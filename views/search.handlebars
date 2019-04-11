@@ -1,0 +1,73 @@
+<div id="homeBody" class="row justify-content-center">
+  <div class="col-lg-8">
+    <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">{{#unless query}}{{#isnt query ""}}Search{{/isnt}}{{/unless}}</h3>
+    <form class="form-inline mb-3" id="searchForm">
+      <input id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags."/>
+      <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+		<div class="container" id="resultsContainer">
+		</div>
+    <div class="page-load-status">
+      <div class="loader-ellips infinite-scroll-request">
+        <span class="loader-ellips__dot"></span>
+        <span class="loader-ellips__dot"></span>
+        <span class="loader-ellips__dot"></span>
+        <span class="loader-ellips__dot"></span>
+      </div>
+      <p class="infinite-scroll-last">No more results.</p>
+      <p class="infinite-scroll-error">No more results.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+$('#resultsContainer').infiniteScroll({
+  path: function() {
+    var pageNumber = ( this.loadCount + 1 );
+    return '/showsearch/{{query}}/' + pageNumber;
+  },
+  append: '.content-box',
+  prefill: true,
+  history: true,
+  status: '.page-load-status'
+});
+
+$('#searchForm').submit(function (e) {
+  e.preventDefault();
+  //-------------------------------------//
+  $('#resultsContainer').infiniteScroll('destroy');
+  $('#resultsContainer').html("");
+  $('#searchTitle').text($("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search");
+  historyData = {
+    url: '/showsearch/' + $("#searchQuery").val(),
+    title: $("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search"
+  }
+  history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
+  $('#resultsContainer').infiniteScroll({
+    path: function() {
+      var pageNumber = ( this.loadCount + 1 );
+      return '/showsearch/' + $("#searchQuery").val() + '/' + pageNumber;
+    },
+    append: '.content-box',
+    prefill: true,
+    history: true
+  });
+  return false;
+});
+
+window.onpopstate = function(history) {
+  $('#resultsContainer').infiniteScroll('destroy');
+  $('#resultsContainer').html("");
+  $('#searchTitle').text(history.state.title);
+  $('#resultsContainer').infiniteScroll({
+    path: function() {
+      var pageNumber = ( this.loadCount + 1 );
+      return history.state.url + '/' + pageNumber;
+    },
+    append: '.content-box',
+    prefill: true,
+    history: true
+  });
+};
+</script>

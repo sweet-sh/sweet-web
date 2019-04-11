@@ -1,0 +1,97 @@
+<div id="profileImageContainer">
+  <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}/images/communities/{{communityData.image}}{{else}}/images/cake.svg{{/if}}" />
+</div>
+
+<h3 style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">
+  <a href="/community/{{communityData.slug}}" class="text-dark">{{ communityData.name }}</a>
+</h3>
+
+{{#if communityData.descriptionParsed}}
+  {{{communityData.descriptionParsed}}}
+{{/if}}
+
+{{#if communityData.rulesParsed}}
+  <h6>Rules</h6>
+  {{{communityData.rulesParsed}}}
+{{/if}}
+
+{{#if loggedIn}}
+  {{#if isBanned}}
+  {{else}}
+    {{#if isMuted}}
+      {{#if isMember}}
+      {{! Muted and a member}}
+        <ul class="nav flex-column mb-2">
+          <li class="nav-item">
+            <a class="nav-link pl-0" id="leaveButton" href="#">Leave community</a>
+          </li>
+        </ul>
+      {{else}}
+        {{! Muted and not a member}}
+        {{#eq communityData.settings.joinType "open"}}
+        </ul>
+          <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+        {{/eq}}
+        {{#eq communityData.settings.joinType "approval"}}
+          {{#if hasRequested}}
+          </ul>
+            <div class="alert alert-secondary text-center">
+              You have asked to join this community. You will be notified if your request is approved.
+            </div>
+          {{else}}
+          </ul>
+            <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+          {{/if}}
+        {{/eq}}
+      {{/if}}
+    {{else}}
+      {{! Not muted}}
+        <ul class="nav flex-column mb-2">
+          {{#eq communityData.settings.joinType "approval"}}
+            {{#if isMember}}
+              <li class="nav-item">
+                <a class="nav-link pl-0 community-panel-link" id="showRequests" data-target="#requestsBody" data-shown="false" data-shown-text="Hide community membership requests{{#if communityData.requestsCount}} ({{communityData.requestsCount}}){{/if}}" data-hidden-text="Show community membership requests{{#if communityData.requestsCount}} ({{communityData.requestsCount}}){{/if}}" href="#">Show community membership requests{{#if communityData.requestsCount}} ({{communityData.requestsCount}}){{/if}}</a>
+              </li>
+            {{/if}}
+          {{/eq}}
+          {{#if isMember}}
+            <li class="nav-item">
+              <a class="nav-link pl-0 community-panel-link" id="editCommunity" data-target="#editBody" data-shown="false" data-shown-text="Hide community editor" data-hidden-text="Show community editor" href="#">Show community editor</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link pl-0 community-panel-link" id="manageMembers" data-target="#membersBody" data-shown="false" data-shown-text="Hide member manager" data-hidden-text="Show member manager" href="#">Show member manager</a>
+            </li>
+          {{/if}}
+          {{#unless isMember}}
+            {{#eq communityData.settings.joinType "open"}}
+            </ul>
+              <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+            {{/eq}}
+            {{#eq communityData.settings.joinType "approval"}}
+              {{#if hasRequested}}
+              </ul>
+                <div class="alert alert-secondary text-center">
+                  You have asked to join this community. You will be notified if your request is approved.
+                </div>
+              {{else}}
+              </ul>
+                <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+              {{/if}}
+            {{/eq}}
+          {{else}}
+            <li class="nav-item">
+              <a class="nav-link pl-0" id="leaveButton" href="#">Leave community</a>
+            </li>
+          </ul>
+          {{/unless}}
+
+        <h5>Members</h5>
+        <div id="membersList" class="user-list">
+          {{#each communityData.members}}
+            <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+          {{/each}}
+        </div>
+
+    {{/if}}
+  {{/if}}
+{{/if}}

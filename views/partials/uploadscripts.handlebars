@@ -1,0 +1,55 @@
+<script type="text/javascript">
+$(function() {
+  $("#postContent").focus(function(){
+    $("#postControls").css('display', 'flex');
+  })
+  upload = new FileUploadWithPreview('postImageUpload')
+  $("#postContentWarningsButton").click(function(){
+    $("#postContentWarningsContainer").slideToggle("fast");
+  })
+  $("#postImageButton").click(function(){
+    upload.selectImage();
+    $('#imagePreviewContainer').slideDown('fast');
+  })
+  window.addEventListener('fileUploadWithPreview:imageSelected', function (e) {
+    if (e.detail.uploadId === 'postImageUpload') {
+      var submitButtonValue = $("#postSubmit").html()
+      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+      var fd = new FormData();
+      fd.append('image', e.detail.cachedFileArray[0]);
+      $.ajax({
+        url: '/api/image',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false
+      })
+      .done(function( data ) {
+        var uploadedImage = JSON.parse(data)
+        if (uploadedImage.error){
+          if (uploadedImage.error == "filesize"){
+            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.", function(){
+              $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+            });
+          }
+        }
+        else {
+          $("#postImageUrl").val(uploadedImage.url)
+          $("#postImageTags").val(uploadedImage.tags)
+          $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+        }
+      })
+    }
+  })
+  $.post('/api/user/followers', function(data){
+    followers = JSON.parse(data).followers;
+    tribute = new Tribute({
+      values: followers,
+      menuItemTemplate: function (item) {
+        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
+      }
+    })
+    tribute.attach($("textarea"));
+  })
+})
+</script>

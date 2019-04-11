@@ -1,0 +1,39 @@
+.tribute-container {
+  font-family: 'IBM Plex Sans', sans-serif;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: auto;
+  max-height: 300px;
+  max-width: 500px;
+  overflow: auto;
+  display: block;
+  z-index: 999999;}
+  .tribute-container ul {
+    margin: 0;
+    margin-top: 6px;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: .25rem;}
+  .tribute-container li {
+    padding: 8px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;}
+    .tribute-container li:hover {
+      background-color: #f8f9fa;}
+    .tribute-container li.highlight {
+      background: #ededed; }
+    .tribute-container li span {
+      font-weight: bold; }
+    .tribute-container li.no-match {
+      cursor: default; }
+  .tribute-container .menu-highlighted {
+    font-weight: bold; }
+  .tribute-image {
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
+    border-radius: 2px; }

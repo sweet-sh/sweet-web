@@ -1,0 +1,136 @@
+<div id="profileImageContainer">
+  <img alt="Profile image for the user @{{ profileData.username}}" id="profileImage" src="{{#if profileData.imageEnabled}}/images/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
+</div>
+
+<h3 style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">
+  {{#if profileData.displayName }}
+    {{ profileData.displayName }}
+  {{/if}}
+  {{#if profileData.displayName }}<br /> <span class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}}
+  {{#if isOwnProfile}}
+    <button type="button" id="updateProfileButton" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#updateProfileModal"><i class="fas fa-pencil-alt"></i></button>
+  {{/if}}
+</h3>
+{{#if profileData.aboutParsed}}
+  <p>
+    {{{profileData.aboutParsed}}}
+  </p>
+{{/if}}
+{{#if profileData.location}}
+  <p>
+    <i class="fas fa-fw fa-map-marker-alt"></i> {{profileData.location}}
+  </p>
+{{/if}}
+{{#if profileData.websiteParsed}}
+  <p>
+    <i class="fas fa-fw fa-link"></i> {{{profileData.websiteParsed}}}
+  </p>
+{{/if}}
+
+{{#unless isOwnProfile}}
+  {{#if loggedIn}}
+    <div id="userActionsButtons" class="mb-2">
+      <div class="btn-group btn-group-sm btn-group-full-width" role="group">
+        {{#if followed}}
+          <button type="button" id="unfollowButton" class="btn btn-secondary"><i class="fas fa-satellite-dish"></i> Unfollow</button>
+        {{else}}
+          <button type="button" id="followButton" class="btn btn-primary"><i class="fas fa-satellite-dish"></i> Follow</button>
+        {{/if}}
+        {{#if trusted}}
+          <button type="button" id="untrustButton" class="btn btn-secondary">
+            <i class="fas fa-lock"></i> Untrust
+          </button>
+        {{else}}
+          <button type="button" id="trustButton" class="btn btn-success">
+            <i class="fas fa-lock-open"></i> Trust
+          </button>
+        {{/if}}
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+          {{#if flagged}}
+            <button type="button" id="unflagButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unflag</button>
+          {{else}}
+            <button type="button" id="flagButton" class="dropdown-item text-danger"><i class="fas fa-exclamation-triangle"></i> Flag</button>
+          {{/if}}
+          <!-- {{#if blocked}}
+            <button type="button" id="unblockButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unblock</button>
+          {{else}}
+            <button type="button" id="blockButton" class="dropdown-item text-danger"><i class="fas fa-ban"></i> Block</button>
+          {{/if}} -->
+        </div>
+      </div>
+    </div>
+    {{#if numberOfFlagsFromTrustedUsers}}
+      <div class="alert alert-danger w-100 my-2" style="text-align:center;">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{numberOfFlagsFromTrustedUsers}} {{plural numberOfFlagsFromTrustedUsers 'person/people'}} you trust {{plural numberOfFlagsFromTrustedUsers 'has/have'}} flagged this user.
+      </div>
+    {{/if}}
+    {{#if userTrustsYou}}
+      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
+        This user trusts you. You can see their private posts.
+      </div>
+    {{/if}}
+    {{#if userFollowsYou}}
+      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
+        This user follows you.
+      </div>
+    {{/if}}
+  {{/if}}
+{{/unless}}
+
+{{#and loggedIn trustedUserData }}
+  {{#or userTrustsYou isOwnProfile}}
+    <h5>Trusts</h5>
+    <div id="trustedUsersList" class="user-list">
+      {{#each trustedUserData}}
+        <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+      {{/each}}
+    </div>
+  {{/or}}
+{{/and}}
+{{#and loggedIn usersWhoTrustThemData }}
+  <h5>Trusted by</h5>
+  <div id="trustedByUsersList" class="user-list">
+    {{#each usersWhoTrustThemData}}
+      <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+    {{/each}}
+  </div>
+{{/and}}
+{{#if followedUserData}}
+  <h5>Follows</h5>
+  <div id="followedUsersList" class="user-list">
+    {{#each followedUserData}}
+      <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+    {{/each}}
+  </div>
+{{/if}}
+{{#if followersData}}
+  <h5>Followed by</h5>
+  <div id="followersList" class="user-list">
+    {{#each followersData}}
+      <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+    {{/each}}
+  </div>
+{{/if}}
+{{#if isOwnProfile}}
+  {{#if flaggedUserData}}
+    <h5>Flagged users</h5>
+      <div id="flaggedUsersList" class="user-list">
+        {{#each flaggedUserData}}
+          <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+      </div>
+  {{/if}}
+{{/if}}
+
+{{#if communitiesData}}
+  <h5>Communities</h5>
+  <div id="communitiesList" class="user-list">
+    {{#each communitiesData}}
+      <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="{{#if this.imageEnabled}}/images/communities/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+    {{/each}}
+  </div>
+{{/if}}

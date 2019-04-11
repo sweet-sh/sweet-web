@@ -1,0 +1,107 @@
+<div id="userBody" class="row">
+  <div class="col-md-4 mx-2 mx-md-0">
+    {{#if loggedIn}}
+      {{> usersidebar}}
+    {{else}}
+      {{#contains visibleSidebarArray profileData.settings.profileVisibility}}
+        {{> usersidebar}}
+      {{else}}
+        <h3 style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">
+          @{{ profileData.username}}
+        </h3>
+        <p>
+          Log in or sign up to see this profile!
+        </p>
+      {{/contains}}
+    {{/if}}
+  </div>
+  <div class="col-md-8">
+    {{#and loggedIn isOwnProfile}}
+  		{{> newpostform }}
+    {{/and}}
+    {{#unless loggedIn}}
+    <div class="alert alert-success w-100 text-center" style="font-size:1.4em;">
+      <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
+    </div>
+    {{/unless}}
+    {{#if loggedIn}}
+      <div class="container commentsList" id="postsContainer"></div>
+      {{> infinitescrollrequests}}
+    {{else}}
+      {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
+  		  <div class="container commentsList" id="postsContainer"></div>
+        {{> infinitescrollrequests}}
+      {{/eq}}
+    {{/if}}
+  </div>
+</div>
+
+{{#if isOwnProfile}}
+<div class="modal fade" id="updateProfileModal" tabindex="-1" role="dialog" aria-labelledby="updateProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateProfileModalLabel">Update profile</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="updateProfileForm" action="/updateprofile" method="post" enctype="multipart/form-data">
+			<div class="modal-body">
+        <div class="form-group">
+					<label for="displayName">Display name</label>
+					<input type="text" class="form-control" name="displayName" value="{{profileData.displayName}}">
+				</div>
+        <div class="form-group">
+          <label for="about">About</label>
+          <textarea class="form-control" name="about">{{profileData.aboutRaw}}</textarea>
+        </div>
+        <div class="form-group">
+					<label for="location">Location</label>
+					<input type="text" class="form-control" name="location" value="{{profileData.location}}">
+				</div>
+        <div class="form-group">
+					<label for="website">Website</label>
+					<input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}">
+				</div>
+        <label>Profile image (maximum file size 3MB)</label>
+  			<div id="image-preview">
+  				<label for="image-upload" id="image-label">Choose file</label>
+  				<input type="file" name="imageUpload" id="image-upload" accept="image/*" />
+  			</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{{> filemessage }}
+{{/if}}
+
+
+<script>
+$('#postsContainer').infiniteScroll({
+  path: function() {
+    var pageNumber = ( this.loadCount + 1 );
+    return '/showposts/user/{{profileData._id}}/' + pageNumber;
+  },
+  append: '.commentContainer',
+  prefill: true,
+  history: false,
+  status: '.page-load-status'
+});
+$('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+  autosize($('.comment-textarea'));
+  tribute.attach($(".comment-textarea"));
+});
+</script>
+
+{{> profilescripts}}
+
+{{#if isOwnProfile}}
+{{> uploadscripts}}
+{{/if}}

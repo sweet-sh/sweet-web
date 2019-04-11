@@ -1,0 +1,21 @@
+<div class="userForm">
+
+    <h3 class="text-center mb-4">Verify email</h3>
+
+    {{> message }}
+
+    <!-- LOGIN FORM -->
+    <form action="/verify-email" method="post">
+      <p class="form-text">
+        Please enter the email address you used when signing up below:
+      </p>
+        <div class="form-group">
+            <input type="email" class="form-control" name="email" placeholder="Email address" value="{{sessionFlash.email}}" required>
+        </div>
+        <input type="hidden" class="form-control" name="verificationToken" value="{{token}}" required>
+
+
+        <button class="btn btn-secondary btn-block" type="submit">Verify</button>
+    </form>
+
+</div>

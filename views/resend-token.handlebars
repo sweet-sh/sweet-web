@@ -1,0 +1,19 @@
+<div class="userForm">
+
+    <h3 class="text-center mb-4">Resend token</h3>
+
+    {{> message }}
+
+    <!-- LOGIN FORM -->
+    <form action="/resend-token" method="post">
+      <p class="form-text">
+        Please enter the email address you used when signing up below:
+      </p>
+      <div class="form-group">
+          <input type="email" class="form-control" name="email" placeholder="Email address" value="{{sessionFlash.email}}">
+      </div>
+
+      <button class="btn btn-secondary btn-block" type="submit">Resend</button>
+    </form>
+
+</div>

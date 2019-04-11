@@ -1,0 +1,211 @@
+<div id="homeBody" class="row justify-content-center">
+  <div class="col-lg-8">
+		<div class="container commentsList" id="postContainer">
+      {{#if canDisplay}}
+        <article class="comment commentContainer" data-post-id="{{post._id}}">
+          <div class="row">
+            <div class="col commentText">
+              {{#eq post.type "boost"}}
+                <p class="text-secondary">
+                  <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{post.owner}}" class="text-secondary">@{{post.owner}}</a></strong>
+                </p>
+              {{/eq}}
+              {{#if post.recentlyCommented}}
+                {{#isnt post.lastCommentAuthor.username loggedInUserData.username}}
+                  <p class="text-secondary">
+                    <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{post.lastCommentAuthor.username}}" class="text-secondary">@{{post.lastCommentAuthor.username}}</a></strong>
+                  </p>
+                {{/isnt}}
+              {{/if}}
+              {{#if post.community}}
+                <div class="text-secondary d-flex align-items-center mb-3">
+                  <img alt="Display image for the community '{{post.community.name}}'" style="width:20px;height:20px;border-radius:2px;" class="postAuthorImage mr-1" src="/images/communities/{{#if post.community.imageEnabled}}{{post.community.image}}{{else}}cake.svg{{/if}}" />
+                  <span>
+                    Posted in <strong><a href="/community/{{post.community.slug}}" class="text-secondary">{{post.community.name}}</a></strong>
+                  </span>
+                </div>
+              {{/if}}
+              <div class="mb-3 d-flex">
+                <img alt="Profile image of @{{post.author.username}}" class="postAuthorImage" src="/images/{{#if post.author.imageEnabled}}{{post.author.image}}{{else}}cake.svg{{/if}}" />
+                <div class="post-meta">
+                  <p>
+                    {{#if post.author.displayName}}
+                      <strong><a class="authorLink" href="/{{post.author.username}}">{{post.author.displayName}}</a></strong> &middot; <span class="text-muted">@{{post.author.username}}</span>
+                    {{else}}
+                      <strong><a class="authorLink" href="/{{post.author.username}}">@{{post.author.username}}</a></strong>
+                    {{/if}} {{#contains flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                  </p>
+                  <p>
+                    <small class="commentTimestamp text-muted">{{post.parsedTimestamp}}</small><small class="text-muted"> &middot; {{#eq post.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i></small>
+                  </p>
+                </div>
+              </div>
+              <div class="post-content {{#if post.contentWarnings}}content-warning-post{{/if}}">
+                {{#if post.contentWarnings}}
+                  <p class="content-warning">
+                    {{post.contentWarnings}}
+                  </p>
+                  <a class="content-warning-show-more" data-state="contracted">Show post</a>
+                  <div class="abbreviated-content content-warning-content" style="height:0">
+                    {{{post.parsedContent}}}
+                  </div>
+                {{else}}
+                  {{{post.parsedContent}}}
+                {{/if}}
+              </div>
+              {{#if post.images}}
+                <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}}">
+                  {{#each post.images}}
+                    <img alt="{{#if ../post.imageDescriptions}}{{../post.imageDescriptions}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/images/uploads/{{this}}" data-featherlight="/images/uploads/{{this}}"/>
+                  {{/each}}
+                </div>
+              {{/if}}
+            </div>
+          </div>
+          <div class="row commentMetadata">
+            <div class="col" style="display:flex;justify-content:space-between;">
+              <div id="generalTools">
+                {{#unless post.commentsDisabled}}
+                  {{#if loggedIn}}
+                    {{#unless isMuted}}
+                      <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
+                        <i class="far fa-comment"></i> {{#if post.numberOfComments}}({{post.numberOfComments}}){{/if}}
+                      </button>
+                    {{else}}
+                      {{#if post.numberOfComments}}
+                        <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
+                          <i class="far fa-comment"></i> {{#if post.numberOfComments}}({{post.numberOfComments}}){{/if}}
+                        </button>
+                      {{/if}}
+                    {{/unless}}
+                  {{else}}
+                    {{#if post.numberOfComments}}
+                      <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
+                        <i class="far fa-comment"></i> {{#if post.numberOfComments}}({{post.numberOfComments}}){{/if}}
+                      </button>
+                    {{/if}}
+                  {{/if}}
+                {{/unless}}
+                {{#eq post.privacy "public"}}
+                  {{#if loggedIn}}
+                    {{#isnt post.type "community"}}
+                      <form class="d-inline" action="/createboost/{{post._id}}" method="post">
+                        <button type="submit" class="btn btn-link btn-sm boostPost  post-action-button">
+                          <i class="fas fa-retweet"></i>
+                        </button>
+                      </form>
+                    {{/isnt}}
+                  {{/if}}
+                {{/eq}}
+                <a class="btn btn-link btn-sm post-action-button" href="/{{post.author.username}}/{{post.url}}">
+                  <i class="fas fa-link"></i>
+                </a>
+              </div>
+              {{#eq loggedInUserData.username post.owner}}
+                <div id="authorTools">
+                  <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{post.deleteid}}">
+                    <i class="far fa-trash-alt"></i>
+                  </button>
+                  <!-- <form class="d-inline" action="/deletecomment/{{../eventData.[0].id}}/{{this._id}}/{{../eventData.[0].editToken}}" method="post">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm editPost">
+                      <i class="fas fa-pencil-alt"></i>
+                    </button>
+                  </form> -->
+                </div>
+              {{/eq}}
+            </div>
+          </div>
+          {{#unless post.commentsDisabled}}
+            <div class="row replyContainer">
+              <div class="repliesContainer">
+              {{#if post.comments}}
+                {{#each post.comments}}
+                <div class="individualReplyContainer">
+                  <p class="mb-1"><img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+                    {{#if this.author.displayName}}
+                      <strong><a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a></strong>
+                    {{else}}
+                      <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
+                    {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}} &middot; <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                    <button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="{{this.author.username}}">
+                      <i class="fas fa-reply"></i>
+                    </button>
+                    {{#if this.canDelete }}
+                      <button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="{{this._id}}" data-post-id="{{../post._id}}" data-comment-id="{{this._id}}">
+                        &times;
+                      </button>
+                    {{/if}}
+                  </p>
+                  {{{this.parsedContent}}}
+                </div>
+                {{/each}}
+                {{/if}}
+              </div>
+              {{#if loggedIn}}
+                {{#unless isMuted}}
+                  {{#isnt post.type "community"}}
+                    <div id="replyForm">
+                      <div class="input-group">
+                        <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
+                        <div class="input-group-append">
+                          <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{post._id}}">Reply <i class="fas fa-chevron-right"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                  {{else}}
+                    {{#if isMember}}
+                      <div id="replyForm">
+                        <div class="input-group">
+                          <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
+                          <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{post._id}}">Reply <i class="fas fa-chevron-right"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    {{else}}
+                    {{/if}}
+                  {{/isnt}}
+                {{/unless}}
+              {{/if}}
+            </div>
+          {{/unless}}
+        </article>
+      {{else}}
+      <article class="comment commentContainer">
+        <div class="row">
+          <div class="col commentText">
+            <p>
+              This post can not be displayed. Possible reasons for this are:
+            </p>
+            <ul>
+              <li>The post has been deleted, or never existed in the first place.</li>
+              <li>You are logged out and the post or the community it was posted in is private.</li>
+              <li>You are logged in but are not trusted by the post's author, or are not a member of the community the post was posted in.</li>
+            </ul>
+            <p>
+              Luckily for you, there are lots of other posts on sweet you <em>can</em> look at.
+            </p>
+          </div>
+        </div>
+      </article>
+      {{/if}}
+		</div>
+  </div>
+</div>
+
+<script>
+$(function() {
+  autosize($("textarea"));
+  $(".replyContainer").show();
+  $.post('/api/user/followers', function(data){
+    followers = JSON.parse(data).followers;
+    tribute = new Tribute({
+      values: followers,
+      menuItemTemplate: function (item) {
+        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
+      }
+    })
+    tribute.attach($("textarea"));
+  })
+});
+</script>

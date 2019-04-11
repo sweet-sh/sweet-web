@@ -1,0 +1,30 @@
+<section id="homeBody" class="row justify-content-center">
+  <div class="col-lg-8">
+		{{> newpostform }}
+    <div id="checkNewPosts"></div>
+    {{> newpostsavailable}}
+		<div class="container commentsList" id="postsContainer">
+		</div>
+    {{> infinitescrollrequests}}
+  </div>
+</section>
+{{> filemessage }}
+<script>
+$('#postsContainer').infiniteScroll({
+  path: function() {
+    var pageNumber = ( this.loadCount + 1 );
+    return '/showposts/home/{{loggedInUserData._id}}/' + pageNumber;
+  },
+  append: '.commentContainer',
+  prefill: true,
+  history: true,
+  status: '.page-load-status'
+});
+
+$('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+  autosize($('.comment-textarea'));
+  tribute.attach($(".comment-textarea"));
+});
+</script>
+
+{{> uploadscripts}}

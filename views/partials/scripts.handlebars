@@ -1,0 +1,120 @@
+<script type="text/javascript">
+$(function() {
+  $('[data-toggle="tooltip"]').tooltip()
+  autosize($('textarea'));
+  $("#notificationsContainer").load( "/api/notification/display" );
+
+  // window.onbeforeunload = function() {
+  //     return true;
+  // };
+
+  // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
+  window.setInterval(function(){
+    $("#notificationsContainer").load("/api/notification/display");
+    {{#eq activePage "home"}}
+    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
+      console.log("Checking")
+      let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
+      let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
+      if (latestPost != currentlyDisplayedPost){
+        $("#newPostsAvailable").show();
+      }
+      else {
+        $("#newPostsAvailable").hide();
+      }
+    })
+    {{/eq}}
+  }, 60000);
+
+  $('body').on('click', '.openReplyBox', function() {
+    $(this).closest(".comment").find(".replyContainer").slideToggle("fast");
+  })
+  $('body').on('click', '.show-more', function() {
+    var state = $(this).attr("data-state");
+    if (state == "contracted") {
+      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
+      $(this).attr("data-state","expanded").css("margin-top", "0.25rem");
+    }
+    else {
+      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"7rem"},200);
+      $(this).attr("data-state","contracted").css("margin-top", "1rem");
+    }
+    var text = $(this).text();
+    $(this).text(
+        text == "Show more" ? "Show less" : "Show more");
+  })
+  $('body').on('click', '.content-warning-show-more', function() {
+    var state = $(this).attr("data-state");
+    if (state == "contracted") {
+      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
+      $(this).closest(".commentContainer").find(".content-warning-images").show();
+      $(this).attr("data-state","expanded");
+    }
+    else {
+      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"0"},200);
+      $(this).closest(".commentContainer").find(".content-warning-images").hide();
+      $(this).attr("data-state","contracted");
+    }
+    var text = $(this).text();
+    $(this).text(
+        text == "Show post" ? "Hide post" : "Show post");
+  })
+  $('body').on('click', '.replyToComment', function() {
+    let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
+    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("id") + " ").focus()
+  })
+  $('body').on('click', '.deletePost', function() {
+    var element = $(this);
+    bootbox.confirm("Are you sure you want to delete this post?", function(result){
+      if (result == true) {
+        let divToDelete = element.closest(".commentContainer");
+        $.post("/deletepost/"+element.attr("id"), function(data) {
+          divToDelete.fadeOut(function() {
+            divToDelete.remove();
+          });
+        });
+      }
+    });
+  })
+  $('body').on('click', '.deleteComment', function() {
+    var element = $(this);
+    bootbox.confirm("Are you sure you want to delete this comment?", function(result){
+      if (result == true) {
+        let divToDelete = element.closest(".individualReplyContainer");
+        $.post("/deletecomment/"+element.attr("data-post-id")+"/"+element.attr("data-comment-id"), function(data) {
+          divToDelete.fadeOut(function() {
+            divToDelete.remove();
+          });
+        });
+      }
+    });
+  })
+  $('body').on('click', '.postReply', function() {
+    let textarea = $(this).closest(".input-group").find(".comment-textarea");
+    let commentContent = $(this).closest(".input-group").find(".comment-textarea").val();
+    let commentsContainer = $(this).closest('.replyContainer').find('.repliesContainer');
+    let commentButton = $(this);
+    commentButton.prop('disabled', true);
+    $.post("/createcomment/"+$(this).attr("id"), { commentContent: commentContent }, function(data) {
+      if (data){
+        textarea.val("");
+        let html = '<div class="individualReplyContainer"><p class="mb-1"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" />' + data.name + ' &middot; <small class="commentTimestamp text-muted">' + data.timestamp + '</small><button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="' + data.username + '"><i class="fas fa-reply"></i></button></p>' + data.content +'</div>'
+        $(html).hide().appendTo(commentsContainer).fadeIn();
+        commentButton.prop('disabled', false);
+      }
+      else {
+        let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
+        $(html).hide().appendTo(commentsContainer).fadeIn();
+        commentButton.prop('disabled', false);
+      }
+    });
+  })
+  $('body').on('click', '.notificationLink', function(e) {
+    e.preventDefault();
+    var link = this.href;
+    $.post("/api/notification/update/"+$(this).attr("id"), function( data ) {
+      window.location.href = link;
+    });
+  })
+});
+</script>

@@ -1,0 +1,58 @@
+{{#if isOwnProfile}}
+<script type="text/javascript">
+  $.uploadPreview({
+    input_field: "#image-upload",
+    preview_box: "#image-preview",
+    label_field: "#image-label",
+    label_default: "Choose file",
+    label_selected: "Change file",
+    no_label: false
+  });
+  $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
+  $("#image-preview").css("background-size", "cover");
+  $("#image-preview").css("background-position", "center center");
+</script>
+{{else}}
+<script type="text/javascript">
+$("#flagButton").click(function() {
+  $.post( "/useraction/flag/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#unflagButton").click(function() {
+  $.post( "/useraction/flag/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#blockButton").click(function() {
+  $.post( "/useraction/block/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#unblockButton").click(function() {
+  $.post( "/useraction/block/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#trustButton").click(function() {
+  $.post( "/useraction/trust/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#untrustButton").click(function() {
+  $.post( "/useraction/trust/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#followButton").click(function() {
+  $.post( "/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+$("#unfollowButton").click(function() {
+  $.post( "/useraction/follow/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
+     location.reload();
+  });
+});
+</script>
+{{/if}}

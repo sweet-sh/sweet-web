@@ -1,0 +1,444 @@
+<div id="pageContainer" class="row">
+  <div class="col-md-4 mx-2 mx-md-0 mb-3">
+    {{> communitysidebar}}
+  </div>
+  <div class="col-md-8">
+    {{#if isBanned}}
+      <div class="alert alert-danger text-center">
+        You have been banned from this community.
+      </div>
+    {{else}}
+      <div id="mainBody" class="community-container">
+        {{#unless loggedIn}}
+        <div class="alert alert-success w-100 text-center" style="font-size:1.4em;">
+          <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
+        </div>
+        {{/unless}}
+        {{#and loggedIn isMember}}
+          {{#unless isMuted}}
+            {{> newpostform }}
+          {{else}}
+            <div class="alert alert-secondary text-center">
+              You have been muted in this community. You are unable to post and your posts and votes have been made invisible. If you are unmuted, your posts and votes will be restored.
+            </div>
+          {{/unless}}
+        {{/and}}
+        {{#unless isMember}}
+          {{#eq communityData.settings.visibility "public"}}
+            <div class="container commentsList" id="postsContainer"></div>
+          {{else}}
+            <div class="alert alert-secondary text-center">
+              This community's posts are only visible to its members.
+            </div>
+          {{/eq}}
+        {{else}}
+          <div class="container commentsList" id="votesContainer">
+              {{> votes}}
+          </div>
+          <div class="container commentsList" id="postsContainer"></div>
+          {{> infinitescrollrequests}}
+        {{/unless}}
+      </div>
+      {{#if loggedIn}}
+      <div id="requestsBody" class="community-container">
+        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Membership requests</h3>
+
+        <div class="container" id="resultsContainer">
+          {{#each communityData.membershipRequests}}
+            <div class="content-box">
+              <div class="row">
+                <div class="col commentText">
+                  <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
+                    <div class="d-flex align-items-center">
+                      <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                      {{#if this.displayName}}
+                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                      {{else}}
+                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                    </div>
+                    <div class="ml-auto mt-2 mt-lg-0">
+                      <button type="button" class="btn btn-success community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
+                      <button type="button" class="btn btn-danger community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
+                    </div>
+                  </div>
+                  <p>
+                    {{{this.aboutParsed}}}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+      <div id="editBody" class="community-container">
+        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Community editor</h3>
+        <nav>
+          <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-nameEditor-tab" data-toggle="tab" href="#nav-nameEditor" role="tab" aria-controls="nav-nameEditor" aria-selected="true">Name</a>
+            <a class="nav-item nav-link" id="nav-descriptionEditor-tab" data-toggle="tab" href="#nav-descriptionEditor" role="tab" aria-controls="nav-descriptionEditor" aria-selected="false">Description</a>
+            <a class="nav-item nav-link" id="nav-rulesEditor-tab" data-toggle="tab" href="#nav-rulesEditor" role="tab" aria-controls="nav-rulesEditor" aria-selected="false">Rules</a>
+            <a class="nav-item nav-link" id="nav-imageEditor-tab" data-toggle="tab" href="#nav-imageEditor" role="tab" aria-controls="nav-imageEditor" aria-selected="false">Image</a>
+            <a class="nav-item nav-link" id="nav-visibilityEditor-tab" data-toggle="tab" href="#nav-visibilityEditor" role="tab" aria-controls="nav-visibilityEditor" aria-selected="false">Visibilty</a>
+            <a class="nav-item nav-link" id="nav-joinTypeEditor-tab" data-toggle="tab" href="#nav-joinTypeEditor" role="tab" aria-controls="nav-joinTypeEditor" aria-selected="false">Joining method</a>
+            <a class="nav-item nav-link" id="nav-voteLengthEditor-tab" data-toggle="tab" href="#nav-voteLengthEditor" role="tab" aria-controls="nav-voteLengthEditor" aria-selected="false">Vote length</a>
+          </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+          <div class="tab-pane fade show active" id="nav-nameEditor" role="tabpanel" aria-labelledby="nav-nameEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <div class="form-group">
+                <input type="hidden" name="reference" value="name" />
+                <label for="communityName">Name</label>
+                <input type="text" class="form-control" id="communityName" name="proposedValue" value="{{communityData.name}}">
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <input type="hidden" name="reference" value="description" />
+              <div class="form-group">
+                <label for="communityDescription">Description</label>
+                <textarea class="form-control" id="communityDescription" name="proposedValue" rows="3">{{communityData.descriptionRaw}}</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <input type="hidden" name="reference" value="rules" />
+              <div class="form-group">
+                <label for="communityRules">Rules</label>
+                <textarea class="form-control" id="communityRules" name="proposedValue" rows="3">{{communityData.rulesRaw}}</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post" enctype="multipart/form-data">
+              <div class="form-group">
+                <input type="hidden" name="reference" value="image" />
+                <input type="hidden" name="imageUrl" value="{{communityData.image}}" />
+                <label>Community image</label>
+                <div id="image-preview">
+                  <label for="image-upload" id="image-label">Choose file</label>
+                  <input type="file" name="proposedValue" id="image-upload" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-visibilityEditor" role="tabpanel" aria-labelledby="nav-visibilityEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <input type="hidden" name="reference" value="visibility" />
+              <div class="form-group">
+                <label for="communityVisibility">Post visibility (currently set to <strong>{{communityData.settings.visibility}}</strong>)</label>
+                <select class="form-control" id="communityVisibility" name="proposedValue">
+                  <option value="public" {{#eq communityData.settings.visibility "public"}}selected{{/eq}}>Public (posts visible to all sweet users)</option>
+                  <option value="private" {{#eq communityData.settings.visibility "private"}}selected{{/eq}}>Private (posts visible only to members)</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-joinTypeEditor" role="tabpanel" aria-labelledby="nav-joinTypeEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <div class="form-group">
+                <input type="hidden" name="reference" value="joinType" />
+                <label for="communityJoinType">Joining method  (currently set to <strong>{{communityData.settings.joinType}}</strong>)</label>
+                <select class="form-control" id="communityJoinType" name="proposedValue">
+                  <option value="open" {{#eq communityData.settings.joinType "open"}}selected{{/eq}}>Open (anyone is free to join)</option>
+                  <option value="approval" {{#eq communityData.settings.joinType "approval"}}selected{{/eq}}>Approval (requests to join must be approved by a current member)</option>
+                  <!-- <option value="closed" {{#eq communityData.settings.joinType "closed"}}selected{{/eq}}>Closed (only invited users can join)</option> -->
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="nav-voteLengthEditor" role="tabpanel" aria-labelledby="nav-voteLengthEditor-tab">
+            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+              <div class="form-group">
+                <input type="hidden" name="reference" value="voteLength" />
+                <label for="communityVoteLength">Vote length (currently set to <strong>{{communityData.settings.voteLength}} days</strong>)</label>
+                <select class="form-control" id="communityVoteLength" name="proposedValue">
+                  <option value="1" {{#eq communityData.settings.voteLength "1"}}selected{{/eq}}>1 day</option>
+                  <option value="3" {{#eq communityData.settings.voteLength "3"}}selected{{/eq}}>3 days</option>
+                  <option value="7" {{#eq communityData.settings.voteLength "7"}}selected{{/eq}}>7 days</option>
+                  <option value="14" {{#eq communityData.settings.voteLength "14"}}selected{{/eq}}>14 days</option>
+                  <option value="30" {{#eq communityData.settings.voteLength "30"}}selected{{/eq}}>30 days</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div id="membersBody" class="community-container">
+        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Member manager</h3>
+        <div class="container" id="resultsContainer">
+          {{#each communityData.members}}
+            {{#contains this.mutedCommunities ../communityData._id}}
+            {{else}}
+              <div class="content-box">
+                <div class="row">
+                  <div class="col commentText">
+                    <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
+                      <div class="d-flex align-items-center">
+                        <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                        {{#if this.displayName}}
+                          <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                        {{else}}
+                          <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                        {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                      </div>
+                      <div class="ml-auto mt-3 mt-lg-0">
+                        <button type="button" class="btn btn-dark community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
+                        <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                      </div>
+                    </div>
+                    <p>
+                      {{{this.aboutParsed}}}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            {{/contains}}
+          {{/each}}
+        </div>
+        <h5 class="mt-4">Muted users</h5>
+        <div class="container" id="resultsContainer">
+          {{#each communityData.mutedMembers}}
+            <div class="content-box">
+              <div class="row">
+                <div class="col commentText">
+                  <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
+                    <div class="d-flex align-items-center">
+                      <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                      {{#if this.displayName}}
+                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                      {{else}}
+                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                    </div>
+                    <div class="ml-auto mt-3 mt-lg-0">
+                      <button type="button" class="btn btn-dark community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
+                      {{#if this.isBanned}}
+                        <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                      {{else}}
+                        <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                      {{/if}}
+                    </div>
+                  </div>
+                  <p>
+                    {{{this.aboutParsed}}}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+        <h5 class="mt-4">Banned users</h5>
+        <div class="container" id="resultsContainer">
+          {{#each communityData.bannedMembers}}
+            <div class="content-box">
+              <div class="row">
+                <div class="col commentText">
+                  <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
+                    <div class="d-flex align-items-center">
+                      <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                      {{#if this.displayName}}
+                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                      {{else}}
+                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                    </div>
+                    <div class="ml-auto mt-3 mt-lg-0">
+                      <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                    </div>
+                  </div>
+                  <p>
+                    {{{this.aboutParsed}}}
+                  </p>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    {{/if}}
+  </div>
+</div>
+
+{{#unless isBanned}}
+<script>
+$('#postsContainer').infiniteScroll({
+  path: function() {
+    var pageNumber = ( this.loadCount + 1 );
+    return '/showposts/community/{{communityData._id}}/' + pageNumber;
+  },
+  append: '.commentContainer',
+  prefill: true,
+  history: false,
+  status: '.page-load-status'
+});
+$('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+  autosize($('.comment-textarea'));
+  tribute.attach($(".comment-textarea"));
+});
+
+{{#if loggedIn}}
+
+$('.community-action-button').click(function() {
+  $(this).prop('disabled', true);
+})
+
+$("#leaveButton").click(function() {
+  var element = $(this);
+  bootbox.confirm("Are you sure you want to leave this community?{{#eq communityData.settings.joinType "approval"}} You will need to be approved by a current member if you would like to join again.{{/eq}}", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/leave/{{ communityData._id }}", function( result ) {
+         location.reload();
+       });
+     }
+  });
+});
+
+$("#joinButton").click(function() {
+  $.post( "/api/community/user/join/{{ communityData._id }}", function( result ) {
+     location.reload();
+  });
+});
+$("#requestButton").click(function() {
+  $.post( "/api/community/user/request/{{ communityData._id }}", function( result ) {
+     location.reload();
+  });
+});
+
+{{#if isMember}}
+
+{{#unless isMuted}}
+
+$(".approveUser").click(function() {
+  $.post( "/api/community/user/accept/{{ communityData._id }}/" + $(this).attr("data-user-id"), function( result ) {
+     location.reload();
+  });
+});
+$(".rejectUser").click(function() {
+  var element = $(this);
+  bootbox.confirm("Are you sure you want to reject this membership request?", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/reject/{{ communityData._id }}/" + element.attr("data-user-id"), function( result ) {
+         location.reload();
+      });
+    }
+  });
+});
+
+$(".banUser").click(function() {
+  var element = $(this);
+  bootbox.confirm("This will create a vote to ban this user from the community. If the vote passes, their posts and votes in the community will be deleted, and they will not be able to rejoin the community unless the ban is lifted. Would you like to proceed?", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/ban/{{ communityData._id }}/" + element.attr("data-user-id"), function( result ) {
+         location.reload();
+      });
+    }
+  });
+});
+$(".unbanUser").click(function() {
+  var element = $(this);
+  bootbox.confirm("This will create a vote to unban this user from the community. Would you like to proceed?", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/unban/{{ communityData._id }}/" + element.attr("data-user-id"), function( result ) {
+         location.reload();
+      });
+    }
+  });
+});
+$(".muteUser").click(function() {
+  var element = $(this);
+  bootbox.confirm("This will create a vote to mute this community member. If the vote passes, their posts and votes in the community will be made invisible, and they will not be able to create new posts. If the mute is lifted, their posts and votes will reappear. Would you like to proceed?", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/mute/{{ communityData._id }}/" + element.attr("data-user-id"), function( result ) {
+         location.reload();
+      });
+    }
+  });
+});
+$(".unmuteUser").click(function() {
+  var element = $(this);
+  bootbox.confirm("This will create a vote to unmute this community member. Would you like to proceed?", function(result){
+    if (result == true) {
+      $.post( "/api/community/user/unmute/{{ communityData._id }}/" + element.attr("data-user-id"), function( result ) {
+         location.reload();
+      });
+    }
+  });
+});
+$(".withdrawVoteButton").click(function() {
+  $.post( "/api/community/vote/withdraw/{{ communityData._id }}/" + $(this).attr("data-vote-id"), function( result ) {
+     location.reload();
+  });
+});
+$(".castVoteButton").click(function() {
+  $.post( "/api/community/vote/cast/{{ communityData._id }}/" + $(this).attr("data-vote-id"), function( result ) {
+     location.reload();
+  });
+});
+$(".deleteVoteButton").click(function() {
+  var element = $(this);
+  bootbox.confirm("Are you sure you want to delete this proposal? If you wish to withdraw your own vote, click the 'Withdraw vote' button instead.", function(result){
+    if (result == true) {
+      $.post( "/api/community/vote/delete/" + element.attr("data-vote-id"), function( result ) {
+         location.reload();
+      });
+    }
+  })
+});
+
+
+
+$(".community-panel-link").click(function() {
+  var element = $(this);
+  var currentVisibility = element.attr("data-shown");
+  $(".community-container").hide();
+  $(".community-panel-link").each(function(i, link) {
+    $(this).text($(this).attr("data-hidden-text"))
+    $(this).attr("data-shown", "false")
+  });
+  if (currentVisibility == "false"){
+    $(element.attr("data-target")).show();
+    element.text(element.attr("data-shown-text"))
+    element.attr("data-shown", "true")
+  }
+  else if (currentVisibility == "true"){
+    $("#mainBody").show();
+    element.text(element.attr("data-hidden-text"))
+    element.attr("data-shown", "false")
+  }
+});
+
+$.uploadPreview({
+  input_field: "#image-upload",
+  preview_box: "#image-preview",
+  label_field: "#image-label",
+  label_default: "Choose file",
+  label_selected: "Change file",
+  no_label: false
+});
+$("#image-preview").css("background-image", "url('/images/communities/{{communityData.image}}')");
+$("#image-preview").css("background-size", "cover");
+$("#image-preview").css("background-position", "center center");
+{{/unless}}
+{{/if}}
+{{/if}}
+</script>
+{{/unless}}
+
+
+{{#unless isMuted}}
+{{#if isMember}}
+{{> uploadscripts}}
+{{/if}}
+{{/unless}}

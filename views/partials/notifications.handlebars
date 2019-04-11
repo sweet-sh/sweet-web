@@ -1,0 +1,34 @@
+{{#if loggedIn}}
+{{#if notifications}}
+  <script>
+  notificationsCount = 0;
+  </script>
+
+  {{#each notifications}}
+    <a href="{{this.url}}" class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}" id="{{this._id}}">
+      <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{this.image}}"/>
+      <span class="notification-text">
+        {{{this.text}}}
+      </span>
+    </a>
+    {{#unless this.seen}}
+      <script>notificationsCount = notificationsCount + 1;</script>
+    {{/unless}}
+  {{/each}}
+
+  <script type="text/javascript">
+    if (notificationsCount > 0) {
+      $("#notificationsCount").text(notificationsCount);
+      document.title = '(' + notificationsCount + ') sweet';
+    }
+  </script>
+{{else}}
+  <p class="mt-2 text-muted text-center">
+    You're up to date!
+  </p>
+{{/if}}
+{{else}}
+  <div class="d-flex align-items-center p-2 list-group-item notificationLink">
+    You are not logged in.
+  </div>
+{{/if}}

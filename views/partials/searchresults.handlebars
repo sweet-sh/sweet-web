@@ -1,0 +1,31 @@
+{{#if noResults}}
+  <div class="content-box">
+    <div class="row">
+      <div class="col commentText">
+        <p class="mt-2 mb-4 text-center" style="font-size:1.3em">
+          No results found!
+        </p>
+      </div>
+    </div>
+  </div>
+{{else}}
+  {{#each results}}
+  <div class="content-box">
+    <div class="row">
+      <div class="col commentText">
+        <p class="text-muted">
+          {{{this.type}}}
+        </p>
+        <p class="mb-2" style="font-size:1.3em">
+          <img class="postAuthorImage" src="{{this.image}}" />
+          {{{this.title}}}
+          {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+        </p>
+        <p>
+          {{{this.description}}}
+        </p>
+      </div>
+    </div>
+  </div>
+  {{/each}}
+{{/if}}

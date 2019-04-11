@@ -1,0 +1,39 @@
+{
+  "name": "sweet",
+  "version": "0.1.0",
+  "description": "A lightweight, trust- and community-based social network",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Raphael Kabo",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@sendgrid/mail": "^6.3.1",
+    "autolinker": "^3.0.5",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.18.3",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.16.4",
+    "express-fileupload": "^1.1.3-alpha.1",
+    "express-handlebars": "^3.0.2",
+    "express-messages": "^1.0.1",
+    "express-session": "^1.15.6",
+    "express-validator": "^5.3.1",
+    "file-type": "^10.10.0",
+    "handlebars-helpers": "^0.10.0",
+    "method-override": "^3.0.0",
+    "moment": "^2.24.0",
+    "mongo-sanitize": "^1.0.1",
+    "mongoose": "^5.4.19",
+    "morgan": "^1.9.1",
+    "node-schedule": "^1.3.2",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "request": "^2.88.0",
+    "sanitize-html": "^1.20.0",
+    "sharp": "^0.22.0",
+    "shortid": "^2.2.14"
+  }
+}
