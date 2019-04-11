@@ -25,7 +25,6 @@ var shortid = require('shortid');
 
 app.use(fileUpload());
 
-
 // Configuration ===============================================================
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
 
@@ -87,7 +86,7 @@ app.on('SIGINT', function() {
 // routes ======================================================================
 require('./app/notifier.js')
 require('./app/communityRoutes.js')(app, passport);
-require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
+require('./app/routes.js')(app, passport);
 
 // launch ======================================================================
 app.listen(port);
