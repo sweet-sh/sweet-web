@@ -57,18 +57,6 @@ var userSchema = new mongoose.Schema({
   mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }]
 });
 
-// userSchema.pre('validate', function (next) {
-//   if (this.notifications.length > 15){
-//     console.log(this.notifications.length)
-//     console.log("Notifications too long!")
-//     this.notifications.reverse();
-//     this.notifications.length = 15;
-//     this.notifications.reverse();
-//     console.log(this.notifications.length)
-//   }
-//   next();
-// });
-
 // methods ======================
 // generating a hash
 userSchema.methods.generateHash = function(password) {

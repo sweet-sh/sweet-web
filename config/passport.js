@@ -5,8 +5,10 @@ const User            = require('../app/models/user');
 const Relationship            = require('../app/models/relationship');
 
 const crypto = require('crypto');
+
+var apiConfig = require('./apis.js');
 const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey('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');
+sgMail.setApiKey(apiConfig.sendgrid);
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {

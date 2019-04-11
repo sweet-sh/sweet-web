@@ -61,13 +61,14 @@ app.set('view engine', 'handlebars');
 app.use(express.static('public'));
 
 // Required for passport
+var passportAuth = require('./config/auth.js');
 app.use(session({
-  secret: 'fbmUdRXUu5flaNrWEnAOV8CEAY5czMLQ',
+  secret: passportAuth.secret,
   cookie:{ _expires: (12 * 60 * 60 * 1000) }, // 12 hours
   rolling: true,
   resave: true,
   saveUninitialized: false
-})); // session secret
+}));
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session

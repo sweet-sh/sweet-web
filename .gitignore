@@ -7,7 +7,7 @@
 # Configuration files with MongoDB login and API keys
 config/apis.js
 config/database.js
-
+config/auth.js
 
 ### macOS ###
 # General
