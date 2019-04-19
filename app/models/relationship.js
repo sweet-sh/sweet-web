@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 // define the schema for our user model
 var relationshipSchema = new mongoose.Schema({
@@ -10,6 +11,8 @@ var relationshipSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  fromUser: { type: Schema.Types.ObjectId, ref: 'User' },
+  toUser: { type: Schema.Types.ObjectId, ref: 'User' },
   value: {
 		type: String,
 		required: true

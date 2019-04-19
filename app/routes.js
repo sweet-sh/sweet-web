@@ -75,12 +75,13 @@ module.exports = function(app, passport) {
         if (req.isAuthenticated()){
           if (image.context === "user") {
             Relationship.find({
-              to: loggedInUserData.email,
+              toUser: loggedInUserData._id,
               value: "trust"
             })
             .then(trusts => {
-              usersWhoTrustMe = trusts.map(a => a._id.toString());
+              usersWhoTrustMe = trusts.map(a => a.fromUser.toString());
               usersWhoTrustMe.push(req.user._id.toString());
+              console.log(usersWhoTrustMe)
               if (usersWhoTrustMe.includes(image.user)){
                 res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
               }
@@ -524,32 +525,24 @@ module.exports = function(app, passport) {
   })
 
   app.post('/api/user/followers', isLoggedIn, function(req, res) {
-    myFollowedUserEmails = []
-    myFollowedUserData = []
+    followedUserData = []
     Relationship.find({
-      from: loggedInUserData.email,
+      fromUser: loggedInUserData._id,
       value: "follow"
     })
-    .then((follows) => {
-      for (var key in follows) {
-        var follow = follows[key];
-        myFollowedUserEmails.push(follow.to);
-      }
-      User.find({
-        email: { $in: myFollowedUserEmails }
+    .populate("toUser")
+    .then((followedUsers) => {
+      followedUsers.forEach(relationship => {
+        var follower = {
+          key: (relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
+          value: relationship.toUser.username,
+          image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
+        }
+        followedUserData.push(follower)
       })
-      .then(users => {
-        users.forEach(user => {
-          var follower = {
-            key: (user.displayName ? user.displayName : '@' + user.username),
-            value: user.username,
-            image: (user.imageEnabled ? user.image : 'cake.svg')
-          }
-          myFollowedUserData.push(follower)
-        })
-        res.setHeader('content-type', 'text/plain');
-        res.end(JSON.stringify({followers: myFollowedUserData}));
-      })
+      console.log(followedUserData)
+      res.setHeader('content-type', 'text/plain');
+      res.end(JSON.stringify({followers: followedUserData}));
     })
     .catch((err) => {
       console.log("Error in profileData.")
@@ -2084,6 +2077,8 @@ module.exports = function(app, passport) {
           const flag = new Relationship({
             from: from.email,
             to: to.email,
+            fromUser: req.params.from,
+            toUser: req.params.to,
             value: req.params.type
           });
           flag.save()
@@ -2097,12 +2092,15 @@ module.exports = function(app, passport) {
           })
           .catch((err) => {
             console.log("Database error.")
+            console.log(err)
           });
         }
         else if (req.params.action = "delete"){
           Relationship.findOneAndRemove({
             from:  from.email,
             to: to.email,
+            fromUser: from._id,
+            toUser: to._id,
             value: req.params.type
           }).then(() => {
             res.end('{"success" : "Updated Successfully", "status" : 200}');
