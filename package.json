@@ -4,7 +4,7 @@
   "description": "A lightweight, trust- and community-based social network",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",

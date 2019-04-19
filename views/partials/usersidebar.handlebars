@@ -130,7 +130,7 @@
   <h5>Communities</h5>
   <div id="communitiesList" class="user-list">
     {{#each communitiesData}}
-      <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="{{#if this.imageEnabled}}/images/communities/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+      <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
     {{/each}}
   </div>
 {{/if}}

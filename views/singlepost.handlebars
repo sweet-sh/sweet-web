@@ -4,7 +4,7 @@
       {{#if canDisplay}}
         <article class="comment commentContainer" data-post-id="{{post._id}}">
           <div class="row">
-            <div class="col commentText">
+            <div class="col commentContent">
               {{#eq post.type "boost"}}
                 <p class="text-secondary">
                   <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{post.owner}}" class="text-secondary">@{{post.owner}}</a></strong>
@@ -56,7 +56,7 @@
               {{#if post.images}}
                 <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}}">
                   {{#each post.images}}
-                    <img alt="{{#if ../post.imageDescriptions}}{{../post.imageDescriptions}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/images/uploads/{{this}}" data-featherlight="/images/uploads/{{this}}"/>
+                    <img alt="{{#if ../post.imageDescriptions}}{{../post.imageDescriptions}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                   {{/each}}
                 </div>
               {{/if}}
@@ -101,18 +101,23 @@
                   <i class="fas fa-link"></i>
                 </a>
               </div>
-              {{#eq loggedInUserData.username post.owner}}
-                <div id="authorTools">
+              <div id="authorTools">
+                {{#contains post.subscribedUsers loggedInUserData._id}}
+                  <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="{{post._id}}">
+                    <i class="far fa-bell"></i>
+                  </button>
+                {{/contains}}
+                {{#contains post.unsubscribedUsers loggedInUserData._id}}
+                  <button type="button" class="btn btn-link btn-sm unmutePost post-action-button" data-post-id="{{post._id}}">
+                    <i class="far fa-bell-slash"></i>
+                  </button>
+                {{/contains}}
+                {{#eq loggedInUserData.username post.owner}}
                   <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{post.deleteid}}">
                     <i class="far fa-trash-alt"></i>
                   </button>
-                  <!-- <form class="d-inline" action="/deletecomment/{{../eventData.[0].id}}/{{this._id}}/{{../eventData.[0].editToken}}" method="post">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm editPost">
-                      <i class="fas fa-pencil-alt"></i>
-                    </button>
-                  </form> -->
-                </div>
-              {{/eq}}
+                {{/eq}}
+              </div>
             </div>
           </div>
           {{#unless post.commentsDisabled}}
@@ -173,7 +178,7 @@
       {{else}}
       <article class="comment commentContainer">
         <div class="row">
-          <div class="col commentText">
+          <div class="col commentContent">
             <p>
               This post can not be displayed. Possible reasons for this are:
             </p>

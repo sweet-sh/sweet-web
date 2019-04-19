@@ -3,7 +3,7 @@
   {{#isnt this.type "community"}}
     <article class="comment commentContainer" data-post-id="{{this._id}}">
       <div class="row">
-        <div class="col commentText">
+        <div class="col commentContent">
           {{#eq this.type "boost"}}
             <p class="text-secondary">
               <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
@@ -58,7 +58,7 @@
           {{#if this.images}}
             <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
               {{#each this.images}}
-                <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/images/uploads/{{this}}" data-featherlight="/images/uploads/{{this}}"/>
+                <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
               {{/each}}
             </div>
           {{/if}}
@@ -93,18 +93,23 @@
               <i class="fas fa-link"></i>
             </a>
           </div>
-          {{#eq ../loggedInUserData.username this.owner}}
-            <div id="authorTools">
+          <div id="authorTools">
+            {{#contains this.subscribedUsers ../loggedInUserData._id}}
+              <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
+                <i class="far fa-bell"></i>
+              </button>
+            {{/contains}}
+            {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
+              <button type="button" class="btn btn-link btn-sm unmutePost post-action-button" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
+                <i class="far fa-bell-slash"></i>
+              </button>
+            {{/contains}}
+            {{#eq ../loggedInUserData.username this.owner}}
               <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                 <i class="far fa-trash-alt"></i>
               </button>
-              <!-- <form class="d-inline" action="/deletecomment/{{../eventData.[0].id}}/{{this._id}}/{{../eventData.[0].editToken}}" method="post">
-                <button type="submit" class="btn btn-outline-secondary btn-sm editPost">
-                  <i class="fas fa-pencil-alt"></i>
-                </button>
-              </form> -->
-            </div>
-          {{/eq}}
+            {{/eq}}
+          </div>
         </div>
       </div>
       {{#unless this.commentsDisabled}}
@@ -151,7 +156,7 @@
       {{!-- SECTION: Community post and the user is a member of this community --}}
       <article class="comment commentContainer" data-post-id="{{this._id}}">
         <div class="row">
-          <div class="col commentText">
+          <div class="col commentContent">
             {{#eq this.type "boost"}}
               <p class="text-secondary">
                 <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
@@ -203,7 +208,7 @@
             {{#if this.images}}
               <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
                 {{#each this.images}}
-                  <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/images/uploads/{{this}}" data-featherlight="/images/uploads/{{this}}"/>
+                  <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                 {{/each}}
               </div>
             {{/if}}
@@ -237,18 +242,23 @@
                 <i class="fas fa-link"></i>
               </a>
             </div>
-            {{#eq ../loggedInUserData.username this.owner}}
-              <div id="authorTools">
+            <div id="authorTools">
+              {{#contains this.subscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="{{this._id}}">
+                  <i class="far fa-bell"></i>
+                </button>
+              {{/contains}}
+              {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="btn btn-link btn-sm unmutePost post-action-button" data-post-id="{{this._id}}">
+                  <i class="far fa-bell-slash"></i>
+                </button>
+              {{/contains}}
+              {{#eq ../loggedInUserData.username this.owner}}
                 <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <!-- <form class="d-inline" action="/deletecomment/{{../eventData.[0].id}}/{{this._id}}/{{../eventData.[0].editToken}}" method="post">
-                  <button type="submit" class="btn btn-outline-secondary btn-sm editPost">
-                    <i class="fas fa-pencil-alt"></i>
-                  </button>
-                </form> -->
-              </div>
-            {{/eq}}
+              {{/eq}}
+            </div>
           </div>
         </div>
         {{#unless this.commentsDisabled}}
@@ -298,7 +308,7 @@
         {{!-- SECTION: So we only show it if you're in the community --}}
         <article class="comment commentContainer" data-post-id="{{this._id}}">
           <div class="row">
-            <div class="col commentText">
+            <div class="col commentContent">
               {{#eq this.type "boost"}}
                 <p class="text-secondary">
                   <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
@@ -342,7 +352,7 @@
               {{#if this.images}}
                 <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
                   {{#each this.images}}
-                    <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/images/uploads/{{this}}" data-featherlight="/images/uploads/{{this}}"/>
+                    <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                   {{/each}}
                 </div>
               {{/if}}
@@ -362,18 +372,23 @@
                   <i class="fas fa-link"></i>
                 </a>
               </div>
-              {{#eq ../loggedInUserData.username this.owner}}
-                <div id="authorTools">
+              <div id="authorTools">
+                {{#contains this.subscribedUsers ../loggedInUserData._id}}
+                  <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="{{this._id}}">
+                    <i class="far fa-bell"></i>
+                  </button>
+                {{/contains}}
+                {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
+                  <button type="button" class="btn btn-link btn-sm unmutePost post-action-button" data-post-id="{{this._id}}">
+                    <i class="far fa-bell-slash"></i>
+                  </button>
+                {{/contains}}
+                {{#eq ../loggedInUserData.username this.owner}}
                   <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                     <i class="far fa-trash-alt"></i>
                   </button>
-                  <!-- <form class="d-inline" action="/deletecomment/{{../eventData.[0].id}}/{{this._id}}/{{../eventData.[0].editToken}}" method="post">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm editPost">
-                      <i class="fas fa-pencil-alt"></i>
-                    </button>
-                  </form> -->
-                </div>
-              {{/eq}}
+                {{/eq}}
+              </div>
             </div>
           </div>
           {{#unless this.commentsDisabled}}

@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var passport = require('passport');
 var flash    = require('connect-flash');
 var helpers = require('handlebars-helpers')();
+var path = require('path');
 
 var expressValidator = require('express-validator');
 app.use(expressValidator());
@@ -83,6 +84,8 @@ app.on('SIGINT', function() {
      process.exit(err ? 1 : 0);
    });
 });
+
+global.appRoot = path.resolve(__dirname);
 
 // routes ======================================================================
 require('./app/notifier.js')

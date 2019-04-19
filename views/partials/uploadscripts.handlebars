@@ -18,7 +18,7 @@ $(function() {
       var fd = new FormData();
       fd.append('image', e.detail.cachedFileArray[0]);
       $.ajax({
-        url: '/api/image',
+        url: '/api/image/v2',
         type: 'POST',
         data: fd,
         processData: false,
@@ -41,6 +41,18 @@ $(function() {
       })
     }
   })
+  // document.onpaste = function(event){
+  //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  //   for (var i = 0 ; i < items.length ; i++) {
+  //     var item = items[i];
+  //     if (item.type.indexOf("image") != -1) {
+  //       var file = item.getAsFile();
+  //       $('#imagePreviewContainer').slideDown('fast');
+  //       upload_file_with_ajax(file);
+  //     }
+  //   }
+  // }
+
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
     tribute = new Tribute({

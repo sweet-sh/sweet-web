@@ -47,7 +47,7 @@
           {{#each communityData.membershipRequests}}
             <div class="content-box">
               <div class="row">
-                <div class="col commentText">
+                <div class="col commentContent">
                   <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
                     <div class="d-flex align-items-center">
                       <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
@@ -79,7 +79,7 @@
             <a class="nav-item nav-link" id="nav-descriptionEditor-tab" data-toggle="tab" href="#nav-descriptionEditor" role="tab" aria-controls="nav-descriptionEditor" aria-selected="false">Description</a>
             <a class="nav-item nav-link" id="nav-rulesEditor-tab" data-toggle="tab" href="#nav-rulesEditor" role="tab" aria-controls="nav-rulesEditor" aria-selected="false">Rules</a>
             <a class="nav-item nav-link" id="nav-imageEditor-tab" data-toggle="tab" href="#nav-imageEditor" role="tab" aria-controls="nav-imageEditor" aria-selected="false">Image</a>
-            <a class="nav-item nav-link" id="nav-visibilityEditor-tab" data-toggle="tab" href="#nav-visibilityEditor" role="tab" aria-controls="nav-visibilityEditor" aria-selected="false">Visibilty</a>
+            <a class="nav-item nav-link" id="nav-visibilityEditor-tab" data-toggle="tab" href="#nav-visibilityEditor" role="tab" aria-controls="nav-visibilityEditor" aria-selected="false">Visibility</a>
             <a class="nav-item nav-link" id="nav-joinTypeEditor-tab" data-toggle="tab" href="#nav-joinTypeEditor" role="tab" aria-controls="nav-joinTypeEditor" aria-selected="false">Joining method</a>
             <a class="nav-item nav-link" id="nav-voteLengthEditor-tab" data-toggle="tab" href="#nav-voteLengthEditor" role="tab" aria-controls="nav-voteLengthEditor" aria-selected="false">Vote length</a>
           </div>
@@ -182,7 +182,7 @@
             {{else}}
               <div class="content-box">
                 <div class="row">
-                  <div class="col commentText">
+                  <div class="col commentContent">
                     <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
                       <div class="d-flex align-items-center">
                         <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
@@ -211,7 +211,7 @@
           {{#each communityData.mutedMembers}}
             <div class="content-box">
               <div class="row">
-                <div class="col commentText">
+                <div class="col commentContent">
                   <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
                     <div class="d-flex align-items-center">
                       <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
@@ -243,7 +243,7 @@
           {{#each communityData.bannedMembers}}
             <div class="content-box">
               <div class="row">
-                <div class="col commentText">
+                <div class="col commentContent">
                   <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
                     <div class="d-flex align-items-center">
                       <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />

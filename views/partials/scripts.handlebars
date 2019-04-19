@@ -1,6 +1,8 @@
 <script type="text/javascript">
 $(function() {
-  $('[data-toggle="tooltip"]').tooltip()
+  $('body').tooltip({
+    selector: '[data-toggle="tooltip"]'
+  });
   autosize($('textarea'));
   $("#notificationsContainer").load( "/api/notification/display" );
 
@@ -115,6 +117,26 @@ $(function() {
     $.post("/api/notification/update/"+$(this).attr("id"), function( data ) {
       window.location.href = link;
     });
+  })
+  $('body').on('click', '.mutePost', function(e) {
+    var button = $(this);
+    bootbox.confirm("You are currently receiving notifications when someone comments on this post. Would you like to mute this post to stop receiving these notifications? You will still be notified if someone mentions you.", function(result){
+      if (result == true) {
+        $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
+          button.removeClass('mutePost').addClass('unmutePost').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+        })
+      }
+    })
+  })
+  $('body').on('click', '.unmutePost', function(e) {
+    var button = $(this);
+    bootbox.confirm("You have muted this post. Would you like to unmute it and start receiving notifications when someone comments?", function(result){
+      if (result == true) {
+        $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
+          button.removeClass('unmutePost').addClass('mutePost').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+        })
+      }
+    })
   })
 });
 </script>

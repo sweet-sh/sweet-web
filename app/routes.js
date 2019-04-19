@@ -4,6 +4,7 @@ const Post    = require('../app/models/post');
 const Tag    = require('../app/models/tag');
 const Community    = require('../app/models/community');
 const Vote    = require('../app/models/vote');
+const Image    = require('../app/models/image');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 const reservedUsernames =  require('../config/reserved-usernames.js')
@@ -62,9 +63,64 @@ var imaggaOptions = {
 
 module.exports = function(app, passport) {
 
-  app.get('/api/post/display', function(req,res){
-
+  app.get('/api/image/display/:filename', function(req,res){
+    Image.findOne({
+      filename: req.params.filename
+    })
+    .then(image => {
+      if (image.privacy === "public"){
+        res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
+      }
+      else if (image.privacy === "private"){
+        if (req.isAuthenticated()){
+          if (image.context === "user") {
+            Relationship.find({
+              to: loggedInUserData.email,
+              value: "trust"
+            })
+            .then(trusts => {
+              usersWhoTrustMe = trusts.map(a => a._id.toString());
+              usersWhoTrustMe.push(req.user._id.toString());
+              if (usersWhoTrustMe.includes(image.user)){
+                res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
+              }
+              else {
+                res.status('404')
+                res.redirect('/404');
+              }
+            })
+          }
+          else if (image.context === "community") {
+            Community.find({
+              members: loggedInUserData._id
+            })
+            .then(communities => {
+              joinedCommunities = communities.map(a => a._id.toString());
+              if (joinedCommunities.includes(image.community)){
+                res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
+              }
+              else {
+                res.status('404')
+                res.redirect('/404');
+              }
+            })
+          }
+        }
+        else {
+          console.log("Not logged in")
+          res.redirect('/404');
+          res.status('404')
+        }
+      }
+    })
+    .catch(error => {
+      res.status('404');
+    })
   })
+
+  // app.get('/api/post/display', function(req,res){
+  //
+  // })
 
   app.get('/', function(req, res) {
     if (req.isAuthenticated()){
@@ -388,7 +444,6 @@ module.exports = function(app, passport) {
   });
 
   app.get('/home', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     res.render('home', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -407,7 +462,6 @@ module.exports = function(app, passport) {
   });
 
   app.get('/tag/:name', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     Tag.findOne({
       name: req.params.name
     })
@@ -426,7 +480,6 @@ module.exports = function(app, passport) {
   })
 
   app.get('/settings', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     res.render('settings', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -435,7 +488,6 @@ module.exports = function(app, passport) {
   })
 
   app.post('/updatesettings', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     let updatedSettings = req.body;
     User.update({
       _id: loggedInUserData._id
@@ -455,7 +507,6 @@ module.exports = function(app, passport) {
   })
 
   app.get('/search', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     res.render('search', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -464,7 +515,6 @@ module.exports = function(app, passport) {
   })
 
   app.get('/search/:query', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     res.render('search', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -474,7 +524,6 @@ module.exports = function(app, passport) {
   })
 
   app.post('/api/user/followers', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     myFollowedUserEmails = []
     myFollowedUserData = []
     Relationship.find({
@@ -513,7 +562,6 @@ module.exports = function(app, passport) {
     let postsPerPage = 10;
     let page = req.params.page-1;
 
-    let loggedInUserData = req.user;
     let query = req.params.query.trim();
     if (!query.length){
       res.status(404)
@@ -777,7 +825,13 @@ module.exports = function(app, passport) {
         var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
         if (req.params.context == "home") {
           var postDisplayContext = {
-            authorEmail: { $in: myFollowedUserEmails }
+            "$or": [
+              { authorEmail: { $in: myFollowedUserEmails } },
+              {
+                type: 'community',
+                community: { $in: myCommunities }
+              }
+            ]
           }
         }
         else if (req.params.context == "user"){
@@ -878,6 +932,18 @@ module.exports = function(app, passport) {
                 lastCommentAuthor = "";
               }
 
+              imageUrlsArray = []
+              if (displayContext.imageVersion === 2){
+                displayContext.images.forEach(image => {
+                  imageUrlsArray.push('/api/image/display/' + image)
+                })
+              }
+              else {
+                displayContext.images.forEach(image => {
+                  imageUrlsArray.push('/images/uploads/' + image)
+                })
+              }
+
               displayedPost = {
                 canDisplay: canDisplay,
                 _id: displayContext._id,
@@ -902,14 +968,16 @@ module.exports = function(app, passport) {
                 comments: displayContext.comments,
                 numberOfComments: displayContext.numberOfComments,
                 contentWarnings: displayContext.contentWarnings,
-                images: displayContext.images,
+                images: imageUrlsArray,
                 imageTags: displayContext.imageTags,
                 imageDescriptions: displayContext.imageDescriptions,
                 community: displayContext.community,
                 boosts: displayContext.boosts,
                 boostTarget: post.boostTarget,
                 recentlyCommented: recentlyCommented,
-                lastCommentAuthor: lastCommentAuthor
+                lastCommentAuthor: lastCommentAuthor,
+                subscribedUsers: displayContext.subscribedUsers,
+                unsubscribedUsers: displayContext.unsubscribedUsers
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1015,7 +1083,9 @@ module.exports = function(app, passport) {
                 boosts: displayContext.boosts,
                 boostTarget: post.boostTarget,
                 recentlyCommented: recentlyCommented,
-                lastCommentAuthor: lastCommentAuthor
+                lastCommentAuthor: lastCommentAuthor,
+                subscribedUsers: displayContext.subscribedUsers,
+                unsubscribedUsers: displayContext.unsubscribedUsers
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1047,8 +1117,6 @@ module.exports = function(app, passport) {
   })
 
   app.get('/showtag/:name/:page', isLoggedIn, function(req, res){
-    let loggedInUserData = req.user;
-
     let postsPerPage = 10;
     let page = req.params.page-1;
 
@@ -1160,6 +1228,19 @@ module.exports = function(app, passport) {
                 else {
                   parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
                 }
+
+                imageUrlsArray = []
+                if (displayContext.imageVersion === 2){
+                  displayContext.images.forEach(image => {
+                    imageUrlsArray.push('/api/image/display/' + image)
+                  })
+                }
+                else {
+                  displayContext.images.forEach(image => {
+                    imageUrlsArray.push('/images/uploads/' + image)
+                  })
+                }
+
                 displayedPost = {
                   canDisplay: canDisplay,
                   _id: displayContext._id,
@@ -1184,10 +1265,16 @@ module.exports = function(app, passport) {
                   comments: displayContext.comments,
                   numberOfComments: displayContext.numberOfComments,
                   contentWarnings: displayContext.contentWarnings,
-                  images: displayContext.images,
+                  images: imageUrlsArray,
                   imageTags: displayContext.imageTags,
                   imageDescriptions: displayContext.imageDescriptions,
-                  community: displayContext.community
+                  community: displayContext.community,
+                  boosts: displayContext.boosts,
+                  boostTarget: post.boostTarget,
+                  recentlyCommented: recentlyCommented,
+                  lastCommentAuthor: lastCommentAuthor,
+                  subscribedUsers: displayContext.subscribedUsers,
+                  unsubscribedUsers: displayContext.unsubscribedUsers
                 }
                 displayedPost.comments.forEach(function(comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1242,17 +1329,28 @@ module.exports = function(app, passport) {
     }
 
     let communitiesData = (user) => {
-      return User.findOne({
-          username: req.params.username
-        })
-        .populate('communities')
-        .then((user) => {
-          results.communitiesData = user.communities
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
+      return Community.find({
+        members: results.profileData._id
+      })
+      .then((communities) => {
+        results.communitiesData = communities
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+      // }
+      // return User.findOne({
+      //     username: req.params.username
+      //   })
+      //   .populate('communities')
+      //   .then((user) => {
+      //     results.communitiesData = user.communities
+      //   })
+      //   .catch((err) => {
+      //     console.log("Error in profileData.")
+      //     console.log(err);
+      //   });
     }
 
     let flagsOnUser = (user) => {
@@ -1798,6 +1896,19 @@ module.exports = function(app, passport) {
             recentlyCommented = false;
             lastCommentAuthor = "";
           }
+
+          imageUrlsArray = []
+          if (displayContext.imageVersion === 2){
+            displayContext.images.forEach(image => {
+              imageUrlsArray.push('/api/image/display/' + image)
+            })
+          }
+          else {
+            displayContext.images.forEach(image => {
+              imageUrlsArray.push('/images/uploads/' + image)
+            })
+          }
+
           displayedPost = {
             canDisplay: canDisplay,
             _id: displayContext._id,
@@ -1822,12 +1933,14 @@ module.exports = function(app, passport) {
             comments: displayContext.comments,
             numberOfComments: displayContext.numberOfComments,
             contentWarnings: displayContext.contentWarnings,
-            images: displayContext.images,
+            images: imageUrlsArray,
             imageTags: displayContext.imageTags,
             imageDescriptions: displayContext.imageDescriptions,
             community: displayContext.community,
             recentlyCommented: recentlyCommented,
-            lastCommentAuthor: lastCommentAuthor
+            lastCommentAuthor: lastCommentAuthor,
+            subscribedUsers: displayContext.subscribedUsers,
+            unsubscribedUsers: displayContext.unsubscribedUsers
           }
           displayedPost.comments.forEach(function(comment) {
             comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -2003,7 +2116,6 @@ module.exports = function(app, passport) {
   });
 
   app.post("/updateprofile", isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     let imageEnabled = loggedInUserData.imageEnabled;
     let imageFilename = loggedInUserData.image;
 		if (Object.keys(req.files).length != 0) {
@@ -2151,6 +2263,87 @@ module.exports = function(app, passport) {
     }
   })
 
+  app.post("/api/image/v2", isLoggedIn, function(req, res) {
+    if (req.files.image) {
+      if (req.files.image.size <= 10485760){
+        let imageFormat = fileType(req.files.image.data);
+        let imageUrl = shortid.generate();
+        if (imageFormat.mime == "image/gif") {
+          if (req.files.image.size <= 5242880){
+            var imageData = req.files.image.data;
+            console.log(imageUrl + '.gif');
+            fs.writeFile('./cdn/images/' + imageUrl + '.gif', imageData, 'base64', function(err) {
+              if(err) {
+                return console.log(err);
+              }
+              // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
+              // .then((tags) => {
+              //   if (tags.auto){
+              //     imageTags = tags.auto.join(", ");
+              //   }
+              //   else {
+              //     imageTags = ""
+              //   }
+                imageTags = ""
+                res.setHeader('content-type', 'text/plain');
+                res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
+              // })
+              // .catch(err => {
+              //   console.error(err);
+              //   imageTags = ""
+              //   res.setHeader('content-type', 'text/plain');
+              //   res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
+              // })
+            })
+          }
+          else {
+            res.setHeader('content-type', 'text/plain');
+            res.end(JSON.stringify({error: "filesize"}));
+          }
+        }
+        else if (imageFormat.mime == "image/jpeg" || imageFormat.mime == "image/png") {
+          sharp(req.files.image.data)
+            .resize({
+              width: 1200,
+              withoutEnlargement: true
+            })
+            .rotate()
+            .jpeg({
+              quality: 70
+            })
+            .toFile('./cdn/images/' + imageUrl + '.jpg')
+            .then(image => {
+              // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
+              // .then((tags) => {
+              //   if (tags.auto){
+              //     imageTags = tags.auto.join(", ");
+              //   }
+              //   else {
+              //     imageTags = ""
+              //   }
+              imageTags = ""
+                res.setHeader('content-type', 'text/plain');
+                res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags}));
+              // })
+              // .catch(err => {
+              //   console.error(err);
+              //   imageTags = ""
+              //   res.setHeader('content-type', 'text/plain');
+              //   res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags}));
+              // })
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        }
+      }
+      else {
+        res.setHeader('content-type', 'text/plain');
+        res.end(JSON.stringify({error: "filesize"}));
+      }
+    }
+  })
+
   app.post("/createpost", isLoggedIn, function(req, res) {
 
     function wordCount(str) {
@@ -2159,13 +2352,11 @@ module.exports = function(app, passport) {
                 .length;
     }
 
-    let loggedInUserData = req.user;
     newPostUrl = shortid.generate();
     var postPrivacy = req.body.postPrivacy;
     var postImage = req.body.postImageUrl != "" ? [req.body.postImageUrl] : [];
     var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
     var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
-
     let formattingEnabled = req.body.postFormattingEnabled ? true : false;
 
     // Parse post content
@@ -2229,11 +2420,25 @@ module.exports = function(app, passport) {
       mentions: trimmedPostMentions,
       tags: trimmedPostTags,
       contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
+      imageVersion: 2,
       images: postImage,
       imageTags: postImageTags,
-      imageDescriptions: postImageDescription
+      imageDescriptions: postImageDescription,
+      subscribedUsers: [loggedInUserData._id]
     });
     let newPostId = post._id;
+
+    // Parse images
+    if (req.body.postImageUrl){
+      image = new Image({
+        context: "user",
+        filename: postImage,
+        privacy: postPrivacy,
+        user: loggedInUserData._id
+      })
+      image.save();
+    }
+
     post.save()
     .then(() => {
       trimmedPostTags.forEach((tag) => {
@@ -2286,15 +2491,21 @@ module.exports = function(app, passport) {
   })
 
   app.post("/deletepost/:postid", isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
+
+      // Delete images
       post.images.forEach((image) => {
-        fs.unlink('/home/raphael/sweet/public/images/uploads/' + image, (err) => {
-          if (err) throw err;
-          console.log('./public/images/uploads/' + image + ' deleted');
-        })
+        if (post.imageVersion === 2){
+          fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {console.log("Image deletion error " + err)})
+        }
+        else {
+          fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {console.log("Image deletion error " + err)})
+        }
+        Image.deleteOne({"filename": image})
       })
+
+      // Delete tags
       post.tags.forEach((tag) => {
         Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
         .then((tag) => {
@@ -2304,6 +2515,8 @@ module.exports = function(app, passport) {
           console.log("Database error: " + err)
         })
       })
+
+      // Delete boosts
       if (post.type == "original") {
         post.boosts.forEach((boost) => {
           Post.deleteOne({"_id": boost})
@@ -2315,6 +2528,16 @@ module.exports = function(app, passport) {
           })
         })
       }
+
+      // Delete notifications
+      User.update(
+        { },
+        { $pull: { notifications: { subjectId: post._id } } },
+        { multi: true }
+      )
+      .then(response => {
+        console.log(response)
+      })
     })
     .catch((err) => {
       console.log("Database error: " + err)
@@ -2331,7 +2554,6 @@ module.exports = function(app, passport) {
   });
 
   app.post("/createcomment/:postid", isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     // Parse comment content
     let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
@@ -2383,8 +2605,8 @@ module.exports = function(app, passport) {
       post.numberOfComments = post.comments.length;
       post.lastUpdated = new Date();
       // Add user to subscribed users for post
-      if (post.author._id.toString() != loggedInUserData._id.toString()){ // Don't subscribe to your own post!
-        post.subscribedUsers.push(loggedInUserData._id);
+      if ((post.author._id.toString() != loggedInUserData._id.toString() || post.subscribedUsers.includes(loggedInUserData._id.toString()) === false)){ // Don't subscribe to your own post, or to a post you're already subscribed to
+        post.subscribedUsers.push(loggedInUserData._id.toString());
       }
 			post.save()
       .then(() => {
@@ -2392,20 +2614,55 @@ module.exports = function(app, passport) {
           "_id": post.author._id
         })
         .then((user) => {
-          if ((post.author._id.toString() != loggedInUserData._id.toString())){ // You don't need to know about your own comments!
+          subscribedUsers = post.subscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
+          unsubscribedUsers = post.unsubscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
+          if (post.author._id.toString() != loggedInUserData._id.toString() && (post.unsubscribedUsers.includes(post.author._id.toString()) === false)){ // You don't need to know about your own comments, and about replies on your posts you're not subscribed to
             notifier.notify('user', 'reply', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
           }
-          post.subscribedUsers.forEach(user => {
-            if ((user.toString() != loggedInUserData._id.toString()) && (user.toString() != post.author._id.toString())){ // Do not get notified when you make a comment on a post you're already subscribed to, and don't notify the post author.
-              notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
+
+          function notifySubscribedUsers() {
+            if (postPrivacy == "private"){
+              checkTrust = true;
             }
-          })
+            else {
+              checkTrust = false;
+            }
+            subscribedUsers.forEach(user => {
+              // console.log("Checking if trustedUserIds contains " + user)
+              // console.log(trustedUserIds.includes(user) === checkTrust);
+              if ((user.toString() != loggedInUserData._id.toString()) && (user.toString() != post.author._id.toString()) && (post.unsubscribedUsers.includes(user.toString()) === false) && (trustedUserIds.includes(user.toString()) === checkTrust)){ // Do not notify yourself, and don't notify the post author (because they get a different notification, above) or unsubscribed users, and don't notify people who you don't trust if it's a private post
+                notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
+              }
+            })
+          }
+
+          // Stopgap code to check if people being notified of replies on a private post can actually view it (are trusted by the post's author)
+          if (postPrivacy == "private"){
+            Relationship.find({
+              from: post.author.email,
+              value: "trust"
+            }, {'to':1})
+            .then((emails) => {
+              trustedUserEmails = emails.map(({ to }) => to)
+              User.find({
+                email: { $in: trustedUserEmails }
+              }, "_id")
+              .then(users => {
+                trustedUserIds = users.map(({ _id }) => _id.toString())
+                notifySubscribedUsers();
+              })
+            });
+          }
+          else {
+            trustedUserIds = []
+            notifySubscribedUsers();
+          }
         })
         if (postPrivacy == "private"){
           console.log("This comment is private!")
-          // Make sure to only notify mentioned people if they are trusted
+          // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post)
           Relationship.find({
-            from: loggedInUserData.email,
+            from: post.author.email,
             value: "trust"
           }, {'to':1})
           .then((emails) => {
@@ -2461,10 +2718,8 @@ module.exports = function(app, passport) {
           content: parsedContent
         }
         console.log(result);
-        // res.sendStatus(200);
         res.contentType('json');
         res.send(JSON.stringify(result));
-        // res.redirect("/" + post.author.username + "/" + post.url);
       })
       .catch((err) => {
         console.log("Database error: " + err)
@@ -2473,7 +2728,6 @@ module.exports = function(app, passport) {
   });
 
   app.post("/deletecomment/:postid/:commentid", isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
       var commentRemove = post.comments.id(req.params.commentid).remove();
@@ -2492,7 +2746,6 @@ module.exports = function(app, passport) {
   });
 
   app.post('/createboost/:postid', isLoggedIn, function(req, res) {
-    let loggedInUserData = req.user;
     newPostUrl = shortid.generate();
     Post.findOne({
       '_id': req.params.postid
@@ -2516,6 +2769,40 @@ module.exports = function(app, passport) {
       boost.save().then(() => {
         notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
         res.redirect("back");
+      })
+    })
+  })
+
+  app.post('/api/post/unsubscribe/:postid', isLoggedIn, function(req,res) {
+    Post.findOne({
+      _id: req.params.postid
+    })
+    .then(post => {
+      post.subscribedUsers.pull(loggedInUserData._id)
+      post.unsubscribedUsers.push(loggedInUserData._id)
+      post.save()
+      .then(response => {
+        res.sendStatus(200);
+      })
+      .catch(error => {
+        console.error(error);
+      })
+    })
+  })
+
+  app.post('/api/post/subscribe/:postid', isLoggedIn, function(req,res) {
+    Post.findOne({
+      _id: req.params.postid
+    })
+    .then(post => {
+      post.unsubscribedUsers.pull(loggedInUserData._id)
+      post.subscribedUsers.push(loggedInUserData._id)
+      post.save()
+      .then(response => {
+        res.sendStatus(200);
+      })
+      .catch(error => {
+        console.error(error);
       })
     })
   })
@@ -2560,8 +2847,10 @@ module.exports = function(app, passport) {
 };
 
 function isLoggedIn(req, res, next) {
-  if (req.isAuthenticated())
+  if (req.isAuthenticated()){
+    loggedInUserData = req.user;
     return next();
+  }
   res.redirect('/');
 }
 

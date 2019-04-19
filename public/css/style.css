@@ -69,7 +69,7 @@ a {
   padding-left: 1px;
 }
 
-.deletePost {
+#authorTools > button {
   text-align: right;
   padding-right: 0px;
 }
@@ -238,7 +238,7 @@ hr {
     /* background: #f8f8f8; */
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-.commentText {
+.commentContent {
     overflow: hidden;
     word-wrap: break-word;
 }
@@ -267,6 +267,10 @@ hr {
   padding-top: 20px;
   padding-left: 20px;
   padding-right: 20px;
+}
+
+.individualReplyContainer {
+    word-wrap: break-word;
 }
 
 .user-list {
@@ -389,7 +393,7 @@ hr {
 
 .notification-active {
   font-weight: 500;
-  background: #f8f9fa;
+  background: #eeecec;
 }
 
 #alertModal,
@@ -506,6 +510,7 @@ hr {
   display: flex;
   flex-direction: column;
   overflow: none;
+  flex: 1;
 }
 
 .post-meta>p {
@@ -514,6 +519,7 @@ hr {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  width: 90%;
 }
 
 .show-more-content {
@@ -713,4 +719,16 @@ hr {
 
 .content-warning-images {
     display: none;
+}
+
+.subscribed-alert {
+  font-size: 90%;
+  text-align: center;
+  color: #909090;
+  margin-bottom: 1rem;
+}
+
+.subscribed-alert a{
+  color: #6f6f6f;
+  font-weight: 500;
 }

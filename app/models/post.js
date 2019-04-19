@@ -62,10 +62,12 @@ var postSchema = new mongoose.Schema({
   boosts: [String],
   contentWarnings: String,
   commentsDisabled: Boolean,
+  imageVersion: Number,
   images: [String],
   imageTags: [String],
   imageDescriptions: [String],
-  subscribedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+  subscribedUsers: [String],
+  unsubscribedUsers: [String]
 });
 
 // create the model for users and expose it to our app

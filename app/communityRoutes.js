@@ -4,6 +4,7 @@ const Post    = require('../app/models/post');
 const Tag    = require('../app/models/tag');
 const Community    = require('../app/models/community');
 const Vote    = require('../app/models/vote');
+const Image    = require('../app/models/image');
 
 var ObjectId = require('mongoose').Types.ObjectId;
 
@@ -80,17 +81,25 @@ module.exports = function(app, passport) {
   })
 
   app.get('/communities', isLoggedIn, function(req, res) {
-    User.findOne({
-      _id: loggedInUserData._id
+    // User.findOne({
+    //   _id: loggedInUserData._id
+    // })
+    // .populate('communities')
+    // .then((user) => {
+    Community.find({
+      members: loggedInUserData._id
     })
-    .populate('communities')
-    .then((user) => {
+    .then((communities) => {
       res.render('communities', {
         loggedIn: true,
         loggedInUserData: loggedInUserData,
-        communities: user.communities
+        communities: communities
       })
     })
+    .catch((err) => {
+      console.log("Error in profileData.")
+      console.log(err);
+    });
   });
 
   app.get('/community/:slug', function(req, res) {
@@ -820,7 +829,7 @@ module.exports = function(app, passport) {
               community[vote.reference + "Parsed"] = vote.parsedProposedValue;
             }
             else if (vote.reference == "image") {
-              fs.rename("/home/raphael/sweet/public/images/communities/staging/" + vote.proposedValue, "/home/raphael/sweet/public/images/communities/" + vote.proposedValue, function() {
+              fs.rename(global.appRoot + "/public/images/communities/staging/" + vote.proposedValue, global.appRoot + "/public/images/communities/" + vote.proposedValue, function() {
                 community[vote.reference] = vote.proposedValue;
                 community['imageEnabled'] = true;
                 community.save()
@@ -848,7 +857,6 @@ module.exports = function(app, passport) {
                 _id: vote.proposedValue
               })
               .then(user => {
-                // user.communities.pull(req.params.communityid);
                 user.mutedCommunities.push(req.params.communityid);
                 user.save()
               })
@@ -1015,11 +1023,32 @@ module.exports = function(app, passport) {
       mentions: trimmedPostMentions,
       tags: trimmedPostTags,
       contentWarnings: sanitize(req.body.postContentWarnings),
+      imageVersion: 2,
       images: postImage,
       imageTags: postImageTags,
-      imageDescriptions: postImageDescription
+      imageDescriptions: postImageDescription,
+      subscribedUsers: [loggedInUserData._id]
     });
     let newPostId = post._id;
+
+    // Parse images
+    if (req.body.postImageUrl){
+      Community.findOne({
+        _id: communityId
+      })
+      .then(community => {
+        image = new Image({
+          context: "community",
+          filename: postImage,
+          privacy: community.settings.visibility,
+          user: loggedInUserData._id,
+          community: communityId
+        })
+        image.save();
+      })
+
+    }
+
     post.save()
     .then(() => {
       trimmedPostTags.forEach((tag) => {
