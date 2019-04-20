@@ -2633,7 +2633,7 @@ module.exports = function(app, passport) {
               && (post.unsubscribedUsers.includes(user.toString()) === false) //don't notify undubscribed users
               && (trustedUserIds.includes(user.toString()) === checkTrust)){ //don't notify people who you don't trust if it's a private post
                 User.findById(user).then((thisuser) => {
-                  if(!trimmedCommentMentions.includes(thisuser.username)){
+                  if(!trimmedCommentMentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
                     notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
                   }
                 })
