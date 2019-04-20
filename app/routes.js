@@ -2628,13 +2628,15 @@ module.exports = function(app, passport) {
             subscribedUsers.forEach(user => {
               // console.log("Checking if trustedUserIds contains " + user)
               // console.log(trustedUserIds.includes(user) === checkTrust);// Do not notify yourself
-              if ((user.toString() != loggedInUserData._id.toString()) 
+              if ( (user.toString() != loggedInUserData._id.toString()) 
               && (user.toString() != post.author._id.toString()) //don't notify the post author (because they get a different notification, above)
               && (post.unsubscribedUsers.includes(user.toString()) === false) //don't notify undubscribed users
-              && (trustedUserIds.includes(user.toString()) === checkTrust) //don't notify people who you don't trust if it's a private post
-              && (!trimmedCommentMentions.find(user.username)) //don't notify someone who is mentioned and will be notified bc of that
-              ){
-                notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
+              && (trustedUserIds.includes(user.toString()) === checkTrust)){ //don't notify people who you don't trust if it's a private post
+                User.findById(user).then((thisuser) => {
+                  if(!trimmedCommentMentions.includes(thisuser.username)){
+                    notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
+                  }
+                })
               }
             })
           }
