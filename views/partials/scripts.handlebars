@@ -101,7 +101,7 @@ $(function() {
       if (data){
         textarea.val("");
         textarea[0].style.height = "";
-        let html = '<div class="individualReplyContainer"><p class="mb-1"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" />' + data.name + ' &middot; <small class="commentTimestamp text-muted">' + data.timestamp + '</small><button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="' + data.username + '"><i class="fas fa-reply"></i></button></p>' + data.content +'</div>'
+        let html = '<div class="individualReplyContainer"><p class="mb-1"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" />' + data.name + ' &middot; <small class="commentTimestamp text-muted">' + data.timestamp + '</small><button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">x</button></p>' + data.content +'</div>';
         $(html).hide().appendTo(commentsContainer).fadeIn();
         commentButton.prop('disabled', false);
       }

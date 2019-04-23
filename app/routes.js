@@ -2730,7 +2730,9 @@ module.exports = function(app, passport) {
           name: name,
           username: loggedInUserData.username,
           timestamp: moment(commentTimestamp).fromNow(),
-          content: parsedContent
+          content: parsedContent,
+          comment_id: post.comments[post.numberOfComments-1]._id.toString(),
+          post_id: post._id.toString()
         }
         console.log(result);
         res.contentType('json');
