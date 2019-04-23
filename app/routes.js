@@ -2614,9 +2614,15 @@ module.exports = function(app, passport) {
         .then((user) => {
           subscribedUsers = post.subscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
           unsubscribedUsers = post.unsubscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
+
+          // REPLY NOTIFICATION (X REPLIED TO YOUR POST)
+
           if (post.author._id.toString() != loggedInUserData._id.toString() && (post.unsubscribedUsers.includes(post.author._id.toString()) === false)){ // You don't need to know about your own comments, and about replies on your posts you're not subscribed to
+            console.log ("Notifying post author of a reply")
             notifier.notify('user', 'reply', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
           }
+
+          // SUBSCRIBED NOTIFICATION (X REPLIED TO POST YOU ALSO REPLIED TO)
 
           function notifySubscribedUsers() {
             if (postPrivacy == "private"){
@@ -2627,11 +2633,12 @@ module.exports = function(app, passport) {
             }
             subscribedUsers.forEach(user => {
               // console.log("Checking if trustedUserIds contains " + user)
-              // console.log(trustedUserIds.includes(user) === checkTrust);// Do not notify yourself
-              if ( (user.toString() != loggedInUserData._id.toString()) 
+              // console.log(trustedUserIds.includes(user) === checkTrust);
+              if ( (user.toString() != loggedInUserData._id.toString()) // Do not notify yourself
               && (user.toString() != post.author._id.toString()) //don't notify the post author (because they get a different notification, above)
               && (post.unsubscribedUsers.includes(user.toString()) === false) //don't notify undubscribed users
               && (trustedUserIds.includes(user.toString()) === checkTrust)){ //don't notify people who you don't trust if it's a private post
+                console.log("Notifying subscribed users")
                 User.findById(user).then((thisuser) => {
                   if(!trimmedCommentMentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
                     notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
@@ -2663,6 +2670,9 @@ module.exports = function(app, passport) {
             notifySubscribedUsers();
           }
         })
+
+        // MENTIONS NOTIFICATION (X MENTIONED YOU IN A REPLY)
+
         if (postPrivacy == "private"){
           console.log("This comment is private!")
           // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post)
@@ -2677,7 +2687,7 @@ module.exports = function(app, passport) {
                 username: mention
               })
               .then((user) => {
-                if (emailsArray.includes(user.email) && user.email != post.author.email) { // Don't send the post's author a second notification if they're also being mentioned
+                if (emailsArray.includes(user.email) && user.email != post.author.email && user.email != loggedInUserData.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
                   notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
                 }
               })
@@ -2696,7 +2706,7 @@ module.exports = function(app, passport) {
               username: mention
             })
             .then((user) => {
-              if (user.email != post.author.email) { // Don't send the post's author a second notification if they're also being mentioned
+              if (user.email != post.author.email && user.email != loggedInUserData.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
                 notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
               }
             })
