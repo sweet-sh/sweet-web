@@ -1307,7 +1307,7 @@ module.exports = function(app, passport) {
         })
         .then((user) => {
           if (!user){
-            console.log("no such user!")
+            console.log("no such user!");
             res.status(404).redirect('/404');
           }
           else {
@@ -2869,6 +2869,7 @@ function isLoggedIn(req, res, next) {
     return next();
   }
   res.redirect('/');
+  next('route');
 }
 
 function getTags(url) {
