@@ -461,6 +461,17 @@ hr {
   display: none;
 }
 
+#emojiWindow {
+  display:none;
+  cursor:default;
+  border:1px solid #ffffff;
+  border-radius:.25rem;
+}
+
+.emoji{
+  display:inline;
+}
+
 .content-warning {
   font-weight: 500;
 }
