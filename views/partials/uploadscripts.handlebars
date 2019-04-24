@@ -7,6 +7,12 @@ $(function() {
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
+  $("#Emoji").click(function(){
+    $("#emojiWindow").slideToggle("fast");
+  })
+  $(".emoji").click(function(){
+    $("#postContent")[0].value+=event.target.innerHTML;
+  })
   $("#postImageButton").click(function(){
     upload.selectImage();
     $('#imagePreviewContainer').slideDown('fast');

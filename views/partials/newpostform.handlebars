@@ -20,6 +20,28 @@
     </div>
     <input type="text" class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}"{{/if}}/>
   </div>
+  <div class="form-row my-2" id="emojiWindow">
+    <div style="margin-right:.75rem;display:inline;">Click to add:</div>
+    <div class="emoji">🍭</div>
+    <div class="emoji">🍬</div>
+    <div class="emoji">👍</div>
+    <div class="emoji">👎</div>
+    <div class="emoji">😀</div>
+    <div class="emoji">😎</div>
+    <div class="emoji">😍</div>
+    <div class="emoji">🤨</div>
+    <div class="emoji">😑</div>
+    <div class="emoji">😶</div>
+    <div class="emoji">🙃</div>
+    <div class="emoji">👻</div>
+    <div class="emoji">🐶</div>
+    <div class="emoji">🐱</div>
+    <div class="emoji">🌞</div>
+    <div class="emoji">🌝</div>
+    <div class="emoji">❤️</div>
+    <div class="emoji">💯</div>
+    <div class="emoji">🏳️‍🌈</div>
+  </div>
   <div id="postControls" class="form-row mt-2">
     {{#unless isMember}}
       <div class="switch-field" id="visibilityControls">
@@ -37,6 +59,7 @@
       <!-- <input type="file" name="postImage" id="postImageUpload" accept="image/*"> -->
       <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
       <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
+      <button type="button" class="btn btn-primary btn-fade" id="Emoji">Emoji</button>
       <button type="submit" class="btn btn-primary btn-fade" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
