@@ -19,6 +19,7 @@ var notificationSchema = new mongoose.Schema({
 var userSchema = new mongoose.Schema({
   joined: Date,
   lastOnline: Date,
+  lastUpdated: { type: Date, required: true, default: Date.now() },
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
   verificationTokenExpiry: { type: Date },
