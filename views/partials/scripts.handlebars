@@ -88,6 +88,14 @@ $(function() {
             divToDelete.remove();
           });
         });
+        let counterToChange = element.closest(".commentContainer").find(".openReplyBox")[0];
+        let regex = /\s|[(-)]/gi;
+        let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))-1;
+        if(newCommentCount!=0){
+          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount+1) + ")", "(" + (newCommentCount) + ")");
+        }else{
+          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount+1) + ")","");
+        }
       }
     });
   })
@@ -104,6 +112,14 @@ $(function() {
         let html = '<div class="individualReplyContainer"><p class="mb-1"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" />' + data.name + ' &middot; <small class="commentTimestamp text-muted">' + data.timestamp + '</small><button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">x</button></p>' + data.content +'</div>';
         $(html).hide().appendTo(commentsContainer).fadeIn();
         commentButton.prop('disabled', false);
+        let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];
+        let regex = /\s|[(-)]/gi;
+        if(counterToChange.textContent.replace(regex,"") === ""){
+          counterToChange.innerHTML = counterToChange.innerHTML + " (1)";
+        }else{
+          let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
+          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
+        }
       }
       else {
         let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
