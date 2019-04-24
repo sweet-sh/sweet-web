@@ -93,7 +93,8 @@ module.exports = function(app, passport) {
       res.render('communities', {
         loggedIn: true,
         loggedInUserData: loggedInUserData,
-        communities: communities
+        communities: communities,
+        activePage: 'communities'
       })
     })
     .catch((err) => {

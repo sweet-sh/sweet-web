@@ -17,8 +17,9 @@
   {{/each}}
 
   <script type="text/javascript">
+    console.log(notificationsCount)
     if (notificationsCount > 0) {
-      $("#notificationsCount").text(notificationsCount);
+      $(".notifications-count").text(notificationsCount);
       document.title = '(' + notificationsCount + ') sweet';
     }
   </script>

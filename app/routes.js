@@ -480,6 +480,30 @@ module.exports = function(app, passport) {
     })
   })
 
+  app.get('/notifications', function(req, res){
+    if (req.isAuthenticated()){
+      let loggedInUserData = req.user;
+      User.findOne({
+        _id: loggedInUserData._id
+      }, 'notifications')
+      .then(user => {
+        user.notifications.reverse();
+        res.render('notifications', {
+          loggedIn: true,
+          loggedInUserData: loggedInUserData,
+          notifications: user.notifications,
+          activePage: 'notifications'
+        });
+      })
+    }
+    else {
+      res.render('notifications', {
+        loggedIn: false,
+        activePage: 'notifications'
+      });
+    }
+  })
+
   app.get('/settings', isLoggedInForGet, function(req, res) {
     res.render('settings', {
       loggedIn: true,
@@ -2764,6 +2788,7 @@ module.exports = function(app, passport) {
 
   app.post('/createboost/:postid', isLoggedInForGet, function(req, res) {
     newPostUrl = shortid.generate();
+    boostedTimestamp = new Date();
     Post.findOne({
       '_id': req.params.postid
     })
@@ -2776,12 +2801,12 @@ module.exports = function(app, passport) {
         author: loggedInUserData._id,
         url: newPostUrl,
         privacy: 'public',
-        timestamp: new Date(),
-        lastUpdated: new Date()
+        timestamp: boostedTimestamp,
+        lastUpdated: boostedTimestamp
       });
       let newPostId = boostedPost._id;
       boostedPost.boosts.push(boost._id);
-      boostedPost.lastUpdated = new Date();
+      // boostedPost.lastUpdated = boostedTimestamp;
       boostedPost.save();
       boost.save().then(() => {
         notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
@@ -2837,6 +2862,7 @@ module.exports = function(app, passport) {
       }
     );
   })
+
 
   app.get('/api/notification/display', function(req, res){
     if (req.isAuthenticated()){
