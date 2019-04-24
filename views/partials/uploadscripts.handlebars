@@ -11,7 +11,12 @@ $(function() {
     $("#emojiWindow").slideToggle("fast");
   })
   $(".emoji").click(function(){
-    $("#postContent")[0].value+=event.target.innerHTML;
+    var ourTextBox = $("#postContent")[0];
+    if(ourTextBox.selectionStart){ //if the cursor is in the box
+      ourTextBox.value = ourTextBox.value.substring(0,ourTextBox.selectionStart) + event.target.innerHTML + ourTextBox.value.substring(ourTextBox.selectionStart);
+    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
+      ourTextBox.value+=event.target.innerHTML; 
+    }
   })
   $("#postImageButton").click(function(){
     upload.selectImage();
