@@ -7,7 +7,7 @@
         <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><i class="fas fa-home"></i></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications"><i class="fas fa-bell"></i> <span class="badge badge-secondary notifications-count"></span></a>
+        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><i class="fas fa-bell"></i> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
       </li>
       <li class="nav-item">
         <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><i class="fas fa-seedling"></i></a>
@@ -35,7 +35,7 @@
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" id="notificationsDropdownLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-bell"></i> <span class="badge badge-secondary notifications-count"></span>
+          <i class="fas fa-bell"></i> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span>
         </a>
         <div class="dropdown-menu py-0" aria-labelledby="notificationsDropdownLink">
           <ul class="list-group list-group-flush" id="notificationsContainer">

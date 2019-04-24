@@ -140,6 +140,10 @@ hr {
   color: #ce1717;
 }
 
+.dropdown-toggle::after {
+  display: none !important;
+}
+
 #topNav .dropdown-item {
     color: #666;
     font-size: 90%;
