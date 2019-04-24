@@ -21,7 +21,7 @@
     <input type="text" class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}"{{/if}}/>
   </div>
   <div class="form-row my-2" id="emojiWindow">
-    <div style="margin-right:.75rem;display:inline;">Click to add:</div>
+    <div style="margin-right:.5rem;display:inline;">Click to add:</div>
     <div class="emoji">🍭</div>
     <div class="emoji">🍬</div>
     <div class="emoji">👍</div>
@@ -42,25 +42,28 @@
     <div class="emoji">💯</div>
     <div class="emoji">🏳️‍🌈</div>
   </div>
-  <div id="postControls" class="form-row mt-2">
-    {{#unless isMember}}
-      <div class="switch-field" id="visibilityControls">
-    		<input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked/>
-    		<label for="postPrivacy-public"><i class='fas fa-eye'></i> Everyone</label>
-    		<input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" />
-    		<label for="postPrivacy-private"><i class='fas fa-eye-slash'></i> Trusted only</label>
-    	</div>
-    {{/unless}}
-    <div class="form-check" id="formattingControls">
-      <input class="form-check-input" type="checkbox" name="postFormattingEnabled" id="postFormattingEnabled" />
-      <label class="form-check-label text-muted" for="postFormattingEnabled">Formatting (<strong>*bold*</strong> and <em>_italics_</em>)</label>
+    <div id="topPostControlsRow" class="form-row mt-2 post-controls">
+      <div class="form-check" id="visibilityControls">
+        <input class="form-check-input" type="checkbox" name="postFormattingEnabled" id="postFormattingEnabled" />
+        <label class="form-check-label" for="postFormattingEnabled">Formatting (<strong>*bold*</strong> and <em>_italics_</em>)</label>
+      </div>
     </div>
-    <div id="rightSideControls">
-      <!-- <input type="file" name="postImage" id="postImageUpload" accept="image/*"> -->
-      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
-      <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton">Emoji</button>
-      <button type="submit" class="btn btn-primary btn-fade" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
+    <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
+      <div id="leftSideControls">
+        {{#unless isMember}}
+          <div class="switch-field" id="visibilityControls">
+        		<input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked/>
+        		<label for="postPrivacy-public"><i class='fas fa-eye'></i> Everyone</label>
+        		<input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" />
+        		<label for="postPrivacy-private"><i class='fas fa-eye-slash'></i> Trusted only</label>
+        	</div>
+        {{/unless}}
+      </div>
+      <div id="rightSideControls">
+        <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
+        <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
+        <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
+        <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
+      </div>
     </div>
-  </div>
 </form>
