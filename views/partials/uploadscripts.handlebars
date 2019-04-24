@@ -11,16 +11,17 @@ $(function() {
     $("#emojiWindow").slideToggle("fast");
   })
   $(".emoji").click(function(){
-    var ourTextBox = $("#postContent")[0]; 
+    var ourTextBox = $("#postContent")[0];
+    var emoji = event.target.innerHTML;
     if(ourTextBox.selectionStart){ //if the cursor is in the box
       var cursorPos = ourTextBox.selectionStart;
-      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + event.target.innerHTML + ourTextBox.value.substring(cursorPos);
-      ourTextBox.selectionStart = cursorPos; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
+      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
     }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      ourTextBox.value = event.target.innerHTML + ourTextBox.value;
-      ourTextBox.selectionStart = 0; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.value = emoji + ourTextBox.value;
+      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
     }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=event.target.innerHTML; 
+      ourTextBox.value+=emoji; 
     }
   })
   $("#postImageButton").click(function(){
