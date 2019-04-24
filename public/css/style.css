@@ -14,22 +14,21 @@
  }
 
 @media (max-width: 575.98px) {
-  #postControls {
+  #topPostControlsRow,
+  #bottomPostControlsRow {
     flex-direction: column;
     align-content: flex-start;
     align-items: flex-start !important;
   }
-  #postControls>div {
+  #topPostControlsRow>div,
+  #bottomPostControlsRow>div {
     margin-bottom: 5px;
   }
-  #visibilityControls {
-    order: 2;
-  }
-  #formattingControls {
+  #leftSideControls {
     order: 1;
   }
   #rightSideControls {
-    order: 3;
+    order: 2;
   }
 }
 
@@ -178,7 +177,8 @@ hr {
   color: #175cf4;
 } */
 
-#postControls {
+#topPostControlsRow,
+#bottomPostControlsRow {
   display: none;
   justify-content: space-between;
   align-items: center;
