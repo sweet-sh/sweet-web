@@ -30,6 +30,9 @@
   #rightSideControls {
     order: 2;
   }
+  #emojiWindowButton{
+    display: none;
+  }
 }
 
 
