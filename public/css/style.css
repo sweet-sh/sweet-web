@@ -229,6 +229,14 @@ hr {
   padding-bottom: 0px;
 }
 
+.replyToComment {
+  color: #80868c;
+}
+
+.replyToComment:hover {
+  color: #55595c;
+}
+
 #postForm {
   border-top: 1px solid #dfdfdf;
   padding: 15px;
