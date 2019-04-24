@@ -2177,7 +2177,7 @@ module.exports = function(app, passport) {
           if (line != ""){
             line = "<p>" + line + "</p>";
             line = Autolinker.link( line );
-            var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+            var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
             var mentionReplace = '$1<a href="/$2">@$2</a>';
             var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
             var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
@@ -2383,7 +2383,7 @@ module.exports = function(app, passport) {
     let rawContent = req.body.postContent;
     let splitContent = rawContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
     var mentionReplace = '$1<a href="/$2">@$2</a>';
     var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
     var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
@@ -2577,7 +2577,7 @@ module.exports = function(app, passport) {
     // Parse comment content
     let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
     var mentionReplace = '$1<a href="/$2">@$2</a>';
     var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
     var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
