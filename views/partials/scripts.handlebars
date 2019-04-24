@@ -6,7 +6,7 @@ $(function() {
   autosize($('textarea'));
   $("#notificationsContainer").load( "/api/notification/display" );
 
-  $('#notificationsDropdownLink').hover(function(){
+  $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){
     $(this).find('.badge').css('background-color', '#ce1717');
   }, function() {
     $(this).find('.badge').css('background-color', '#6c757d');
