@@ -33,8 +33,6 @@
   }
 }
 
-
-
 body {
   font-family: 'Ubuntu', serif;
   color: #1a1717;
@@ -80,7 +78,6 @@ hr {
     background-color: #cbcbcb;
 }
 
-
 #topNav {
     border-bottom: 2px solid #ce1717;
     box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
@@ -100,6 +97,30 @@ hr {
 #navTitle a {
   text-decoration: none;
   color: #ce1717;
+}
+
+#navbarMenuDesktop {
+  display: none;
+}
+
+@media (min-width: 576px) {
+  #navbarMenuMobile {
+    display: none;
+  }
+  #navbarMenuDesktop {
+    display: inline-flex;
+  }
+}
+
+#navbarMenuDesktop .nav-link,
+#navbarMenuMobile .nav-link {
+  padding: .5rem .7rem;
+}
+.nav-item:first-child > .nav-link {
+  padding-left: 0 !important;
+}
+.nav-item:last-child > .nav-link {
+  padding-right: 0 !important;
 }
 
 #topNav .nav-link,
@@ -359,7 +380,6 @@ hr {
   width: 150px;
   height: 150px;
   border-radius: 10px;
-  margin-bottom: 1em;
   /* border-radius: 50%; */
 }
 
@@ -382,11 +402,13 @@ hr {
       min-width: 360px;
   }
 }
+#notificationsList,
 #notificationsContainer {
     font-size: 0.825em;
     font-weight: 300;
 }
 
+#notificationsList strong,
 #notificationsContainer strong {
   font-weight: 500;
 }

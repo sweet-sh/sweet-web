@@ -480,6 +480,30 @@ module.exports = function(app, passport) {
     })
   })
 
+  app.get('/notifications', function(req, res){
+    if (req.isAuthenticated()){
+      let loggedInUserData = req.user;
+      User.findOne({
+        _id: loggedInUserData._id
+      }, 'notifications')
+      .then(user => {
+        user.notifications.reverse();
+        res.render('notifications', {
+          loggedIn: true,
+          loggedInUserData: loggedInUserData,
+          notifications: user.notifications,
+          activePage: 'notifications'
+        });
+      })
+    }
+    else {
+      res.render('notifications', {
+        loggedIn: false,
+        activePage: 'notifications'
+      });
+    }
+  })
+
   app.get('/settings', isLoggedIn, function(req, res) {
     res.render('settings', {
       loggedIn: true,
@@ -2836,6 +2860,7 @@ module.exports = function(app, passport) {
       }
     );
   })
+
 
   app.get('/api/notification/display', function(req, res){
     if (req.isAuthenticated()){

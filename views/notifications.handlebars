@@ -1,5 +1,6 @@
 {{#if loggedIn}}
 {{#if notifications}}
+  <div class="list-group" id="notificationsList">
   {{#each notifications}}
     <a href="{{this.url}}" class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}" id="{{this._id}}">
       <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{this.image}}"/>
@@ -8,6 +9,7 @@
       </span>
     </a>
   {{/each}}
+  </div>
 {{else}}
   <p class="mt-2 text-muted text-center">
     You're up to date!
