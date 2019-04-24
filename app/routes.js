@@ -431,7 +431,7 @@ module.exports = function(app, passport) {
     });
   });
 
-  app.get('/getprofile/:email', isLoggedIn, function(req, res) {
+  app.get('/getprofile/:email', isLoggedInForGet, function(req, res) {
       User.findOne({
         email: req.params.email
       }).then((user) => {
@@ -444,7 +444,7 @@ module.exports = function(app, passport) {
       res.redirect('back');
   });
 
-  app.get('/home', isLoggedIn, function(req, res) {
+  app.get('/home', isLoggedInForGet, function(req, res) {
     res.render('home', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -462,7 +462,7 @@ module.exports = function(app, passport) {
     }
   });
 
-  app.get('/tag/:name', isLoggedIn, function(req, res) {
+  app.get('/tag/:name', isLoggedInForGet, function(req, res) {
     Tag.findOne({
       name: req.params.name
     })
@@ -504,7 +504,7 @@ module.exports = function(app, passport) {
     }
   })
 
-  app.get('/settings', isLoggedIn, function(req, res) {
+  app.get('/settings', isLoggedInForGet, function(req, res) {
     res.render('settings', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -512,7 +512,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.post('/updatesettings', isLoggedIn, function(req, res) {
+  app.post('/updatesettings', isLoggedInForGet, function(req, res) {
     let updatedSettings = req.body;
     User.update({
       _id: loggedInUserData._id
@@ -531,7 +531,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.get('/search', isLoggedIn, function(req, res) {
+  app.get('/search', isLoggedInForGet, function(req, res) {
     res.render('search', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -539,7 +539,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.get('/search/:query', isLoggedIn, function(req, res) {
+  app.get('/search/:query', isLoggedInForGet, function(req, res) {
     res.render('search', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -548,7 +548,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.post('/api/user/followers', isLoggedIn, function(req, res) {
+  app.post('/api/user/followers', isLoggedInForGet, function(req, res) {
     followedUserData = []
     Relationship.find({
       fromUser: loggedInUserData._id,
@@ -574,7 +574,7 @@ module.exports = function(app, passport) {
     });
   })
 
-  app.get('/showsearch/:query/:page', isLoggedIn, function(req, res) {
+  app.get('/showsearch/:query/:page', isLoggedInForGet, function(req, res) {
 
     let postsPerPage = 10;
     let page = req.params.page-1;
@@ -703,11 +703,11 @@ module.exports = function(app, passport) {
   app.get('/showposts/:context/:identifier/:page', function(req, res){
     var loggedInUserData = {}
     if (req.isAuthenticated()){
-      isLoggedIn = true;
+      isLoggedInForGet = true;
       loggedInUserData = req.user;
     }
     else {
-      isLoggedIn = false;
+      isLoggedInForGet = false;
     }
 
     let postsPerPage = 10;
@@ -814,7 +814,7 @@ module.exports = function(app, passport) {
 
     let isMuted = () => {
       isMuted = false;
-      if (req.params.context == "community" && isLoggedIn) {
+      if (req.params.context == "community" && isLoggedInForGet) {
         return Community.findOne({
           _id: req.params.identifier
         })
@@ -1120,7 +1120,7 @@ module.exports = function(app, passport) {
           }
           res.render('partials/posts', {
             layout: false,
-            loggedIn: isLoggedIn,
+            loggedIn: isLoggedInForGet,
             isMuted: isMuted,
             loggedInUserData: loggedInUserData,
             posts: displayedPosts,
@@ -1133,7 +1133,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.get('/showtag/:name/:page', isLoggedIn, function(req, res){
+  app.get('/showtag/:name/:page', isLoggedInForGet, function(req, res){
     let postsPerPage = 10;
     let page = req.params.page-1;
 
@@ -1316,11 +1316,11 @@ module.exports = function(app, passport) {
   app.get('/:username', function(req, res) {
     var loggedInUserData = {}
     if (req.isAuthenticated()){
-      isLoggedIn = true;
+      isLoggedInForGet = true;
       loggedInUserData = req.user;
     }
     else {
-      isLoggedIn = false;
+      isLoggedInForGet = false;
     }
 
     let results = {};
@@ -1331,7 +1331,7 @@ module.exports = function(app, passport) {
         })
         .then((user) => {
           if (!user){
-            console.log("no such user!")
+            console.log("no such user!");
             res.status(404).redirect('/404');
           }
           else {
@@ -1649,7 +1649,7 @@ module.exports = function(app, passport) {
       }
 
       res.render('user', {
-        loggedIn: isLoggedIn,
+        loggedIn: isLoggedInForGet,
         isOwnProfile: isOwnProfile,
         loggedInUserData: loggedInUserData,
         profileData: results.profileData,
@@ -1678,11 +1678,11 @@ module.exports = function(app, passport) {
 
     var loggedInUserData = {}
     if (req.isAuthenticated()){
-      isLoggedIn = true;
+      isLoggedInForGet = true;
       loggedInUserData = req.user;
     }
     else {
-      isLoggedIn = false;
+      isLoggedInForGet = false;
     }
 
     let myFollowedUserEmails = () => {
@@ -1787,7 +1787,7 @@ module.exports = function(app, passport) {
     let isMuted = () => {
       isMuted = false;
       isMember = false;
-      if (isLoggedIn) {
+      if (isLoggedInForGet) {
         return Post.findOne({url: req.params.posturl})
         .then(post => {
           if (post){
@@ -1832,7 +1832,7 @@ module.exports = function(app, passport) {
         if (!post){
           res.render('singlepost', {
             canDisplay: false,
-            loggedIn: isLoggedIn,
+            loggedIn: isLoggedInForGet,
             loggedInUserData: loggedInUserData
           })
         }
@@ -1995,7 +1995,7 @@ module.exports = function(app, passport) {
           }
           res.render('singlepost', {
             canDisplay: canDisplay,
-            loggedIn: isLoggedIn,
+            loggedIn: isLoggedInForGet,
             loggedInUserData: loggedInUserData,
             post: displayedPost,
             flaggedUsers: flagged,
@@ -2137,7 +2137,7 @@ module.exports = function(app, passport) {
     })
   });
 
-  app.post("/updateprofile", isLoggedIn, function(req, res) {
+  app.post("/updateprofile", isLoggedInForGet, function(req, res) {
     let imageEnabled = loggedInUserData.imageEnabled;
     let imageFilename = loggedInUserData.image;
 		if (Object.keys(req.files).length != 0) {
@@ -2207,7 +2207,7 @@ module.exports = function(app, passport) {
     })
   });
 
-  app.post("/api/image", isLoggedIn, function(req, res) {
+  app.post("/api/image", isLoggedInForGet, function(req, res) {
     if (req.files.image) {
       if (req.files.image.size <= 10485760){
         let imageFormat = fileType(req.files.image.data);
@@ -2285,7 +2285,7 @@ module.exports = function(app, passport) {
     }
   })
 
-  app.post("/api/image/v2", isLoggedIn, function(req, res) {
+  app.post("/api/image/v2", isLoggedInForGet, function(req, res) {
     if (req.files.image) {
       if (req.files.image.size <= 10485760){
         let imageFormat = fileType(req.files.image.data);
@@ -2366,7 +2366,7 @@ module.exports = function(app, passport) {
     }
   })
 
-  app.post("/createpost", isLoggedIn, function(req, res) {
+  app.post("/createpost", isLoggedInForGet, function(req, res) {
 
     function wordCount(str) {
          return str.split(' ')
@@ -2512,7 +2512,7 @@ module.exports = function(app, passport) {
       });
   })
 
-  app.post("/deletepost/:postid", isLoggedIn, function(req, res) {
+  app.post("/deletepost/:postid", isLoggedInForGet, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
 
@@ -2575,7 +2575,7 @@ module.exports = function(app, passport) {
     });
   });
 
-  app.post("/createcomment/:postid", isLoggedIn, function(req, res) {
+  app.post("/createcomment/:postid", isLoggedInForPost, function(req, res) {
     // Parse comment content
     let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
@@ -2754,7 +2754,9 @@ module.exports = function(app, passport) {
           name: name,
           username: loggedInUserData.username,
           timestamp: moment(commentTimestamp).fromNow(),
-          content: parsedContent
+          content: parsedContent,
+          comment_id: post.comments[post.numberOfComments-1]._id.toString(),
+          post_id: post._id.toString()
         }
         console.log(result);
         res.contentType('json');
@@ -2766,7 +2768,7 @@ module.exports = function(app, passport) {
     })
   });
 
-  app.post("/deletecomment/:postid/:commentid", isLoggedIn, function(req, res) {
+  app.post("/deletecomment/:postid/:commentid", isLoggedInForGet, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
       var commentRemove = post.comments.id(req.params.commentid).remove();
@@ -2784,7 +2786,7 @@ module.exports = function(app, passport) {
     })
   });
 
-  app.post('/createboost/:postid', isLoggedIn, function(req, res) {
+  app.post('/createboost/:postid', isLoggedInForGet, function(req, res) {
     newPostUrl = shortid.generate();
     boostedTimestamp = new Date();
     Post.findOne({
@@ -2813,7 +2815,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.post('/api/post/unsubscribe/:postid', isLoggedIn, function(req,res) {
+  app.post('/api/post/unsubscribe/:postid', isLoggedInForGet, function(req,res) {
     Post.findOne({
       _id: req.params.postid
     })
@@ -2830,7 +2832,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.post('/api/post/subscribe/:postid', isLoggedIn, function(req,res) {
+  app.post('/api/post/subscribe/:postid', isLoggedInForGet, function(req,res) {
     Post.findOne({
       _id: req.params.postid
     })
@@ -2847,7 +2849,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  app.post("/api/notification/update/:id", isLoggedIn, function(req,res) {
+  app.post("/api/notification/update/:id", isLoggedInForGet, function(req,res) {
     User.findOneAndUpdate(
       { "_id": req.user._id, "notifications._id": req.params.id },
       {
@@ -2887,13 +2889,24 @@ module.exports = function(app, passport) {
   })
 };
 
-function isLoggedIn(req, res, next) {
+function isLoggedInForGet(req, res, next) {
   if (req.isAuthenticated()){
     loggedInUserData = req.user;
     return next();
   }
   res.redirect('/');
+  next('route');
 }
+
+function isLoggedInForPost(req, res, next) {
+  if (req.isAuthenticated()){
+    loggedInUserData = req.user;
+    return next();
+  }
+  res.send('nope');
+  next('route');
+}
+
 
 function getTags(url) {
   return new Promise((resolve, reject) => {
