@@ -402,7 +402,6 @@ hr {
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
-  overflow: hidden;
 }
 
 @media (min-width: 576px) {
