@@ -505,8 +505,23 @@ hr {
   border-radius:.25rem;
 }
 
+.replyEmojiWindow {
+  display:none;
+  cursor:default;
+  border:1px solid #ffffff;
+  border-radius:.25rem;
+}
+
 .emoji{
   display:inline;
+}
+
+.replyEmoji{
+  display:inline;
+}
+
+.replyEmojiWindowButton{
+  margin-top: .5rem;
 }
 
 .content-warning {

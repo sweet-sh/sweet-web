@@ -55,6 +55,28 @@ $(function() {
     $(this).text(
         text == "Show more" ? "Show less" : "Show more");
   })
+  $('body').on('click','.replyEmojiWindowButton', function() {
+    $( this ).prev().slideToggle("fast");
+  })
+  $('body').on('click','.replyEmoji', function() {
+    var ourTextBox = $(this).closest("#replyForm").find("#commentContent")[0];
+    var emoji = event.target.innerHTML;
+    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
+      var cursorPos = ourTextBox.selectionStart;
+      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
+      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = cursorPos + emoji.length;
+      ourTextBox.focus();
+    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
+      ourTextBox.value = emoji + ourTextBox.value;
+      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = emoji.length;
+      ourTextBox.focus();
+    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
+      ourTextBox.value+=emoji;
+      ourTextBox.focus();
+    }
+  })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
