@@ -2104,7 +2104,8 @@ module.exports = function(app, passport) {
           });
           flag.save()
           .then(() => {
-            if (req.params.type != 'block'){
+            // Do not notify when users are flagged, muted, or blocked (blocking and muting not currently implemented)
+            if (req.params.type != 'block' && req.params.type != 'flag' && req.params.type != 'mute'){
               notifier.notify('user', 'relationship', to._id, from._id, from._id, '/' + from.username, req.params.type)
             }
           })
