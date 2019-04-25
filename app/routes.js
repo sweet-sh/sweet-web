@@ -638,7 +638,7 @@ module.exports = function(app, passport) {
                 if (result.username){
                   // It's a user
                   constructedResult.type = '<i class="fas fa-user"></i> User'
-                  constructedResult.sort = result.username
+                  constructedResult.sort = result.lastUpdated
                   constructedResult.email = result.email
                   if (result.displayName){
                     constructedResult.title = '<strong><a class="authorLink" href="/' + result.username + '">' + result.displayName + '</a></strong> &middot; <span class="text-muted">@' + result.username + '</span>';
@@ -656,7 +656,7 @@ module.exports = function(app, passport) {
                 else if (result.members){
                   // It's a community
                   constructedResult.type = '<i class="fas fa-leaf"></i> Community'
-                  constructedResult.sort = result.name
+                  constructedResult.sort = result.lastUpdated
                   constructedResult.title = '<strong><a class="authorLink" href="/community/' + result.slug + '">' + result.name + '</a></strong> &middot; <span class="text-muted">' + result.membersCount + ' member' + (result.membersCount == 1 ? '' : 's') + '</span>';
                   constructedResult.url = '/community/' + result.slug
                   if (result.imageEnabled)
@@ -668,7 +668,7 @@ module.exports = function(app, passport) {
                 else {
                   // It's a tag
                   constructedResult.type = '<i class="fas fa-hashtag"></i> Tag'
-                  constructedResult.sort = result.name
+                  constructedResult.sort = result.lastUpdated
                   constructedResult.title = '<strong><a class="authorLink" href="/tag/' + result.name + '">#' + result.name + '</a></strong>';
                   constructedResult.url = '/tag/' + result.name
                   constructedResult.description = '<p>' + result.posts.length + ' post' + (result.posts.length == 1 ? '' : 's') + '</p>'
@@ -677,10 +677,10 @@ module.exports = function(app, passport) {
                 parsedResults.push(constructedResult)
               })
               parsedResults.sort(function(a, b){
-               var nameA=a.sort.toLowerCase(), nameB=b.sort.toLowerCase();
-               if (nameA < nameB) //sort string ascending
+               var timestampA=a.sort, timestampB=b.sort;
+               if (timestampA > timestampB) //sort timestamp descending
                 return -1;
-               if (nameA > nameB)
+               if (timestampA < timestampB)
                 return 1;
                return 0; //default return value (no sorting)
               });
@@ -688,10 +688,7 @@ module.exports = function(app, passport) {
                 layout: false,
                 loggedIn: true,
                 loggedInUserData: loggedInUserData,
-                results: parsedResults,
-                userResults: userResults,
-                communityResults: communityResults
-                // tagResults: tagResults
+                results: parsedResults
               });
             }
           })
@@ -2180,7 +2177,7 @@ module.exports = function(app, passport) {
           if (line != ""){
             line = "<p>" + line + "</p>";
             line = Autolinker.link( line );
-            var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+            var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
             var mentionReplace = '$1<a href="/$2">@$2</a>';
             var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
             var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
@@ -2375,6 +2372,7 @@ module.exports = function(app, passport) {
     }
 
     newPostUrl = shortid.generate();
+    let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
     var postImage = req.body.postImageUrl != "" ? [req.body.postImageUrl] : [];
     var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
@@ -2385,7 +2383,7 @@ module.exports = function(app, passport) {
     let rawContent = req.body.postContent;
     let splitContent = rawContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
     var mentionReplace = '$1<a href="/$2">@$2</a>';
     var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
     var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
@@ -2434,8 +2432,8 @@ module.exports = function(app, passport) {
       author: loggedInUserData._id,
       url: newPostUrl,
       privacy: postPrivacy,
-      timestamp: new Date(),
-      lastUpdated: new Date(),
+      timestamp: postCreationTime,
+      lastUpdated: postCreationTime,
       rawContent: sanitize(req.body.postContent),
       parsedContent: sanitize(parsedContent),
       numberOfComments: 0,
@@ -2464,7 +2462,7 @@ module.exports = function(app, passport) {
     post.save()
     .then(() => {
       trimmedPostTags.forEach((tag) => {
-        Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
+        Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
           if (error) return
         });
       });
@@ -2527,7 +2525,7 @@ module.exports = function(app, passport) {
         Image.deleteOne({"filename": image})
       })
 
-      // Delete tags
+      // Delete tags (does not currently fix tag last updated time)
       post.tags.forEach((tag) => {
         Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
         .then((tag) => {
@@ -2579,7 +2577,7 @@ module.exports = function(app, passport) {
     // Parse comment content
     let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
     let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
+    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
     var mentionReplace = '$1<a href="/$2">@$2</a>';
     var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
     var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
@@ -2892,6 +2890,17 @@ module.exports = function(app, passport) {
 function isLoggedInForGet(req, res, next) {
   if (req.isAuthenticated()){
     loggedInUserData = req.user;
+    // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
+    currentTime = new Date();
+    if ((currentTime - loggedInUserData.lastUpdated) > 3600000){ // If the timestamp is older than an hour
+      User.findOne({
+        _id: loggedInUserData._id
+      })
+      .then(user => {
+        user.lastUpdated = currentTime;
+        user.save()
+      })
+    }
     return next();
   }
   res.redirect('/');

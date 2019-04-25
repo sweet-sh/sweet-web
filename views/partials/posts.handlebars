@@ -124,6 +124,9 @@
                 {{else}}
                   <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                 {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}} &middot; <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                <button type="button" class="btn btn-link btn-xs replyToComment" id="{{this.author.username}}">
+                  <i class="fas fa-reply"></i>
+                </button>
                 {{#if this.canDelete }}
                   <button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="{{this._id}}" data-post-id="{{../this._id}}" data-comment-id="{{this._id}}">
                     &times;
@@ -270,6 +273,9 @@
                   {{else}}
                     <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                   {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}} &middot; <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                  <button type="button" class="btn btn-link btn-xs replyToComment" id="{{this.author.username}}">
+                    <i class="fas fa-reply"></i>
+                  </button>
                   {{#if this.canDelete }}
                     <button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="{{this._id}}" data-post-id="{{../this._id}}" data-comment-id="{{this._id}}">
                       &times;
@@ -397,6 +403,9 @@
                     {{else}}
                       <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                     {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}} &middot; <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                    <button type="button" class="btn btn-link btn-xs replyToComment" id="{{this.author.username}}">
+                      <i class="fas fa-reply"></i>
+                    </button>
                     {{#if this.canDelete }}
                       <button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="{{this._id}}" data-post-id="{{../this._id}}" data-comment-id="{{this._id}}">
                         &times;
