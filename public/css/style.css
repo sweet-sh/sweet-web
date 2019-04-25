@@ -229,14 +229,6 @@ hr {
   padding-bottom: 0px;
 }
 
-.replyToComment {
-  color: #80868c;
-}
-
-.replyToComment:hover {
-  color: #55595c;
-}
-
 #postForm {
   border-top: 1px solid #dfdfdf;
   padding: 15px;
@@ -410,6 +402,7 @@ hr {
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
+  overflow: hidden;
 }
 
 @media (min-width: 576px) {
@@ -551,7 +544,7 @@ hr {
 .content-warning-show-more {
   margin: 0 auto 1rem auto;
 }
-
+/*
 .post-meta {
   margin-left: 3px;
   justify-content: space-between;
@@ -568,6 +561,62 @@ hr {
   overflow: hidden;
   white-space: nowrap;
   width: 90%;
+} */
+
+.comment-header,
+.post-header {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+}
+.comment-header-row-1,
+.post-header-row-1 {
+  display: flex;
+  overflow: hidden;
+}
+.comment-header-row-1>*{
+  align-self: center;
+}
+.comment-header-divider {
+  padding: 0 5px;
+}
+.commentTimestamp {
+  white-space: nowrap;
+}
+.comment-button {
+  color: #aaa;
+  position: relative;
+  top: 2px;
+}
+
+.comment-button:hover {
+  color: #0069d9;
+  text-decoration: none;
+}
+.replyToComment {
+  padding: 0 10px;
+}
+.deleteComment {
+  padding: 0;
+  flex: 1;
+  text-align: right;
+}
+.author-username {
+  white-space: nowrap;
+}
+.author-display-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+.user-flag {
+  padding: 0 5px;
+}
+.post-header .user-flag {
+  position: relative;
+  top: 3px;
 }
 
 .show-more-content {
@@ -623,14 +672,7 @@ hr {
   margin-bottom: 0.5rem !important;
 }
 
-.deleteComment {
-  float: right;
-  padding-right: 0;
-}
 
-.deleteComment:hover {
-  text-decoration: none;
-}
 
 .community-container {
   display: none;

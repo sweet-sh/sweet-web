@@ -27,17 +27,26 @@
               {{/if}}
               <div class="mb-3 d-flex">
                 <img alt="Profile image of @{{post.author.username}}" class="postAuthorImage" src="/images/{{#if post.author.imageEnabled}}{{post.author.image}}{{else}}cake.svg{{/if}}" />
-                <div class="post-meta">
-                  <p>
+                <div class="post-header">
+                  <div class="post-header-row-1">
                     {{#if post.author.displayName}}
-                      <strong><a class="authorLink" href="/{{post.author.username}}">{{post.author.displayName}}</a></strong> &middot; <span class="text-muted">@{{post.author.username}}</span>
+                    <div class="author-display-name">
+                      <strong><a class="authorLink" href="/{{this.author.username}}">{{post.author.displayName}}</a></strong>
+                    </div>
+                    <div class="author-username">
+                      <span class="text-muted">@{{post.author.username}}</span>
+                    </div>
                     {{else}}
-                      <strong><a class="authorLink" href="/{{post.author.username}}">@{{post.author.username}}</a></strong>
-                    {{/if}} {{#contains flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                  </p>
-                  <p>
-                    <small class="commentTimestamp text-muted">{{post.parsedTimestamp}}</small><small class="text-muted"> &middot; {{#eq post.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i></small>
-                  </p>
+                      <div class="author-username">
+                        <strong><a class="authorLink" href="/{{this.author.username}}">@{{post.author.username}}</a></strong>
+                      </div>
+                    {{/if}} {{#contains ../flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                  </div>
+                  <div class="post-header-row-2">
+                    <div class="post-timestamp-privacy">
+                      <small class="commentTimestamp text-muted">{{post.parsedTimestamp}}</small><small class="text-muted"> &middot; {{#eq post.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i></small>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="post-content {{#if post.contentWarnings}}content-warning-post{{/if}}">
@@ -126,21 +135,39 @@
               {{#if post.comments}}
                 {{#each post.comments}}
                 <div class="individualReplyContainer">
-                  <p class="mb-1"><img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
-                    {{#if this.author.displayName}}
-                      <strong><a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a></strong>
-                    {{else}}
-                      <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
-                    {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}} &middot; <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
-                    <button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="{{this.author.username}}">
-                      <i class="fas fa-reply"></i>
-                    </button>
-                    {{#if this.canDelete }}
-                      <button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="{{this._id}}" data-post-id="{{../post._id}}" data-comment-id="{{this._id}}">
-                        &times;
-                      </button>
-                    {{/if}}
-                  </p>
+                  <div class="mb-1 d-flex">
+                    <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+                    <div class="comment-header">
+                      <div class="comment-header-row-1">
+                        {{#if this.author.displayName}}
+                          <div class="author-display-name">
+                            <strong><a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a></strong>
+                          </div>
+                          <div class="author-username">
+                            <span class="text-muted">@{{this.author.username}}</span>
+                          </div>
+                        {{else}}
+                          <div class="author-username">
+                            <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
+                          </div>
+                        {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                        <div class="comment-header-divider">
+                          &middot;
+                        </div>
+                        <div class="commentTimestamp">
+                          <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                        </div>
+                        <button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="{{this.author.username}}">
+                          <i class="fas fa-reply"></i>
+                        </button>
+                        {{#if this.canDelete }}
+                          <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../post._id}}" data-comment-id="{{this._id}}">
+                            &times;
+                          </button>
+                        {{/if}}
+                      </div>
+                    </div>
+                  </div>
                   {{{this.parsedContent}}}
                 </div>
                 {{/each}}

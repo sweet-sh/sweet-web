@@ -2741,10 +2741,10 @@ module.exports = function(app, passport) {
           image = 'cake.svg'
         }
         if (loggedInUserData.displayName){
-          name = '<strong><a class="authorLink" href="/' + loggedInUserData.username + '">' + loggedInUserData.displayName + '</a></strong> &middot; <span class="text-muted">@' + loggedInUserData.username + '</span>';
+          name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">' + loggedInUserData.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + loggedInUserData.username + '</span></div>';
         }
         else {
-          name = '<strong><a class="authorLink" href="/' + loggedInUserData.username + '">@' + loggedInUserData.username + '</a></strong>';
+          name = '<div class="author-username"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">@' + loggedInUserData.username + '</a></strong></div>';
         }
 
         result = {
