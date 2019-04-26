@@ -4,19 +4,19 @@
   <ul class="nav" id="navbarMenuMobile">
     {{#if loggedIn }}
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><i class="fas fa-home"></i></a>
+        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><img class="nav-icon" src="./icons/home.svg" /></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><i class="fas fa-bell"></i> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
+        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><img class="nav-icon" src="./icons/notifications.svg" /> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><i class="fas fa-seedling"></i></a>
+        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><img class="nav-icon" src="./icons/communities.svg" /></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><i class="fas fa-user-circle"></i></a>
+        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><img class="nav-icon" src="./icons/profile.svg" /></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><i class="fas fa-search"></i></a>
+        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><img class="nav-icon" src="./icons/search.svg" /></a>
       </li>
     {{else}}
       <li class="nav-item">

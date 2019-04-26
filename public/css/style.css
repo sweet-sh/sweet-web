@@ -96,6 +96,10 @@ hr {
   font-weight: 500;
 }
 
+.nav-icon {
+  width: 20px;
+}
+
 #navTitle a {
   text-decoration: none;
   color: #ce1717;
