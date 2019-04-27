@@ -2862,6 +2862,23 @@ module.exports = function(app, passport) {
     );
   })
 
+  app.post("/api/notification/update-by-subject/:subjectid", isLoggedInForGet, function(req,res) {
+    User.findOne({
+      _id: req.user._id
+    })
+    .then(user => {
+      user.notifications.forEach(notification => {
+        if (notification.subjectId == req.params.subjectid) {
+          notification.seen = true;
+        }
+      })
+      user.save()
+      .then(response => {
+        res.sendStatus(200);
+      })
+    })
+  })
+
 
   app.get('/api/notification/display', function(req, res){
     if (req.isAuthenticated()){

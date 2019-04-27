@@ -25,7 +25,6 @@ $(function() {
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
-      console.log("Checking")
       let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
       if (latestPost != currentlyDisplayedPost){
@@ -39,7 +38,16 @@ $(function() {
   }, 60000);
 
   $('body').on('click', '.openReplyBox', function() {
-    $(this).closest(".comment").find(".replyContainer").slideToggle("fast");
+    commentsContainer = $(this).closest(".comment").find(".replyContainer");
+    commentsContainer.slideToggle("fast", function(){
+      if (commentsContainer.is(':visible')){
+        console.log("Comments shown!")
+        var post = $(this).closest('.commentContainer');
+        $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
+          $("#notificationsContainer").load( "/api/notification/display" );
+        })
+      }
+    })
   })
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
