@@ -61,8 +61,13 @@ var imaggaOptions = {
    }
 };
 
+
 module.exports = function(app, passport) {
 
+  //Responds to get requests for images on the server. If the image is private, checks to see
+  //if the user is trusted/in the community first.
+  //Input: URL of an image
+  //Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function(req,res){
     Image.findOne({
       filename: req.params.filename
@@ -119,10 +124,9 @@ module.exports = function(app, passport) {
     })
   })
 
-  // app.get('/api/post/display', function(req,res){
-  //
-  // })
-
+  //Responds to get requests for '/'. 
+  //Input: none
+  //Output: redirect to '/home' if logged in, render of the index page if logged out.
   app.get('/', function(req, res) {
     if (req.isAuthenticated()){
       res.redirect('/home');
@@ -137,14 +141,23 @@ module.exports = function(app, passport) {
     }
   });
 
+  //Responds to get requests for the login page.
+  //Input: flash message
+  //Output: rendering of the login page with the flash message included.
   app.get('/login', function(req, res) {
       res.render('login', { sessionFlash: res.locals.sessionFlash });
   });
 
+  //Responds to get requests for the signup page.
+  //Input: flash message
+  //Output: rendering of the signup page with the flash message included.
   app.get('/signup', function(req, res) {
       res.render('signup', { sessionFlash: res.locals.sessionFlash });
   });
 
+  //Responds to get requests for email verification that don't have the verification token included. Deprecated? When would this happen
+  //Input: none
+  //Output: redirect to /login with a 301 code and "No token provided" in the flash message.
   app.get('/verify-email', function(req, res){
     req.session.sessionFlash = {
       type: 'warning',
@@ -153,10 +166,18 @@ module.exports = function(app, passport) {
     res.redirect(301, '/login');
   });
 
+  //Responds to get requests for email verification that include the verification token.
+  //Input: the token
+  //Output: rendering of verify-email with the token as a hidden input on the page and the email autofilled from sessionFlash.
   app.get('/verify-email/:verificationtoken', function(req, res){
     res.render('verify-email', { sessionFlash: res.locals.sessionFlash, token: req.params.verificationtoken });
   })
 
+  //Responds to post requests for email verification.
+  //Input: the email address and the verification token
+  //Output: A redirect to /verify-email/... if the email is wrong or there's an error saving the user,
+  //redirect to /resend-token if the token is wrong or if there is a database error finding the user, or a
+  //redirect to /login and the user's isVerified property being set to true if everything's right.
   app.post('/verify-email', function(req, res){
     req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({max:80});
     req.getValidationResult().then(function (result) {
@@ -221,10 +242,16 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to get requests for /resend-token
+  //Input: flash message
+  //Output: renders resend-token with flash message
   app.get('/resend-token', function(req, res){
     res.render('resend-token', { sessionFlash: res.locals.sessionFlash });
   });
 
+  //Responds to post requests from /resend-token
+  //Input: email address
+  //Output: a redirect to /resend-token with a new flash message. Does not actually send emails??? I can't get it to.
   app.post('/resend-token', function(req, res){
     User.findOne({
       email: req.body.email
@@ -277,10 +304,17 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Responds to get requests for /forgot-password without a password reset token
+  //Input: flash message
+  //Output: renders forgot-password with flash message
   app.get('/forgot-password', function(req, res) {
       res.render('forgot-password', { sessionFlash: res.locals.sessionFlash });
   });
 
+  //Responds to get requests for /forgot-password with a password reset token
+  //Input: password reset token
+  //Output: a redirect to /forgot-password with flash message if the token is wrong,
+  //a redirect to reset-password if the token is right
   app.get('/reset-password/:token', function(req, res) {
     User.findOne({
       passwordResetToken: req.params.token,
@@ -302,6 +336,11 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Responds to post requests from /forgot-password by sending a password reset email with a token
+  //Input: the user's email
+  //Ouput: just a redirect to /forgot-password with an incorrect flash message if the email is wrong,
+  //an email with a link to /reset-password with a token if the email is right and the token saved in 
+  //the database, or a redirect to /forgot-password with a warning message if the email or database apis return errors.
   app.post('/forgot-password', function(req, res) {
     require('crypto').randomBytes(20, function(err, buffer) {
       token = buffer.toString('hex');
@@ -361,6 +400,12 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to post requests with new passwords from the passport reset page.
+  //Input: the new password, the reset token, the username, and the email
+  //Output: a redirect to /forgot-password with a flash message if the token is wrong, a redirect to /reset-password
+  //with the token and a warning message if the new password is invalid, a new password for the user and an email
+  //telling the user they've reset the passport and a redirect to /login if everything is right, or a redirect to /reset-password
+  //with the token if there was a database error saving the user's new password.
   app.post('/reset-password/:token', function(req, res) {
     console.log(req.params.token)
     User.findOne({
@@ -431,6 +476,9 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to get requests for the profile of someone with a certain email. Deprecated? Is this used?
+  //Input: the email
+  //Output: redirect to /the username of the person with that email.
   app.get('/getprofile/:email', isLoggedInForGet, function(req, res) {
       User.findOne({
         email: req.params.email
@@ -439,11 +487,17 @@ module.exports = function(app, passport) {
       })
   });
 
+  //Responds to get requests for /logout.
+  //Input: none
+  //Output: user is logged out and redirected to the referring page or / if no referrer.
   app.get('/logout', function(req, res) {
       req.logout();
       res.redirect('back');
   });
 
+  //Responds to get requests for the home page.
+  //Input: none
+  //Output: the home page, if isLoggedInForGet doesn't redirect you.
   app.get('/home', isLoggedInForGet, function(req, res) {
     res.render('home', {
       loggedIn: true,
@@ -452,6 +506,9 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to get requests for the 404 page.
+  //Input: user data from req.user
+  //Output: the 404 page, which at the moment doesn't actually use the user data this function passes it
   app.get('/404', function(req, res) {
     if (req.isAuthenticated()){
       let loggedInUserData = req.user;
@@ -462,6 +519,9 @@ module.exports = function(app, passport) {
     }
   });
 
+  //Responds to get requests for tag pages.
+  //Input: the name of the tag from the url
+  //Output: the tag page rendered if it exists, the 404 page otherwise.
   app.get('/tag/:name', isLoggedInForGet, function(req, res) {
     Tag.findOne({
       name: req.params.name
