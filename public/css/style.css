@@ -33,6 +33,9 @@
   #emojiWindowButton{
     display: none;
   }
+  .replyEmojiWindowButton{
+    display: none;
+  }
 }
 
 body {
