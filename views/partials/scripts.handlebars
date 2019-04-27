@@ -25,7 +25,6 @@ $(function() {
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
-      console.log("Checking")
       let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
       if (latestPost != currentlyDisplayedPost){
@@ -39,7 +38,16 @@ $(function() {
   }, 60000);
 
   $('body').on('click', '.openReplyBox', function() {
-    $(this).closest(".comment").find(".replyContainer").slideToggle("fast");
+    commentsContainer = $(this).closest(".comment").find(".replyContainer");
+    commentsContainer.slideToggle("fast", function(){
+      if (commentsContainer.is(':visible')){
+        console.log("Comments shown!")
+        var post = $(this).closest('.commentContainer');
+        $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
+          $("#notificationsContainer").load( "/api/notification/display" );
+        })
+      }
+    })
   })
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
@@ -95,7 +103,7 @@ $(function() {
   })
   $('body').on('click', '.replyToComment', function() {
     let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
-    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("id") + " ").focus()
+    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus()
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
@@ -141,7 +149,7 @@ $(function() {
       if (data!='nope'){
         textarea.val("");
         textarea[0].style.height = "";
-        let html = '<div class="individualReplyContainer"><p class="mb-1"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" />' + data.name + ' &middot; <small class="commentTimestamp text-muted">' + data.timestamp + '</small><button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment text-muted" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">x</button></p>' + data.content +'</div>';
+        let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content +'</div>';
         $(html).hide().appendTo(commentsContainer).fadeIn();
         commentButton.prop('disabled', false);
         let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];

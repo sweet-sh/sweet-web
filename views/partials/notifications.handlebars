@@ -17,10 +17,13 @@
   {{/each}}
 
   <script type="text/javascript">
-    console.log(notificationsCount)
     if (notificationsCount > 0) {
       $(".notifications-count").text(notificationsCount);
       document.title = '(' + notificationsCount + ') sweet';
+    }
+    else {
+      $(".notifications-count").text('');
+      document.title = 'sweet';
     }
   </script>
 {{else}}

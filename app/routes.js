@@ -2164,7 +2164,8 @@ module.exports = function(app, passport) {
           });
           flag.save()
           .then(() => {
-            if (req.params.type != 'block'){
+            // Do not notify when users are flagged, muted, or blocked (blocking and muting not currently implemented)
+            if (req.params.type != 'block' && req.params.type != 'flag' && req.params.type != 'mute'){
               notifier.notify('user', 'relationship', to._id, from._id, from._id, '/' + from.username, req.params.type)
             }
           })
@@ -2801,10 +2802,10 @@ module.exports = function(app, passport) {
           image = 'cake.svg'
         }
         if (loggedInUserData.displayName){
-          name = '<strong><a class="authorLink" href="/' + loggedInUserData.username + '">' + loggedInUserData.displayName + '</a></strong> &middot; <span class="text-muted">@' + loggedInUserData.username + '</span>';
+          name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">' + loggedInUserData.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + loggedInUserData.username + '</span></div>';
         }
         else {
-          name = '<strong><a class="authorLink" href="/' + loggedInUserData.username + '">@' + loggedInUserData.username + '</a></strong>';
+          name = '<div class="author-username"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">@' + loggedInUserData.username + '</a></strong></div>';
         }
 
         result = {
@@ -2919,6 +2920,23 @@ module.exports = function(app, passport) {
         res.sendStatus(200)
       }
     );
+  })
+
+  app.post("/api/notification/update-by-subject/:subjectid", isLoggedInForGet, function(req,res) {
+    User.findOne({
+      _id: req.user._id
+    })
+    .then(user => {
+      user.notifications.forEach(notification => {
+        if (notification.subjectId == req.params.subjectid) {
+          notification.seen = true;
+        }
+      })
+      user.save()
+      .then(response => {
+        res.sendStatus(200);
+      })
+    })
   })
 
 
