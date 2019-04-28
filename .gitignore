@@ -123,4 +123,8 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+#Profile pictures?
+public/images/*.jpg
+
 # End of https://www.gitignore.io/api/node,macos
+

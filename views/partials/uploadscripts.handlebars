@@ -31,6 +31,9 @@ $(function() {
   })
   $("#postImageButton").click(function(){
     upload.selectImage();
+    let imagePrevCont = $('.custom-file-container')[0];
+    imagePrevCont.style.display = "block"
+    imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
     $('#imagePreviewContainer').slideDown('fast');
   })
   window.addEventListener('fileUploadWithPreview:imageSelected', function (e) {
