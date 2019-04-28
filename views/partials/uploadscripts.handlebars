@@ -61,7 +61,10 @@ $(function() {
         if (uploadedImage.error){
           if (uploadedImage.error == "filesize"){
             bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.", function(){
+              $("#postImageUrl").val("");
+              $("#postImageTags").val("");
               $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+              $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
             });
           }
         }
@@ -76,7 +79,8 @@ $(function() {
           imageUploadReq.abort();
         }else{
           console.log("delete image on server here");
-          ;;;//placeholder for deleting the image on the server
+          let jsonResponse = JSON.parse(imageUploadReq.responseText);
+          $.post( "/cleartempimage", { imageURL: jsonResponse.url } );
         }
         $("#postImageUrl").val("");
         $("#postImageTags").val("");

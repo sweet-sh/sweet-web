@@ -2389,7 +2389,7 @@ module.exports = function(app, passport) {
           if (req.files.image.size <= 5242880){
             var imageData = req.files.image.data;
             console.log(imageUrl + '.gif');
-            fs.writeFile('./cdn/images/' + imageUrl + '.gif', imageData, 'base64', function(err) {
+            fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function(err) { //to temp
               if(err) {
                 return console.log(err);
               }
@@ -2428,7 +2428,7 @@ module.exports = function(app, passport) {
             .jpeg({
               quality: 70
             })
-            .toFile('./cdn/images/' + imageUrl + '.jpg')
+            .toFile('./cdn/images/temp/' + imageUrl + '.jpg') //to temp
             .then(image => {
               // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
               // .then((tags) => {
@@ -2459,6 +2459,15 @@ module.exports = function(app, passport) {
         res.end(JSON.stringify({error: "filesize"}));
       }
     }
+  })
+
+  app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
+    fs.unlink("./cdn/images/temp/"+req.body.imageURL, function(e){
+      if(e){
+        console.log("could not delete image "+"./cdn/images/temp/"+req.body.imageURL);
+        console.log(e);
+      }
+    });
   })
 
   app.post("/createpost", isLoggedInOrRedirect, function(req, res) {
@@ -2548,6 +2557,10 @@ module.exports = function(app, passport) {
 
     // Parse images
     if (req.body.postImageUrl){
+      fs.rename("./cdn/images/temp/"+req.body.postImageUrl, "./cdn/images/"+req.body.postImageUrl, function(e){
+        console.log("could not move "+req.body.postImageUrl+" out of temp");
+        console.log(e);
+      }) //move images out of temp storage
       image = new Image({
         context: "user",
         filename: postImage,
