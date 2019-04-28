@@ -675,7 +675,7 @@ hr {
 }
 
 .custom-file-container__image-clear {
-    color: white;
+    color: #000000;
     font-size: 2em;
     text-align: right;
     position: absolute;

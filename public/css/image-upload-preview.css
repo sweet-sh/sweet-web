@@ -54,18 +54,18 @@
         border-left: 1px solid #c0c0af;
         box-sizing: border-box; }
   .custom-file-container__image-preview {
+    overflow: hidden;
     box-sizing: border-box;
     transition: all 0.2s ease;
     margin-top: 20px;
     margin-bottom: 40px;
-    height: 250px;
+    height: 400px;
     width: 100%;
     border-radius: 4px;
-    background-size: cover;
-    background-position: center center;
+    background-size: contain;
+    background-position:center;
     background-repeat: no-repeat;
-    background-color: #fff;
-    overflow: scroll; }
+    background-color: #fff; }
   .custom-file-container__image-multi-preview {
     position: relative;
     box-sizing: border-box;
@@ -80,6 +80,7 @@
     height: 90px;
     box-shadow: 0 4px 10px 0 rgba(51, 51, 51, 0.25); }
     .custom-file-container__image-multi-preview__single-image-clear {
+      color: #000000;
       left: -6px;
       background: #EDEDE8;
       position: absolute;
