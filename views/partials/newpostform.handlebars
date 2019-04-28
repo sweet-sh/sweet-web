@@ -7,7 +7,6 @@
     <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}"{{/if}}/>
   </div>
   <div class="form-row mb-2" id="imagePreviewContainer">
-    <!-- <img src="" id="imagePreview" /> -->
     <input type="hidden" id="postImageUrl" name="postImageUrl"/>
     <input type="hidden" id="postImageTags" name="postImageTags"/>
     <div class="custom-file-container" data-upload-id="postImageUpload">
@@ -20,27 +19,8 @@
     </div>
     <input type="text" class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}"{{/if}}/>
   </div>
-  <div class="form-row my-2" id="emojiWindow">
-    <div style="margin-right:.5rem;display:inline;">Click to add:</div>
-    <div class="emoji">🍭</div>
-    <div class="emoji">🍬</div>
-    <div class="emoji">👍</div>
-    <div class="emoji">👎</div>
-    <div class="emoji">😀</div>
-    <div class="emoji">😎</div>
-    <div class="emoji">😍</div>
-    <div class="emoji">🤨</div>
-    <div class="emoji">😑</div>
-    <div class="emoji">😶</div>
-    <div class="emoji">🙃</div>
-    <div class="emoji">👻</div>
-    <div class="emoji">🐶</div>
-    <div class="emoji">🐱</div>
-    <div class="emoji">🌞</div>
-    <div class="emoji">🌝</div>
-    <div class="emoji">❤️</div>
-    <div class="emoji">💯</div>
-    <div class="emoji">🏳️‍🌈</div>
+  <div class="form-row my-2 card p-1" id="emojiWindow" style="display:none">
+    {{> emojilist }}
   </div>
     <div id="topPostControlsRow" class="form-row mt-2 post-controls">
       <div class="form-check" id="visibilityControls">
@@ -49,7 +29,7 @@
       </div>
     </div>
     <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
-      <div id="leftSideControls">
+      <div class="leftSideControls">
         {{#unless isMember}}
           <div class="switch-field" id="visibilityControls">
         		<input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked/>
@@ -59,7 +39,7 @@
         	</div>
         {{/unless}}
       </div>
-      <div id="rightSideControls">
+      <div class="rightSideControls">
         <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
         <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
         <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>

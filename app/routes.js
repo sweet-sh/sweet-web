@@ -124,7 +124,7 @@ module.exports = function(app, passport) {
     })
   })
 
-  //Responds to get requests for '/'. 
+  //Responds to get requests for '/'.
   //Input: none
   //Output: redirect to '/home' if logged in, render of the index page if logged out.
   app.get('/', function(req, res) {
@@ -339,7 +339,7 @@ module.exports = function(app, passport) {
   //Responds to post requests from /forgot-password by sending a password reset email with a token
   //Input: the user's email
   //Ouput: just a redirect to /forgot-password with an incorrect flash message if the email is wrong,
-  //an email with a link to /reset-password with a token if the email is right and the token saved in 
+  //an email with a link to /reset-password with a token if the email is right and the token saved in
   //the database, or a redirect to /forgot-password with a warning message if the email or database apis return errors.
   app.post('/forgot-password', function(req, res) {
     require('crypto').randomBytes(20, function(err, buffer) {
@@ -1925,7 +1925,8 @@ module.exports = function(app, passport) {
           res.render('singlepost', {
             canDisplay: false,
             loggedIn: isLoggedIn,
-            loggedInUserData: loggedInUserData
+            loggedInUserData: loggedInUserData,
+            activePage: 'singlepost'
           })
         }
         else {
@@ -2093,7 +2094,8 @@ module.exports = function(app, passport) {
             flaggedUsers: flagged,
             metadata: metadata,
             isMuted: isMuted,
-            isMember: isMember
+            isMember: isMember,
+            activePage: 'singlepost'
           })
         }
       })

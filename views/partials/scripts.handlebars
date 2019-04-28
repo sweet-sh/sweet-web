@@ -64,10 +64,10 @@ $(function() {
         text == "Show more" ? "Show less" : "Show more");
   })
   $('body').on('click','.replyEmojiWindowButton', function() {
-    $( this ).prev().slideToggle("fast");
+    $(this).closest('.replyForm').find('.replyEmojiWindow').slideToggle("fast");
   })
-  $('body').on('click','.replyEmoji', function() {
-    var ourTextBox = $(this).closest("#replyForm").find("#commentContent")[0];
+  $('body').on('click','.replyEmojiWindow>.emoji', function() {
+    var ourTextBox = $(this).closest(".replyForm").find("#commentContent")[0];
     var emoji = event.target.innerHTML;
     if(ourTextBox.selectionStart){ //if the cursor has a position in the box
       var cursorPos = ourTextBox.selectionStart;
@@ -102,7 +102,7 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
+    let replyTextarea = $(this).closest(".replyContainer").children(".replyForm").find("#commentContent")
     replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus()
   })
   $('body').on('click', '.deletePost', function() {
@@ -140,12 +140,13 @@ $(function() {
     });
   })
   $('body').on('click', '.postReply', function() {
-    let textarea = $(this).closest(".input-group").find(".comment-textarea");
-    let commentContent = $(this).closest(".input-group").find(".comment-textarea").val();
+    let textarea = $(this).closest(".replyForm").find(".comment-textarea");
+    let commentContent = textarea.val();
     let commentsContainer = $(this).closest('.replyContainer').find('.repliesContainer');
+    let emojiWindow = $(this).closest('.replyForm').find('.replyEmojiWindow');
     let commentButton = $(this);
     commentButton.prop('disabled', true);
-    $.post("/createcomment/"+$(this).attr("id"), { commentContent: commentContent }, function(data) {
+    $.post("/createcomment/"+$(this).attr("data-post-id"), { commentContent: commentContent }, function(data) {
       if (data!='nope'){
         textarea.val("");
         textarea[0].style.height = "";
@@ -160,6 +161,7 @@ $(function() {
           let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
           counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
         }
+        emojiWindow.hide()
       }
       else {
         let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
