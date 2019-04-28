@@ -6,7 +6,7 @@
         <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span><span class="screenreader-text"> Home</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><span class="navbar-icon-notifications"></span><span class="screenreader-text"> Notifications </span><span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
+        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><span class="navbar-icon-notifications"></span><span class="screenreader-text"> Notifications </span><span class="badge badge-secondary badge-pill notifications-count"></span></a>
       </li>
       <li class="nav-item">
         <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}/images/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="screenreader-text"> Profile</span></a>
@@ -27,15 +27,15 @@
     {{/if}}
   </ul>
 
-  <ul class="nav ml-auto col-8" id="navbarMenuDesktop">
+  <ul class="nav ml-auto col-8" id="navbarMenuDesktop" role="navigation">
     <!-- <a class="navbar-brand" href="/" id="navTitle">s</a> -->
     {{#if loggedIn }}
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span></a>
+        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span><span class="screenreader-text"> Home</span></a>
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" id="notificationsDropdownLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <span class="navbar-icon-notifications"></span> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span>
+          <span class="navbar-icon-notifications"></span> <span class="badge badge-secondary badge-pill notifications-count"></span><span class="screenreader-text"> Notifications</span>
         </a>
         <div class="dropdown-menu py-0" aria-labelledby="notificationsDropdownLink">
           <ul class="list-group list-group-flush" id="notificationsContainer">
@@ -54,10 +54,10 @@
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><span class="navbar-icon-communities"></span></a>
+        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><span class="navbar-icon-communities"></span><span class="screenreader-text"> Communities</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><span class="navbar-icon-search"></span></a>
+        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><span class="navbar-icon-search"></span><span class="screenreader-text"> Search</span></a>
       </li>
     {{else}}
       <li class="nav-item">
