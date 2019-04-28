@@ -19,16 +19,16 @@
       </li>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login"><i class="fas fa-cookie"></i> log in</a>
+        <a class="nav-link" href="/login">log in</a>
       </li>
+      <a class="navbar-brand" href="/" id="navTitle">s</a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> sign up</a>
+        <a class="nav-link" href="/signup">sign up</a>
       </li>
     {{/if}}
   </ul>
 
   <ul class="nav ml-auto col-8 px-4" id="navbarMenuDesktop" role="navigation">
-    <!-- <a class="navbar-brand" href="/" id="navTitle">s</a> -->
     {{#if loggedIn }}
       <li class="nav-item">
         <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span><span class="screenreader-text"> Home</span></a>
@@ -61,10 +61,11 @@
       </li>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login"><i class="fas fa-cookie"></i> log in</a>
+        <a class="nav-link" href="/login">log in</a>
       </li>
+      <a class="navbar-brand" href="/" id="navTitle">s</a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> sign up</a>
+        <a class="nav-link" href="/signup">sign up</a>
       </li>
     {{/if}}
   </ul>
