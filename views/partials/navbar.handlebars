@@ -1,22 +1,25 @@
 <nav class="navbar navbar-light fixed-top" id="topNav">
-  <a class="navbar-brand" href="/" id="navTitle">sweet</a>
+  <!-- <a class="navbar-brand" href="/" id="navTitle">s</a> -->
+  <!-- <ul class="nav" id="navbarMenuMobile">
 
-  <ul class="nav" id="navbarMenuMobile">
+  </ul> -->
+
+  <ul class="nav" id="navbarMenuMobile" role='navigation'>
     {{#if loggedIn }}
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><img class="nav-icon" src="./icons/home.svg" /></a>
+        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><img class="nav-icon" data-icon-name="home" src="/icons/home.svg" /><span class="screenreader-text"> Home</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><img class="nav-icon" src="./icons/notifications.svg" /> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
+        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><img class="nav-icon" data-icon-name="notifications" src="/icons/notifications.svg" /> <span class="screenreader-text"> Notifications </span><span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><img class="nav-icon" src="./icons/communities.svg" /></a>
+        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><img class="nav-icon" data-icon-name="communities" src="/icons/communities.svg" /><span class="screenreader-text"> Communities</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><img class="nav-icon" src="./icons/profile.svg" /></a>
+        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><img class="nav-icon" data-icon-name="search" src="/icons/search.svg" /><span class="screenreader-text"> Search</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><img class="nav-icon" src="./icons/search.svg" /></a>
+        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}/images/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="screenreader-text"> Profile</span></a>
       </li>
     {{else}}
       <li class="nav-item">

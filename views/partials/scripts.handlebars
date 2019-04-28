@@ -12,6 +12,20 @@ $(function() {
     $(this).find('.badge').css('background-color', '#6c757d');
   });
 
+  $('#navbarMenuMobile .nav-item').hover(function(){
+    var icon = $(this).find('.nav-icon');
+    var iconName = icon.attr('data-icon-name');
+    icon.attr('src', '/icons/' + iconName + '-hover.svg')
+  }, function(){
+    var isActive = $(this).find('.nav-link').hasClass('active');
+    var icon = $(this).find('.nav-icon');
+    var iconName = icon.attr('data-icon-name');
+    icon.attr('src', '/icons/' + iconName + (isActive ? '-active' : '') + '.svg')
+  })
+
+  $('#navbarMenuMobile .nav-link.active').find('.nav-icon').attr('src', '/icons/' + $(this).find('.nav-link.active .nav-icon').attr('data-icon-name') + '-active.svg');
+
+
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }

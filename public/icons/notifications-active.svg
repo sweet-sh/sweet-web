@@ -12,7 +12,7 @@
    y="0px"
    viewBox="0 0 80 90.048157"
    id="svg10"
-   sodipodi:docname="notifications-hover.svg"
+   sodipodi:docname="notifications-active.svg"
    width="80"
    height="90.048157"
    inkscape:version="0.92.2 5c3e80d, 2017-08-06">
@@ -39,7 +39,7 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="740"
+     inkscape:window-width="742"
      inkscape:window-height="480"
      id="namedview12"
      showgrid="false"
@@ -53,9 +53,9 @@
   <g
      transform="translate(-10,-957.31402)"
      id="g4"
-     style="fill:#666666;fill-opacity:1">
+     style="fill:#900202;fill-opacity:1">
     <path
-       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:Sans;-inkscape-font-specification:Sans;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;baseline-shift:baseline;text-anchor:start;display:inline;overflow:visible;visibility:visible;opacity:1;fill:#666666;fill-opacity:1;stroke:none;stroke-width:6;marker:none;enable-background:accumulate"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:Sans;-inkscape-font-specification:Sans;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;baseline-shift:baseline;text-anchor:start;display:inline;overflow:visible;visibility:visible;opacity:1;fill:#900202;fill-opacity:1;stroke:none;stroke-width:6;marker:none;enable-background:accumulate"
        d="M 49.65625,4.96875 C 48.192884,5.13746 46.975112,6.52715 47,8 v 3.1875 c -5.574212,0.695628 -10.348015,3.30218 -13.9375,7 -4.218229,4.34554 -6.881418,10.12905 -8,16.28125 l -4,22 c -0.830038,4.5652 -2.522146,5.50205 -4.9375,7.09375 -1.207677,0.7958 -2.680464,1.64485 -3.96875,3.15625 C 10.867964,68.23025 10,70.4378 10,73 c 0,4.3801 3.619892,8 8,8 H 35.03125 C 35.550604,88.794147 42.078826,95 50,95 57.921174,95 64.449396,88.794147 64.96875,81 H 82 c 4.380108,0 8,-3.6199 8,-8 0,-2.5622 -0.867963,-4.76985 -2.15625,-6.28125 C 86.555463,65.20735 85.082676,64.3583 83.875,63.5625 81.459649,61.9708 79.767539,61.03405 78.9375,56.46875 l -4,-22 c -1.118582,-6.1522 -3.781772,-11.93571 -8,-16.28125 -3.589484,-3.69782 -8.363288,-6.304372 -13.9375,-7 V 8 C 53.02879,6.2975 51.347769,4.77359 49.65625,4.96875 Z M 50,17 c 5.264761,0 9.38896,2.01004 12.625,5.34375 3.23604,3.33371 5.504629,8.05671 6.4375,13.1875 l 4,22 c 1.135719,6.2465 4.938041,9.32235 7.53125,11.03125 1.296605,0.8544 2.220437,1.48335 2.6875,2.03125 C 83.748313,71.14175 84,71.569 84,73 c 0,1.1599 -0.840108,2 -2,2 H 18 c -1.159892,0 -2,-0.8401 -2,-2 0,-1.431 0.251686,-1.85825 0.71875,-2.40625 0.467064,-0.5479 1.390897,-1.17685 2.6875,-2.03125 2.593206,-1.7089 6.39553,-4.78475 7.53125,-11.03125 l 4,-22 C 31.870371,30.40046 34.13896,25.67746 37.375,22.34375 40.61104,19.01004 44.735239,17 50,17 Z m -8.8125,64 h 17.625 C 58.305268,85.5269 54.681708,89 50,89 45.318292,89 41.694732,85.5269 41.1875,81 Z"
        transform="translate(0,952.36218)"
        id="path2"

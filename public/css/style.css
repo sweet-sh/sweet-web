@@ -88,21 +88,65 @@ hr {
     padding-top: 0.25em;
 }
 
-#navTitle {
+/* #navTitle {
   font-family: "Roboto Mono", monospace;
   align-self: center;
   color: #ce1717;
   font-size: 1.6em;
   font-weight: 500;
+} */
+
+#navTitle {
+  font-family: "Roboto Mono", monospace;
+  align-self: center;
+  color: white;
+  font-size: 1.6em;
+  font-weight: 500;
+  background: #ce1717;
+  display: flex;
+  width: 28px;
+  margin: 0;
+  padding: 0;
+  height: 28px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding-bottom: 5px;
 }
 
+#navbarProfileImage {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+#navbarProfileImage.active {
+  border: 1px solid #900202;
+}
+
+#navbarProfileImage:hover {
+  border: 1px solid #ce1717;
+}
+
+
+
 .nav-icon {
-  width: 20px;
+  height: 20px;
+}
+
+.screenreader-text {
+  display: none;
 }
 
 #navTitle a {
   text-decoration: none;
   color: #ce1717;
+}
+
+#navbarMenuMobile {
+  justify-content: space-between;
+  width: 100%;
 }
 
 #navbarMenuDesktop {
