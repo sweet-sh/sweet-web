@@ -121,7 +121,7 @@ function(req, email, password, done) {
                     if (err)
                       throw err;
                     console.log("Saved sweetbot follow!")
-                    return done(null, newUser);
+                    return done(null, false);
                   })
                 })
                 .catch(error => {
