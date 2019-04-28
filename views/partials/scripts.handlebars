@@ -12,6 +12,7 @@ $(function() {
     $(this).find('.badge').css('background-color', '#6c757d');
   });
 
+
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }
@@ -102,8 +103,11 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    let replyTextarea = $(this).closest(".replyContainer").children(".replyForm").find("#commentContent")
-    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus()
+    let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
+    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus(function() {
+      var textareaValue = $(this).val();
+      $(this).val(textareaValue);
+    })
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);

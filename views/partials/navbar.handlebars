@@ -1,53 +1,50 @@
 <nav class="navbar navbar-light fixed-top" id="topNav">
-  <a class="navbar-brand" href="/" id="navTitle">sweet</a>
 
-  <ul class="nav" id="navbarMenuMobile">
+  <ul class="nav" id="navbarMenuMobile" role='navigation'>
     {{#if loggedIn }}
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><i class="fas fa-home"></i></a>
+        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span><span class="screenreader-text"> Home</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><i class="fas fa-bell"></i> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span></a>
+        <a class="nav-link{{#eq activePage 'notifications'}} active{{/eq}}" href="/notifications" id="notificationsPageLink"><span class="navbar-icon-notifications"></span><span class="screenreader-text"> Notifications </span><span class="badge badge-secondary badge-pill notifications-count"></span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><i class="fas fa-seedling"></i></a>
+        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}/images/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="screenreader-text"> Profile</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage loggedInUserData.username}} active{{/eq}}" href="/{{loggedInUserData.username}}"><i class="fas fa-user-circle"></i></a>
+        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><span class="navbar-icon-communities"></span><span class="screenreader-text"> Communities</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><i class="fas fa-search"></i></a>
+        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><span class="navbar-icon-search"></span><span class="screenreader-text"> Search</span></a>
       </li>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login"><i class="fas fa-cookie"></i> log in</a>
+        <a class="nav-link" href="/login">log in</a>
       </li>
+      <a class="navbar-brand" href="/" id="navTitle">s</a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> sign up</a>
+        <a class="nav-link" href="/signup">sign up</a>
       </li>
     {{/if}}
   </ul>
 
-  <ul class="nav ml-auto" id="navbarMenuDesktop">
+  <ul class="nav ml-auto col-8 px-4" id="navbarMenuDesktop" role="navigation">
     {{#if loggedIn }}
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><i class="fas fa-home"></i> home</a>
+        <a class="nav-link{{#eq activePage 'home'}} active{{/eq}}" href="/home"><span class="navbar-icon-home"></span><span class="screenreader-text"> Home</span></a>
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" id="notificationsDropdownLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-bell"></i> <span class="badge badge-secondary badge-pill notifications-count" style="position:relative;top:-1px;"></span>
+          <span class="navbar-icon-notifications"></span> <span class="badge badge-secondary badge-pill notifications-count"></span><span class="screenreader-text"> Notifications</span>
         </a>
         <div class="dropdown-menu py-0" aria-labelledby="notificationsDropdownLink">
           <ul class="list-group list-group-flush" id="notificationsContainer">
           </ul>
         </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><i class="fas fa-seedling"></i> communities</a>
-      </li>
       <li class="nav-item dropdown">
         <a class="nav-link {{#eq activePage loggedInUserData.username}}active{{/eq}} dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-at"></i> {{loggedInUserData.username}}
+          <img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}/images/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="navbar-username">@{{loggedInUserData.username}}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown" id="userDropdownMenu">
           <a class="dropdown-item" href="/{{loggedInUserData.username}}"><i class="fas fa-user-circle"></i> profile</a>
@@ -57,14 +54,18 @@
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><i class="fas fa-search"></i> search</a>
+        <a class="nav-link{{#eq activePage 'communities'}} active{{/eq}}" href="/communities"><span class="navbar-icon-communities"></span><span class="screenreader-text"> Communities</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><span class="navbar-icon-search"></span><span class="screenreader-text"> Search</span></a>
       </li>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login"><i class="fas fa-cookie"></i> log in</a>
+        <a class="nav-link" href="/login">log in</a>
       </li>
+      <a class="navbar-brand" href="/" id="navTitle">s</a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> sign up</a>
+        <a class="nav-link" href="/signup">sign up</a>
       </li>
     {{/if}}
   </ul>
