@@ -3017,6 +3017,26 @@ module.exports = function(app, passport) {
   })
 };
 
+function cleanTempFolder(){
+  fs.readdir("./cdn/images/temp", function(err,files){
+    files.forEach(file => {
+      fs.stat(file,function(err, s){
+        if(Date.now() - s.mtime > 3600000){
+          fs.unlink(file,function(e){
+            if(e){
+              console.log("couldn't clean temp file "+file.path);
+              console.log(e);
+            }
+          })
+        }
+      })
+    });
+  });
+  setTimeout(cleanTempFolder, 3600000);
+}
+
+setTimeout(cleanTempFolder, 3600000); //clean temp image folder every hour
+
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {
   if (req.isAuthenticated()){
