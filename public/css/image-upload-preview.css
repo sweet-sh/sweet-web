@@ -1,4 +1,4 @@
-.custom-file-container {
+/*.custom-file-container {
   box-sizing: border-box;
   position: relative;
   display: block; }
@@ -79,21 +79,5 @@
     width: 29.615861214%;
     height: 90px;
     box-shadow: 0 4px 10px 0 rgba(51, 51, 51, 0.25); }
-    .image-dclear {
-      color: #000000;
-      left: -6px;
-      background: #EDEDE8;
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      text-align: center;
-      margin-top: -6px;
-      box-shadow: 0 4px 10px 0 rgba(51, 51, 51, 0.25); }
-      .imaged-clear:hover {
-        background: #cbcbbd;
-        cursor: pointer; }
-      .image-dclear__icon {
-        color: #6a6a53;
-        display: block;
-        margin-top: -2px; }
+    
+*/

@@ -639,7 +639,24 @@ hr {
   display: none;
 }
 
+.custom-file-container {
+  box-sizing: border-box;
+  position: relative;
+  display: block; }
+
 .image-preview {
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+  margin-bottom: 40px;
+  height: 100%;
+  width: 100%;
+  border-radius: 4px;
+  background-size: contain;
+  background-position:center;
+  background-repeat: no-repeat;
+  background-color: #fff;
   background-image:url("/images/imagePreviewWindowDefault.jpg");
   width: 100%;
   border: 2px dashed #d5d5d5;
