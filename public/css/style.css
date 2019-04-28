@@ -639,7 +639,8 @@ hr {
   display: none;
 }
 
-#imagePreview {
+.image-preview {
+  background-image:url("/images/imagePreviewWindowDefault.jpg");
   width: 100%;
   border: 2px dashed #d5d5d5;
   margin: 15px 0;
@@ -679,7 +680,7 @@ hr {
   margin-bottom: 0.5rem !important;
 }
 
-.custom-file-container__image-clear {
+.image-clear {
     background-color: #ffffff99;
     color: #000000;
     border-radius: 90%;
@@ -691,7 +692,7 @@ hr {
     top: 7px;
 }
 
-.custom-file-container__image-preview {
+.image-preview {
   background-color: #edede8 !important;
 }
 

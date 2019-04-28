@@ -123,5 +123,10 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+#hosted images
+/cdn/images/*.jpg
+/cdn/images/*.png
+/cdn/images/*.gif
+
 # End of https://www.gitignore.io/api/node,macos
 
