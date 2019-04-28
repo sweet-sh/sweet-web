@@ -2462,12 +2462,14 @@ module.exports = function(app, passport) {
   })
 
   app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
-    fs.unlink("./cdn/images/temp/"+req.body.imageURL, function(e){
-      if(e){
-        console.log("could not delete image "+"./cdn/images/temp/"+req.body.imageURL);
-        console.log(e);
-      }
-    });
+    if(!req.body.imageURL.includes("/")){
+      fs.unlink("./cdn/images/temp/"+req.body.imageURL, function(e){
+        if(e){
+          console.log("could not delete image "+"./cdn/images/temp/"+req.body.imageURL);
+          console.log(e);
+        }
+      });
+    }
   })
 
   app.post("/createpost", isLoggedInOrRedirect, function(req, res) {
