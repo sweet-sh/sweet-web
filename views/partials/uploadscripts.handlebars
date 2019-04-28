@@ -100,6 +100,10 @@ $(function() {
   //   }
   // }
 
+  $(window).on("unload", function(e) {
+    $.post( "/cleartempimage", { imageURL: $("#postImageUrl")[0].value } );
+  });
+
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
     tribute = new Tribute({
