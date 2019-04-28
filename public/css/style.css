@@ -503,7 +503,6 @@ hr {
 .replyEmojiWindow {
   display:none;
   cursor:default;
-  border:1px solid #ffffff;
   border-radius:.25rem;
 }
 
