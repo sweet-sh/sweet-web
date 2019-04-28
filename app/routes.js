@@ -627,7 +627,7 @@ module.exports = function(app, passport) {
   //Responds to post requests (?) for the users that follow the logged in user
   //Input: none
   //Output: JSON data describing the users that follow the logged in user or a redirect from isLoggedInOrRedirect.
-  //Should be isLoggedInOrErrorResponse?
+  //Should be isLoggedInOrErrorResponse? Because jQuery intercepts the response, the browser won't automatically handle it?
   app.post('/api/user/followers', isLoggedInOrRedirect, function(req, res) {
     followedUserData = []
     Relationship.find({
@@ -654,6 +654,9 @@ module.exports = function(app, passport) {
     });
   })
 
+  //Responds to requests for search queries by page.
+  //Input: query, page number
+  //Output: 404 response if no results, the rendered search results otherwise, unless isLoggedInOrRedirect redirects you
   app.get('/showsearch/:query/:page', isLoggedInOrRedirect, function(req, res) {
 
     let postsPerPage = 10;
@@ -777,6 +780,12 @@ module.exports = function(app, passport) {
     }
   })
 
+  //Responds to requests for posts for feeds. API method, used within the public pages.
+  //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
+  //(posts on a user's profile page), or single (a single post.) The identifier identifies either the user, the
+  //community, or the post. I don't believe it's used when the context is home? It appears to be the url of the image
+  //of the logged in user in that case. (??????????????????) Page means page.
+  //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
   app.get('/showposts/:context/:identifier/:page', function(req, res){
     var loggedInUserData = {}
     if (req.isAuthenticated()){
@@ -1210,6 +1219,10 @@ module.exports = function(app, passport) {
     })
   })
 
+  //API method that responds to requests for posts tagged a certain way.
+  //Input: name is the name of the tag, page is the page number of posts we're viewing.
+  //Output: isLoggedInOrRedirect might redirect you. Otherwise, you get 404 if no showable posts are found or
+  //the rendered posts results.
   app.get('/showtag/:name/:page', isLoggedInOrRedirect, function(req, res){
     let postsPerPage = 10;
     let page = req.params.page-1;
@@ -1390,6 +1403,9 @@ module.exports = function(app, passport) {
     })
   })
 
+  //Responds to get requests for a user's profile page.
+  //Inputs: username is the user's username.
+  //Outputs: a 404 if the user isn't found
   app.get('/:username', function(req, res) {
     var loggedInUserData = {}
     if (req.isAuthenticated()){
@@ -1751,15 +1767,14 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Responds to a get response for a specific post.
   app.get('/:username/:posturl', function(req,res){
 
     var loggedInUserData = {}
+    var isLoggedIn = false;
     if (req.isAuthenticated()){
-      isLoggedInOrRedirect = true;
+      isLoggedIn = true;
       loggedInUserData = req.user;
-    }
-    else {
-      isLoggedInOrRedirect = false;
     }
 
     let myFollowedUserEmails = () => {
@@ -1864,7 +1879,7 @@ module.exports = function(app, passport) {
     let isMuted = () => {
       isMuted = false;
       isMember = false;
-      if (isLoggedInOrRedirect) {
+      if (isLoggedIn) {
         return Post.findOne({url: req.params.posturl})
         .then(post => {
           if (post){
@@ -1909,7 +1924,7 @@ module.exports = function(app, passport) {
         if (!post){
           res.render('singlepost', {
             canDisplay: false,
-            loggedIn: isLoggedInOrRedirect,
+            loggedIn: isLoggedIn,
             loggedInUserData: loggedInUserData
           })
         }
@@ -2072,7 +2087,7 @@ module.exports = function(app, passport) {
           }
           res.render('singlepost', {
             canDisplay: canDisplay,
-            loggedIn: isLoggedInOrRedirect,
+            loggedIn: isLoggedIn,
             loggedInUserData: loggedInUserData,
             post: displayedPost,
             flaggedUsers: flagged,
