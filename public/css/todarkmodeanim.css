@@ -1,0 +1,18 @@
+#postContent {
+    
+  animation-duration: 3s;
+  animation-name: todark;
+  animation-fill-mode: forwards;
+}
+
+@keyframes todark {
+  from {
+    background:#ffffff;
+    color:#000000;
+  }
+
+  to {
+    background:#333333;
+    color:#eeeeee;
+  }
+}
