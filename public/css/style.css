@@ -277,7 +277,8 @@ hr {
 
 #topNav {
   /*box shadow property moved to colors section*/
-  border-bottom: 2px solid;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
   padding-bottom: 0.75rem;
   padding-top: 0.75rem;
 }
