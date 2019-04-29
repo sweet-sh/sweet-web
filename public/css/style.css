@@ -1,8 +1,4 @@
-/* @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700');
-@import url('https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,600,600i,700,700i');
-@import url('https://fonts.googleapis.com/css?family=Arimo:400,400i,700,700i|Lato:300,300i,400,400i,700,700i|Noto+Sans:400,400i,700,700i|Ubuntu:300,300i,400,400i,500,500i,700,700i'); */
-
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Inconsolata:400,700');
 
 /*colors*/
 
@@ -37,6 +33,14 @@ hr {
 #navTitle a {
   color: #ce1717;
 }
+
+#navbarSearchField {
+  background: #f3f3f3;
+  border-color: #e1e1e1;
+  font-family: 'Inconsolata', monospace;
+  width: 220px;
+}
+
 #topNav .nav-link,
 #topNav .nav-link:visited,
 #topNav .nav-link:active,
@@ -244,14 +248,9 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inconsolata', monospace;
   letter-spacing: -0.5px;
 }
-
-/* #topNav .nav-link {
-  font-family: 'Roboto Mono', monospace;
-  letter-spacing: -0.2px;
-} */
 
 .col-md-4 h4,
 .col-md-4 h5,
@@ -284,7 +283,7 @@ hr {
 }
 
 /* #navTitle {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Inconsolata", monospace;
   align-self: center;
   color: #ce1717;
   font-size: 1.6em;
@@ -292,7 +291,7 @@ hr {
 } */
 
 #navTitle {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Inconsolata", monospace;
   align-self: center;
   font-size: 1.6em;
   font-weight: 500;
@@ -322,18 +321,36 @@ hr {
   text-decoration: none;
 }
 
+.navbar-group {
+  display: flex;
+  flex: 1;
+}
+#navbarLeftGroup {
+  justify-content: flex-start;
+}
+#navbarLeftGroup .nav-item:not(:last-child) {
+  padding-right: 2rem;
+}
+#navbarCentreGroup {
+  justify-content: center;
+}
+#navbarRightGroup {
+  justify-content: flex-end;
+}
+#navbarRightGroup .nav-item {
+  padding-left: 7px;
+}
+
 #navbarMenuMobile {
   justify-content: space-between;
   width: 100%;
 }
 
 #navbarMenuDesktop {
+  display: none;
   justify-content: space-around;
   margin: 0 auto;
-}
-
-#navbarMenuDesktop {
-  display: none;
+  width: 1110px;
 }
 
 @media (min-width: 576px) {
@@ -372,10 +389,17 @@ hr {
     font-size: 90%;
 }
 
+.nav-link-text {
+  font-size: 1rem;
+  margin-left: 7px;
+  font-family: 'Inconsolata', monospace;
+}
+
 .navbar-username {
   font-weight: 300;
-  font-size: 1.1rem;
-  margin-left: 5px;
+  font-size: 1rem;
+  margin-left: 7px;
+  font-family: 'Inconsolata', monospace;
 }
 
 .notifications-count {
@@ -582,6 +606,12 @@ hr {
   margin: auto;
   text-align: center;
 	border-radius: 5px;
+}
+
+.page-header {
+   border-bottom:2px solid #ce1717;
+   padding-bottom:10px;
+   margin-bottom:20px;
 }
 
 #profileImageContainer {

@@ -41,7 +41,7 @@
       </div>
       {{#if loggedIn}}
       <div id="requestsBody" class="community-container">
-        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Membership requests</h3>
+        <h3 class="page-header mx-2">Membership requests</h3>
 
         <div class="container" id="resultsContainer">
           {{#each communityData.membershipRequests}}
@@ -72,7 +72,7 @@
         </div>
       </div>
       <div id="editBody" class="community-container">
-        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Community editor</h3>
+        <h3 class="page-header mx-2">Community editor</h3>
         <nav>
           <div class="nav nav-tabs" id="nav-tab" role="tablist">
             <a class="nav-item nav-link active" id="nav-nameEditor-tab" data-toggle="tab" href="#nav-nameEditor" role="tab" aria-controls="nav-nameEditor" aria-selected="true">Name</a>
@@ -175,7 +175,7 @@
         </div>
       </div>
       <div id="membersBody" class="community-container">
-        <h3 id="searchTitle" class="mx-2" style="font-family:'Roboto Mono',monospace;border-bottom:2px solid #ce1717;padding-bottom:10px;margin-bottom:20px;">Member manager</h3>
+        <h3 class="page-header mx-2">Member manager</h3>
         <div class="container" id="resultsContainer">
           {{#each communityData.members}}
             {{#contains this.mutedCommunities ../communityData._id}}

@@ -243,12 +243,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inconsolata', monospace;
   letter-spacing: -0.5px;
 }
 
 /* #topNav .nav-link {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Inconsolata', monospace;
   letter-spacing: -0.2px;
 } */
 
@@ -282,7 +282,7 @@ hr {
 }
 
 /* #navTitle {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Inconsolata", monospace;
   align-self: center;
   color: #590909;
   font-size: 1.6em;
@@ -290,7 +290,7 @@ hr {
 } */
 
 #navTitle {
-  font-family: "Roboto Mono", monospace;
+  font-family: "Inconsolata", monospace;
   align-self: center;
   font-size: 1.6em;
   font-weight: 500;

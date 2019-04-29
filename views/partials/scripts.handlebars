@@ -11,11 +11,24 @@ $(function() {
   }, function() {
     $(this).find('.badge').css('background-color', '#6c757d');
   });
-
-
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }
+
+  // Navbar search box
+
+  $('#navbarSearchField').keypress(function(event){
+  	var keycode = (event.keyCode ? event.keyCode : event.which);
+    var searchQuery = $(this).val();
+  	if(keycode == '13'){
+  		window.location.href = '/search/' +	searchQuery
+  	}
+  });
+  $("#navbarSearchButton").click(function(event){
+    event.preventDefault();
+    var searchQuery = $('#navbarSearchField').val();
+    window.location.href = '/search/' +	searchQuery
+  })
 
   // window.onbeforeunload = function() {
   //     return true;
