@@ -67,7 +67,7 @@ hr {
 #resultsContainer,
 #directoryResults,
 .commentsList {
-  border: 1px solid #565656;
+  border: 1px solid #c4d8e9;
   background: #474747;
 }
 .commentContainer {
@@ -75,20 +75,20 @@ hr {
 	/* border-radius: 5px; */
 	padding: 15px;
 	/* margin-bottom: 10px; */
-	border-bottom: 1px solid #565656;
+	border-bottom: 1px solid #c4d8e9;
   padding-bottom: 0px;
 }
 #postForm {
-  border-top: 1px solid #565656;
-  border-left: 1px solid #565656;
-  border-right: 1px solid #565656;
+  border-top: 1px solid #c4d8e9;
+  border-left: 1px solid #c4d8e9;
+  border-right: 1px solid #c4d8e9;
   background: #474747;
 }
 #postForm:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
 .content-box {
-  border-bottom: 1px solid #565656;
+  border-bottom: 1px solid #c4d8e9;
 }
 .content-box:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
@@ -104,7 +104,7 @@ hr {
   border-top: 1px solid #212121;
 }
 .user-list li{
-  border: 1px solid #565656;
+  border: 1px solid #c4d8e9;
 }
 .user-list li:hover {
   background: #161616;
@@ -185,9 +185,9 @@ hr {
 }
 #newPostsAvailable {
   background: #4f5e4f;
-  border-left: 1px solid #565656;
-  border-right: 1px solid #565656;
-  border-top: 1px solid #565656;
+  border-left: 1px solid #c4d8e9;
+  border-right: 1px solid #c4d8e9;
+  border-top: 1px solid #c4d8e9;
   color: #25a325;
 }
 #newPostsAvailable a{
@@ -198,9 +198,6 @@ hr {
 }
 .subscribed-alert a{
   color: #a3a3a3;
-}
-.mutedtext {
-  color:#c4d8e9;
 }
 
 
