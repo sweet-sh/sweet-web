@@ -391,6 +391,7 @@ hr {
     max-width: 380px;
     padding: 1em;
     border-radius: 4px;
+    margin: 1em auto;
     /*border property moved to colors section*/
 }
 
