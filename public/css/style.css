@@ -403,8 +403,9 @@ hr {
 }
 
 .notifications-count {
-  margin-left: 5px;
-  font-size: small;
+  font-size: 0.5em;
+  position: relative;
+  top: -4px;
 }
 
 #bodyContainer .intro {
