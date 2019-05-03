@@ -19,11 +19,13 @@
       </li>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login">log in</a>
+        <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i><span class="nav-link-text">log in</span></a>
       </li>
-      <a class="navbar-brand" href="/" id="navTitle">s</a>
+      <a href="/" id="sweetLogoLink">
+        <img src="/icons/sweet_bee_logo.svg" id="sweetLogo" alt="sweet logo"/>
+      </a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup">sign up</a>
+        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> <span class="nav-link-text">sign up</span></a>
       </li>
     {{/if}}
   </ul>
@@ -48,6 +50,11 @@
         </li>
       </div>
       <div class="navbar-group" id="navbarCentreGroup">
+        <a href="/" id="sweetLogoLink">
+          <img src="/icons/sweet_bee_logo.svg" id="sweetLogo" alt="sweet logo"/>
+        </a>
+      </div>
+      <div class="navbar-group" id="navbarRightGroup">
         <li class="nav-item dropdown">
           <a class="nav-link {{#eq activePage loggedInUserData.username}}active{{/eq}} dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}/images/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="navbar-username">@{{loggedInUserData.username}}</span>
@@ -56,23 +63,23 @@
             <a class="dropdown-item" href="/{{loggedInUserData.username}}"><i class="fas fa-user-circle"></i> profile</a>
             <a class="dropdown-item" href="/settings"><i class="fas fa-cog"></i> settings</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="/logout"><i class="fas fa-cookie-bite"></i> log out</a>
+            <a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt"></i> log out</a>
           </div>
         </li>
-      </div>
-      <div class="navbar-group" id="navbarRightGroup">
-        <input id="navbarSearchField" class="form-control" type="search" placeholder="Search" aria-label="Search" />
         <li class="nav-item">
           <a id="navbarSearchButton" class="nav-link{{#eq activePage 'search'}} active{{/eq}}" href="/search"><span class="navbar-icon-search"></span><span class="screenreader-text"> Search</span></a>
         </li>
+        <input id="navbarSearchField" class="form-control" type="search" placeholder="Search" aria-label="Search" />
       </div>
     {{else}}
       <li class="nav-item">
-        <a class="nav-link" href="/login">log in</a>
+        <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> <span class="nav-link-text">log in</span></a>
       </li>
-      <a class="navbar-brand" href="/" id="navTitle">s</a>
+      <a href="/" id="sweetLogoLink">
+        <img src="/icons/sweet_bee_logo.svg" id="sweetLogo" alt="sweet logo"/>
+      </a>
       <li class="nav-item">
-        <a class="nav-link" href="/signup">sign up</a>
+        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> <span class="nav-link-text">sign up</span></a>
       </li>
     {{/if}}
   </ul>

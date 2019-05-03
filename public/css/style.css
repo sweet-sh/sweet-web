@@ -38,7 +38,7 @@ hr {
   background: #f3f3f3;
   border-color: #e1e1e1;
   font-family: 'Inconsolata', monospace;
-  width: 220px;
+  width: 180px;
 }
 
 #topNav .nav-link,
@@ -306,6 +306,17 @@ hr {
   padding-bottom: 5px;
 }
 
+#sweetLogo {
+  width: 30px;
+  height: 30px;
+}
+
+#sweetLogoLink {
+  line-height:30px;
+  position: relative;
+  top: 2px;
+}
+
 #navbarProfileImage {
   width: 30px;
   height: 30px;
@@ -323,10 +334,10 @@ hr {
 
 .navbar-group {
   display: flex;
-  flex: 1;
 }
 #navbarLeftGroup {
   justify-content: flex-start;
+  flex: 1;
 }
 #navbarLeftGroup .nav-item:not(:last-child) {
   padding-right: 2rem;
@@ -336,9 +347,13 @@ hr {
 }
 #navbarRightGroup {
   justify-content: flex-end;
+  flex: 1;
+}
+#navbarRightGroup .nav-item:not(:last-of-type) {
+  padding-right: 2rem;
 }
 #navbarRightGroup .nav-item {
-  padding-left: 7px;
+  padding-right: 8px;
 }
 
 #navbarMenuMobile {
@@ -389,23 +404,32 @@ hr {
     font-size: 90%;
 }
 
+
+
+.navbar-username,
 .nav-link-text {
+  display: none;
   font-size: 1rem;
-  margin-left: 7px;
+  margin-left: 8px;
   font-family: 'Inconsolata', monospace;
 }
 
-.navbar-username {
-  font-weight: 300;
-  font-size: 1rem;
-  margin-left: 7px;
-  font-family: 'Inconsolata', monospace;
+@media (min-width: 839px) {
+  .navbar-username,
+  .nav-link-text {
+    display: inline;
+  }
 }
+
+/* @media (min-width: 992px) { ... } */
+
+
 
 .notifications-count {
   font-size: 0.5em;
-  position: relative;
-  top: -4px;
+  position: absolute;
+  top: 6px;
+  left: 7px;
 }
 
 #bodyContainer .intro {
@@ -413,11 +437,11 @@ hr {
 }
 
 .userForm {
-    max-width: 380px;
-    padding: 1em;
-    border-radius: 4px;
-    margin: 1em auto;
-    /*border property moved to colors section*/
+  max-width: 380px;
+  padding: 1em;
+  border-radius: 4px;
+  margin: 1em auto;
+  /*border property moved to colors section*/
 }
 
 .userForm h2 {
