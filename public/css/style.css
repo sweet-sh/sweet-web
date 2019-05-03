@@ -188,14 +188,15 @@ hr {
   color: #ababab;
 }
 #newPostsAvailable {
-  background: #efffef;
+  background: #ececec;
   border-left: 1px solid #dfdfdf;
   border-right: 1px solid #dfdfdf;
   border-top: 1px solid #dfdfdf;
-  color: #196919;
+  color: #6c6c6c;
+  box-shadow: rgba(0, 0, 0, 0.1) 3px 3px 2px inset;
 }
 #newPostsAvailable a{
-  color: #196919;
+  color: #6c6c6c;
 }
 .subscribed-alert {
   color: #909090;
