@@ -414,22 +414,31 @@ hr {
   font-family: 'Inconsolata', monospace;
 }
 
+
+
+/* @media (min-width: 992px) { ... } */
+
+#notificationsPageLink,
+#notificationsDropdownLink {
+  position: relative;
+}
+
+.notifications-count {
+  font-size: 0.5em;
+  position: absolute;
+  top: -5px;
+  left: 7px;
+}
+
 @media (min-width: 839px) {
   .navbar-username,
   .nav-link-text {
     display: inline;
   }
-}
-
-/* @media (min-width: 992px) { ... } */
-
-
-
-.notifications-count {
-  font-size: 0.5em;
-  position: absolute;
-  top: 6px;
-  left: 7px;
+  .notifications-count {
+    top: -2px;
+    left: 7px;
+  }
 }
 
 #bodyContainer .intro {
