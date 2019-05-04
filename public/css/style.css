@@ -351,7 +351,7 @@ hr {
   flex: 1;
 }
 #navbarLeftGroup .nav-item:not(:last-child) {
-  padding-right: 2rem;
+  padding-right: 3.5rem;
 }
 #navbarCentreGroup {
   justify-content: center;
@@ -415,8 +415,6 @@ hr {
     font-size: 90%;
 }
 
-
-
 .navbar-username,
 .nav-link-text {
   display: none;
@@ -425,9 +423,9 @@ hr {
   font-family: 'Inconsolata', monospace;
 }
 
-
-
-/* @media (min-width: 992px) { ... } */
+.nav-link-text.not-hidden {
+  display: inline !important;
+}
 
 #notificationsPageLink,
 #notificationsDropdownLink {
@@ -449,6 +447,9 @@ hr {
   .notifications-count {
     top: -2px;
     left: 7px;
+  }
+  #navbarLeftGroup .nav-item:not(:last-child) {
+    padding-right: 2rem;
   }
 }
 
@@ -494,6 +495,29 @@ hr {
 #userHeader {
   display: flex;
   justify-content: space-between;
+}
+
+#profileControlsDesktopMobile {
+  display: block;
+}
+#profileControlsTablet {
+  display: none;
+}
+@media (min-width: 768px) {
+  #profileControlsDesktopMobile {
+    display: none;
+  }
+  #profileControlsTablet {
+    display: block;
+  }
+}
+@media (min-width: 992px) {
+  #profileControlsDesktopMobile {
+    display: block;
+  }
+  #profileControlsTablet {
+    display: none;
+  }
 }
 
 /* a, a:visited, a:active {
