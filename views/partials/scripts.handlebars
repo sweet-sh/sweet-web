@@ -15,6 +15,18 @@ $(function() {
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }
 
+  $("#darkModeToggle").click(function(e){
+    e.preventDefault();
+    if ($(this).hasClass('notification-active')){
+      $("#darkModeStylesheet").attr("href","")
+      $(this).removeClass('notification-active')
+    }
+    else {
+      $("#darkModeStylesheet").attr("href","/css/darkmode.css")
+      $(this).addClass('notification-active')
+    }
+  })
+
   // Navbar search box
 
   $('#navbarSearchField').keypress(function(event){
