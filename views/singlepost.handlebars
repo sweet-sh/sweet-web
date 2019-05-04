@@ -176,24 +176,10 @@
               {{#if loggedIn}}
                 {{#unless isMuted}}
                   {{#isnt post.type "community"}}
-                    <div id="replyForm">
-                      <div class="input-group">
-                        <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
-                        <div class="input-group-append">
-                          <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{post._id}}">Reply <i class="fas fa-chevron-right"></i></button>
-                        </div>
-                      </div>
-                    </div>
+                    {{> newreplyform }}
                   {{else}}
                     {{#if isMember}}
-                      <div id="replyForm">
-                        <div class="input-group">
-                          <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
-                          <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{post._id}}">Reply <i class="fas fa-chevron-right"></i></button>
-                          </div>
-                        </div>
-                      </div>
+                      {{> newreplyform }}
                     {{else}}
                     {{/if}}
                   {{/isnt}}

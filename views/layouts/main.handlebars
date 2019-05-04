@@ -4,7 +4,7 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no">
-  <title>sweet</title>
+  <title>{{#unless metadata.title}}sweet{{else}}{{metadata.title}}{{/unless}}</title>
 
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=BG7YpbbwpE">
@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <!-- <link rel="stylesheet" href="/css/reset.css"> -->
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/navbar-icons.css">
   <!-- <link id="darkModeStylesheet" rel="stylesheet" href="/css/darkmode.css"> -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
   <script
@@ -41,7 +42,6 @@
   <script src="/js/jquery.uploadPreview.min.js"></script>
   <link href="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" />
   <script src="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
-  <script src="/js/image-upload-preview.js"></script>
   <link href="/css/image-upload-preview.css" type="text/css" rel="stylesheet" />
   <script src="/js/bootbox.min.js"></script>
   <link rel="stylesheet" href="/css/tribute.css" />

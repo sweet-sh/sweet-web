@@ -3,38 +3,62 @@ $(function() {
   $("#postContent").focus(function(){
     $(".post-controls").css('display', 'flex');
   })
-  upload = new FileUploadWithPreview('postImageUpload')
+  //upload = new FileUploadWithPreview('postImageUpload')
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
   $("#emojiWindowButton").click(function(){
-    $("#emojiWindow").slideToggle("fast");
+    $("#emojiWindow").slideToggle("fast")
   })
   $(".emoji").click(function(){
     var ourTextBox = $("#postContent")[0];
     var emoji = event.target.innerHTML;
-    if(ourTextBox.selectionStart){ //if the cursor is in the box
+    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
       var cursorPos = ourTextBox.selectionStart;
       ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
       ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = cursorPos + emoji.length;
+      ourTextBox.focus();
     }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
       ourTextBox.value = emoji + ourTextBox.value;
       ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = emoji.length;
+      ourTextBox.focus();
     }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=emoji; 
+      ourTextBox.value+=emoji;
+      ourTextBox.focus();
     }
   })
   $("#postImageButton").click(function(){
-    upload.selectImage();
+    $(".file-input").click();
+    let imagePrevCont = $('.custom-file-container')[0];
+    imagePrevCont.style.display = "block"
+    imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
     $('#imagePreviewContainer').slideDown('fast');
   })
-  window.addEventListener('fileUploadWithPreview:imageSelected', function (e) {
-    if (e.detail.uploadId === 'postImageUpload') {
+
+  function resetImageUploadFields(){
+    $("#postImageUrl").val("");
+    $("#postImageTags").val("");
+    $("#postSubmit").html($("#postSubmit").html()).prop('disabled', false);
+    $("#postContent").prop('required',true);
+    $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
+    $(".file-input").val(null);
+  }
+
+  $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html()
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+      
+      let fr = new FileReader();
+      fr.onload = function(e){
+        $(".image-preview")[0].style.backgroundImage = "url("+e.target.result+")";
+      }
+      fr.readAsDataURL(this.files[0]);
+
       var fd = new FormData();
-      fd.append('image', e.detail.cachedFileArray[0]);
-      $.ajax({
+      fd.append('image', this.files[0]);
+      var imageUploadReq = $.ajax({
         url: '/api/image/v2',
         type: 'POST',
         data: fd,
@@ -46,17 +70,26 @@ $(function() {
         if (uploadedImage.error){
           if (uploadedImage.error == "filesize"){
             bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.", function(){
-              $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+              resetImageUploadFields();
             });
           }
         }
         else {
-          $("#postImageUrl").val(uploadedImage.url)
-          $("#postImageTags").val(uploadedImage.tags)
+          $("#postImageUrl").val(uploadedImage.url);
+          $("#postImageTags").val(uploadedImage.tags);
           $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+          $("#postContent").removeAttr("required");
         }
+      });
+      $(".image-clear").click(function(e){
+        if(imageUploadReq.readyState != 4){
+          imageUploadReq.abort();
+        }else{
+          let jsonResponse = JSON.parse(imageUploadReq.responseText);
+          $.post( "/cleartempimage", { imageURL: jsonResponse.url } );
+        }
+        resetImageUploadFields();
       })
-    }
   })
   // document.onpaste = function(event){
   //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
@@ -69,6 +102,10 @@ $(function() {
   //     }
   //   }
   // }
+
+  $(window).on("unload", function(e) {
+    $.post( "/cleartempimage", { imageURL: $("#postImageUrl")[0].value } );
+  });
 
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;

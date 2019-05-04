@@ -12,7 +12,7 @@
       </span>
     </a>
     {{#unless this.seen}}
-      <script>notificationsCount = notificationsCount + 1;</script>
+      <script>notificationsCount = (notificationsCount < 9 ? notificationsCount + 1 : notificationsCount);</script>
     {{/unless}}
   {{/each}}
 

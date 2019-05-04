@@ -153,7 +153,7 @@
                       <i class="fas fa-reply"></i>
                     </button>
                     {{#if this.canDelete }}
-                      <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../../post._id}}" data-comment-id="{{this._id}}">
+                      <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../_id}}" data-comment-id="{{this._id}}">
                         &times;
                       </button>
                     {{/if}}
@@ -166,14 +166,7 @@
             {{/if}}
           </div>
           {{#if ../loggedIn}}
-            <div id="replyForm">
-              <div class="input-group">
-                <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
-                <div class="input-group-append">
-                  <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{this._id}}">Reply <i class="fas fa-chevron-right"></i></button>
-                </div>
-              </div>
-            </div>
+            {{> newreplyform }}
           {{/if}}
         </div>
       {{/unless}}
@@ -329,7 +322,7 @@
                         <i class="fas fa-reply"></i>
                       </button>
                       {{#if this.canDelete }}
-                        <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../../post._id}}" data-comment-id="{{this._id}}">
+                        <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../_id}}" data-comment-id="{{this._id}}">
                           &times;
                         </button>
                       {{/if}}
@@ -343,21 +336,14 @@
             </div>
             {{#if ../loggedIn}}
               {{#unless ../isMuted}}
-                <div id="replyForm">
-                  <div class="input-group">
-                    <textarea class="form-control form-control-sm comment-textarea" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
-                    <div class="input-group-append">
-                      <button type="submit" class="btn btn-primary btn-block h-100 btn-sm btn-fade postReply" id="{{this._id}}">Reply <i class="fas fa-chevron-right"></i></button>
-                    </div>
-                  </div>
-                </div>
+                {{> newreplyform }}
               {{/unless}}
             {{/if}}
           </div>
         {{/unless}}
         </article>
     {{else}}
-      {{!-- SECTION: Community post and the user is NOT a member of this community --}}
+      {{!-- SECTION: Community post and the user is NOT a member of this community (we don't show the new comment form here)--}}
       {{#eq ../context "community"}}
         {{!-- SECTION: So we only show it if you're in the community --}}
         <article class="comment commentContainer" data-post-id="{{this._id}}">
@@ -486,7 +472,7 @@
                           <i class="fas fa-reply"></i>
                         </button>
                         {{#if this.canDelete }}
-                          <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../../post._id}}" data-comment-id="{{this._id}}">
+                          <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../_id}}" data-comment-id="{{this._id}}">
                             &times;
                           </button>
                         {{/if}}

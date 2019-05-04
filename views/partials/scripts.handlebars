@@ -11,10 +11,24 @@ $(function() {
   }, function() {
     $(this).find('.badge').css('background-color', '#6c757d');
   });
-
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }
+
+  // Navbar search box
+
+  $('#navbarSearchField').keypress(function(event){
+  	var keycode = (event.keyCode ? event.keyCode : event.which);
+    var searchQuery = $(this).val();
+  	if(keycode == '13'){
+  		window.location.href = '/search/' +	searchQuery
+  	}
+  });
+  $("#navbarSearchButton").click(function(event){
+    event.preventDefault();
+    var searchQuery = $('#navbarSearchField').val();
+    window.location.href = '/search/' +	searchQuery
+  })
 
   // window.onbeforeunload = function() {
   //     return true;
@@ -63,6 +77,28 @@ $(function() {
     $(this).text(
         text == "Show more" ? "Show less" : "Show more");
   })
+  $('body').on('click','.replyEmojiWindowButton', function() {
+    $(this).closest('.replyForm').find('.replyEmojiWindow').slideToggle("fast");
+  })
+  $('body').on('click','.replyEmojiWindow>.emoji', function() {
+    var ourTextBox = $(this).closest(".replyForm").find("#commentContent")[0];
+    var emoji = event.target.innerHTML;
+    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
+      var cursorPos = ourTextBox.selectionStart;
+      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
+      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = cursorPos + emoji.length;
+      ourTextBox.focus();
+    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
+      ourTextBox.value = emoji + ourTextBox.value;
+      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
+      ourTextBox.selectionEnd = emoji.length;
+      ourTextBox.focus();
+    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
+      ourTextBox.value+=emoji;
+      ourTextBox.focus();
+    }
+  })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
@@ -81,7 +117,10 @@ $(function() {
   })
   $('body').on('click', '.replyToComment', function() {
     let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
-    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus()
+    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus(function() {
+      var textareaValue = $(this).val();
+      $(this).val(textareaValue);
+    })
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
@@ -118,12 +157,13 @@ $(function() {
     });
   })
   $('body').on('click', '.postReply', function() {
-    let textarea = $(this).closest(".input-group").find(".comment-textarea");
-    let commentContent = $(this).closest(".input-group").find(".comment-textarea").val();
+    let textarea = $(this).closest(".replyForm").find(".comment-textarea");
+    let commentContent = textarea.val();
     let commentsContainer = $(this).closest('.replyContainer').find('.repliesContainer');
+    let emojiWindow = $(this).closest('.replyForm').find('.replyEmojiWindow');
     let commentButton = $(this);
     commentButton.prop('disabled', true);
-    $.post("/createcomment/"+$(this).attr("id"), { commentContent: commentContent }, function(data) {
+    $.post("/createcomment/"+$(this).attr("data-post-id"), { commentContent: commentContent }, function(data) {
       if (data!='nope'){
         textarea.val("");
         textarea[0].style.height = "";
@@ -138,6 +178,7 @@ $(function() {
           let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
           counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
         }
+        emojiWindow.hide()
       }
       else {
         let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
