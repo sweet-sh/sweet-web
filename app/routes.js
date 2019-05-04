@@ -251,7 +251,7 @@ module.exports = function(app, passport) {
 
   //Responds to post requests from /resend-token
   //Input: email address
-  //Output: a redirect to /resend-token with a new flash message. Does not actually send emails??? I can't get it to.
+  //Output: a redirect to /resend-token with a new flash message.
   app.post('/resend-token', function(req, res){
     User.findOne({
       email: req.body.email
@@ -274,15 +274,30 @@ module.exports = function(app, passport) {
         res.redirect(301, '/resend-token');
       }
       else { // Actual success
-        user.verificationToken = crypto.randomBytes(20).toString('hex');
-        user.verificationTokenExpiry = Date.now() + 43200000; // 12 hours
+        require('crypto').randomBytes(20, function(err, buffer) {
+          token = buffer.toString('hex');
+        })
+        user.verificationToken = token;
+        user.verificationTokenExpiry = Date.now() + 3600000; // 1 hour
         user.save()
         .then(user => {
-          req.session.sessionFlash = {
-            type: 'success',
-            message: "A new token has been sent to " + req.body.email + ". Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page."
-          }
-          res.redirect(301, '/resend-token');
+          const msg = {
+            to: email,
+            from: 'support@sweet.sh',
+            subject: 'sweet new user verification',
+            text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
+            'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
+            'https://sweet.sh/verify-email/' + token + '\n\n' +
+            'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
+          };
+          sgMail.send(msg)
+          .then(user => {
+            req.session.sessionFlash = {
+              type: 'success',
+              message: "A new token has been sent to " + req.body.email + ". Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page."
+            }
+            res.redirect(301, '/resend-token');
+          })
         })
         .catch(err => {
           req.session.sessionFlash = {

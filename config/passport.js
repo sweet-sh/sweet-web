@@ -96,7 +96,7 @@ function(req, email, password, done) {
               newUser.username = req.body.username;
               newUser.joined = new Date();
               newUser.verificationToken = crypto.randomBytes(20).toString('hex');
-              newUser.verificationTokenExpiry = Date.now() + 43200000; // 12 hours
+              newUser.verificationTokenExpiry = Date.now() + 3600000; // 1 hour
 
               // save the user
               newUser.save(function(err) {
