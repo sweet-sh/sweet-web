@@ -6,7 +6,7 @@
   </div>
   <div class="col-6 d-flex align-items-start">
     {{#if isOwnProfile}}
-      <div class="btn-group-vertical w-100" role="group" aria-label="Profile control buttons">
+      <div class="btn-group-vertical w-100" role="group" aria-label="Profile control buttons" id="profileControlsDesktopMobile">
         <button type="button" class="btn btn-outline-secondary" id="updateProfileButton" data-toggle="modal" data-target="#updateProfileModal"><i class="fas fa-pencil-alt"></i> Edit</button>
         <a href="/settings" class="btn btn-outline-secondary"><i class="fas fa-cog"></i> Settings</a>
         <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> Log out</a>
@@ -21,6 +21,13 @@
   {{/if}}
   {{#if profileData.displayName }}<br /> <span class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}}
 </h3>
+{{#if isOwnProfile}}
+  <div class="btn-group-vertical w-100 mb-3" role="group" aria-label="Profile control buttons" id="profileControlsTablet">
+    <button type="button" class="btn btn-outline-secondary" id="updateProfileButton" data-toggle="modal" data-target="#updateProfileModal"><i class="fas fa-pencil-alt"></i> Edit</button>
+    <a href="/settings" class="btn btn-outline-secondary"><i class="fas fa-cog"></i> Settings</a>
+    <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> Log out</a>
+  </div>
+{{/if}}
 {{#if profileData.aboutParsed}}
   <p>
     {{{profileData.aboutParsed}}}
