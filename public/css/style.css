@@ -82,11 +82,13 @@ hr {
 	border-bottom: 1px solid #dfdfdf;
   padding-bottom: 0px;
 }
+#searchHeader,
 #postForm {
   border-top: 1px solid #dfdfdf;
   border-left: 1px solid #dfdfdf;
   border-right: 1px solid #dfdfdf;
   background: white;
+  padding: 15px;
 }
 #postForm:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
@@ -552,10 +554,7 @@ hr {
   padding-bottom: 0px;
 }
 
-#postForm {
-  padding: 15px;
-  /*border moved to colors section*/
-}
+
 
 @media (max-width: 768px) {
   #homeBody,
