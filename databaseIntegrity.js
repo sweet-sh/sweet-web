@@ -11,7 +11,7 @@ User.find({}).then(users => {
         user.communities.forEach(function(commID) {
             Community.findOne({_id: commID}).then( community => {
                 if(community.members.indexOf(user._id) == -1){
-                    console.log("bad news: community "+community._id.toString()+" does not have user "+user._id.toString()+" in their members array");
+                    console.log("bad news: community \""+community.name+"\" does not have user \""+user.displayName+"\" in its members array");
                     /*console.log("fixing");
                     communities.members.push(user._id);
                     communities.save();*/
@@ -28,7 +28,7 @@ Community.find({}).then(comms => {
         comm.members.forEach(function(memberID) {
             User.findOne({_id: memberID}).then( user => {
                 if(user.communities.indexOf(comm._id) == -1){
-                    console.log("bad news: user "+user._id.toString()+" does not have community "+comm._id.toString()+" in their communities array");
+                    console.log("bad news: user \""+user.displayName+"\" does not have community \""+comm.name+"\" in their communities array");
                     /*console.log("fixing");
                     user.communities.push(comm._id);
                     user.save();*/
