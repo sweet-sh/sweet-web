@@ -1170,6 +1170,19 @@ module.exports = function(app, passport) {
                 recentlyCommented = false;
                 lastCommentAuthor = "";
               }
+
+              imageUrlsArray = []
+              if (displayContext.imageVersion === 2){
+                displayContext.images.forEach(image => {
+                  imageUrlsArray.push('/api/image/display/' + image)
+                })
+              }
+              else {
+                displayContext.images.forEach(image => {
+                  imageUrlsArray.push('/images/uploads/' + image)
+                })
+              }
+
               displayedPost = {
                 canDisplay: canDisplay,
                 _id: displayContext._id,
