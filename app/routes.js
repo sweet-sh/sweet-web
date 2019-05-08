@@ -804,11 +804,11 @@ module.exports = function(app, passport) {
   app.get('/showposts/:context/:identifier/:page', function(req, res){
     var loggedInUserData = {}
     if (req.isAuthenticated()){
-      isLoggedInOrRedirect = true;
+      isLoggedIn = true;
       loggedInUserData = req.user;
     }
     else {
-      isLoggedInOrRedirect = false;
+      isLoggedIn = false;
     }
 
     let postsPerPage = 10;
@@ -915,7 +915,7 @@ module.exports = function(app, passport) {
 
     let isMuted = () => {
       isMuted = false;
-      if (req.params.context == "community" && isLoggedInOrRedirect) {
+      if (req.params.context == "community" && isLoggedIn) {
         return Community.findOne({
           _id: req.params.identifier
         })
@@ -1221,7 +1221,7 @@ module.exports = function(app, passport) {
           }
           res.render('partials/posts', {
             layout: false,
-            loggedIn: isLoggedInOrRedirect,
+            loggedIn: isLoggedIn,
             isMuted: isMuted,
             loggedInUserData: loggedInUserData,
             posts: displayedPosts,
