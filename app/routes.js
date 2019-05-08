@@ -1238,7 +1238,7 @@ module.exports = function(app, passport) {
                 comments: displayContext.comments,
                 numberOfComments: displayContext.numberOfComments,
                 contentWarnings: displayContext.contentWarnings,
-                images: displayContext.images,
+                images: imageUrlsArray,
                 imageTags: displayContext.imageTags,
                 imageDescriptions: displayContext.imageDescriptions,
                 community: displayContext.community,
