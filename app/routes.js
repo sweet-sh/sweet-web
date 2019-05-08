@@ -72,15 +72,17 @@ module.exports = function(app, passport) {
 
     function sendImageFile(){
       imagePath = global.appRoot + '/cdn/images/' + req.params.filename;
-      fs.access(imagePath, fs.F_OK, (err) => {
-        if (err) {
-          console.log("Image " + image.filename + " doesn't exist on server!")
-          // Image file doesn't exist on server
-          res.status('404')
-          res.redirect('/404');
+      try {
+        if (fs.existsSync(imagePath)) {
+          res.sendFile(imagePath);
         }
-        res.sendFile(imagePath);
-      })
+      } catch(err) {
+        // Image file doesn't exist on server
+        console.log("Image " + req.params.filename + " doesn't exist on server!")
+        console.log(err)
+        res.status('404')
+        res.redirect('/404');
+      }
     }
 
     Image.findOne({
@@ -88,6 +90,7 @@ module.exports = function(app, passport) {
     })
     .then(image => {
       if (image){
+        console.log(image)
         if (image.privacy === "public"){
           sendImageFile()
         }
