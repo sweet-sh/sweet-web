@@ -40,14 +40,14 @@ $(function() {
   function resetImageUploadFields(){
     $("#postImageUrl").val("");
     $("#postImageTags").val("");
-    $("#postSubmit").html($("#postSubmit").html()).prop('disabled', false);
+    $("#postSubmit").html("Send <i class=\"fas fa-chevron-right\"></i>").prop('disabled', false);
     $("#postContent").prop('required',true);
     $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
     $(".file-input").val(null);
   }
 
   $(".file-input").change(function (e) {
-      var submitButtonValue = $("#postSubmit").html()
+      var submitButtonValue = $("#postSubmit").html();
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
       
       let fr = new FileReader();
