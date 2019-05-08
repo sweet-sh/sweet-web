@@ -1,5 +1,24 @@
 <script type="text/javascript">
 $(function() {
+
+  function appendToInput(inputElement, appendedText) {
+    if(inputElement.selectionStart){ //if the cursor has a position in the box
+      var cursorPos = inputElement.selectionStart;
+      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
+      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
+      inputElement.selectionEnd = cursorPos + appendedText.length;
+      inputElement.focus();
+    }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
+      inputElement.value = appendedText + inputElement.value;
+      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
+      inputElement.selectionEnd = appendedText.length;
+      inputElement.focus();
+    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
+      inputElement.value+=appendedText;
+      inputElement.focus();
+    }
+  }
+
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
@@ -14,6 +33,18 @@ $(function() {
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
   }
+
+  $("#darkModeToggle").click(function(e){
+    e.preventDefault();
+    if ($(this).hasClass('notification-active')){
+      $("#darkModeStylesheet").attr("href","")
+      $(this).removeClass('notification-active')
+    }
+    else {
+      $("#darkModeStylesheet").attr("href","/css/darkmode.css")
+      $(this).addClass('notification-active')
+    }
+  })
 
   // Navbar search box
 
@@ -55,7 +86,6 @@ $(function() {
     commentsContainer = $(this).closest(".comment").find(".replyContainer");
     commentsContainer.slideToggle("fast", function(){
       if (commentsContainer.is(':visible')){
-        console.log("Comments shown!")
         var post = $(this).closest('.commentContainer');
         $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
           $("#notificationsContainer").load( "/api/notification/display" );
@@ -81,23 +111,7 @@ $(function() {
     $(this).closest('.replyForm').find('.replyEmojiWindow').slideToggle("fast");
   })
   $('body').on('click','.replyEmojiWindow>.emoji', function() {
-    var ourTextBox = $(this).closest(".replyForm").find("#commentContent")[0];
-    var emoji = event.target.innerHTML;
-    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = ourTextBox.selectionStart;
-      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
-      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = cursorPos + emoji.length;
-      ourTextBox.focus();
-    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      ourTextBox.value = emoji + ourTextBox.value;
-      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = emoji.length;
-      ourTextBox.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=emoji;
-      ourTextBox.focus();
-    }
+    appendToInput($(this).closest(".replyForm").find("#commentContent")[0], event.target.innerHTML)
   })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
@@ -116,11 +130,7 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    let replyTextarea = $(this).closest(".replyContainer").children("#replyForm").find("#commentContent")
-    replyTextarea.val(replyTextarea.val() + "@" + $(this).attr("data-username") + " ").focus(function() {
-      var textareaValue = $(this).val();
-      $(this).val(textareaValue);
-    })
+    appendToInput($(this).closest(".replyContainer").children(".replyForm").find("#commentContent")[0], "@" + $(this).attr("data-username"))
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
