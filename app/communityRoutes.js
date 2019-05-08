@@ -1034,6 +1034,12 @@ module.exports = function(app, passport) {
 
     // Parse images
     if (req.body.postImageUrl){
+      fs.rename("./cdn/images/temp/"+req.body.postImageUrl, "./cdn/images/"+req.body.postImageUrl, function(e){
+        if(e){
+          console.log("could not move "+req.body.postImageUrl+" out of temp");
+          console.log(e);
+        }
+      }) //move images out of temp storage
       Community.findOne({
         _id: communityId
       })
