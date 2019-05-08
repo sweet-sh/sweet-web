@@ -74,7 +74,7 @@ module.exports = function(app, passport) {
       imagePath = global.appRoot + '/cdn/images/' + req.params.filename;
       fs.access(imagePath, fs.F_OK, (err) => {
         if (err) {
-          console.log("Image " + image.filename " doesn't exist on server!")
+          console.log("Image " + image.filename + " doesn't exist on server!")
           // Image file doesn't exist on server
           res.status('404')
           res.redirect('/404');
@@ -141,7 +141,7 @@ module.exports = function(app, passport) {
       }
       else {
         // Image entry not found in database
-        console.log("Image " + image.filename " not in database!")
+        console.log("Image " + image.filename + " not in database!")
         res.status('404');
         res.redirect('/404');
       }
