@@ -69,58 +69,89 @@ module.exports = function(app, passport) {
   //Input: URL of an image
   //Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function(req,res){
+
+    function sendImageFile(){
+      imagePath = global.appRoot + '/cdn/images/' + req.params.filename;
+      fs.access(imagePath, fs.F_OK, (err) => {
+        if (err) {
+          console.log("Image " + image.filename " doesn't exist on server!")
+          // Image file doesn't exist on server
+          res.status('404')
+          res.redirect('/404');
+        }
+        res.sendFile(imagePath);
+      })
+    }
+
     Image.findOne({
       filename: req.params.filename
     })
     .then(image => {
-      if (image.privacy === "public"){
-        res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
+      if (image){
+        if (image.privacy === "public"){
+          sendImageFile()
+        }
+        else if (image.privacy === "private"){
+          if (req.isAuthenticated()){
+            if (image.context === "user") {
+              Relationship.find({
+                toUser: loggedInUserData._id,
+                value: "trust"
+              })
+              .then(trusts => {
+                usersWhoTrustMe = trusts.map(a => a.fromUser.toString());
+                usersWhoTrustMe.push(req.user._id.toString());
+                console.log(usersWhoTrustMe)
+                if (usersWhoTrustMe.includes(image.user)){
+                  sendImageFile()
+                }
+                else {
+                  // User not trusted by image's uploader
+                  console.log("User not trusted!")
+                  res.status('404')
+                  res.redirect('/404');
+                }
+              })
+            }
+            else if (image.context === "community") {
+              Community.find({
+                members: loggedInUserData._id
+              })
+              .then(communities => {
+                joinedCommunities = communities.map(a => a._id.toString());
+                if (joinedCommunities.includes(image.community)){
+                  sendImageFile()
+                }
+                else {
+                  // User not a member of this community
+                  console.log("User not a community member!")
+                  res.status('404')
+                  res.redirect('/404');
+                }
+              })
+            }
+          }
+          else {
+            // User not logged in, but has to be to see this image
+            console.log("User not logged in!")
+            res.status('404');
+            res.redirect('/404');
+          }
+        }
       }
-      else if (image.privacy === "private"){
-        if (req.isAuthenticated()){
-          if (image.context === "user") {
-            Relationship.find({
-              toUser: loggedInUserData._id,
-              value: "trust"
-            })
-            .then(trusts => {
-              usersWhoTrustMe = trusts.map(a => a.fromUser.toString());
-              usersWhoTrustMe.push(req.user._id.toString());
-              console.log(usersWhoTrustMe)
-              if (usersWhoTrustMe.includes(image.user)){
-                res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
-              }
-              else {
-                res.status('404')
-                res.redirect('/404');
-              }
-            })
-          }
-          else if (image.context === "community") {
-            Community.find({
-              members: loggedInUserData._id
-            })
-            .then(communities => {
-              joinedCommunities = communities.map(a => a._id.toString());
-              if (joinedCommunities.includes(image.community)){
-                res.sendFile(global.appRoot + '/cdn/images/' + req.params.filename);
-              }
-              else {
-                res.status('404')
-                res.redirect('/404');
-              }
-            })
-          }
-        }
-        else {
-          console.log("Not logged in")
-          res.redirect('/404');
-          res.status('404')
-        }
+      else {
+        // Image entry not found in database
+        console.log("Image " + image.filename " not in database!")
+        res.status('404');
+        res.redirect('/404');
       }
     })
     .catch(error => {
+      // Unexpected error
+      console.log("Unexpected error displaying image")
+      console.log(error)
       res.status('404');
+      res.redirect('/404');
     })
   })
 
