@@ -2505,25 +2505,28 @@ module.exports = function(app, passport) {
 
     // Parse post content
     let rawContent = req.body.postContent;
-    let splitContent = rawContent.split(/\r\n|\r|\n/gi);
+    let splitContent = rawContent.split('</p>');
+    console.log(splitContent)
     let parsedContent = [];
     var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
     var mentionReplace = '$1<a href="/$2">@$2</a>';
     var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
     var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-    var boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
-    var italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
-    var boldReplace = '$1<strong>$2</strong>$3';
-    var italicsReplace = '$1<em>$2</em>$3';
+    // var boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
+    // var italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
+    // var boldReplace = '$1<strong>$2</strong>$3';
+    // var italicsReplace = '$1<em>$2</em>$3';
     splitContent.forEach(function (line) {
-      if (line != ""){
-        line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        line = "<p>" + line + "</p>";
+      line += '</p>'
+      console.log(line)
+      if (line != "</p>" && line != "<p><br></p>"){
+        // line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        // line = "<p>" + line + "</p>";
         line = Autolinker.link( line );
         line = line.replace( mentionRegex, mentionReplace ).replace( hashtagRegex, hashtagReplace );
-        if (formattingEnabled){
-          line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
-        }
+        // if (formattingEnabled){
+        //   line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
+        // }
         parsedContent.push(line);
       }
     })

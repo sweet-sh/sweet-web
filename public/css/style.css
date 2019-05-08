@@ -332,6 +332,19 @@ hr {
   height: 30px;
 }
 
+#sweetLogo:hover {
+  animation: shake 0.5s;
+  animation-iteration-count: infinite;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-3deg); }
+  40% { transform: rotate(3deg); }
+  60% { transform: rotate(0deg); }
+  80% { transform: rotate(3deg); }
+  100% { transform: rotate(-3deg); }
+}
+
 #sweetLogoLink {
   line-height:30px;
   position: relative;
@@ -797,6 +810,30 @@ hr {
 
 .switch-field label:last-of-type {
 	border-radius: 0 4px 4px 0;
+}
+
+.editable-text {
+  width: 100%;
+  padding: .375rem .75rem;
+  border-radius: .25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 1px solid #ced4da;
+  /* min-height: 2.5rem !important; */
+}
+
+.editable-text:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+}
+
+.editable-text > p:last-child,
+.editable-text > div:last-child > p
+{
+  margin-bottom: 0;
 }
 
 #postContentWarningsContainer {

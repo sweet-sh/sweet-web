@@ -1,7 +1,8 @@
 <form id="postForm" action="{{#if isMember}}/api/community/post/create/{{communityData._id}}/{{communityData.url}}{{else}}/createpost{{/if}}" method="post" enctype="multipart/form-data">
 
   <div class="form-row">
-    <textarea required class="form-control" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
+    <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
+    <!-- <div class="editable-post-content editable-text">{{sessionFlash.errorContent}}</div> -->
   </div>
   <div class="form-row my-2" id="postContentWarningsContainer">
     <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}"{{/if}}/>

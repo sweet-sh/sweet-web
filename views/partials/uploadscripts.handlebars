@@ -1,6 +1,53 @@
 <script type="text/javascript">
 $(function() {
-  $("#postContent").focus(function(){
+
+  function appendToInput(inputElement, appendedText) {
+    if(inputElement.selectionStart){ //if the cursor has a position in the box
+      var cursorPos = inputElement.selectionStart;
+      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
+      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
+      inputElement.selectionEnd = cursorPos + appendedText.length;
+      inputElement.focus();
+    }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
+      inputElement.value = appendedText + inputElement.value;
+      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
+      inputElement.selectionEnd = appendedText.length;
+      inputElement.focus();
+    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
+      inputElement.value+=appendedText;
+      inputElement.focus();
+    }
+  }
+
+  var editor = new MediumEditor('.editable-text', {
+    buttonLabels: 'fontawesome',
+    toolbar: {
+      buttons: ['bold','italic']
+    },
+    keyboardCommands: {
+      commands: [
+        {
+            command: 'bold',
+            key: 'B',
+            meta: true,
+            shift: false,
+            alt: false
+        },
+        {
+            command: 'italic',
+            key: 'I',
+            meta: true,
+            shift: false,
+            alt: false
+        }
+      ],
+    },
+    placeholder: {
+        text: 'Write something.'
+    }
+  });
+
+  $(".editable-post-content").focus(function(){
     $(".post-controls").css('display', 'flex');
   })
   //upload = new FileUploadWithPreview('postImageUpload')
@@ -11,23 +58,7 @@ $(function() {
     $("#emojiWindow").slideToggle("fast")
   })
   $(".emoji").click(function(){
-    var ourTextBox = $("#postContent")[0];
-    var emoji = event.target.innerHTML;
-    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = ourTextBox.selectionStart;
-      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
-      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = cursorPos + emoji.length;
-      ourTextBox.focus();
-    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      ourTextBox.value = emoji + ourTextBox.value;
-      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = emoji.length;
-      ourTextBox.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=emoji;
-      ourTextBox.focus();
-    }
+    appendToInput($("#postForm").find('.editable-post-content')[0], event.target.innerHTML);
   })
   $("#postImageButton").click(function(){
     $(".file-input").click();
@@ -41,7 +72,7 @@ $(function() {
     $("#postImageUrl").val("");
     $("#postImageTags").val("");
     $("#postSubmit").html($("#postSubmit").html()).prop('disabled', false);
-    $("#postContent").prop('required',true);
+    $(".editable-post-content").prop('required',true);
     $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
     $(".file-input").val(null);
   }
@@ -49,7 +80,7 @@ $(function() {
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html()
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
-      
+
       let fr = new FileReader();
       fr.onload = function(e){
         $(".image-preview")[0].style.backgroundImage = "url("+e.target.result+")";
@@ -78,7 +109,7 @@ $(function() {
           $("#postImageUrl").val(uploadedImage.url);
           $("#postImageTags").val(uploadedImage.tags);
           $("#postSubmit").html(submitButtonValue).prop('disabled', false);
-          $("#postContent").removeAttr("required");
+          $(".editable-post-content").removeAttr("required");
         }
       });
       $(".image-clear").click(function(e){
@@ -115,7 +146,7 @@ $(function() {
         return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
       }
     })
-    tribute.attach($("textarea"));
+    tribute.attach($(".editable-text"));
   })
 })
 </script>
