@@ -836,6 +836,15 @@ hr {
   margin-bottom: 0;
 }
 
+.medium-editor-element {
+  min-height: 38px !important;
+}
+.medium-editor-placeholder-relative::after {
+  font-style: normal !important;
+  padding: 0 !important;
+  color: #6c757d;
+}
+
 #postContentWarningsContainer {
   display: none;
 }
