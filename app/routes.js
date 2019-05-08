@@ -3037,7 +3037,7 @@ module.exports = function(app, passport) {
 function cleanTempFolder(){
   fs.readdir("./cdn/images/temp", function(err,files){
     files.forEach(file => {
-      if(file != ".gitkeep"){
+      if(file != ".gitkeep" && file != ""){
         fs.stat("./cdn/images/temp/"+file, function(err, s){
           if(Date.now() - s.mtimeMs > 3600000){
             fs.unlink("./cdn/images/temp/"+file,function(e){
