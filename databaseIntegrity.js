@@ -4,7 +4,7 @@ var configDatabase = require('./config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
 
-//Check to see if there are any communities with someone who's a member acc to the user document not in their "members" array
+//Check to see if there are any communities with someone who's a member acc to the user document but who is not in their "members" array
 
 User.find({}).then(users => {
     users.forEach(function(user) {
