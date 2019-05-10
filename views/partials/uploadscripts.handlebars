@@ -19,9 +19,9 @@ $(function() {
     imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
     $('#imagePreviewContainer').slideDown('fast');
   })
-
+  
   $(".file-input").change(function (e) {
-      var submitButtonValue = $("#postSubmit").html()
+      var submitButtonValue = $("#postSubmit").html();
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
 
       let fr = new FileReader();
