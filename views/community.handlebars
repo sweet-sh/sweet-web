@@ -292,6 +292,7 @@ $('#postsContainer').on( 'append.infiniteScroll', function( event, response, pat
 
 $('.community-action-button').click(function() {
   $(this).prop('disabled', true);
+  $(this).parent().submit();
 })
 
 $("#leaveButton").click(function() {

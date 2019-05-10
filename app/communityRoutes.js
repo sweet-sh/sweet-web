@@ -822,7 +822,9 @@ module.exports = function(app, passport) {
           let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
           if (vote.votes >= majorityMargin) {
             console.log("Vote passed!")
-            if (vote.reference == "visibility" || vote.reference == "joinType" || vote.reference == "voteLength") {
+            if (vote.reference == "visibility"){
+                
+            }else if(vote.reference == "joinType" || vote.reference == "voteLength") {
               community.settings[vote.reference] = vote.proposedValue;
             }
             else if (vote.reference == "description" || vote.reference == "rules") {
