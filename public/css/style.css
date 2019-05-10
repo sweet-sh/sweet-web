@@ -847,7 +847,7 @@ hr {
 }
 
 .medium-editor-element {
-  min-height: 40px !important;
+  min-height: 60pt !important;
 }
 .medium-editor-placeholder::after {
   font-style: normal !important;
