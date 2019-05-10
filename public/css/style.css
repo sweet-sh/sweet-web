@@ -828,6 +828,7 @@ hr {
   font-size: 1rem;
   line-height: 1.5;
   border: 2px solid #666;
+  cursor: text;
   /* min-height: 2.5rem !important; */
 }
 
