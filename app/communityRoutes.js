@@ -986,7 +986,7 @@ module.exports = function(app, passport) {
     var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
     var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
 
-    let parsedResult = parseText(req.body.postContent, req.body.postContentWarnings)
+    let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings)
 
     const post = new Post({
       type: 'community',
