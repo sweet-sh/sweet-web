@@ -827,7 +827,7 @@ hr {
   border-radius: .25rem;
   font-size: 1rem;
   line-height: 1.5;
-  border: 2px solid #666;
+  border: 2px solid #ced4da;
   cursor: text;
   /* min-height: 2.5rem !important; */
 }
@@ -847,7 +847,7 @@ hr {
 }
 
 .medium-editor-element {
-  min-height: 60pt !important;
+  min-height: 4rem !important;
 }
 .medium-editor-placeholder::after {
   font-style: normal !important;
