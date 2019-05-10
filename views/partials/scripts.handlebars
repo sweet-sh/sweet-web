@@ -1,24 +1,5 @@
 <script type="text/javascript">
 $(function() {
-
-  function appendToInput(inputElement, appendedText) {
-    if(inputElement.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = inputElement.selectionStart;
-      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
-      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = cursorPos + appendedText.length;
-      inputElement.focus();
-    }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      inputElement.value = appendedText + inputElement.value;
-      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = appendedText.length;
-      inputElement.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      inputElement.value+=appendedText;
-      inputElement.focus();
-    }
-  }
-
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
@@ -96,11 +77,11 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
+      $(this).prev(".abbreviated-content").animate({height:"100%"},200);
       $(this).attr("data-state","expanded").css("margin-top", "0.25rem");
     }
     else {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"7rem"},200);
+      $(this).prev(".abbreviated-content").animate({height:"7rem"},200);
       $(this).attr("data-state","contracted").css("margin-top", "1rem");
     }
     var text = $(this).text();
@@ -110,8 +91,8 @@ $(function() {
   $('body').on('click','.replyEmojiWindowButton', function() {
     $(this).closest('.replyForm').find('.replyEmojiWindow').slideToggle("fast");
   })
-  $('body').on('click','.replyEmojiWindow>.emoji', function() {
-    appendToInput($(this).closest(".replyForm").find("#commentContent")[0], event.target.innerHTML)
+  $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
+    pasteHtmlAtCaret($(this).closest(".replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
@@ -130,7 +111,7 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    appendToInput($(this).closest(".replyContainer").children(".replyForm").find("#commentContent")[0], "@" + $(this).attr("data-username"))
+    pasteHtmlAtCaret($(this).closest(".replyContainer").children(".replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username"));
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
@@ -167,35 +148,39 @@ $(function() {
     });
   })
   $('body').on('click', '.postReply', function() {
-    let textarea = $(this).closest(".replyForm").find(".comment-textarea");
+    let textarea = $(this).closest(".replyForm").find("textarea.comment-textarea");
+    let contentEditable = $(this).closest(".replyForm").find("div.comment-textarea");
     let commentContent = textarea.val();
     let commentsContainer = $(this).closest('.replyContainer').find('.repliesContainer');
     let emojiWindow = $(this).closest('.replyForm').find('.replyEmojiWindow');
     let commentButton = $(this);
-    commentButton.prop('disabled', true);
-    $.post("/createcomment/"+$(this).attr("data-post-id"), { commentContent: commentContent }, function(data) {
-      if (data!='nope'){
-        textarea.val("");
-        textarea[0].style.height = "";
-        let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content +'</div>';
-        $(html).hide().appendTo(commentsContainer).fadeIn();
-        commentButton.prop('disabled', false);
-        let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];
-        let regex = /\s|[(-)]/gi;
-        if(counterToChange.textContent.replace(regex,"") === ""){
-          counterToChange.innerHTML = counterToChange.innerHTML + " (1)";
-        }else{
-          let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
-          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
+    if (commentContent.replace(/<[^>]*>/g, "") != "") { // Filter out empty comments
+      commentButton.prop('disabled', true);
+      $.post("/createcomment/"+$(this).attr("data-post-id"), { commentContent: commentContent }, function(data) {
+        if (data!='nope'){
+          textarea.val("");
+          contentEditable.html("");
+          // textarea[0].style.height = "";
+          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content +'</div>';
+          $(html).hide().appendTo(commentsContainer).fadeIn();
+          commentButton.prop('disabled', false);
+          let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];
+          let regex = /\s|[(-)]/gi;
+          if(counterToChange.textContent.replace(regex,"") === ""){
+            counterToChange.innerHTML = counterToChange.innerHTML + " (1)";
+          }else{
+            let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
+            counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
+          }
+          emojiWindow.hide()
         }
-        emojiWindow.hide()
-      }
-      else {
-        let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
-        $(html).hide().appendTo(commentsContainer).fadeIn();
-        commentButton.prop('disabled', false);
-      }
-    });
+        else {
+          let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
+          $(html).hide().appendTo(commentsContainer).fadeIn();
+          commentButton.prop('disabled', false);
+        }
+      });
+    }
   })
   $('body').on('click', '.notificationLink', function(e) {
     e.preventDefault();

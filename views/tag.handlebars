@@ -21,7 +21,7 @@ $('#postsContainer').infiniteScroll({
 });
 
 $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
-  autosize($('.comment-textarea'));
-  tribute.attach($(".comment-textarea"));
+  tribute.attach($(".editable-text"));
+  editor.addElements('.editable-text');
 });
 </script>

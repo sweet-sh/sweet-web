@@ -1,33 +1,16 @@
 <script type="text/javascript">
 $(function() {
-  $("#postContent").focus(function(){
+  $(".editable-post-content").focus(function(){
     $(".post-controls").css('display', 'flex');
   })
-  //upload = new FileUploadWithPreview('postImageUpload')
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
   $("#emojiWindowButton").click(function(){
     $("#emojiWindow").slideToggle("fast")
   })
-  $(".emoji").click(function(){
-    var ourTextBox = $("#postContent")[0];
-    var emoji = event.target.innerHTML;
-    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = ourTextBox.selectionStart;
-      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
-      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = cursorPos + emoji.length;
-      ourTextBox.focus();
-    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      ourTextBox.value = emoji + ourTextBox.value;
-      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = emoji.length;
-      ourTextBox.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=emoji;
-      ourTextBox.focus();
-    }
+  $("#emojiWindow>.add-emoji").click(function(){
+    pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
   $("#postImageButton").click(function(){
     $(".file-input").click();
@@ -36,21 +19,11 @@ $(function() {
     imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
     $('#imagePreviewContainer').slideDown('fast');
   })
-
-  function resetImageUploadFields(){
-    $("#postImageUrl").val("");
-    $("#postImageTags").val("");
-    $("#postSubmit").html("Send <i class=\"fas fa-chevron-right\"></i>").prop('disabled', false);
-    $("#postContent").prop('required',true);
-    $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
-    $(".file-input").val(null);
-    $(".image-clear").off();
-  }
-
+  
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html();
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
-      
+
       let fr = new FileReader();
       fr.onload = function(e){
         $(".image-preview")[0].style.backgroundImage = "url("+e.target.result+")";
@@ -79,7 +52,7 @@ $(function() {
           $("#postImageUrl").val(uploadedImage.url);
           $("#postImageTags").val(uploadedImage.tags);
           $("#postSubmit").html(submitButtonValue).prop('disabled', false);
-          $("#postContent").removeAttr("required");
+          $(".editable-post-content").removeAttr("required");
         }
       });
       $(".image-clear").click(function(e){
@@ -116,7 +89,7 @@ $(function() {
         return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
       }
     })
-    tribute.attach($("textarea"));
+    tribute.attach($(".editable-text"));
   })
 })
 </script>

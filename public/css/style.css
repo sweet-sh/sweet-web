@@ -27,6 +27,14 @@ body {
 a {
   color: #338fc2;
 }
+
+blockquote {
+  border-left: 2px solid #bbb;
+  color: #777;
+  padding-left: 0.5rem;
+  margin: 0;
+}
+
 .post-action-button {
   color: #aaa;
 }
@@ -160,7 +168,7 @@ hr {
 .switch-field input:checked + label {
   background-color: #a5dc86;
 }
-.emoji:hover {
+.add-emoji:hover {
   border-color: #ddd;
 }
 .abbreviated-content:not(.content-warning-content)::after {
@@ -283,6 +291,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 60px;
   text-align: left;
   padding-left: 1px;
+  font-size: 1rem;
 }
 
 #authorTools > button {
@@ -330,6 +339,19 @@ hr {
 #sweetLogo {
   width: 30px;
   height: 30px;
+}
+
+#sweetLogo:hover {
+  animation: shake 0.5s;
+  animation-iteration-count: infinite;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-3deg); }
+  40% { transform: rotate(3deg); }
+  60% { transform: rotate(0deg); }
+  80% { transform: rotate(3deg); }
+  100% { transform: rotate(-3deg); }
 }
 
 #sweetLogoLink {
@@ -799,6 +821,44 @@ hr {
 	border-radius: 0 4px 4px 0;
 }
 
+.editable-text {
+  width: 100%;
+  padding: .375rem .75rem;
+  border-radius: .25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 2px solid #ced4da;
+  cursor: text;
+  /* min-height: 2.5rem !important; */
+}
+
+.editable-text:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+}
+
+.editable-text > p:last-child,
+.editable-text > div:last-child > p
+{
+  margin-bottom: 0;
+}
+
+.medium-editor-element {
+  min-height: 4rem !important;
+}
+.medium-editor-placeholder::after {
+  font-style: normal !important;
+  color: #6c757d;
+}
+.medium-editor-placeholder-relative::after {
+  font-style: normal !important;
+  padding: 0 !important;
+  color: #6c757d;
+}
+
 #postContentWarningsContainer {
   display: none;
 }
@@ -811,10 +871,22 @@ hr {
   justify-content: flex-start;
 }
 
-.emoji {
+.add-emoji {
   padding: 2px 0.15rem 0 0.15rem;
   border: 1px solid transparent;
   border-radius: 4px;
+  background: #fff;
+}
+
+
+/* Don't let emoji become italicised or bold! */
+.emoji {
+  font-style: normal !important;
+  font-weight: 400 !important;
+}
+.emoji > * {
+    font-style: normal;
+    font-weight: 400;
 }
 
 .content-warning {
