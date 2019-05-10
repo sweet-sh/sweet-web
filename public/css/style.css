@@ -27,6 +27,14 @@ body {
 a {
   color: #338fc2;
 }
+
+blockquote {
+  border-left: 2px solid #bbb;
+  color: #777;
+  padding-left: 0.5rem;
+  margin: 0;
+}
+
 .post-action-button {
   color: #aaa;
 }
@@ -160,7 +168,7 @@ hr {
 .switch-field input:checked + label {
   background-color: #a5dc86;
 }
-.emoji:hover {
+.add-emoji:hover {
   border-color: #ddd;
 }
 .abbreviated-content:not(.content-warning-content)::after {
@@ -283,6 +291,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 60px;
   text-align: left;
   padding-left: 1px;
+  font-size: 1rem;
 }
 
 #authorTools > button {
@@ -818,7 +827,7 @@ hr {
   border-radius: .25rem;
   font-size: 1rem;
   line-height: 1.5;
-  border: 1px solid #ced4da;
+  border: 2px solid #666;
   /* min-height: 2.5rem !important; */
 }
 
@@ -837,7 +846,11 @@ hr {
 }
 
 .medium-editor-element {
-  min-height: 38px !important;
+  min-height: 40px !important;
+}
+.medium-editor-placeholder::after {
+  font-style: normal !important;
+  color: #6c757d;
 }
 .medium-editor-placeholder-relative::after {
   font-style: normal !important;
@@ -857,10 +870,22 @@ hr {
   justify-content: flex-start;
 }
 
-.emoji {
+.add-emoji {
   padding: 2px 0.15rem 0 0.15rem;
   border: 1px solid transparent;
   border-radius: 4px;
+  background: #fff;
+}
+
+
+/* Don't let emoji become italicised or bold! */
+.emoji {
+  font-style: normal !important;
+  font-weight: 400 !important;
+}
+.emoji > * {
+    font-style: normal;
+    font-weight: 400;
 }
 
 .content-warning {

@@ -88,6 +88,7 @@ app.on('SIGINT', function() {
 global.appRoot = path.resolve(__dirname);
 
 // routes ======================================================================
+helper = require('./app/helperFunctions.js');
 require('./app/notifier.js')
 require('./app/communityRoutes.js')(app, passport);
 require('./app/routes.js')(app, passport);

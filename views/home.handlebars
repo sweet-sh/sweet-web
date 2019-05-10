@@ -22,7 +22,7 @@ $('#postsContainer').infiniteScroll({
 });
 
 $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
-  tribute.attach($(".editable-text"));
+  // tribute.attach($(".editable-text"));
   editor.addElements('.editable-text');
 });
 </script>

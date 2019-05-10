@@ -2489,12 +2489,6 @@ module.exports = function(app, passport) {
 
   app.post("/createpost", isLoggedInOrRedirect, function(req, res) {
 
-    function wordCount(str) {
-         return str.split(' ')
-                .filter(function(n) { return n != '' })
-                .length;
-    }
-
     newPostUrl = shortid.generate();
     let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
@@ -2503,56 +2497,8 @@ module.exports = function(app, passport) {
     var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
     let formattingEnabled = req.body.postFormattingEnabled ? true : false;
 
-    // Parse post content
-    let rawContent = req.body.postContent;
-    let splitContent = rawContent.split('</p>');
-    console.log(splitContent)
-    let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-    var mentionReplace = '$1<a href="/$2">@$2</a>';
-    var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-    var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-    // var boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
-    // var italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
-    // var boldReplace = '$1<strong>$2</strong>$3';
-    // var italicsReplace = '$1<em>$2</em>$3';
-    splitContent.forEach(function (line) {
-      line += '</p>'
-      console.log(line)
-      if (line != "</p>" && line != "<p><br></p>"){
-        // line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        // line = "<p>" + line + "</p>";
-        line = Autolinker.link( line );
-        line = line.replace( mentionRegex, mentionReplace ).replace( hashtagRegex, hashtagReplace );
-        // if (formattingEnabled){
-        //   line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
-        // }
-        parsedContent.push(line);
-      }
-    })
-    parsedContent = parsedContent.join('');
+    let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
 
-    if (!req.body.postContentWarnings){
-      let contentWordCount = wordCount(parsedContent);
-      if (contentWordCount > 160){
-        parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><a class="show-more" data-state="contracted">Show more</a>';
-      }
-    }
-
-    let postMentions = Array.from(new Set(req.body.postContent.match( mentionRegex )))
-    let postTags = Array.from(new Set(req.body.postContent.match( hashtagRegex )))
-    let trimmedPostMentions = []
-    let trimmedPostTags = []
-    if (postMentions){
-      postMentions.forEach((el) => {
-        trimmedPostMentions.push(el.replace(/(@|\s)*/i, ''));
-      })
-    }
-    if (postTags){
-      postTags.forEach((el) => {
-        trimmedPostTags.push(el.replace(/(#|\s)*/i, ''));
-      })
-    }
     const post = new Post({
       type: 'original',
       authorEmail:  loggedInUserData.email,
@@ -2562,10 +2508,10 @@ module.exports = function(app, passport) {
       timestamp: postCreationTime,
       lastUpdated: postCreationTime,
       rawContent: sanitize(req.body.postContent),
-      parsedContent: sanitize(parsedContent),
+      parsedContent: parsedResult.text,
       numberOfComments: 0,
-      mentions: trimmedPostMentions,
-      tags: trimmedPostTags,
+      mentions: parsedResult.mentions,
+      tags: parsedResult.tags,
       contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
       imageVersion: 2,
       images: postImage,
@@ -2594,7 +2540,7 @@ module.exports = function(app, passport) {
 
     post.save()
     .then(() => {
-      trimmedPostTags.forEach((tag) => {
+      parsedResult.tags.forEach((tag) => {
         Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
           if (error) return
         });
@@ -2608,7 +2554,7 @@ module.exports = function(app, passport) {
         }, {'to':1})
         .then((emails) => {
           let emailsArray = emails.map(({ to }) => to)
-          trimmedPostMentions.forEach(function(mention){
+          parsedResult.mentions.forEach(function(mention){
             User.findOne({
               username: mention
             })
@@ -2627,7 +2573,7 @@ module.exports = function(app, passport) {
       else if (postPrivacy == "public"){
         console.log("This post is public!")
         // This is a public post, notify everyone
-        trimmedPostMentions.forEach(function(mention){
+        parsedResult.mentions.forEach(function(mention){
           User.findOne({
             username: mention
           })
@@ -2637,10 +2583,10 @@ module.exports = function(app, passport) {
         });
       }
       res.redirect('back');
-      })
-      .catch((err) => {
-        console.log("Database error: " + err)
-      });
+    })
+    .catch((err) => {
+      console.log("Database error: " + err)
+    });
   })
 
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
@@ -2707,46 +2653,17 @@ module.exports = function(app, passport) {
   });
 
   app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function(req, res) {
-    // Parse comment content
-    let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
-    let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-    var mentionReplace = '$1<a href="/$2">@$2</a>';
-    var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-    var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-    splitContent.forEach(function (line) {
-      if (line != ""){
-        line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        line = "<p>" + line + "</p>";
-        line = Autolinker.link( line );
-        line = line.replace( mentionRegex, mentionReplace ).replace( hashtagRegex, hashtagReplace );
-        parsedContent.push(line);
-      }
-    })
-    parsedContent = parsedContent.join('');
-    let commentMentions = Array.from(new Set(req.body.commentContent.match( mentionRegex )))
-    let commentTags = Array.from(new Set(req.body.commentContent.match( hashtagRegex )))
-    let trimmedCommentMentions = []
-    let trimmedCommentTags = []
-    if (commentMentions){
-      commentMentions.forEach((el) => {
-        trimmedCommentMentions.push(el.replace(/(@|\s)*/i, ''));
-      })
-    }
-    if (commentTags){
-      commentTags.forEach((el) => {
-        trimmedCommentTags.push(el.replace(/(#|\s)*/i, ''));
-      })
-    }
+    console.log(req.body)
+    let parsedResult = helper.parseText(req.body.commentContent);
     commentTimestamp = new Date();
     const comment = {
       authorEmail:  loggedInUserData.email,
       author:  loggedInUserData._id,
       timestamp: commentTimestamp,
       rawContent: sanitize(req.body.commentContent),
-      parsedContent: sanitize(parsedContent),
-      mentions: trimmedCommentMentions,
-      tags: trimmedCommentTags
+      parsedContent: parsedResult.text,
+      mentions: parsedResult.mentions,
+      tags: parsedResult.tags
     };
     Post.findOne({
       "_id": req.params.postid
@@ -2795,7 +2712,7 @@ module.exports = function(app, passport) {
               && (trustedUserIds.includes(user.toString()) === checkTrust)){ //don't notify people who you don't trust if it's a private post
                 console.log("Notifying subscribed users")
                 User.findById(user).then((thisuser) => {
-                  if(!trimmedCommentMentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
+                  if(!parsedResult.mentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
                     notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
                   }
                 })
@@ -2837,7 +2754,7 @@ module.exports = function(app, passport) {
           }, {'to':1})
           .then((emails) => {
             let emailsArray = emails.map(({ to }) => to)
-            trimmedCommentMentions.forEach(function(mention){
+            parsedResult.mentions.forEach(function(mention){
               User.findOne({
                 username: mention
               })
@@ -2856,7 +2773,7 @@ module.exports = function(app, passport) {
         else if (postPrivacy == "public"){
           console.log("This comment is public!")
           // This is a public post, notify everyone
-          trimmedCommentMentions.forEach(function(mention){
+          parsedResult.mentions.forEach(function(mention){
             User.findOne({
               username: mention
             })
@@ -2885,7 +2802,7 @@ module.exports = function(app, passport) {
           name: name,
           username: loggedInUserData.username,
           timestamp: moment(commentTimestamp).fromNow(),
-          content: parsedContent,
+          content: parsedResult.text,
           comment_id: post.comments[post.numberOfComments-1]._id.toString(),
           post_id: post._id.toString()
         }
@@ -3089,7 +3006,6 @@ function isLoggedInOrErrorResponse(req, res, next) {
   res.send('nope');
   next('route');
 }
-
 
 function getTags(url) {
   return new Promise((resolve, reject) => {

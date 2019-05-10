@@ -1,64 +1,16 @@
 <script type="text/javascript">
 $(function() {
-
-  function appendToInput(inputElement, appendedText) {
-    if(inputElement.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = inputElement.selectionStart;
-      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
-      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = cursorPos + appendedText.length;
-      inputElement.focus();
-    }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      inputElement.value = appendedText + inputElement.value;
-      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = appendedText.length;
-      inputElement.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      inputElement.value+=appendedText;
-      inputElement.focus();
-    }
-  }
-
-  var editor = new MediumEditor('.editable-text', {
-    buttonLabels: 'fontawesome',
-    toolbar: {
-      buttons: ['bold','italic']
-    },
-    keyboardCommands: {
-      commands: [
-        {
-            command: 'bold',
-            key: 'B',
-            meta: true,
-            shift: false,
-            alt: false
-        },
-        {
-            command: 'italic',
-            key: 'I',
-            meta: true,
-            shift: false,
-            alt: false
-        }
-      ],
-    },
-    placeholder: {
-        text: 'Write something.'
-    }
-  });
-
   $(".editable-post-content").focus(function(){
     $(".post-controls").css('display', 'flex');
   })
-  //upload = new FileUploadWithPreview('postImageUpload')
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
   $("#emojiWindowButton").click(function(){
     $("#emojiWindow").slideToggle("fast")
   })
-  $(".emoji").click(function(){
-    appendToInput($("#postForm").find('.editable-post-content')[0], event.target.innerHTML);
+  $("#emojiWindow>.add-emoji").click(function(){
+    pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
   $("#postImageButton").click(function(){
     $(".file-input").click();
@@ -67,15 +19,6 @@ $(function() {
     imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
     $('#imagePreviewContainer').slideDown('fast');
   })
-
-  function resetImageUploadFields(){
-    $("#postImageUrl").val("");
-    $("#postImageTags").val("");
-    $("#postSubmit").html($("#postSubmit").html()).prop('disabled', false);
-    $(".editable-post-content").prop('required',true);
-    $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
-    $(".file-input").val(null);
-  }
 
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html()

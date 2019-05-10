@@ -3,3 +3,12 @@
 <button type="button" class="btn btn-link btn-xs replyToComment text-muted" id="{{this.author.username}}">
   <i class="fas fa-reply"></i>
 </button>
+
+{{! Formatting enabled checkbox}}
+
+<div id="topPostControlsRow" class="form-row mt-2 post-controls">
+  <div class="form-check" id="visibilityControls">
+    <input class="form-check-input" type="checkbox" name="postFormattingEnabled" id="postFormattingEnabled" />
+    <label class="form-check-label" for="postFormattingEnabled">Formatting (<strong>*bold*</strong> and <em>_italics_</em>)</label>
+  </div>
+</div>

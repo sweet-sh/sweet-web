@@ -491,7 +491,11 @@ var Tribute = function () {
         value: function defaultSelectTemplate(item) {
             if (typeof item === 'undefined') return null;
             if (this.range.isContentEditable(this.current.element)) {
-                return '<span class="tribute-mention">' + (this.current.collection.trigger + item.original[this.current.collection.fillAttr]) + '</span>';
+                // Original code
+                // return '<span class="tribute-mention">' + (this.current.collection.trigger + item.original[this.current.collection.fillAttr]) + '</span>';
+                // Modified to not add a span element around matches
+                return (this.current.collection.trigger + item.original[this.current.collection.fillAttr]);
+
             }
 
             return this.current.collection.trigger + item.original[this.current.collection.fillAttr];
