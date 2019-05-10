@@ -234,6 +234,9 @@ hr {
   color: #6f6f6f;
 }
 
+p{
+  margin-bottom: 0.5em;
+}
 
 #bodyContainer {
   padding-top: 90px;
