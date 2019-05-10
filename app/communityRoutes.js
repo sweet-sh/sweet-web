@@ -823,7 +823,15 @@ module.exports = function(app, passport) {
           if (vote.votes >= majorityMargin) {
             console.log("Vote passed!")
             if (vote.reference == "visibility"){
-                ;;;//something something image privacy change
+              community.settings[vote.reference] = vote.proposedValue;  
+              Image.find({context: "community", community: community._id}).then(images =>{
+                console.log(images);
+                images.forEach(function(image){
+                  console.log(image);
+                  image.privacy = vote.proposedValue;
+                  image.save();
+                })
+              })
             }else if(vote.reference == "joinType" || vote.reference == "voteLength") {
               community.settings[vote.reference] = vote.proposedValue;
             }
