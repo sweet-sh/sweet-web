@@ -88,7 +88,7 @@ module.exports = function(app, passport) {
     // .then((user) => {
     Community.find({
       members: loggedInUserData._id
-    })
+    }).sort('name')
     .then((communities) => {
       res.render('communities', {
         loggedIn: true,
