@@ -1102,6 +1102,12 @@ var TributeRange = function () {
                     this.pasteHtml(text, info.mentionPosition, info.mentionPosition + info.mentionText.length + !this.tribute.autocompleteMode);
                 }
 
+                //Updates the textarea that contains the value that will be sent to the server, which is normally only updated by the
+                //MediumEditor code upon proper inputs by the user. In theory this should be replaced by triggering an editableInput event on the editor
+                //but, I can't seem to make that happen, and this code does the same thing (compare with
+                //https://github.com/yabwe/medium-editor/blob/master/src/js/core.js#L203)
+                this.tribute.current.element.parentElement.getElementsByTagName('textarea')[0].value = this.tribute.current.element.innerHTML.trim();
+
                 context.element.dispatchEvent(replaceEvent);
             }
         }
