@@ -276,9 +276,9 @@ module.exports = function(app, passport) {
           slug: newCommunitySlug,
           url: communityUrl,
           descriptionRaw: sanitize(newCommunityData.communityDescription),
-          descriptionParsed: parseText(newCommunityData.communityDescription),
+          descriptionParsed: helper.parseText(newCommunityData.communityDescription).parsedContent,
           rulesRaw: sanitize(newCommunityData.communityRules),
-          rulesParsed: parseText(newCommunityData.communityRules),
+          rulesParsed: helper.parseText(newCommunityData.communityRules).parsedContent,
           image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
           imageEnabled: imageEnabled,
           settings: {
@@ -725,7 +725,7 @@ module.exports = function(app, passport) {
     let parsedReference = parsedReferences[req.body.reference]
     if (req.body.reference == "description" || req.body.reference == "rules"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = parseText(req.body.proposedValue)
+      parsedProposedValue = helper.parseText(req.body.proposedValue).parsedContent
     }
     else if (req.body.reference == "joinType"){
       proposedValue = sanitize(req.body.proposedValue)
@@ -745,7 +745,7 @@ module.exports = function(app, passport) {
     }
     else if (req.body.reference == "name"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = parseText(req.body.proposedValue)
+      parsedProposedValue = helper.parseText(req.body.proposedValue).parsedContent
     }
     Community.findOne({
       _id: req.params.communityid
@@ -1076,41 +1076,4 @@ function isLoggedIn(req, res, next) {
     return next();
   }
   res.redirect('/');
-}
-
-function parseText(rawText, formattingEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
-  let splitContent = rawText.split(/\r\n|\r|\n/gi);
-  let parsedContent = [];
-  let mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
-  let mentionReplace = '$1<a href="/$2">@$2</a>';
-  let hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-  let hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-  let boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
-  let italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
-  let boldReplace = '$1<strong>$2</strong>$3';
-  let italicsReplace = '$1<em>$2</em>$3';
-  splitContent.forEach(function (line) {
-    if (line != ""){
-      line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      line = "<p>" + line + "</p>";
-      if (urlsEnabled){
-        line = Autolinker.link( line );
-      }
-      if (mentionsEnabled){
-        line = line.replace( mentionRegex, mentionReplace )
-      }
-      if (hashtagsEnabled){
-        line = line.replace( hashtagRegex, hashtagReplace );
-      }
-      if (formattingEnabled){
-        line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
-      }
-      parsedContent.push(line);
-    }
-  })
-  parsedContent = parsedContent.join('');
-  // parsedContent = sanitizeHtml(parsedContent, sanitizeHtmlOptions);
-  // parsedContent = parsedContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  parsedContent = sanitize(parsedContent);
-  return parsedContent;
 }
