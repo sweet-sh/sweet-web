@@ -50,11 +50,6 @@ module.exports = {
         trimmedTags.push(el.replace(/(#|\s)*/i, ''));
       })
     }
-
-    console.log(trimmedMentions)
-
-    console.log(trimmedTags)
-
     return {
       text: parsedContent,
       mentions: trimmedMentions,
