@@ -1,12 +1,3 @@
-const User            = require('../app/models/user');
-const Relationship    = require('../app/models/relationship');
-const Post    = require('../app/models/post');
-const Tag    = require('../app/models/tag');
-const Community    = require('../app/models/community');
-const Vote    = require('../app/models/vote');
-const Image    = require('../app/models/image');
-var ObjectId = require('mongoose').Types.ObjectId;
-
 const reservedUsernames =  require('../config/reserved-usernames.js')
 var bcrypt   = require('bcrypt-nodejs');
 var moment = require('moment');
