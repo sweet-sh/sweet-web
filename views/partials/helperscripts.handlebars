@@ -68,34 +68,6 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
   }
 }
 
-var editor = new MediumEditor('.editable-text', {
-  buttonLabels: 'fontawesome',
-  toolbar: {
-    buttons: ['bold', 'italic', 'quote']
-  },
-  keyboardCommands: {
-    commands: [
-      {
-          command: 'bold',
-          key: 'B',
-          meta: true,
-          shift: false,
-          alt: false
-      },
-      {
-          command: 'italic',
-          key: 'I',
-          meta: true,
-          shift: false,
-          alt: false
-      }
-    ],
-  },
-  placeholder: {
-      text: 'Write something. Highlight text to format.'
-  }
-});
-
 function resetImageUploadFields(){
   $("#postImageUrl").val("");
   $("#postImageTags").val("");
@@ -104,4 +76,56 @@ function resetImageUploadFields(){
   $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
   $(".file-input").val(null);
 }
+
+// TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
+
+$(function() {
+
+  // Init tribute
+  $.post('/api/user/followers', function(data){
+    followers = JSON.parse(data).followers;
+    tribute = new Tribute({
+      values: followers,
+      menuItemTemplate: function (item) {
+        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
+      }
+    })
+    tribute.attach($(".editable-text"));
+  });
+  // Attach tribute to comment fields
+  $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+    editor.addElements('.editable-text');
+    tribute.attach($(".editable-comment-content"));
+  });
+
+  // RICH TEXT EDITOR INIT
+
+  var editor = new MediumEditor('.editable-text', {
+    buttonLabels: 'fontawesome',
+    toolbar: {
+      buttons: ['bold', 'italic', 'quote']
+    },
+    keyboardCommands: {
+      commands: [
+        {
+            command: 'bold',
+            key: 'B',
+            meta: true,
+            shift: false,
+            alt: false
+        },
+        {
+            command: 'italic',
+            key: 'I',
+            meta: true,
+            shift: false,
+            alt: false
+        }
+      ],
+    },
+    placeholder: {
+        text: 'Write something. Highlight text to format.'
+    }
+  });
+});
 </script>

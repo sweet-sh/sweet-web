@@ -3,7 +3,6 @@ $(function() {
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
-  autosize($('textarea'));
   $("#notificationsContainer").load( "/api/notification/display" );
 
   $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){

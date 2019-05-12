@@ -213,7 +213,6 @@
 
 <script>
 $(function() {
-  autosize($("textarea"));
   $(".replyContainer").show();
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
@@ -223,7 +222,6 @@ $(function() {
         return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
       }
     })
-    tribute.attach($(".editable-text"));
   })
 });
 </script>

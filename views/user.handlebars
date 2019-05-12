@@ -94,10 +94,6 @@ $('#postsContainer').infiniteScroll({
   history: false,
   status: '.page-load-status'
 });
-$('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
-  tribute.attach($(".editable-text"));
-  editor.addElements('.editable-text');
-});
 </script>
 
 {{> profilescripts}}
