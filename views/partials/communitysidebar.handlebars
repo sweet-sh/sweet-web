@@ -6,6 +6,11 @@
   <a href="/community/{{communityData.slug}}" class="text-dark">{{ communityData.name }}</a>
 </h3>
 
+<div class="community-tags">
+  <span class="badge badge-secondary mr-2">{{#eq communityData.settings.joinType "open"}}Open{{else}}Approval only{{/eq}}</span>
+  <span class="badge badge-secondary">{{#eq communityData.settings.visibility "public"}}Public{{else}}Private{{/eq}}</span>
+</div>
+
 {{#if communityData.descriptionParsed}}
   {{{communityData.descriptionParsed}}}
 {{/if}}

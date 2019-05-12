@@ -726,16 +726,33 @@ hr {
 }
 
 #profileImageContainer {
-    display: flex;
-    width: 150px;
-    position: relative;
+  display: flex;
+  width: 100%;
+  position: relative;
+  margin-bottom: 10px;
 }
 
 #profileImage {
-  width: 150px;
-  height: 150px;
+  width: 100%;
   border-radius: 10px;
   /* border-radius: 50%; */
+  object-fit: cover;
+  object-position: top;
+}
+
+@media (max-width: 776px) {
+  #profileImage {
+    max-height: 250px;
+  }
+}
+
+.own-profile-image {
+  margin-bottom: 0 !important;
+}
+
+.community-tags {
+    margin-top: -10px;
+    margin-bottom: 20px;
 }
 
 #updateImage {
@@ -1011,7 +1028,24 @@ hr {
 .custom-file-container {
   box-sizing: border-box;
   position: relative;
-  display: block; }
+  display: block;
+  height: 200px;
+  width: 45%;
+  position: relative;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+ }
+
+ .newimagecont {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  height: 200px;
+  width: 45%;
+  position: relative;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+ }
 
 .image-preview {
   overflow: hidden;
@@ -1056,11 +1090,6 @@ hr {
   cursor: pointer;
 }
 
-.custom-file-container {
-  margin-top: 1rem !important;
-  margin-bottom: 0.5rem !important;
-}
-
 .image-clear {
     border-radius: 90%;
     width: 1.5em;
@@ -1068,7 +1097,7 @@ hr {
     text-align: center;
     position: absolute;
     right: 20px;
-    top: 7px;
+    top: 20px;
 }
 
 

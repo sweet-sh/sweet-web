@@ -1,6 +1,3 @@
-const User = require('../app/models/user');
-const Community    = require('../app/models/community');
-
 function markRead(userId, subjectId) {
   User.findOne({
     _id: userId
