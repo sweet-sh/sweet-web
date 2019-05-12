@@ -7,7 +7,9 @@ var imageSchema = new mongoose.Schema({
   privacy: String,
   accessToken: String,
   user: String,
-  community: String
+  community: String,
+  tags: String,
+  description: String
 });
 
 module.exports = mongoose.model('Image', imageSchema);

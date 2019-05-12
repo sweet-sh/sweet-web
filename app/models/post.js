@@ -19,7 +19,8 @@ var commentSchema = new mongoose.Schema({
     type: String
   },
   mentions: [String],
-  tags: [String]
+  tags: [String],
+  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }]
 });
 
 var postSchema = new mongoose.Schema({
@@ -66,6 +67,7 @@ var postSchema = new mongoose.Schema({
   images: [String],
   imageTags: [String],
   imageDescriptions: [String],
+  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }],
   subscribedUsers: [String],
   unsubscribedUsers: [String]
 });
