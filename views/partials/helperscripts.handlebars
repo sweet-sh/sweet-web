@@ -99,7 +99,7 @@ var editor = new MediumEditor('.editable-text', {
 function resetImageUploadFields(){
   $("#postImageUrl").val("");
   $("#postImageTags").val("");
-  $("#postSubmit").html($("#postSubmit").html()).prop('disabled', false);
+  $("#postSubmit").html("Send <i class=\"fas fa-chevron-right\"></i>").prop('disabled', false);
   $(".editable-post-content").prop('required',true);
   $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
   $(".file-input").val(null);

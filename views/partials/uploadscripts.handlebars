@@ -14,47 +14,57 @@ $(function() {
   })
   $("#postImageButton").click(function(){
     $(".file-input").click();
-    let imagePrevCont = $('.custom-file-container')[0];
-    imagePrevCont.style.display = "block"
-    imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
-    $('#imagePreviewContainer').slideDown('fast');
   })
   
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html();
-      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true); 
+      //var uploadsinprogress =      
+      
+      for(var i = 0;i<this.files.length;i++){
+        //add preview windows
+        var fr = new FileReader();
+        fr.onload = function(e){
+          var newimagecont = $('.custom-file-container').clone();
+          newimagecont.attr('class','newimagecont').appendTo( "#topPostControlsRow" );
+          newimagecont.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+        }
+        fr.readAsDataURL(this.files[i]);
 
-      let fr = new FileReader();
-      fr.onload = function(e){
-        $(".image-preview")[0].style.backgroundImage = "url("+e.target.result+")";
-      }
-      fr.readAsDataURL(this.files[0]);
-
-      var fd = new FormData();
-      fd.append('image', this.files[0]);
-      var imageUploadReq = $.ajax({
-        url: '/api/image/v2',
-        type: 'POST',
-        data: fd,
-        processData: false,
-        contentType: false
-      })
-      .done(function( data ) {
-        var uploadedImage = JSON.parse(data)
-        if (uploadedImage.error){
-          if (uploadedImage.error == "filesize"){
-            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.", function(){
+        //upload files and add urls to post form
+        var fd = new FormData();
+        fd.append('image', this.files[i]);
+        var imageUploadReq = $.ajax({
+          url: '/api/image/v2',
+          type: 'POST',
+          data: fd,
+          processData: false,
+          contentType: false
+        })
+        .done(function( data ) {
+          var uploadedImage = JSON.parse(data)
+          if (uploadedImage.error){
+            if (uploadedImage.error == "filesize"){
+              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
               resetImageUploadFields();
-            });
+            }
+          }else {
+            if($("#postImageUrl").val()){
+              $("#postImageUrl").val($("#postImageUrl").val() + " " + uploadedImage.url);
+            }else{
+              $("#postImageUrl").val(uploadedImage.url);
+            }
+            $("#postImageTags").val(uploadedImage.tags);
+            $("#postSubmit").html(submitButtonValue).prop('disabled', false);
+            $(".editable-post-content").removeAttr("required");
           }
-        }
-        else {
-          $("#postImageUrl").val(uploadedImage.url);
-          $("#postImageTags").val(uploadedImage.tags);
-          $("#postSubmit").html(submitButtonValue).prop('disabled', false);
-          $(".editable-post-content").removeAttr("required");
-        }
-      });
+        })
+      }  
+  });
+  
+    
+
+
       $(".image-clear").click(function(e){
         if(imageUploadReq.readyState != 4){
           imageUploadReq.abort();
@@ -64,7 +74,7 @@ $(function() {
         }
         resetImageUploadFields();
       })
-  })
+  //})
   // document.onpaste = function(event){
   //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
   //   for (var i = 0 ; i < items.length ; i++) {

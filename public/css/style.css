@@ -1011,7 +1011,24 @@ hr {
 .custom-file-container {
   box-sizing: border-box;
   position: relative;
-  display: block; }
+  display: block;
+  height: 200px;
+  width: 45%;
+  position: relative;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+ }
+
+ .newimagecont {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  height: 200px;
+  width: 45%;
+  position: relative;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+ }
 
 .image-preview {
   overflow: hidden;
@@ -1056,11 +1073,6 @@ hr {
   cursor: pointer;
 }
 
-.custom-file-container {
-  margin-top: 1rem !important;
-  margin-bottom: 0.5rem !important;
-}
-
 .image-clear {
     border-radius: 90%;
     width: 1.5em;
@@ -1068,7 +1080,7 @@ hr {
     text-align: center;
     position: absolute;
     right: 20px;
-    top: 7px;
+    top: 20px;
 }
 
 
