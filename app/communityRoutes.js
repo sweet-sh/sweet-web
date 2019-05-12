@@ -1,13 +1,3 @@
-const User            = require('../app/models/user');
-const Relationship    = require('../app/models/relationship');
-const Post    = require('../app/models/post');
-const Tag    = require('../app/models/tag');
-const Community    = require('../app/models/community');
-const Vote    = require('../app/models/vote');
-const Image    = require('../app/models/image');
-
-var ObjectId = require('mongoose').Types.ObjectId;
-
 var moment = require('moment');
 
 const notifier = require('./notifier.js');
@@ -276,9 +266,9 @@ module.exports = function(app, passport) {
           slug: newCommunitySlug,
           url: communityUrl,
           descriptionRaw: sanitize(newCommunityData.communityDescription),
-          descriptionParsed: helper.parseText(newCommunityData.communityDescription).parsedContent,
+          descriptionParsed: helper.parseText(newCommunityData.communityDescription).text,
           rulesRaw: sanitize(newCommunityData.communityRules),
-          rulesParsed: helper.parseText(newCommunityData.communityRules).parsedContent,
+          rulesParsed: helper.parseText(newCommunityData.communityRules).text,
           image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
           imageEnabled: imageEnabled,
           settings: {
@@ -725,7 +715,7 @@ module.exports = function(app, passport) {
     let parsedReference = parsedReferences[req.body.reference]
     if (req.body.reference == "description" || req.body.reference == "rules"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = helper.parseText(req.body.proposedValue).parsedContent
+      parsedProposedValue = helper.parseText(req.body.proposedValue).text
     }
     else if (req.body.reference == "joinType"){
       proposedValue = sanitize(req.body.proposedValue)
@@ -745,7 +735,7 @@ module.exports = function(app, passport) {
     }
     else if (req.body.reference == "name"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = helper.parseText(req.body.proposedValue).parsedContent
+      parsedProposedValue = helper.parseText(req.body.proposedValue).text
     }
     Community.findOne({
       _id: req.params.communityid
@@ -823,7 +813,7 @@ module.exports = function(app, passport) {
           if (vote.votes >= majorityMargin) {
             console.log("Vote passed!")
             if (vote.reference == "visibility"){
-              community.settings[vote.reference] = vote.proposedValue;  
+              community.settings[vote.reference] = vote.proposedValue;
               Image.find({context: "community", community: community._id}).then(images =>{
                 console.log(images);
                 images.forEach(function(image){

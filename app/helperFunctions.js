@@ -2,8 +2,7 @@ const Autolinker = require( 'autolinker' );
 var sanitize = require('mongo-sanitize');
 
 module.exports = {
-  // Parses new post and new comment content. Input: a text string from a
-  // contenteditable div. Output: a parsed text string.
+  // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
   parseText: function (rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, ) {
     let splitContent = rawText.split('</p>');
     let parsedContent = [];
@@ -50,11 +49,6 @@ module.exports = {
         trimmedTags.push(el.replace(/(#|\s)*/i, ''));
       })
     }
-
-    console.log(trimmedMentions)
-
-    console.log(trimmedTags)
-
     return {
       text: parsedContent,
       mentions: trimmedMentions,

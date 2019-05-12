@@ -1,12 +1,3 @@
-const User            = require('../app/models/user');
-const Relationship    = require('../app/models/relationship');
-const Post    = require('../app/models/post');
-const Tag    = require('../app/models/tag');
-const Community    = require('../app/models/community');
-const Vote    = require('../app/models/vote');
-const Image    = require('../app/models/image');
-var ObjectId = require('mongoose').Types.ObjectId;
-
 const reservedUsernames =  require('../config/reserved-usernames.js')
 var bcrypt   = require('bcrypt-nodejs');
 var moment = require('moment');
@@ -2870,6 +2861,7 @@ module.exports = function(app, passport) {
       post.numberOfComments = post.comments.length;
       post.save()
       .then((comment) => {
+        relocatePost(ObjectId(req.params.postid));
         res.sendStatus(200);
       })
       .catch((error) => {
@@ -2943,6 +2935,28 @@ module.exports = function(app, passport) {
       })
     })
   })
+
+  function relocatePost(postid){
+    Post.aggregate([
+      { "$match": { "_id": postid } },
+      { "$unwind" : "$comments" },
+      { "$sort" : { "comments.timestamp" : -1 } },
+      { "$group" : { "_id" : "$_id", "latest_timestamp" : { "$first" : "$comments" } } }
+    ])
+    .then(result => {
+      Post.findOneAndUpdate(
+        { _id: postid },
+        { $set: { lastUpdated: result[0].latest_timestamp.timestamp } },
+        { returnNewDocument: true }
+      )
+      .then(updatedPost => {
+        console.log(updatedPost)
+      })
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  }
 
   app.post("/api/notification/update/:id", isLoggedInOrRedirect, function(req,res) {
     User.findOneAndUpdate(

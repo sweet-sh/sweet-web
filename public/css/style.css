@@ -726,16 +726,33 @@ hr {
 }
 
 #profileImageContainer {
-    display: flex;
-    width: 150px;
-    position: relative;
+  display: flex;
+  width: 100%;
+  position: relative;
+  margin-bottom: 10px;
 }
 
 #profileImage {
-  width: 150px;
-  height: 150px;
+  width: 100%;
   border-radius: 10px;
   /* border-radius: 50%; */
+  object-fit: cover;
+  object-position: top;
+}
+
+@media (max-width: 776px) {
+  #profileImage {
+    max-height: 250px;
+  }
+}
+
+.own-profile-image {
+  margin-bottom: 0 !important;
+}
+
+.community-tags {
+    margin-top: -10px;
+    margin-bottom: 20px;
 }
 
 #updateImage {

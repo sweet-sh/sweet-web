@@ -15,7 +15,7 @@ $(function() {
   $("#postImageButton").click(function(){
     $(".file-input").click();
   })
-  
+
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html();
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true); 
@@ -91,15 +91,5 @@ $(function() {
     $.post( "/cleartempimage", { imageURL: $("#postImageUrl")[0].value } );
   });
 
-  $.post('/api/user/followers', function(data){
-    followers = JSON.parse(data).followers;
-    tribute = new Tribute({
-      values: followers,
-      menuItemTemplate: function (item) {
-        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
-      }
-    })
-    tribute.attach($(".editable-text"));
-  })
 })
 </script>
