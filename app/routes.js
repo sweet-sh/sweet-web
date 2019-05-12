@@ -2870,6 +2870,7 @@ module.exports = function(app, passport) {
       post.numberOfComments = post.comments.length;
       post.save()
       .then((comment) => {
+        relocatePost(ObjectId(req.params.postid));
         res.sendStatus(200);
       })
       .catch((error) => {
@@ -2943,6 +2944,28 @@ module.exports = function(app, passport) {
       })
     })
   })
+
+  function relocatePost(postid){
+    Post.aggregate([
+      { "$match": { "_id": postid } },
+      { "$unwind" : "$comments" },
+      { "$sort" : { "comments.timestamp" : -1 } },
+      { "$group" : { "_id" : "$_id", "latest_timestamp" : { "$first" : "$comments" } } }
+    ])
+    .then(result => {
+      Post.findOneAndUpdate(
+        { _id: postid },
+        { $set: { lastUpdated: result[0].latest_timestamp.timestamp } },
+        { returnNewDocument: true }
+      )
+      .then(updatedPost => {
+        console.log(updatedPost)
+      })
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  }
 
   app.post("/api/notification/update/:id", isLoggedInOrRedirect, function(req,res) {
     User.findOneAndUpdate(
