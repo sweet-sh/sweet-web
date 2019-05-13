@@ -2456,7 +2456,7 @@ module.exports = function(app, passport) {
               //   }
                 imageTags = ""
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
+                res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags, imageid: req.body.imageid}));
               // })
               // .catch(err => {
               //   console.error(err);
