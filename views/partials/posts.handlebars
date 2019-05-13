@@ -67,7 +67,7 @@
           {{#if this.images}}
             <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
               {{#each this.images}}
-                <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
+                <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
               {{/each}}
             </div>
           {{/if}}
@@ -237,7 +237,7 @@
             {{#if this.images}}
               <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
                 {{#each this.images}}
-                  <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
+                  <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                 {{/each}}
               </div>
             {{/if}}
@@ -401,7 +401,7 @@
               {{#if this.images}}
                 <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
                   {{#each this.images}}
-                    <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
+                    <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                   {{/each}}
                 </div>
               {{/if}}

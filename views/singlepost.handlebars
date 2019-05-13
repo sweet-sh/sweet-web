@@ -65,7 +65,7 @@
               {{#if post.images}}
                 <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}}">
                   {{#each post.images}}
-                    <img alt="{{#if ../post.imageDescriptions}}{{../post.imageDescriptions}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
+                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
                   {{/each}}
                 </div>
               {{/if}}

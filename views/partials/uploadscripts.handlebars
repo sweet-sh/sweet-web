@@ -76,6 +76,10 @@ $(function() {
     $("#postSubmit").click(function(e){
       e.preventDefault();
       if($('#postContent').val() != "" || imagesuploaded!=0){
+        let imagedescarray = [];
+        for(let j=0;j<imagesuploaded;j++){
+          imagedescarray.push($('.newimagecont[locInUrlArray="'+j+'"]').find('#postImageDescription').val());
+        }
         $.ajax({
           url: '/createpost',
           type: 'POST',
@@ -83,6 +87,7 @@ $(function() {
             postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
             postContent: $('#postContent').val(),
             postContentWarnings: $('#postContentWarnings').val(),
+            postImageDescription: JSON.stringify(imagedescarray),
             postImageURL: JSON.stringify(imageUrls),
             imageTags: ""
           }}).done(function(data){

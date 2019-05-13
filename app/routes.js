@@ -2534,7 +2534,7 @@ module.exports = function(app, passport) {
       return value!=="";
     });
     var postImageTags = [""];
-    var postImageDescription = req.body.postImageDescription;
+    var postImageDescription = JSON.parse(req.body.postImageDescription);
     let formattingEnabled = req.body.postFormattingEnabled ? true : false;
 
     let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
