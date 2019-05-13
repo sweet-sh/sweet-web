@@ -16,25 +16,35 @@ $(function() {
     $(".file-input").click();
   })
 
+    var imageuploadrequests = [];
+    var imagesuploaded = 0;
+    var uploadsinprogress = 0;
+    var uploadscompleted = 0;
+    var imageUrls = [];
+    var imageDescs = [];
+
   $(".file-input").change(function (e) {
       var submitButtonValue = $("#postSubmit").html();
       $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true); 
-      //var uploadsinprogress =      
+      uploadsinprogress += this.files.length;
       
       for(var i = 0;i<this.files.length;i++){
         //add preview windows
         var fr = new FileReader();
         fr.onload = function(e){
-          var newimagecont = $('.custom-file-container').clone();
-          newimagecont.attr('class','newimagecont').appendTo( "#topPostControlsRow" );
+          var newimagecont = $(".newimageform").clone();
+          newimagecont.attr('class','newimagecont').attr('number',''+imagesuploaded++).appendTo( "#topPostControlsRow" );
           newimagecont.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
         }
         fr.readAsDataURL(this.files[i]);
 
         //upload files and add urls to post form
+        
         var fd = new FormData();
         fd.append('image', this.files[i]);
-        var imageUploadReq = $.ajax({
+        fd.append('imageid',""+i);
+
+        let imageUploadReq = $.ajax({
           url: '/api/image/v2',
           type: 'POST',
           data: fd,
@@ -49,30 +59,62 @@ $(function() {
               resetImageUploadFields();
             }
           }else {
-            if($("#postImageUrl").val()){
-              $("#postImageUrl").val($("#postImageUrl").val() + " " + uploadedImage.url);
-            }else{
-              $("#postImageUrl").val(uploadedImage.url);
-            }
+            imageUrls.push(uploadedImage.url);
+            $('.newimagecont[number="'+uploadedImage.imageid+'"]').attr('locInUrlArray', ""+uploadscompleted++);
             $("#postImageTags").val(uploadedImage.tags);
-            $("#postSubmit").html(submitButtonValue).prop('disabled', false);
-            $(".editable-post-content").removeAttr("required");
+            uploadsinprogress--;
+            if(uploadsinprogress==0){
+              $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+            }
           }
         })
-      }  
+        imageuploadrequests.push(imageUploadReq);
+      }
+      $('.file-input').val(""); //we don't need it! and we need to be detect all changes
   });
+
+    $("#postSubmit").click(function(e){
+      e.preventDefault();
+      if($('#postContent').val() != "" || imagesuploaded!=0){
+        $.ajax({
+          url: '/createpost',
+          type: 'POST',
+          data: {
+            postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
+            postContent: $('#postContent').val(),
+            postContentWarnings: $('#postContentWarnings').val(),
+            postImageURL: JSON.stringify(imageUrls),
+            imageTags: ""
+          }}).done(function(data){
+            window.location.reload(true);
+          });
+      }else{
+        alert('either write something or upload an image plz');
+      }
+    });
+
   
-    
-
-
-      $(".image-clear").click(function(e){
-        if(imageUploadReq.readyState != 4){
-          imageUploadReq.abort();
+      $("body").on('click','.image-clear',function(e){
+        let imageid = $(this).parent().parent().attr('number');
+        if(imageuploadrequests[imageid].readyState != 4){
+          imageuploadrequests[imageid].abort();
+          uploadsinprogress--;
+          if(uploadsinprogress==0){
+            $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+          }
         }else{
-          let jsonResponse = JSON.parse(imageUploadReq.responseText);
+          imagesuploaded--;
+          if(imagesuploaded==0){
+            $(".editable-post-content").prop('required',true);
+          }
+          let locInUrlArray = $(this).parent().parent().attr('locinurlarray');
+          imageUrls[locInUrlArray] = "";
+          
+          let jsonResponse = JSON.parse(imageuploadrequests[imageid].responseText);
           $.post( "/cleartempimage", { imageURL: jsonResponse.url } );
         }
-        resetImageUploadFields();
+        $(this).parent().parent().remove();
+          //resetImageUploadFields();
       })
   //})
   // document.onpaste = function(event){
@@ -88,7 +130,11 @@ $(function() {
   // }
 
   $(window).on("unload", function(e) {
-    $.post( "/cleartempimage", { imageURL: $("#postImageUrl")[0].value } );
+    imageUrls.forEach(function(url){
+      if(url){
+        $.post( "/cleartempimage", { imageURL: url } );
+      }
+      })
   });
 
 })

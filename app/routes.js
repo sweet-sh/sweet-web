@@ -2493,7 +2493,7 @@ module.exports = function(app, passport) {
               //   }
               imageTags = ""
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags}));
+                res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags, imageid: req.body.imageid}));
               // })
               // .catch(err => {
               //   console.error(err);
@@ -2530,9 +2530,11 @@ module.exports = function(app, passport) {
     newPostUrl = shortid.generate();
     let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
-    var postImage = req.body.postImageUrl != "" ? [req.body.postImageUrl] : [];
-    var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
-    var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
+    var postImage = JSON.parse(req.body.postImageURL).filter(function(value,index,arr){
+      return value!=="";
+    });
+    var postImageTags = [""];
+    var postImageDescription = req.body.postImageDescription;
     let formattingEnabled = req.body.postFormattingEnabled ? true : false;
 
     let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
@@ -2560,20 +2562,24 @@ module.exports = function(app, passport) {
     let newPostId = post._id;
 
     // Parse images
-    if (req.body.postImageUrl){
-      fs.rename("./cdn/images/temp/"+req.body.postImageUrl, "./cdn/images/"+req.body.postImageUrl, function(e){
-        if(e){
-          console.log("could not move "+req.body.postImageUrl+" out of temp");
-          console.log(e);
+    if (postImage){
+      postImage.forEach(function(imageFileName){
+        if(imageFileName){
+          fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+            if(e){
+              console.log("could not move "+imageFileName+" out of temp");
+              console.log(e);
+            }
+          }) //move images out of temp storage
+          image = new Image({
+            context: "user",
+            filename: imageFileName,
+            privacy: postPrivacy,
+            user: loggedInUserData._id
+          })
+          image.save();
         }
-      }) //move images out of temp storage
-      image = new Image({
-        context: "user",
-        filename: postImage,
-        privacy: postPrivacy,
-        user: loggedInUserData._id
-      })
-      image.save();
+      });      
     }
 
     post.save()

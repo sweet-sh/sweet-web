@@ -1041,7 +1041,7 @@ hr {
   position: relative;
   display: block;
   height: 200px;
-  width: 45%;
+  width: 100%;
   position: relative;
   margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
@@ -1049,22 +1049,19 @@ hr {
 
 .image-preview {
   overflow: hidden;
-  box-sizing: border-box;
   transition: all 0.2s ease;
-  margin-top: 20px;
-  margin-bottom: 40px;
   height: 100%;
-  width: 100%;
+  width: 45%;
   border-radius: 4px;
   background-size: contain;
   background-position:center;
   background-repeat: no-repeat;
   background-image:url("/images/imagePreviewWindowDefault.jpg");
-  width: 100%;
   /*border moved to colors*/
-  margin: 15px 0;
+  margin: 0 2.5%;
   object-fit: contain;
   border-radius: 6px;
+  display: inline-block;
 }
 
 #postImageUpload {
@@ -1074,6 +1071,16 @@ hr {
 #imagePreviewContainer {
   display: none;
   text-align: center;
+}
+
+#postImageDescription {
+  position: absolute;
+  display: inline-block;
+  transition: all 0.2s ease;
+  height: 100%;
+  width: 45%;
+  margin: 0 2.5%;
+  text-align: left;
 }
 
 .post-images {
@@ -1096,7 +1103,7 @@ hr {
     font-size: 2em;
     text-align: center;
     position: absolute;
-    right: 20px;
+    right: 57%;
     top: 20px;
 }
 
