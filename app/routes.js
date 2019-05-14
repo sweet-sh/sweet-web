@@ -2530,108 +2530,190 @@ module.exports = function(app, passport) {
     newPostUrl = shortid.generate();
     let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
-    var postImage = JSON.parse(req.body.postImageURL).filter(function(value,index,arr){
-      return value!=="";
-    });
-    var postImageTags = [""];
+    var postImage = JSON.parse(req.body.postImageURL);
+    var postImageTags = [""]; //what
     var postImageDescription = JSON.parse(req.body.postImageDescription);
-    let formattingEnabled = req.body.postFormattingEnabled ? true : false;
+    let formattingEnabled = req.body.postFormattingEnabled ? true : false; //hmmmmm
 
     let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
 
-    const post = new Post({
-      type: 'original',
-      authorEmail:  loggedInUserData.email,
-      author: loggedInUserData._id,
-      url: newPostUrl,
-      privacy: postPrivacy,
-      timestamp: postCreationTime,
-      lastUpdated: postCreationTime,
-      rawContent: sanitize(req.body.postContent),
-      parsedContent: parsedResult.text,
-      numberOfComments: 0,
-      mentions: parsedResult.mentions,
-      tags: parsedResult.tags,
-      contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-      imageVersion: 2,
-      images: postImage,
-      imageTags: postImageTags,
-      imageDescriptions: postImageDescription,
-      subscribedUsers: [loggedInUserData._id]
-    });
-    let newPostId = post._id;
 
-    // Parse images
-    if (postImage){
-      postImage.forEach(function(imageFileName){
-        if(imageFileName){
-          fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
-            if(e){
-              console.log("could not move "+imageFileName+" out of temp");
-              console.log(e);
-            }
-          }) //move images out of temp storage
-          image = new Image({
-            context: "user",
-            filename: imageFileName,
-            privacy: postPrivacy,
-            user: loggedInUserData._id
-          })
-          image.save();
-        }
-      });      
-    }
-
-    post.save()
-    .then(() => {
-      parsedResult.tags.forEach((tag) => {
-        Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
-          if (error) return
-        });
+    //non-community post
+    if(!req.body.communityId){
+      var post = new Post({
+        type: 'original',
+        authorEmail:  loggedInUserData.email,
+        author: loggedInUserData._id,
+        url: newPostUrl,
+        privacy: postPrivacy,
+        timestamp: postCreationTime,
+        lastUpdated: postCreationTime,
+        rawContent: sanitize(req.body.postContent),
+        parsedContent: parsedResult.text,
+        numberOfComments: 0,
+        mentions: parsedResult.mentions,
+        tags: parsedResult.tags,
+        contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
+        imageVersion: 2,
+        images: postImage,
+        imageTags: postImageTags,
+        imageDescriptions: postImageDescription,
+        subscribedUsers: [loggedInUserData._id]
       });
-      if (postPrivacy == "private"){
-        console.log("This post is private!")
-        // Make sure to only notify mentioned people if they are trusted
-        Relationship.find({
-          from: loggedInUserData.email,
-          value: "trust"
-        }, {'to':1})
-        .then((emails) => {
-          let emailsArray = emails.map(({ to }) => to)
+
+      // Parse images
+      if (postImage){
+        postImage.forEach(function(imageFileName){
+          if(imageFileName){
+            fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+              if(e){
+                console.log("could not move "+imageFileName+" out of temp");
+                console.log(e);
+              }
+            }) //move images out of temp storage
+            image = new Image({
+              context: "user",
+              filename: imageFileName,
+              privacy: postPrivacy,
+              user: loggedInUserData._id
+            })
+            image.save();
+          }
+        });      
+      }
+
+      let newPostId = post._id;
+      post.save()
+      .then(() => {
+        parsedResult.tags.forEach((tag) => {
+          Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
+            if (error) return
+          });
+        });
+        if (postPrivacy == "private"){
+          console.log("This post is private!")
+          // Make sure to only notify mentioned people if they are trusted
+          Relationship.find({
+            from: loggedInUserData.email,
+            value: "trust"
+          }, {'to':1})
+          .then((emails) => {
+            let emailsArray = emails.map(({ to }) => to)
+            parsedResult.mentions.forEach(function(mention){
+              User.findOne({
+                username: mention
+              })
+              .then((user) => {
+                if (emailsArray.includes(user.email)) {
+                  notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                }
+              })
+            })
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+        }
+        else if (postPrivacy == "public"){
+          console.log("This post is public!")
+          // This is a public post, notify everyone
           parsedResult.mentions.forEach(function(mention){
             User.findOne({
               username: mention
             })
             .then((user) => {
-              if (emailsArray.includes(user.email)) {
-                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-              }
+              notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
             })
+          });
+        }
+        res.redirect('back');
+      })
+      .catch((err) => {
+        console.log("Database error: " + err)
+      });
+    
+      //community post
+    }else{
+      let communityId = req.body.communityId;
+
+      const post = new Post({
+        type: 'community',
+        community: communityId,
+        authorEmail:  loggedInUserData.email,
+        author: loggedInUserData._id,
+        url: newPostUrl,
+        privacy: 'public',
+        timestamp: new Date(),
+        lastUpdated: new Date(),
+        rawContent: sanitize(req.body.postContent),
+        parsedContent: parsedResult.text,
+        numberOfComments: 0,
+        mentions: parsedResult.mentions,
+        tags: parsedResult.tags,
+        contentWarnings: sanitize(req.body.postContentWarnings),
+        imageVersion: 2,
+        images: postImage,
+        imageTags: postImageTags,
+        imageDescriptions: postImageDescription,
+        subscribedUsers: [loggedInUserData._id]
+      });
+      
+      // Parse images
+      if (postImage){
+        postImage.forEach(function(imageFileName){
+          fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+            if(e){
+              console.log("could not move " + imageFileName + " out of temp");
+              console.log(e);
+            }
+          }) //move images out of temp storage
+          Community.findOne({
+            _id: communityId
           })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
+          .then(community => {
+            image = new Image({
+              context: "community",
+              filename: imageFileName,
+              privacy: community.settings.visibility,
+              user: loggedInUserData._id,
+              community: communityId
+            })
+            image.save();
+          })
         });
       }
-      else if (postPrivacy == "public"){
-        console.log("This post is public!")
-        // This is a public post, notify everyone
+
+      post.save()
+      .then(() => {
+        parsedResult.tags.forEach((tag) => {
+          Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
+              if (error) return
+          });
+        });
+        // This is a public post, notify everyone in this community
         parsedResult.mentions.forEach(function(mention){
           User.findOne({
-            username: mention
+            username: mention,
+            communities: communityId
           })
           .then((user) => {
             notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
           })
         });
-      }
-      res.redirect('back');
-    })
-    .catch((err) => {
-      console.log("Database error: " + err)
-    });
-  })
+        Community.findOneAndUpdate(
+          { _id: communityId },
+          { $set: { lastUpdated: new Date() } }
+        ).then(community => {
+          console.log("Updated community!")
+        })
+        res.redirect('back');
+      })
+      .catch((err) => {
+        console.log("Database error: " + err)
+      });
+    }    
+  });
 
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})

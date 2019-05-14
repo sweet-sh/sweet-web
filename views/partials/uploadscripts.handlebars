@@ -16,9 +16,6 @@ $(function() {
     $(".file-input").click();
   })
 
-    
-    
-    
     //IMAGE UPLOADER CODE
     
     var uploadsStarted = 0;
@@ -28,15 +25,12 @@ $(function() {
     var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process
 
     $(".file-input").change(function (e) {
-
-      
-            
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
 
           $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
-          
+
           //add preview windows
           var newimagecont = $(".newimageform").clone();
           newimagecont.attr('class','newimagecont').attr('uploadnumber',uploadsStarted).appendTo( "#topPostControlsRow" );
@@ -133,6 +127,7 @@ $(function() {
           url: '/createpost',
           type: 'POST',
           data: {
+            communityId: $('#postForm').attr("communityId"),
             postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
             postContent: $('#postContent').val(),
             postContentWarnings: $('#postContentWarnings').val(),

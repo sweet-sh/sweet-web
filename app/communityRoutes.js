@@ -968,6 +968,8 @@ module.exports = function(app, passport) {
     })
   });
 
+  //THIS FUNCTION IS NOT USED RIGHT NOW.
+  //LEAVING IT IN CASE THE COMMUNITY SECTION OF CREATEPOST IN ROUTES.JS BREAKS AND I WANT TO COMPARE IT TO THIS AGAIN TO TRY TO SEE WHY
   app.post('/api/community/post/create/:communityid/:communityurl', isLoggedIn, function(req, res) {
     let communityId = req.params.communityid;
     let communityUrl = req.params.communityurl;

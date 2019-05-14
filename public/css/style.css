@@ -727,13 +727,13 @@ hr {
 
 #profileImageContainer {
   display: flex;
-  width: 100%;
+  width: 150px;
   position: relative;
-  margin-bottom: 10px;
 }
 
 #profileImage {
-  width: 100%;
+  width: 150px;
+  height:150px;
   border-radius: 10px;
   /* border-radius: 50%; */
   object-fit: cover;

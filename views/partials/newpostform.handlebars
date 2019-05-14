@@ -1,4 +1,4 @@
-<form id="postForm" action="{{#if isMember}}/api/community/post/create/{{communityData._id}}/{{communityData.url}}{{else}}/createpost{{/if}}" method="post" enctype="multipart/form-data">
+<form id="postForm" {{#if isMember}}communityid="{{communityData._id}}"{{/if}} action="/createpost" method="post" enctype="multipart/form-data">
 
   <div class="form-row">
     <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
