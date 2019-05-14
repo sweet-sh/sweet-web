@@ -29,59 +29,72 @@ $(function() {
 
     $(".file-input").change(function (e) {
 
-      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+      
             
       for(var i = 0;i<this.files.length;i++){
+        //check to make sure it's a supported file type of the correct size
+        if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
 
-        //add preview windows
-        var newimagecont = $(".newimageform").clone();
-        newimagecont.attr('class','newimagecont').attr('uploadnumber',uploadsStarted).appendTo( "#topPostControlsRow" );
+          $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+          
+          //add preview windows
+          var newimagecont = $(".newimageform").clone();
+          newimagecont.attr('class','newimagecont').attr('uploadnumber',uploadsStarted).appendTo( "#topPostControlsRow" );
 
-        //create filereader that will obtain us the preview
-        var fr = new FileReader();
-        fr.uploadNumber = uploadsStarted; //lets us find the preview window to give this image to when done
-        fr.onload = function(e){
-          let bgRecipient = $('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
-          if(bgRecipient){ //our preview window might have already been eliminated by a cancel operation
-            bgRecipient.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+          //create filereader that will obtain us the preview
+          var fr = new FileReader();
+          fr.uploadNumber = uploadsStarted; //lets us find the preview window to give this image to when done
+          fr.onload = function(e){
+            let bgRecipient = $('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
+            if(bgRecipient){ //our preview window might have already been eliminated by a cancel operation
+              bgRecipient.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+            }
+          }
+          fr.fileType = this.files[i].type;
+          fr.readAsDataURL(this.files[i]);
+
+          //make the image-uploading ajax request
+          var fd = new FormData();
+          fd.append('image', this.files[i]);
+
+          let imageUploadReq = $.ajax({
+            url: '/api/image/v2',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false
+          });
+          imageUploadReq.uploadNumber = uploadsStarted;
+          imageUploadReq.done(function(data, textstatus, jqXHR){
+            //find the corresponding preview window
+            thisImagesWindow = $('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
+
+            var serverResponse = JSON.parse(data);
+            //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
+            if(serverResponse.error && serverResponse.error == "filesize"){
+              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+              uploadsCancelled++;
+              thisImagesWindow.remove();
+              if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+                $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+              }
+            }else{
+              uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
+              thisImagesWindow.attr('urlpos', uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
+              if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+                $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+              }
+            }
+          });
+          imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
+          ++uploadsStarted;
+        }else{
+          if(!(this.files[i].type === "image/jpeg" || this.files[i].type === "image/gif" || this.files[i].type === "image/png")){
+            bootbox.alert("You appear to have sent us a file of unsupported type! Atm we only take gifs, jpgs, and pngs");
+          }else{
+            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
           }
         }
-        fr.readAsDataURL(this.files[i]);
-
-        //make the image-uploading ajax request
-        var fd = new FormData();
-        fd.append('image', this.files[i]);
-
-        let imageUploadReq = $.ajax({
-          url: '/api/image/v2',
-          type: 'POST',
-          data: fd,
-          processData: false,
-          contentType: false
-        });
-        imageUploadReq.uploadNumber = uploadsStarted;
-        imageUploadReq.done(function(data, textstatus, jqXHR){
-          //find the corresponding preview window
-          thisImagesWindow = $('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
-
-          var serverResponse = JSON.parse(data);
-          if(serverResponse.error && serverResponse.error == "filesize"){
-            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-            uploadsCancelled++;
-            thisImagesWindow.remove();
-            if(uploadsStarted-uploadsCancelled == uploadsCompleted){
-              $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
-            }
-          }else{
-            uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
-            thisImagesWindow.attr('urlpos', uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
-            if(uploadsStarted-uploadsCancelled == uploadsCompleted){
-              $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
-            }
-          }
-        });
-        imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
-        ++uploadsStarted;
       }
     });
 
