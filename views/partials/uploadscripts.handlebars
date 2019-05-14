@@ -12,11 +12,8 @@ $(function() {
   $("#emojiWindow>.add-emoji").click(function(){
     pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
-  $("body").on('click','#postImageButton',function(e){
-    $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input').click(); //bit sketchy! oh well
-  })
-
-    //IMAGE UPLOADER CODE
+  
+      //IMAGE UPLOADER CODE
     //initialize variables for new post form image uploader
     var uploadsStarted = 0;
     var uploadsCompleted = 0;
@@ -25,7 +22,7 @@ $(function() {
     var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process
 
     //function right after clicking the add image button on the post and comment forms
-    $(".file-input").change(function (e) {
+    function fileselected (e) {
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
@@ -103,7 +100,17 @@ $(function() {
           }
         }
       }
-    });
+    }
+  
+  $("body").on('click','#postImageButton',function(e){
+    let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
+    //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+    if(!ourFileInputGuy[0].changeEventAttached){
+      ourFileInputGuy.change(fileselected);
+      ourFileInputGuy[0].changeEventAttached = true;
+    }
+    ourFileInputGuy.click();
+  })
 
   //function for removing an image from a post or comment
   $("body").on('click','.image-clear',function(e){
@@ -128,14 +135,14 @@ $(function() {
   //function for very specifically submitting a post, not a comment
   $("#postSubmit").click(function(e){
       e.preventDefault();
-      let previewContainer = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
+      let pc = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
       //only do anything if there are no pending uploads and there is some text or image(s) to post
-      if(previewContainer.uploadsCompleted == previewContainer.uploadsStarted-previewContainer.uploadsCancelled && ($(previewContainer).find('.newimagecont').length != 0 || $('#postContent').val() != "" )){
+      if((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted-pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || $('#postContent').val() != "" )){
         let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
         let imagedescs = [];
-        for(let i=0; i < $(previewContainer).find('.newimagecont').length; i++){
-          let imageWindow = $($(previewContainer).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
-          sortedurls.push(previewContainer.uploadedImageUrls[imageWindow.attr('urlpos')]);
+        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
+          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
+          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
           imagedescs.push(imageWindow.find('#postImageDescription').val());
         }
         $.ajax({
