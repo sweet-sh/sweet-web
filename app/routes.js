@@ -2456,7 +2456,7 @@ module.exports = function(app, passport) {
               //   }
                 imageTags = ""
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags, imageid: req.body.imageid}));
+                res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
               // })
               // .catch(err => {
               //   console.error(err);
@@ -2493,7 +2493,7 @@ module.exports = function(app, passport) {
               //   }
               imageTags = ""
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags, imageid: req.body.imageid}));
+                res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags}));
               // })
               // .catch(err => {
               //   console.error(err);

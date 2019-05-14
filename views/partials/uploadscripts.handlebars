@@ -16,33 +16,41 @@ $(function() {
     $(".file-input").click();
   })
 
-    var imageuploadrequests = [];
-    var imagesuploaded = 0;
-    var uploadsinprogress = 0;
-    var uploadscompleted = 0;
-    var imageUrls = [];
-    var imageDescs = [];
+    
+    
+    
+    //IMAGE UPLOADER CODE
+    
+    var uploadsStarted = 0;
+    var uploadsCompleted = 0; //completed just means not pending, being aborted counts as "completed"
+    var uploadsCancelled = 0;
+    var uploadedImageUrls = [];
+    var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process
 
-  $(".file-input").change(function (e) {
-      var submitButtonValue = $("#postSubmit").html();
-      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true); 
-      uploadsinprogress += this.files.length;
-      
+    $(".file-input").change(function (e) {
+
+      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+            
       for(var i = 0;i<this.files.length;i++){
+
         //add preview windows
+        var newimagecont = $(".newimageform").clone();
+        newimagecont.attr('class','newimagecont').attr('uploadnumber',uploadsStarted).appendTo( "#topPostControlsRow" );
+
+        //create filereader that will obtain us the preview
         var fr = new FileReader();
+        fr.uploadNumber = uploadsStarted; //lets us find the preview window to give this image to when done
         fr.onload = function(e){
-          var newimagecont = $(".newimageform").clone();
-          newimagecont.attr('class','newimagecont').attr('number',''+imagesuploaded++).appendTo( "#topPostControlsRow" );
-          newimagecont.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+          let bgRecipient = $('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
+          if(bgRecipient){ //our preview window might have already been eliminated by a cancel operation
+            bgRecipient.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+          }
         }
         fr.readAsDataURL(this.files[i]);
 
-        //upload files and add urls to post form
-        
+        //make the image-uploading ajax request
         var fd = new FormData();
         fd.append('image', this.files[i]);
-        fd.append('imageid',""+i);
 
         let imageUploadReq = $.ajax({
           url: '/api/image/v2',
@@ -50,35 +58,63 @@ $(function() {
           data: fd,
           processData: false,
           contentType: false
-        })
-        .done(function( data ) {
-          var uploadedImage = JSON.parse(data)
-          if (uploadedImage.error){
-            if (uploadedImage.error == "filesize"){
-              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-              resetImageUploadFields();
+        });
+        imageUploadReq.uploadNumber = uploadsStarted;
+        imageUploadReq.done(function(data, textstatus, jqXHR){
+          //find the corresponding preview window
+          thisImagesWindow = $('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
+
+          var serverResponse = JSON.parse(data);
+          if(serverResponse.error && serverResponse.error == "filesize"){
+            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+            uploadsCancelled++;
+            thisImagesWindow.remove();
+            if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+              $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
             }
-          }else {
-            imageUrls.push(uploadedImage.url);
-            $('.newimagecont[number="'+uploadedImage.imageid+'"]').attr('locInUrlArray', ""+uploadscompleted++);
-            $("#postImageTags").val(uploadedImage.tags);
-            uploadsinprogress--;
-            if(uploadsinprogress==0){
+          }else{
+            uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
+            thisImagesWindow.attr('urlpos', uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
+            if(uploadsStarted-uploadsCancelled == uploadsCompleted){
               $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
             }
           }
-        })
-        imageuploadrequests.push(imageUploadReq);
+        });
+        imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
+        ++uploadsStarted;
       }
-      $('.file-input').val(""); //we don't need it! and we need to be detect all changes
-  });
+    });
 
-    $("#postSubmit").click(function(e){
+  $("body").on('click','.image-clear',function(e){
+    let thisPreviewWindow = $(this).parent().parent();
+    let reqid = thisPreviewWindow.attr('uploadnumber');
+    let thisReq = imageUploadRequests[reqid];
+    if(thisReq.readyState != 4){ //if the upload is still in progress
+      thisReq.abort();
+      ++uploadsCancelled;
+      if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+        $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+      }
+    }else{
+      let url = uploadedImageUrls[thisPreviewWindow.attr('urlpos')];
+      $.post( "/cleartempimage", { imageURL: url } );
+      uploadedImageUrls[thisPreviewWindow.attr('urlpos')] = ""; //we can't just remove the url without throwing off the numbering for all following ones
+    }
+    thisPreviewWindow.remove();
+  })
+
+  $("#postSubmit").click(function(e){
       e.preventDefault();
-      if($('#postContent').val() != "" || imagesuploaded!=0){
-        let imagedescarray = [];
-        for(let j=0;j<imagesuploaded;j++){
-          imagedescarray.push($('.newimagecont[locInUrlArray="'+j+'"]').find('#postImageDescription').val());
+      //only do anything if there are no pending uploads and there is some text or image(s) to post
+      //(the number of preview windows is our proxy for "did we have a successful non cancelled upload")
+      //(removing a successfully completed upload doesn't show up in the counter variables)
+      if(uploadsCompleted == uploadsStarted-uploadsCancelled && ($('.newimagecont').length != 0 || $('#postContent').val() != "" )){
+        let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
+        let imagedescs = [];
+        for(let i=0; i < $('.newimagecont').length; i++){
+          let imageWindow = $($('.newimagecont')[i]);
+          sortedurls.push(uploadedImageUrls[imageWindow.attr('urlpos')]);
+          imagedescs.push(imageWindow.find('#postImageDescription').val());
         }
         $.ajax({
           url: '/createpost',
@@ -87,40 +123,19 @@ $(function() {
             postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
             postContent: $('#postContent').val(),
             postContentWarnings: $('#postContentWarnings').val(),
-            postImageDescription: JSON.stringify(imagedescarray),
-            postImageURL: JSON.stringify(imageUrls),
+            postImageDescription: JSON.stringify(imagedescs),
+            postImageURL: JSON.stringify(sortedurls),
             imageTags: ""
-          }}).done(function(data){
-            window.location.reload(true);
-          });
+        }}).done(function(data){
+          window.location.reload(true);
+        });
       }else{
-        alert('either write something or upload an image plz');
+        bootbox.alert("This post appears to be... empty");
       }
-    });
+  });
 
-  
-      $("body").on('click','.image-clear',function(e){
-        let imageid = $(this).parent().parent().attr('number');
-        if(imageuploadrequests[imageid].readyState != 4){
-          imageuploadrequests[imageid].abort();
-          uploadsinprogress--;
-          if(uploadsinprogress==0){
-            $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
-          }
-        }else{
-          imagesuploaded--;
-          if(imagesuploaded==0){
-            $(".editable-post-content").prop('required',true);
-          }
-          let locInUrlArray = $(this).parent().parent().attr('locinurlarray');
-          imageUrls[locInUrlArray] = "";
-          
-          let jsonResponse = JSON.parse(imageuploadrequests[imageid].responseText);
-          $.post( "/cleartempimage", { imageURL: jsonResponse.url } );
-        }
-        $(this).parent().parent().remove();
-          //resetImageUploadFields();
-      })
+
+    
   //})
   // document.onpaste = function(event){
   //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
@@ -135,7 +150,7 @@ $(function() {
   // }
 
   $(window).on("unload", function(e) {
-    imageUrls.forEach(function(url){
+    uploadedImageUrls.forEach(function(url){
       if(url){
         $.post( "/cleartempimage", { imageURL: url } );
       }
