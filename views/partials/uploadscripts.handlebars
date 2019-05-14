@@ -12,34 +12,46 @@ $(function() {
   $("#emojiWindow>.add-emoji").click(function(){
     pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
-  $("#postImageButton").click(function(){
-    $(".file-input").click();
+  $("body").on('click','#postImageButton',function(e){
+    $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input').click(); //bit sketchy! oh well
   })
 
     //IMAGE UPLOADER CODE
-    
+    //initialize variables for new post form image uploader
     var uploadsStarted = 0;
-    var uploadsCompleted = 0; //completed just means not pending, being aborted counts as "completed"
+    var uploadsCompleted = 0;
     var uploadsCancelled = 0;
     var uploadedImageUrls = [];
     var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process
 
+    //function right after clicking the add image button on the post and comment forms
     $(".file-input").change(function (e) {
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
 
           $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+          let previewContainer = $(this).parent()[0];
+
+          //initialize variables for this image uploady thing
+          if(!previewContainer.uploadsStarted){
+            previewContainer.uploadsStarted = 0;
+            previewContainer.uploadsCompleted = 0;
+            previewContainer.uploadsCancelled = 0;
+            previewContainer.uploadedImageUrls = [];
+            previewContainer.imageUploadRequests = []; 
+          }
 
           //add preview windows
           var newimagecont = $(".newimageform").clone();
-          newimagecont.attr('class','newimagecont').attr('uploadnumber',uploadsStarted).appendTo( "#topPostControlsRow" );
+          newimagecont.attr('class','newimagecont').attr('uploadnumber',previewContainer.uploadsStarted).appendTo(previewContainer);
 
           //create filereader that will obtain us the preview
           var fr = new FileReader();
-          fr.uploadNumber = uploadsStarted; //lets us find the preview window to give this image to when done
+          fr.uploadNumber = previewContainer.uploadsStarted; //lets us find the preview window to give this image to when done
+          fr.previewContainer = previewContainer;
           fr.onload = function(e){
-            let bgRecipient = $('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
+            let bgRecipient = $(this.previewContainer).find('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
             if(bgRecipient){ //our preview window might have already been eliminated by a cancel operation
               bgRecipient.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
             }
@@ -58,30 +70,31 @@ $(function() {
             processData: false,
             contentType: false
           });
-          imageUploadReq.uploadNumber = uploadsStarted;
+          imageUploadReq.uploadNumber = previewContainer.uploadsStarted;
+          imageUploadReq.previewContainer = previewContainer;
           imageUploadReq.done(function(data, textstatus, jqXHR){
             //find the corresponding preview window
-            thisImagesWindow = $('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
+            thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
 
             var serverResponse = JSON.parse(data);
             //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
             if(serverResponse.error && serverResponse.error == "filesize"){
               bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-              uploadsCancelled++;
+              jqXHR.previewContainer.uploadsCancelled++;
               thisImagesWindow.remove();
-              if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+              if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
                 $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
               }
             }else{
-              uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
-              thisImagesWindow.attr('urlpos', uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
-              if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+              jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
+              thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
+              if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
                 $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
               }
             }
           });
-          imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
-          ++uploadsStarted;
+          previewContainer.imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
+          ++previewContainer.uploadsStarted;
         }else{
           if(!(this.files[i].type === "image/jpeg" || this.files[i].type === "image/gif" || this.files[i].type === "image/png")){
             bootbox.alert("You appear to have sent us a file of unsupported type! Atm we only take gifs, jpgs, and pngs");
@@ -92,35 +105,37 @@ $(function() {
       }
     });
 
+  //function for removing an image from a post or comment
   $("body").on('click','.image-clear',function(e){
     let thisPreviewWindow = $(this).parent().parent();
+    let previewContainer = thisPreviewWindow.parent()[0];
     let reqid = thisPreviewWindow.attr('uploadnumber');
-    let thisReq = imageUploadRequests[reqid];
+    let thisReq = previewContainer.imageUploadRequests[reqid];
     if(thisReq.readyState != 4){ //if the upload is still in progress
       thisReq.abort();
-      ++uploadsCancelled;
-      if(uploadsStarted-uploadsCancelled == uploadsCompleted){
+      ++previewContainer.uploadsCancelled;
+      if(previewContainer.uploadsStarted-previewContainer.uploadsCancelled == previewContainer.uploadsCompleted){
         $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
       }
     }else{
-      let url = uploadedImageUrls[thisPreviewWindow.attr('urlpos')];
+      let url = previewContainer.uploadedImageUrls[thisPreviewWindow.attr('urlpos')];
       $.post( "/cleartempimage", { imageURL: url } );
-      uploadedImageUrls[thisPreviewWindow.attr('urlpos')] = ""; //we can't just remove the url without throwing off the numbering for all following ones
+      previewContainer.uploadedImageUrls[thisPreviewWindow.attr('urlpos')] = ""; //we can't just remove the url without throwing off the numbering for all following ones
     }
     thisPreviewWindow.remove();
   })
 
+  //function for very specifically submitting a post, not a comment
   $("#postSubmit").click(function(e){
       e.preventDefault();
+      let previewContainer = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
       //only do anything if there are no pending uploads and there is some text or image(s) to post
-      //(the number of preview windows is our proxy for "did we have a successful non cancelled upload")
-      //(removing a successfully completed upload doesn't show up in the counter variables)
-      if(uploadsCompleted == uploadsStarted-uploadsCancelled && ($('.newimagecont').length != 0 || $('#postContent').val() != "" )){
+      if(previewContainer.uploadsCompleted == previewContainer.uploadsStarted-previewContainer.uploadsCancelled && ($(previewContainer).find('.newimagecont').length != 0 || $('#postContent').val() != "" )){
         let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
         let imagedescs = [];
-        for(let i=0; i < $('.newimagecont').length; i++){
-          let imageWindow = $($('.newimagecont')[i]);
-          sortedurls.push(uploadedImageUrls[imageWindow.attr('urlpos')]);
+        for(let i=0; i < $(previewContainer).find('.newimagecont').length; i++){
+          let imageWindow = $($(previewContainer).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
+          sortedurls.push(previewContainer.uploadedImageUrls[imageWindow.attr('urlpos')]);
           imagedescs.push(imageWindow.find('#postImageDescription').val());
         }
         $.ajax({

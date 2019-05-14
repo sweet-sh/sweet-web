@@ -5,9 +5,13 @@
   <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
     {{> emojilist }}
   </div>
+  <div id="image-preview-holder" class="form-row post-controls">
+    <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose File" name="postImage" multiple>
+  </div>
   <div id="replyControlsRow" class="form-row mt-2 post-controls">
     <div class="leftSideControls">
       <button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
     </div>
     <div class="rightSideControls">
       <button type="submit" class="btn btn-primary btn-fade postReply" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">Reply <i class="fas fa-chevron-right"></i></button>

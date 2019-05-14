@@ -684,6 +684,13 @@ hr {
 
 /* IMAGE UPLOAD FORM */
 
+.file-input {
+  display:none;
+}
+
+.newimageform {
+  display: none;
+}
 
 #image-preview {
   width: 260px;

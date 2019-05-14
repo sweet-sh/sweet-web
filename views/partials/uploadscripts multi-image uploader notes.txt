@@ -53,4 +53,12 @@ User clicks the post send button
 User closes the page
 	send each non-empty string url in imageurls to cleartempimages.
 	
-get rid of that imageid code on the server if the ajax property thing is working correctly
+Expansion to comments section:
+Add image-preview-holder div under comment text thing (no content initially)
+Add image-adding button
+Each variable becomes a property (?) of the image-preview-holder
+
+we definitely need different code for a comment submit button because. different ajax request is being sent. also, we're appending comments instead of refreshing the page?
+do we need different code for the image clear button? Just change it altogether to use the properties of the .parent().parent() element (the previews container in every case)
+also must change post submit button code then, to use those properties, to be compatible with the new image clear button
+the same image adder should also work for the comments. just use new variables and start telling the xhr request and the filereader what preview-holder they belong to with properties.
