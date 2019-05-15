@@ -14,20 +14,21 @@ $(function() {
   })
   
       //IMAGE UPLOADER CODE
-    //initialize variables for new post form image uploader
+    /*hm
     var uploadsStarted = 0;
     var uploadsCompleted = 0;
     var uploadsCancelled = 0;
     var uploadedImageUrls = [];
-    var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process
+    var imageUploadRequests = []; //stored so we can cancel requests arbitrarily during the uploading process*/
 
     //function right after clicking the add image button on the post and comment forms
     function fileselected (e) {
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
-
-          $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+          
+          var submitbutton = $(this).closest('.contentForm').find('button[type="submit"]');
+          submitbutton.html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
           let previewContainer = $(this).parent()[0];
 
           //initialize variables for this image uploady thing
@@ -80,13 +81,15 @@ $(function() {
               jqXHR.previewContainer.uploadsCancelled++;
               thisImagesWindow.remove();
               if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
-                $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+                let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
+                submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
               }
             }else{
               jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
               thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
               if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
-                $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+                let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
+                submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
               }
             }
           });
@@ -122,7 +125,8 @@ $(function() {
       thisReq.abort();
       ++previewContainer.uploadsCancelled;
       if(previewContainer.uploadsStarted-previewContainer.uploadsCancelled == previewContainer.uploadsCompleted){
-        $("#postSubmit").html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+        var submitbutton = $(this).closest(".contentForm").find('button[type="submit"]');
+        submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
       }
     }else{
       let url = previewContainer.uploadedImageUrls[thisPreviewWindow.attr('urlpos')];

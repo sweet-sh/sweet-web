@@ -89,10 +89,10 @@ $(function() {
         text == "Show more" ? "Show less" : "Show more");
   })
   $('body').on('click','.replyEmojiWindowButton', function() {
-    $(this).closest('.replyForm').find('.replyEmojiWindow').slideToggle("fast");
+    $(this).closest('#replyForm').find('.replyEmojiWindow').slideToggle("fast");
   })
   $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
-    pasteHtmlAtCaret($(this).closest(".replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
+    pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
@@ -111,7 +111,7 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    pasteHtmlAtCaret($(this).closest(".replyContainer").children(".replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username"));
+    pasteHtmlAtCaret($(this).closest(".replyContainer").children("#replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username"));
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
@@ -148,20 +148,47 @@ $(function() {
     });
   })
   $('body').on('click', '.postReply', function() {
-    let textarea = $(this).closest(".replyForm").find("textarea.comment-textarea");
-    let contentEditable = $(this).closest(".replyForm").find("div.comment-textarea");
-    let commentContent = textarea.val();
-    let commentsContainer = $(this).closest('.replyContainer').find('.repliesContainer');
-    let emojiWindow = $(this).closest('.replyForm').find('.replyEmojiWindow');
     let commentButton = $(this);
+    let replyForm = commentButton.closest('#replyForm');
+    let textarea = replyForm.find("textarea.comment-textarea");
+    let contentEditable = replyForm.find("div.comment-textarea");
+    let commentContent = textarea.val();
+    let commentsContainer = commentButton.closest('.replyContainer').find('.repliesContainer');
+    let emojiWindow = replyForm.find('.replyEmojiWindow');
+
+    let pc = replyForm.find('#image-preview-holder');
+    
+    if(pc.uploadsCompleted){
+      if(pc.uploadsCompleted!= pc.uploadsStarted-pc.uploadsCancelled){
+        bootbox.alert("You have image uploads in progress.");
+        return;
+      }else{
+        var sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
+        var imagedescs = [];
+        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
+          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
+          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
+          imagedescs.push(imageWindow.find('#postImageDescription').val());
+        }
+      }
+    }
+
     if (commentContent.replace(/<[^>]*>/g, "") != "") { // Filter out empty comments
       commentButton.prop('disabled', true);
-      $.post("/createcomment/"+$(this).attr("data-post-id"), { commentContent: commentContent }, function(data) {
+      $.post("/createcomment/"+$(this).attr("data-post-id"),
+      { commentContent: commentContent,
+        images: JSON.stringify(sortedurls),
+        imageDescs: JSON.stringify(imagedescs)
+      },
+      function(data) {
         if (data!='nope'){
           textarea.val("");
           contentEditable.html("");
-          // textarea[0].style.height = "";
-          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content +'</div>';
+          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content;
+          for (let i=0; i<sortedurls.length;i++){
+            html += '<img alt="'+imagedescs[i]+' (posted by '+$('navbar-username')[0].innerHTML+')" class="post-single-image" src="/api/image/display/'+sortedurls[i]+'" data-featherlight="/api/image/display/'+sortedurls[i]'+">';
+          }
+          html+='</div>';
           $(html).hide().appendTo(commentsContainer).fadeIn();
           commentButton.prop('disabled', false);
           let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];

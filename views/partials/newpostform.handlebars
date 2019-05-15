@@ -1,4 +1,4 @@
-<form id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}} action="/createpost" method="post" enctype="multipart/form-data">
+<div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
 
   <div class="form-row">
     <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
@@ -41,4 +41,4 @@
       <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
-</form>
+</div>
