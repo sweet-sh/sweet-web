@@ -1116,7 +1116,6 @@ hr {
   cursor: pointer;
   width: 100%;
   height: 100%;
-  height: 400px;
   transition: border 100ms ease-in;
 }
 
@@ -1129,6 +1128,7 @@ background-size: 5.66px 5.66px;
 
 .post-images.one-image > img {
   object-fit: contain;
+  height:auto;
 }
 
 .post-images.two-images {
