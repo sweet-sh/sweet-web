@@ -1124,6 +1124,9 @@ module.exports = function(app, passport) {
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                for(var i=0; i<comment.images.length; i++){
+                  comment.images[i]='/api/image/display/' + comment.images[i];
+                }
                 // If the comment's author is logged in, or the post's author is logged in
                 if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)){
                   comment.canDelete = true;
@@ -1245,6 +1248,9 @@ module.exports = function(app, passport) {
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                for(var i=0; i<comment.images.length; i++){
+                  comment.images[i]='/api/image/display/' + comment.images[i];
+                }
               });
               displayedPosts.push(displayedPost);
             })
@@ -1438,6 +1444,9 @@ module.exports = function(app, passport) {
                 }
                 displayedPost.comments.forEach(function(comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                  for(var i=0; i<comment.images.length; i++){
+                    comment.images[i]='/api/image/display/' + comment.images[i];
+                  }
                 });
                 displayedPosts.push(displayedPost);
               }
@@ -2107,6 +2116,9 @@ module.exports = function(app, passport) {
           }
           displayedPost.comments.forEach(function(comment) {
             comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+            for(var i=0; i<comment.images.length; i++){
+              comment.images[i]='/api/image/display/' + comment.images[i];
+            }
             // If the comment's author is logged in, or the post's author is logged in
             if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)){
               comment.canDelete = true;
@@ -2579,7 +2591,7 @@ module.exports = function(app, passport) {
             })
             image.save();
           }
-        });      
+        });
       }
 
       let newPostId = post._id;
@@ -2632,7 +2644,7 @@ module.exports = function(app, passport) {
       .catch((err) => {
         console.log("Database error: " + err)
       });
-    
+
       //community post
     }else{
       let communityId = req.body.communityId;
@@ -2658,7 +2670,7 @@ module.exports = function(app, passport) {
         imageDescriptions: postImageDescription,
         subscribedUsers: [loggedInUserData._id]
       });
-      
+
       // Parse images
       if (postImage){
         postImage.forEach(function(imageFileName){
@@ -2712,7 +2724,7 @@ module.exports = function(app, passport) {
       .catch((err) => {
         console.log("Database error: " + err)
       });
-    }    
+    }
   });
 
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
@@ -2842,8 +2854,8 @@ module.exports = function(app, passport) {
             })
             image.save();
           }
-        });      
-      }               
+        });
+      }
 
         User.findOne({
           "_id": post.author._id
@@ -3094,7 +3106,7 @@ module.exports = function(app, passport) {
           { returnNewDocument: true }
         )
       }
-    })    
+    })
     .catch(error => {
       console.error(error);
     })

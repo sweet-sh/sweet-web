@@ -189,9 +189,9 @@ hr {
   background-color: #fff;
   border: 2px dashed #d5d5d5;
 }
-.two-images > .post-single-image,
-.three-images > .post-single-image,
-.four-images > .post-single-image {
+.two-images > *,
+.three-images > *,
+.four-images > * {
   border: 1px solid #eaeaea;
 }
 .post-single-image {
@@ -655,9 +655,9 @@ hr {
     word-wrap: break-word;
 }
 
-/* .comment-content {
-  margin-left: 30px;
-} */
+.comment-content {
+  margin: 0.5rem 0 1rem 0;
+}
 
 .user-list {
     padding: 0;

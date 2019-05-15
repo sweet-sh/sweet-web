@@ -157,7 +157,7 @@ $(function() {
     let emojiWindow = replyForm.find('.replyEmojiWindow');
 
     let pc = replyForm.find('#image-preview-holder')[0];
-    
+
     var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
     var imagedescs = [];
 
@@ -185,11 +185,14 @@ $(function() {
         if (data!='nope'){
           textarea.val("");
           contentEditable.html("");
-          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div>' + data.content;
+          console.log(sortedurls.length)
+          classNames = ['one-image','two-images','three-images','four-images'];
+          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div><div class="comment-content">' + data.content + (sortedurls.length>0 ? '<div class="post-images '+classNames[sortedurls.length-1]+'"'+(sortedurls.length>1 ? ' data-featherlight-gallery data-featherlight-filter="a"' : '')+'>' : '');
           for (let i=0; i<sortedurls.length;i++){
-            html += '<img alt="'+imagedescs[i]+' (posted by '+$('.navbar-username')[0].innerHTML+')" class="post-single-image" src="/api/image/display/'+sortedurls[i]+'" data-featherlight="/api/image/display/'+sortedurls[i]+'">';
+            html += (sortedurls.length>1 ? '<a href="/api/image/display/'+sortedurls[i]+'">' : '')+'<img alt="'+imagedescs[i]+' (posted by '+$('.navbar-username')[0].innerHTML+')" class="post-single-image" src="/api/image/display/'+sortedurls[i]+'" '+(sortedurls.length==1 ? 'data-featherlight="/api/image/display/'+sortedurls[i]+'"' : '')+'>'+(sortedurls.length>1 ? '</a>' : '');
           }
-          html+='</div>';
+          html += (sortedurls.length>0 ? '</div>' : '');
+          html+='</div></div>';
           $(html).hide().appendTo(commentsContainer).fadeIn();
           commentButton.prop('disabled', false);
           let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];
@@ -206,7 +209,7 @@ $(function() {
           pc.uploadsCompleted = 0;
           pc.uploadsCancelled = 0;
           pc.uploadedImageUrls = [];
-          pc.imageUploadRequests = []; 
+          pc.imageUploadRequests = [];
         }
         else {
           let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
