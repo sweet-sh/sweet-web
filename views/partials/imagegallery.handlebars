@@ -1,0 +1,7 @@
+<div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}} {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}" {{#gt this.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
+  {{#each this.images}}
+    {{#gt ../this.images.length 1}}<a href="{{this}}">{{/gt}}
+    <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+    {{#gt ../this.images.length 1}}</a>{{/gt}}
+  {{/each}}
+</div>
