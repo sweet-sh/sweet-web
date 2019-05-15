@@ -2722,10 +2722,10 @@ module.exports = function(app, passport) {
       // Delete images
       post.images.forEach((image) => {
         if (post.imageVersion === 2){
-          fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {console.log("Image deletion error " + err)})
+          fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
         }
         else {
-          fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {console.log("Image deletion error " + err)})
+          fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
         }
         Image.deleteOne({"filename": image})
       })
@@ -2753,6 +2753,16 @@ module.exports = function(app, passport) {
           })
         })
       }
+
+      //delete comment images
+      post.comments.forEach((comment) => {
+        if(comment.images){
+          comment.images.forEach((image) => {
+            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)});
+            Image.deleteOne({"filename": image});
+          })
+        }
+      });
 
       // Delete notifications
       User.update(
@@ -2974,7 +2984,11 @@ module.exports = function(app, passport) {
   app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
-      var commentRemove = post.comments.id(req.params.commentid).remove();
+      post.comments.id(req.params.commentid).images.forEach((image) => {
+        fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
+        Image.deleteOne({"filename": image})
+      })
+      post.comments.id(req.params.commentid).remove();
       post.numberOfComments = post.comments.length;
       post.save()
       .then((comment) => {
@@ -3053,6 +3067,9 @@ module.exports = function(app, passport) {
     })
   })
 
+  //This function relocates posts on the timeline when a comment is deleted by changing lastUpdated (the post feed sorting field.)
+  //input: post id
+  //output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
   function relocatePost(postid){
     Post.aggregate([
       { "$match": { "_id": postid } },
@@ -3061,15 +3078,23 @@ module.exports = function(app, passport) {
       { "$group" : { "_id" : "$_id", "latest_timestamp" : { "$first" : "$comments" } } }
     ])
     .then(result => {
-      Post.findOneAndUpdate(
-        { _id: postid },
-        { $set: { lastUpdated: result[0].latest_timestamp.timestamp } },
-        { returnNewDocument: true }
-      )
-      .then(updatedPost => {
-        console.log(updatedPost)
-      })
-    })
+      if(result.length){
+        Post.findOneAndUpdate(
+          { _id: postid },
+          { $set: { lastUpdated: result[0].latest_timestamp.timestamp } },
+          { returnNewDocument: true }
+        )
+        .then(updatedPost => {
+          console.log(updatedPost)
+        })
+      }else{
+        Post.findOneAndUpdate(
+          { _id: postid },
+          { $set: { lastUpdated: timestamp } },
+          { returnNewDocument: true }
+        )
+      }
+    })    
     .catch(error => {
       console.error(error);
     })
