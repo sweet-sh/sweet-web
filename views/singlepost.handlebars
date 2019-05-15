@@ -169,6 +169,11 @@
                     </div>
                   </div>
                   {{{this.parsedContent}}}
+                  {{#if this.images}}
+                    {{#each this.images}}
+                      <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="/api/image/display/{{this}}" data-featherlight="/api/image/display/{{this}}"/>
+                    {{/each}}
+                  {{/if}}
                 </div>
                 {{/each}}
                 {{/if}}

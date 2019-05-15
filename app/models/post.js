@@ -13,14 +13,16 @@ var commentSchema = new mongoose.Schema({
 	},
   rawContent: {
     type: String,
-    required: true
+    required: false
   },
   parsedContent: {
     type: String
   },
   mentions: [String],
   tags: [String],
-  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }]
+  images: [String],
+  imageDescriptions: [String],
+  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }] //not a thing atm
 });
 
 var postSchema = new mongoose.Schema({

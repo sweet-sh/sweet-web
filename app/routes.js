@@ -2782,6 +2782,10 @@ module.exports = function(app, passport) {
     console.log(req.body)
     let parsedResult = helper.parseText(req.body.commentContent);
     commentTimestamp = new Date();
+    let postImages = JSON.parse(req.body.imageUrls);
+    if(!(postImages || parsedResult)){ //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+      res.status(400).send('bad post op');
+    }
     const comment = {
       authorEmail:  loggedInUserData.email,
       author:  loggedInUserData._id,
@@ -2789,8 +2793,11 @@ module.exports = function(app, passport) {
       rawContent: sanitize(req.body.commentContent),
       parsedContent: parsedResult.text,
       mentions: parsedResult.mentions,
-      tags: parsedResult.tags
+      tags: parsedResult.tags,
+      images: JSON.parse(req.body.imageUrls),
+      imageDescriptions: JSON.parse(req.body.imageDescs)
     };
+
     Post.findOne({
       "_id": req.params.postid
     })
@@ -2806,6 +2813,28 @@ module.exports = function(app, passport) {
       }
 			post.save()
       .then(() => {
+
+        // Parse images
+      if (postImages){
+        postImages.forEach(function(imageFileName){
+          if(imageFileName){
+            fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+              if(e){
+                console.log("could not move "+imageFileName+" out of temp");
+                console.log(e);
+              }
+            }) //move images out of temp storage
+            image = new Image({
+              context: "user",
+              filename: imageFileName,
+              privacy: post.privacy,
+              user: loggedInUserData._id
+            })
+            image.save();
+          }
+        });      
+      }               
+
         User.findOne({
           "_id": post.author._id
         })
