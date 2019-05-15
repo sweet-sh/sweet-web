@@ -290,9 +290,17 @@ $('#postsContainer').infiniteScroll({
 
 {{#if loggedIn}}
 
-$('.community-action-button').click(function() {
-  $(this).prop('disabled', true);
-  $(this).parent().submit();
+$('.community-action-button').click(function(e) {
+  let button = $(this);
+  if(button.parent().find("input[type='file']")){ //if a file is being submitted
+    if(!button.parent().find("input[type='file']").val()){ //and its value isn't set
+      bootbox.alert('No image file chosen! :/');
+      e.preventDefault();
+      return;
+    }
+  }
+  button.prop('disabled', true);
+  button.parent().submit();
 })
 
 $("#leaveButton").click(function() {
