@@ -98,12 +98,12 @@ $(function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
       $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").show();
+      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","expanded");
     }
     else {
       $(this).closest(".post-content").find(".abbreviated-content").animate({height:"0"},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").hide();
+      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","contracted");
     }
     var text = $(this).text();

@@ -1324,6 +1324,9 @@ background-size: 5.66px 5.66px;
 .content-warning-images {
     display: none;
 }
+.content-warning-images-shown {
+  display: grid;
+}
 
 .subscribed-alert {
   font-size: 90%;
