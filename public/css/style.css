@@ -1127,6 +1127,7 @@ hr {
   grid-column-gap: 5px;
   grid-row-gap: 5px;
   max-height: 400px;
+  margin-bottom: 10px;
 }
 
 .post-images a {
