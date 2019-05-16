@@ -39,7 +39,7 @@ blockquote {
   color: #aaa;
 }
 hr {
-  background-color: #cbcbcb;
+  color: #cbcbcb;
 }
 #topNav{
   border-bottom-color:#ce1717;
@@ -239,6 +239,10 @@ hr {
   color: #6f6f6f;
 }
 
+#replyForm {
+  background-color: #ffffffaa;
+}
+
 p{
   margin-bottom: 0.5em;
 }
@@ -310,6 +314,10 @@ h1, h2, h3, h4, h5, h6 {
 hr {
   height: 1px;
   border: 0;
+  display: block;
+  border-top: 1px solid;
+  margin: 0.5em 0;
+  padding: 0;
 }
 
 #topNav {
@@ -635,16 +643,16 @@ hr {
     /* border-top: 1px solid #e7e7e7; */
     /* margin-top: 10px; */
     padding-top: 0px;
-    padding-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 #replyForm {
-  padding: 0 15px 10px 15px;
+  padding: 20px 15px 10px 15px;
+  border-radius: 5px;
 }
 
 .repliesContainer {
 	font-size: 0.9em;
-	padding-left:5px;
   /*border moved to colors section*/
   padding-top: 20px;
   padding-left: 20px;
@@ -1116,6 +1124,7 @@ hr {
   cursor: pointer;
   width: 100%;
   height: 100%;
+  max-height: 400px;
   transition: border 100ms ease-in;
 }
 
@@ -1146,14 +1155,15 @@ background-size: 5.66px 5.66px;
   grid-row-end: span 2;
 }
 
-/* .post-single-image {
-  max-width: 100%;
-  margin: 0 0 1rem 0;
-  border-radius: 6px;
-  max-height: 300px;
-  object-fit: contain;
-  cursor: pointer;
-} */
+@media (max-width: 500px){
+  .post-single-image,
+  .post-single-image > img {
+    max-height: 175px;
+  }
+  .post-images{
+    max-height:175px;
+  }
+}
 
 .image-clear {
     border-radius: 90%;
@@ -1164,8 +1174,6 @@ background-size: 5.66px 5.66px;
     right: 57%;
     top: 20px;
 }
-
-
 
 .community-container {
   display: none;
