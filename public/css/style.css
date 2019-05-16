@@ -1075,32 +1075,31 @@ hr {
   margin-bottom: 0.5rem !important;
  }
 
+ .image-preview-holder {
+   margin: 0.5em 0;
+   display: none;
+ }
+
  .newimagecont {
-  box-sizing: border-box;
-  position: relative;
-  display: block;
-  height: 200px;
+  display: flex;
+  height: 100px;
   width: 100%;
-  position: relative;
-  margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
  }
 
 .image-preview {
+  flex: 1;
   overflow: hidden;
   transition: all 0.2s ease;
   height: 100%;
-  width: 45%;
   border-radius: 4px;
   background-size: contain;
   background-position:center;
   background-repeat: no-repeat;
   background-image:url("/images/imagePreviewWindowDefault.jpg");
   /*border moved to colors*/
-  margin: 0 2.5%;
+  margin: 0;
   object-fit: contain;
-  border-radius: 6px;
-  display: inline-block;
 }
 
 #postImageUpload {
@@ -1112,14 +1111,38 @@ hr {
   text-align: center;
 }
 
+.image-preview-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.image-preview-controls > a {
+  text-decoration: none;
+  color: #aaa;
+  width: 1.5em;
+  font-size: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 #postImageDescription {
-  position: absolute;
-  display: inline-block;
+  position: relative;
   transition: all 0.2s ease;
   height: 100%;
-  width: 45%;
-  margin: 0 2.5%;
+  width: 60%;
+  margin: 0 0 0 10px;
   text-align: left;
+}
+
+.sortable-placeholder {
+  height: 100px;
+  background: #efefef;
+  border: 1px dashed #ddd;
+  width: 100%;
+  margin-bottom: 0.5em;
+  border-radius: 4px;
 }
 
 .post-images {
@@ -1189,16 +1212,6 @@ background-size: 5.66px 5.66px;
 }
 .comment-content .post-images .post-single-image {
     max-height: 200px;
-}
-
-.image-clear {
-    border-radius: 90%;
-    width: 1.5em;
-    font-size: 2em;
-    text-align: center;
-    position: absolute;
-    right: 57%;
-    top: 20px;
 }
 
 .community-container {

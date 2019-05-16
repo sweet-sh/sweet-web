@@ -128,6 +128,11 @@ $(function() {
     ourFileInputGuy.click();
   })
 
+  // function for sorting images in the upload area
+  sortable('.image-preview-holder', {
+    handle: '.image-move'
+  });
+
   //function for removing an image from a post or comment
   $("body").on('click','.image-clear',function(e){
     let thisPreviewWindow = $(this).parent().parent();

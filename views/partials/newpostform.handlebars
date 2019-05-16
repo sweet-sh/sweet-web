@@ -12,14 +12,18 @@
     </label>
   </div>
   <div class="newimageform">
-    <div class="image-preview"><a href="javascript:void(0)" class="image-clear" title="Clear Image"><i class="fas fa-times"></i></a></div>
+    <div class="image-preview"></div>
     <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
+    <div class="image-preview-controls">
+      <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
+      <a href="javascript:void(0)" class="image-control image-move" title="Move image"><i class="fas fa-arrows-alt"></i></a>
+    </div>
   </div>
 
   <div class="form-row my-2 card p-1" id="emojiWindow" style="display:none">
     {{> emojilist }}
   </div>
-  <div id="image-preview-holder" class="form-row post-controls">
+  <div id="image-preview-holder" class="form-row post-controls image-preview-holder">
     <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose File" name="postImage" multiple>
   </div>
   <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
