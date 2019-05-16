@@ -150,8 +150,11 @@ hr {
   background-color: #ced4da;
 	color: #555;
 }
-.notification-active {
+.notificationLink {
   background: #eeecec;
+}
+.notification-active {
+  background: #fff;
 }
 .authorLink {
   color: #1a1717;
