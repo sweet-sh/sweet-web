@@ -111,7 +111,7 @@ $(function() {
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.replyToComment', function() {
-    pasteHtmlAtCaret($(this).closest(".replyContainer").children("#replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username"));
+    pasteHtmlAtCaret($(this).closest(".replyContainer").children("#replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
   })
   $('body').on('click', '.deletePost', function() {
     var element = $(this);
