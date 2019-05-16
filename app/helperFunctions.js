@@ -22,6 +22,7 @@ module.exports = {
         if (hashtagsEnabled){
           line = line.replace( hashtagRegex, hashtagReplace );
         }
+        line = line.replace(/<div[^>]*>|<\/div>/g, ''); // Removes DIV tags
         parsedContent.push(line);
       }
     })
