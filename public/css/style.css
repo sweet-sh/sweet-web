@@ -134,6 +134,7 @@ hr {
 }
 .repliesContainer {
   border-top: 1px solid #eaeaea;
+  /* box-shadow: inset 0 2px 2px rgba(0,0,0,0.09); */
 }
 .user-list li{
   border: 1px solid #dfdfdf;
@@ -166,10 +167,11 @@ hr {
 	background-color: #e4e4e4;
 	color: rgba(0, 0, 0, 0.6);
 	border: 1px solid rgba(0, 0, 0, 0.2);
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
 }
 .switch-field input:checked + label {
-  background-color: #a5dc86;
+  background-color: #cb5e4c;
+  color: white;
 }
 .add-emoji:hover {
   border-color: #ddd;
@@ -186,11 +188,20 @@ hr {
   color: #aaa;
 }
 .comment-button:hover {
-  color: #0069d9;
+  /* color: #0069d9; */
+  color: #cb5e4c;
+}
+.btn-link:hover {
+  color: #cb5e4c;
+}
+.btn-primary:hover {
+  color: #fff;
+  background-color: #cb5e4c;
+  border-color: #b06357;
 }
 .image-preview {
   background-color: #fff;
-  border: 2px dashed #d5d5d5;
+  border: 1px dashed #d5d5d5;
 }
 .two-images > *,
 .three-images > *,
@@ -208,7 +219,7 @@ hr {
   color: #000000;
 }
 .image-preview {
-  background-color: #edede8 !important;
+  background-color: #f6f6f6 !important;
 }
 #nav-tabContent,
 #communitiesTabContent {
@@ -244,6 +255,7 @@ hr {
 
 #replyForm {
   background-color: #ffffffaa;
+  box-shadow: inset 0 2px 2px rgba(0,0,0,0.09);
 }
 
 p{
@@ -646,13 +658,12 @@ hr {
     display: none;
     /* border-top: 1px solid #e7e7e7; */
     /* margin-top: 10px; */
-    padding-top: 0px;
-    margin-bottom: 10px;
+    /* padding-top: 0px; */
 }
 
 #replyForm {
-  padding: 20px 15px 10px 15px;
-  border-radius: 5px;
+  padding: 20px 15px 20px 15px;
+  /* border-radius: 5px; */
 }
 
 .repliesContainer {
@@ -832,7 +843,7 @@ hr {
 .switch-field {
 	display: flex;
   position: relative;
-  top: 4px;
+  height: 38px;
 }
 
 .switch-field input {
@@ -846,10 +857,10 @@ hr {
 
 .switch-field label {
 	font-size: 14px;
-	line-height: 1;
 	text-align: center;
 	padding: 8px 16px;
 	margin-right: -1px;
+  margin-bottom: 0;
 	transition: all 0.1s ease-in-out;
 }
 
@@ -1170,6 +1181,13 @@ background-size: 5.66px 5.66px;
   .newimagecont{
     height: 150px;
   }
+}
+.comment-content .post-images {
+    max-width: 400px;
+    max-height: 200px;
+}
+.comment-content .post-images .post-single-image {
+    max-height: 200px;
 }
 
 .image-clear {

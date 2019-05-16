@@ -6,13 +6,25 @@ $(function() {
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
+  $("#postPrivacy-private").change(function() {
+    if(this.checked) {
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i> Private");
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i>");
+    }
+  });
+  $("#postPrivacy-public").change(function() {
+    if(this.checked) {
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i> Public");
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i>");
+    }
+  });
   $("#emojiWindowButton").click(function(){
     $("#emojiWindow").slideToggle("fast")
   })
   $("#emojiWindow>.add-emoji").click(function(){
     pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
-  
+
     //IMAGE UPLOADER CODE
 
     //function called right after clicking the add image button on the post and comment forms
@@ -22,7 +34,7 @@ $(function() {
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
-          
+
           if($(previewContainer).children().length == 5){ //if we already have 4 image previews + the file input, which is also a child of the preview container
             bootbox.alert("We only take four images at once atm, sry");
             break;
@@ -37,7 +49,7 @@ $(function() {
             previewContainer.uploadsCompleted = 0;
             previewContainer.uploadsCancelled = 0;
             previewContainer.uploadedImageUrls = [];
-            previewContainer.imageUploadRequests = []; 
+            previewContainer.imageUploadRequests = [];
           }
 
           //add preview windows
@@ -105,7 +117,7 @@ $(function() {
       }
       $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
     }
-  
+
   $("body").on('click','#postImageButton',function(e){
     let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
@@ -170,7 +182,7 @@ $(function() {
   });
 
 
-    
+
   //})
   // document.onpaste = function(event){
   //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
