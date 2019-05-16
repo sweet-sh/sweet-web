@@ -2542,13 +2542,15 @@ module.exports = function(app, passport) {
     newPostUrl = shortid.generate();
     let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
-    var postImage = JSON.parse(req.body.postImageURL);
+    var postImages = JSON.parse(req.body.postImageURL).slice(0,4); //in case someone sends us more with custom ajax request
     var postImageTags = [""]; //what
-    var postImageDescription = JSON.parse(req.body.postImageDescription);
-    let formattingEnabled = req.body.postFormattingEnabled ? true : false; //hmmmmm
+    var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0,4);
 
     let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
 
+    if(!(postImages || parsedResult)){ //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
+      res.status(400).send('bad post op');
+    }
 
     //non-community post
     if(!req.body.communityId){
@@ -2567,15 +2569,15 @@ module.exports = function(app, passport) {
         tags: parsedResult.tags,
         contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
         imageVersion: 2,
-        images: postImage,
+        images: postImages,
         imageTags: postImageTags,
-        imageDescriptions: postImageDescription,
+        imageDescriptions: postImageDescriptions,
         subscribedUsers: [loggedInUserData._id]
       });
 
       // Parse images
-      if (postImage){
-        postImage.forEach(function(imageFileName){
+      if (postImages){
+        postImages.forEach(function(imageFileName){
           if(imageFileName){
             fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
               if(e){
@@ -2665,15 +2667,15 @@ module.exports = function(app, passport) {
         tags: parsedResult.tags,
         contentWarnings: sanitize(req.body.postContentWarnings),
         imageVersion: 2,
-        images: postImage,
+        images: postImages,
         imageTags: postImageTags,
-        imageDescriptions: postImageDescription,
+        imageDescriptions: postImageDescriptions,
         subscribedUsers: [loggedInUserData._id]
       });
 
       // Parse images
-      if (postImage){
-        postImage.forEach(function(imageFileName){
+      if (postImages){
+        postImages.forEach(function(imageFileName){
           fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
             if(e){
               console.log("could not move " + imageFileName + " out of temp");
@@ -2804,7 +2806,7 @@ module.exports = function(app, passport) {
     console.log(req.body)
     let parsedResult = helper.parseText(req.body.commentContent);
     commentTimestamp = new Date();
-    let postImages = JSON.parse(req.body.imageUrls);
+    let postImages = JSON.parse(req.body.imageUrls).slice(0,4); //in case someone tries to send us more images than 4
     if(!(postImages || parsedResult)){ //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
       res.status(400).send('bad post op');
     }
@@ -2816,8 +2818,8 @@ module.exports = function(app, passport) {
       parsedContent: parsedResult.text,
       mentions: parsedResult.mentions,
       tags: parsedResult.tags,
-      images: JSON.parse(req.body.imageUrls),
-      imageDescriptions: JSON.parse(req.body.imageDescs)
+      images: postImages,
+      imageDescriptions: JSON.parse(req.body.imageDescs).slice(0,4)
     };
 
     Post.findOne({

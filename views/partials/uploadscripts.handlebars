@@ -23,6 +23,11 @@ $(function() {
         //check to make sure it's a supported file type of the correct size
         if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
           
+          if($(previewContainer).children().length == 5){ //if we already have 4 image previews + the file input, which is also a child of the preview container
+            bootbox.alert("We only take four images at once atm, sry");
+            break;
+          }
+
           var submitbutton = $(this).closest('.contentForm').find('button[type="submit"]');
           submitbutton.html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
 
