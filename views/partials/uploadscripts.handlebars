@@ -187,75 +187,91 @@ $(function() {
       }
   });
 
-  var totalDeltaY = 0;
+  function moveimagecont(deltaY, imagecont, spacer){
+    //move the floaty element:
 
-  function moveimagecont(e){
-    var imagecontpos = e.imagecont.position();
-    e.imagecont.css("position", "absolute");
-    e.imagecont.css("left", imagecontpos.left+"px");
-    var newYPos = Math.min(Math.max(e.spacer.parent().position().top,imagecontpos.top+e.originalEvent.movementY),e.spacer.parent().position().top+e.spacer.parent().height()); //AUGH
-    e.imagecont.css("top", newYPos+"px");
-    totalDeltaY+=e.originalEvent.movementY;
-    if(totalDeltaY < (-1)*e.spacer.height()){
-      totalDeltaY = 0;
-      if(e.spacer.prev().prev()){
-        e.spacer.prev().prev().after(e.spacer);
+    var imageconttop = imagecont.position().top;
+    //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
+    var newYPos = Math.min(Math.max(imageconttop+deltaY, imagecont.parent().position().top),imagecont.parent().position().top+(imagecont.parent().height()-imagecont.height())); //beauty
+    imagecont.css("top", newYPos+"px");
+
+    //move the spacer (maybe):
+
+    //Calculate how many spaces the image has moved (might be more than one)
+    //This moves the spacer if the image's horizontal center line has gone above the bottom of the one above it or below the top of the one below it
+    var spacertop = spacer.position().top;
+    var sHeight = imagecont.outerHeight(true);
+    if(Math.abs((imageconttop+0.5*sHeight) - spacertop) > Number.EPSILON){ //floating point imprecision fix :/
+      var deltaImageIndex = Math.floor(imageconttop+0.5*sHeight > spacertop ? (imageconttop+0.5*sHeight-spacertop)/sHeight : (imageconttop-0.5*sHeight-spacertop)/sHeight)
+    }else{
+      var deltaImageIndex = 0;
+    }
+
+    //Move the spacer (signifying the future destination of the image) according to deltaImageIndex
+    while(deltaImageIndex < 0){
+      if(spacer.prev().prev()){
+        spacer.prev().prev().after(spacer);
       }
-    }else if(totalDeltaY > e.spacer.height()){
-      totalDeltaY = 0;
-      if(e.spacer.next()){
-        e.spacer.next().after(e.spacer);
+      deltaImageIndex += 1;
+    }
+    while(deltaImageIndex > 0){
+      if(spacer.next()){
+        spacer.next().after(spacer);
       }
+      deltaImageIndex -= 1;
     }
   }
 
-  $('body').on('mousedown','.image-move',function(e){
-    e.preventDefault();
-    var spacer = $(this).parent().parent();
-    //only do something if there's at least one other image container to switch positions with
-    if(spacer.parent().children().length <= 2){ //2 = one image container and the file input element.
-      return;
-    }
+  function prepareImageForMoving(selectedImage){
+    selectedImage.css("width",selectedImage.width()+"px");
+    selectedImage.css("height",selectedImage.height()+"px");
+
+    var imagecont = selectedImage.clone();
     
-    spacer.css("width",spacer.width()+"px");
-    spacer.css("height",spacer.height()+"px");
+    selectedImage.addClass("imagecontspacer");
 
-    var imagecont = spacer.clone();
-    
-    spacer.addClass("imagecontspacer");
+    var imagecontpos = selectedImage.position();
 
-    var imagecontpos = spacer.position();
-
-    spacer.prev().after(imagecont);
+    selectedImage.prev().after(imagecont);
     
     imagecont.css("width", imagecont.width()+"px");
     imagecont.css("position", "absolute");
     imagecont.css("left", imagecontpos.left+"px");
     imagecont.css("top", imagecontpos.top+"px");
     imagecont.css("z-index",2147483647);
+    imagecont.css("background-color","white");
+    imagecont.css("border","solid #dfdfdf")
     imagecont.addClass("onthemove");
     
-    spacer.css("border","dashed")
+    selectedImage.css("border","dashed")
 
-    spacer.empty();
+    selectedImage.empty();
+
+    return imagecont;
+  }
+
+  $('body').on('mousedown','.image-move',function(e){
+    e.preventDefault();
+    var selectedImage = $(this).parent().parent();
+    //only do something if there's at least one other image container to switch positions with
+    if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
+      return;
+    }   
     
+    var floatyImageCont = prepareImageForMoving(selectedImage);
+
     $(document).mousemove(function(e){
-      e.imagecont = imagecont;
-      e.spacer = spacer;
-      moveimagecont(e);
+      moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
     })
   });
 
   $(document).on('mouseup',function(e){
     $(document).off('mousemove');
-    totalDeltaY = 0;
     $('.imagecontspacer').prev().after($('.onthemove')); 
-    $('.onthemove').css("position","unset").css("z-index",10); //seems like a good number
+    $('.onthemove').css("position","unset").css("border","none").css("z-index",10); //seems like a good number
     $('.onthemove').removeClass("onthemove");
     $('.imagecontspacer').remove();
   });
-
-
 
   //})
   // document.onpaste = function(event){
