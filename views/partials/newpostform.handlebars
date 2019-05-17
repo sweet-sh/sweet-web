@@ -1,50 +1,48 @@
-<form id="postForm" action="{{#if isMember}}/api/community/post/create/{{communityData._id}}/{{communityData.url}}{{else}}/createpost{{/if}}" method="post" enctype="multipart/form-data">
+<div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
 
   <div class="form-row">
-    <textarea required class="form-control" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
+    <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
   </div>
   <div class="form-row my-2" id="postContentWarningsContainer">
-    <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}"{{/if}}/>
+    <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
   </div>
   <div class="form-row mb-2" id="imagePreviewContainer">
-    <input type="hidden" id="postImageUrl" name="postImageUrl"/>
-    <input type="hidden" id="postImageTags" name="postImageTags"/>
-    <div class="custom-file-container" data-upload-id="postImageUpload">
-    <label style="display:none" class="custom-file-container__custom-file" >
-      <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose File" name="postImage">
-      <input type="hidden" name="MAX_FILE_SIZE" value="10485760" />
-      <span class="file-control"></span>
+    <input type="hidden" id="postImageUrl" name="postImageUrl" /><!-- unused? p sure. -->
+    <input type="hidden" id="postImageTags" name="postImageTags" /><!-- unused? p sure. -->
     </label>
-    <div class="image-preview"><a href="javascript:void(0)" class="image-clear" title="Clear Image"><i class="fas fa-times"></i></a></div>
-    </div>
-    <input type="text" class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}"{{/if}}/>
   </div>
+  <div class="newimageform">
+    <div class="image-preview"></div>
+    <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
+    <div class="image-preview-controls">
+      <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
+      <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+    </div>
+  </div>
+
   <div class="form-row my-2 card p-1" id="emojiWindow" style="display:none">
     {{> emojilist }}
   </div>
-    <div id="topPostControlsRow" class="form-row mt-2 post-controls">
-      <div class="form-check" id="visibilityControls">
-        <input class="form-check-input" type="checkbox" name="postFormattingEnabled" id="postFormattingEnabled" />
-        <label class="form-check-label" for="postFormattingEnabled">Formatting (<strong>*bold*</strong> and <em>_italics_</em>)</label>
+  <div id="image-preview-holder" class="form-row post-controls image-preview-holder">
+    <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose File" name="postImage" multiple>
+  </div>
+  <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
+    {{! Hide this div in communities}}
+    {{#unless isMember}}
+    <div class="leftSideControls">
+      <div class="switch-field" id="visibilityControls">
+        <input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked />
+        <label for="postPrivacy-public"><i class='fas fa-eye'></i></label>
+        <input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" />
+        <label for="postPrivacy-private"><i class='fas fa-eye-slash'></i></label>
       </div>
     </div>
-    <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
-      {{! Hide this div in communities}}
-      {{#unless isMember}}
-      <div class="leftSideControls">
-        <div class="switch-field" id="visibilityControls">
-      		<input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked/>
-      		<label for="postPrivacy-public"><i class='fas fa-eye'></i> Everyone</label>
-      		<input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" />
-      		<label for="postPrivacy-private"><i class='fas fa-eye-slash'></i> Trusted only</label>
-      	</div>
-      </div>
-      {{/unless}}
-      <div class="rightSideControls">
-        <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
-        <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
-        <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
-        <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
-      </div>
+    {{/unless}}
+    <div class="rightSideControls">
+      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
+      <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
-</form>
+  </div>
+</div>

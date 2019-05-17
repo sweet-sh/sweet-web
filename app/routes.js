@@ -1,12 +1,3 @@
-const User            = require('../app/models/user');
-const Relationship    = require('../app/models/relationship');
-const Post    = require('../app/models/post');
-const Tag    = require('../app/models/tag');
-const Community    = require('../app/models/community');
-const Vote    = require('../app/models/vote');
-const Image    = require('../app/models/image');
-var ObjectId = require('mongoose').Types.ObjectId;
-
 const reservedUsernames =  require('../config/reserved-usernames.js')
 var bcrypt   = require('bcrypt-nodejs');
 var moment = require('moment');
@@ -1133,6 +1124,9 @@ module.exports = function(app, passport) {
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                for(var i=0; i<comment.images.length; i++){
+                  comment.images[i]='/api/image/display/' + comment.images[i];
+                }
                 // If the comment's author is logged in, or the post's author is logged in
                 if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)){
                   comment.canDelete = true;
@@ -1254,6 +1248,9 @@ module.exports = function(app, passport) {
               }
               displayedPost.comments.forEach(function(comment) {
                 comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                for(var i=0; i<comment.images.length; i++){
+                  comment.images[i]='/api/image/display/' + comment.images[i];
+                }
               });
               displayedPosts.push(displayedPost);
             })
@@ -1447,6 +1444,9 @@ module.exports = function(app, passport) {
                 }
                 displayedPost.comments.forEach(function(comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                  for(var i=0; i<comment.images.length; i++){
+                    comment.images[i]='/api/image/display/' + comment.images[i];
+                  }
                 });
                 displayedPosts.push(displayedPost);
               }
@@ -2116,6 +2116,9 @@ module.exports = function(app, passport) {
           }
           displayedPost.comments.forEach(function(comment) {
             comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+            for(var i=0; i<comment.images.length; i++){
+              comment.images[i]='/api/image/display/' + comment.images[i];
+            }
             // If the comment's author is logged in, or the post's author is logged in
             if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)){
               comment.canDelete = true;
@@ -2536,156 +2539,195 @@ module.exports = function(app, passport) {
 
   app.post("/createpost", isLoggedInOrRedirect, function(req, res) {
 
-    function wordCount(str) {
-         return str.split(' ')
-                .filter(function(n) { return n != '' })
-                .length;
-    }
-
     newPostUrl = shortid.generate();
     let postCreationTime = new Date();
     var postPrivacy = req.body.postPrivacy;
-    var postImage = req.body.postImageUrl != "" ? [req.body.postImageUrl] : [];
-    var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
-    var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
-    let formattingEnabled = req.body.postFormattingEnabled ? true : false;
+    var postImages = JSON.parse(req.body.postImageURL).slice(0,4); //in case someone sends us more with custom ajax request
+    var postImageTags = [""]; //what
+    var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0,4);
 
-    // Parse post content
-    let rawContent = req.body.postContent;
-    let splitContent = rawContent.split(/\r\n|\r|\n/gi);
-    let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-    var mentionReplace = '$1<a href="/$2">@$2</a>';
-    var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-    var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-    var boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
-    var italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
-    var boldReplace = '$1<strong>$2</strong>$3';
-    var italicsReplace = '$1<em>$2</em>$3';
-    splitContent.forEach(function (line) {
-      if (line != ""){
-        line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        line = "<p>" + line + "</p>";
-        line = Autolinker.link( line );
-        line = line.replace( mentionRegex, mentionReplace ).replace( hashtagRegex, hashtagReplace );
-        if (formattingEnabled){
-          line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
-        }
-        parsedContent.push(line);
-      }
-    })
-    parsedContent = parsedContent.join('');
+    let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
 
-    if (!req.body.postContentWarnings){
-      let contentWordCount = wordCount(parsedContent);
-      if (contentWordCount > 160){
-        parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><a class="show-more" data-state="contracted">Show more</a>';
-      }
+    if(!(postImages || parsedResult)){ //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
+      res.status(400).send('bad post op');
     }
 
-    let postMentions = Array.from(new Set(req.body.postContent.match( mentionRegex )))
-    let postTags = Array.from(new Set(req.body.postContent.match( hashtagRegex )))
-    let trimmedPostMentions = []
-    let trimmedPostTags = []
-    if (postMentions){
-      postMentions.forEach((el) => {
-        trimmedPostMentions.push(el.replace(/(@|\s)*/i, ''));
-      })
-    }
-    if (postTags){
-      postTags.forEach((el) => {
-        trimmedPostTags.push(el.replace(/(#|\s)*/i, ''));
-      })
-    }
-    const post = new Post({
-      type: 'original',
-      authorEmail:  loggedInUserData.email,
-      author: loggedInUserData._id,
-      url: newPostUrl,
-      privacy: postPrivacy,
-      timestamp: postCreationTime,
-      lastUpdated: postCreationTime,
-      rawContent: sanitize(req.body.postContent),
-      parsedContent: sanitize(parsedContent),
-      numberOfComments: 0,
-      mentions: trimmedPostMentions,
-      tags: trimmedPostTags,
-      contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-      imageVersion: 2,
-      images: postImage,
-      imageTags: postImageTags,
-      imageDescriptions: postImageDescription,
-      subscribedUsers: [loggedInUserData._id]
-    });
-    let newPostId = post._id;
-
-    // Parse images
-    if (req.body.postImageUrl){
-      fs.rename("./cdn/images/temp/"+req.body.postImageUrl, "./cdn/images/"+req.body.postImageUrl, function(e){
-        if(e){
-          console.log("could not move "+req.body.postImageUrl+" out of temp");
-          console.log(e);
-        }
-      }) //move images out of temp storage
-      image = new Image({
-        context: "user",
-        filename: postImage,
+    //non-community post
+    if(!req.body.communityId){
+      var post = new Post({
+        type: 'original',
+        authorEmail:  loggedInUserData.email,
+        author: loggedInUserData._id,
+        url: newPostUrl,
         privacy: postPrivacy,
-        user: loggedInUserData._id
-      })
-      image.save();
-    }
-
-    post.save()
-    .then(() => {
-      trimmedPostTags.forEach((tag) => {
-        Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
-          if (error) return
-        });
+        timestamp: postCreationTime,
+        lastUpdated: postCreationTime,
+        rawContent: sanitize(req.body.postContent),
+        parsedContent: parsedResult.text,
+        numberOfComments: 0,
+        mentions: parsedResult.mentions,
+        tags: parsedResult.tags,
+        contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
+        imageVersion: 2,
+        images: postImages,
+        imageTags: postImageTags,
+        imageDescriptions: postImageDescriptions,
+        subscribedUsers: [loggedInUserData._id]
       });
-      if (postPrivacy == "private"){
-        console.log("This post is private!")
-        // Make sure to only notify mentioned people if they are trusted
-        Relationship.find({
-          from: loggedInUserData.email,
-          value: "trust"
-        }, {'to':1})
-        .then((emails) => {
-          let emailsArray = emails.map(({ to }) => to)
-          trimmedPostMentions.forEach(function(mention){
+
+      // Parse images
+      if (postImages){
+        postImages.forEach(function(imageFileName){
+          if(imageFileName){
+            fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+              if(e){
+                console.log("could not move "+imageFileName+" out of temp");
+                console.log(e);
+              }
+            }) //move images out of temp storage
+            image = new Image({
+              context: "user",
+              filename: imageFileName,
+              privacy: postPrivacy,
+              user: loggedInUserData._id
+            })
+            image.save();
+          }
+        });
+      }
+
+      let newPostId = post._id;
+      post.save()
+      .then(() => {
+        parsedResult.tags.forEach((tag) => {
+          Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime} }, { upsert: true, new: true }, function(error, result) {
+            if (error) return
+          });
+        });
+        if (postPrivacy == "private"){
+          console.log("This post is private!")
+          // Make sure to only notify mentioned people if they are trusted
+          Relationship.find({
+            from: loggedInUserData.email,
+            value: "trust"
+          }, {'to':1})
+          .then((emails) => {
+            let emailsArray = emails.map(({ to }) => to)
+            parsedResult.mentions.forEach(function(mention){
+              User.findOne({
+                username: mention
+              })
+              .then((user) => {
+                if (emailsArray.includes(user.email)) {
+                  notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                }
+              })
+            })
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+        }
+        else if (postPrivacy == "public"){
+          console.log("This post is public!")
+          // This is a public post, notify everyone
+          parsedResult.mentions.forEach(function(mention){
             User.findOne({
               username: mention
             })
             .then((user) => {
-              if (emailsArray.includes(user.email)) {
-                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-              }
+              notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
             })
+          });
+        }
+        res.redirect('back');
+      })
+      .catch((err) => {
+        console.log("Database error: " + err)
+      });
+
+      //community post
+    }else{
+      let communityId = req.body.communityId;
+
+      const post = new Post({
+        type: 'community',
+        community: communityId,
+        authorEmail:  loggedInUserData.email,
+        author: loggedInUserData._id,
+        url: newPostUrl,
+        privacy: 'public',
+        timestamp: new Date(),
+        lastUpdated: new Date(),
+        rawContent: sanitize(req.body.postContent),
+        parsedContent: parsedResult.text,
+        numberOfComments: 0,
+        mentions: parsedResult.mentions,
+        tags: parsedResult.tags,
+        contentWarnings: sanitize(req.body.postContentWarnings),
+        imageVersion: 2,
+        images: postImages,
+        imageTags: postImageTags,
+        imageDescriptions: postImageDescriptions,
+        subscribedUsers: [loggedInUserData._id]
+      });
+
+      // Parse images
+      if (postImages){
+        postImages.forEach(function(imageFileName){
+          fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+            if(e){
+              console.log("could not move " + imageFileName + " out of temp");
+              console.log(e);
+            }
+          }) //move images out of temp storage
+          Community.findOne({
+            _id: communityId
           })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
+          .then(community => {
+            image = new Image({
+              context: "community",
+              filename: imageFileName,
+              privacy: community.settings.visibility,
+              user: loggedInUserData._id,
+              community: communityId
+            })
+            image.save();
+          })
         });
       }
-      else if (postPrivacy == "public"){
-        console.log("This post is public!")
-        // This is a public post, notify everyone
-        trimmedPostMentions.forEach(function(mention){
+
+      post.save()
+      .then(() => {
+        parsedResult.tags.forEach((tag) => {
+          Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
+              if (error) return
+          });
+        });
+        // This is a public post, notify everyone in this community
+        parsedResult.mentions.forEach(function(mention){
           User.findOne({
-            username: mention
+            username: mention,
+            communities: communityId
           })
           .then((user) => {
             notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
           })
         });
-      }
-      res.redirect('back');
+        Community.findOneAndUpdate(
+          { _id: communityId },
+          { $set: { lastUpdated: new Date() } }
+        ).then(community => {
+          console.log("Updated community!")
+        })
+        res.redirect('back');
       })
       .catch((err) => {
         console.log("Database error: " + err)
       });
-  })
+    }
+  });
 
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
@@ -2694,10 +2736,10 @@ module.exports = function(app, passport) {
       // Delete images
       post.images.forEach((image) => {
         if (post.imageVersion === 2){
-          fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {console.log("Image deletion error " + err)})
+          fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
         }
         else {
-          fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {console.log("Image deletion error " + err)})
+          fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
         }
         Image.deleteOne({"filename": image})
       })
@@ -2726,6 +2768,16 @@ module.exports = function(app, passport) {
         })
       }
 
+      //delete comment images
+      post.comments.forEach((comment) => {
+        if(comment.images){
+          comment.images.forEach((image) => {
+            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)});
+            Image.deleteOne({"filename": image});
+          })
+        }
+      });
+
       // Delete notifications
       User.update(
         { },
@@ -2751,47 +2803,25 @@ module.exports = function(app, passport) {
   });
 
   app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function(req, res) {
-    // Parse comment content
-    let splitContent = req.body.commentContent.split(/\r\n|\r|\n/gi);
-    let parsedContent = [];
-    var mentionRegex   = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-    var mentionReplace = '$1<a href="/$2">@$2</a>';
-    var hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-    var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-    splitContent.forEach(function (line) {
-      if (line != ""){
-        line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        line = "<p>" + line + "</p>";
-        line = Autolinker.link( line );
-        line = line.replace( mentionRegex, mentionReplace ).replace( hashtagRegex, hashtagReplace );
-        parsedContent.push(line);
-      }
-    })
-    parsedContent = parsedContent.join('');
-    let commentMentions = Array.from(new Set(req.body.commentContent.match( mentionRegex )))
-    let commentTags = Array.from(new Set(req.body.commentContent.match( hashtagRegex )))
-    let trimmedCommentMentions = []
-    let trimmedCommentTags = []
-    if (commentMentions){
-      commentMentions.forEach((el) => {
-        trimmedCommentMentions.push(el.replace(/(@|\s)*/i, ''));
-      })
-    }
-    if (commentTags){
-      commentTags.forEach((el) => {
-        trimmedCommentTags.push(el.replace(/(#|\s)*/i, ''));
-      })
-    }
+    console.log(req.body)
+    let parsedResult = helper.parseText(req.body.commentContent);
     commentTimestamp = new Date();
+    let postImages = JSON.parse(req.body.imageUrls).slice(0,4); //in case someone tries to send us more images than 4
+    if(!(postImages || parsedResult)){ //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+      res.status(400).send('bad post op');
+    }
     const comment = {
       authorEmail:  loggedInUserData.email,
       author:  loggedInUserData._id,
       timestamp: commentTimestamp,
       rawContent: sanitize(req.body.commentContent),
-      parsedContent: sanitize(parsedContent),
-      mentions: trimmedCommentMentions,
-      tags: trimmedCommentTags
+      parsedContent: parsedResult.text,
+      mentions: parsedResult.mentions,
+      tags: parsedResult.tags,
+      images: postImages,
+      imageDescriptions: JSON.parse(req.body.imageDescs).slice(0,4)
     };
+
     Post.findOne({
       "_id": req.params.postid
     })
@@ -2807,6 +2837,28 @@ module.exports = function(app, passport) {
       }
 			post.save()
       .then(() => {
+
+        // Parse images
+      if (postImages){
+        postImages.forEach(function(imageFileName){
+          if(imageFileName){
+            fs.rename("./cdn/images/temp/"+imageFileName, "./cdn/images/"+imageFileName, function(e){
+              if(e){
+                console.log("could not move "+imageFileName+" out of temp");
+                console.log(e);
+              }
+            }) //move images out of temp storage
+            image = new Image({
+              context: "user",
+              filename: imageFileName,
+              privacy: post.privacy,
+              user: loggedInUserData._id
+            })
+            image.save();
+          }
+        });
+      }
+
         User.findOne({
           "_id": post.author._id
         })
@@ -2839,7 +2891,7 @@ module.exports = function(app, passport) {
               && (trustedUserIds.includes(user.toString()) === checkTrust)){ //don't notify people who you don't trust if it's a private post
                 console.log("Notifying subscribed users")
                 User.findById(user).then((thisuser) => {
-                  if(!trimmedCommentMentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
+                  if(!parsedResult.mentions.includes(thisuser.username)){ //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
                     notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
                   }
                 })
@@ -2881,7 +2933,7 @@ module.exports = function(app, passport) {
           }, {'to':1})
           .then((emails) => {
             let emailsArray = emails.map(({ to }) => to)
-            trimmedCommentMentions.forEach(function(mention){
+            parsedResult.mentions.forEach(function(mention){
               User.findOne({
                 username: mention
               })
@@ -2900,7 +2952,7 @@ module.exports = function(app, passport) {
         else if (postPrivacy == "public"){
           console.log("This comment is public!")
           // This is a public post, notify everyone
-          trimmedCommentMentions.forEach(function(mention){
+          parsedResult.mentions.forEach(function(mention){
             User.findOne({
               username: mention
             })
@@ -2929,7 +2981,7 @@ module.exports = function(app, passport) {
           name: name,
           username: loggedInUserData.username,
           timestamp: moment(commentTimestamp).fromNow(),
-          content: parsedContent,
+          content: parsedResult.text,
           comment_id: post.comments[post.numberOfComments-1]._id.toString(),
           post_id: post._id.toString()
         }
@@ -2946,10 +2998,15 @@ module.exports = function(app, passport) {
   app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
-      var commentRemove = post.comments.id(req.params.commentid).remove();
+      post.comments.id(req.params.commentid).images.forEach((image) => {
+        fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
+        Image.deleteOne({"filename": image})
+      })
+      post.comments.id(req.params.commentid).remove();
       post.numberOfComments = post.comments.length;
       post.save()
       .then((comment) => {
+        relocatePost(ObjectId(req.params.postid));
         res.sendStatus(200);
       })
       .catch((error) => {
@@ -3023,6 +3080,39 @@ module.exports = function(app, passport) {
       })
     })
   })
+
+  //This function relocates posts on the timeline when a comment is deleted by changing lastUpdated (the post feed sorting field.)
+  //input: post id
+  //output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
+  function relocatePost(postid){
+    Post.aggregate([
+      { "$match": { "_id": postid } },
+      { "$unwind" : "$comments" },
+      { "$sort" : { "comments.timestamp" : -1 } },
+      { "$group" : { "_id" : "$_id", "latest_timestamp" : { "$first" : "$comments" } } }
+    ])
+    .then(result => {
+      if(result.length){
+        Post.findOneAndUpdate(
+          { _id: postid },
+          { $set: { lastUpdated: result[0].latest_timestamp.timestamp } },
+          { returnNewDocument: true }
+        )
+        .then(updatedPost => {
+          console.log(updatedPost)
+        })
+      }else{
+        Post.findOneAndUpdate(
+          { _id: postid },
+          { $set: { lastUpdated: timestamp } },
+          { returnNewDocument: true }
+        )
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  }
 
   app.post("/api/notification/update/:id", isLoggedInOrRedirect, function(req,res) {
     User.findOneAndUpdate(
@@ -3133,7 +3223,6 @@ function isLoggedInOrErrorResponse(req, res, next) {
   res.send('nope');
   next('route');
 }
-
 
 function getTags(url) {
   return new Promise((resolve, reject) => {

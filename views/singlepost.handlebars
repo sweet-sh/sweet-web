@@ -40,7 +40,7 @@
                       <div class="author-username">
                         <strong><a class="authorLink" href="/{{this.author.username}}">@{{post.author.username}}</a></strong>
                       </div>
-                    {{/if}} {{#contains ../flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                    {{/if}} {{#contains flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
                   </div>
                   <div class="post-header-row-2">
                     <div class="post-timestamp-privacy">
@@ -63,9 +63,11 @@
                 {{/if}}
               </div>
               {{#if post.images}}
-                <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}}">
+                <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}} {{#eq post.images.length 1}} one-image{{/eq}}{{#eq post.images.length 2}} two-images{{/eq}}{{#eq post.images.length 3}} three-images{{/eq}}{{#eq post.images.length 4}} four-images{{/eq}}" {{#gt post.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                   {{#each post.images}}
-                    <img alt="{{#if ../post.imageDescriptions}}{{../post.imageDescriptions}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
+                    {{#gt ../post.images.length 1}}<a href="{{this}}">{{/gt}}
+                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../post.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../post.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                    {{#gt ../post.images.length 1}}</a>{{/gt}}
                   {{/each}}
                 </div>
               {{/if}}
@@ -168,7 +170,18 @@
                       </div>
                     </div>
                   </div>
-                  {{{this.parsedContent}}}
+                  <div class="comment-content">
+                    {{{this.parsedContent}}}
+                    {{#if this.images}}
+                      <div class="post-images {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}" {{#gt this.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
+                        {{#each this.images}}
+                          {{#gt ../this.images.length 1}}<a href="{{this}}">{{/gt}}
+                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                          {{#gt ../this.images.length 1}}</a>{{/gt}}
+                        {{/each}}
+                      </div>
+                    {{/if}}
+                  </div>
                 </div>
                 {{/each}}
                 {{/if}}
@@ -213,7 +226,6 @@
 
 <script>
 $(function() {
-  autosize($("textarea"));
   $(".replyContainer").show();
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
@@ -223,7 +235,6 @@ $(function() {
         return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
       }
     })
-    tribute.attach($("textarea"));
   })
 });
 </script>

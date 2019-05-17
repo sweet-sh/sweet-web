@@ -1,97 +1,350 @@
 <script type="text/javascript">
 $(function() {
-  $("#postContent").focus(function(){
+  $(".editable-post-content").focus(function(){
     $(".post-controls").css('display', 'flex');
   })
-  //upload = new FileUploadWithPreview('postImageUpload')
   $("#postContentWarningsButton").click(function(){
     $("#postContentWarningsContainer").slideToggle("fast");
   })
+  $("#postPrivacy-private").change(function() {
+    if(this.checked) {
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i> Private");
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i>");
+    }
+  });
+  $("#postPrivacy-public").change(function() {
+    if(this.checked) {
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i> Public");
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i>");
+    }
+  });
   $("#emojiWindowButton").click(function(){
     $("#emojiWindow").slideToggle("fast")
   })
-  $(".emoji").click(function(){
-    var ourTextBox = $("#postContent")[0];
-    var emoji = event.target.innerHTML;
-    if(ourTextBox.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = ourTextBox.selectionStart;
-      ourTextBox.value = ourTextBox.value.substring(0,cursorPos) + emoji + ourTextBox.value.substring(cursorPos);
-      ourTextBox.selectionStart = cursorPos + emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = cursorPos + emoji.length;
-      ourTextBox.focus();
-    }else if(ourTextBox.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      ourTextBox.value = emoji + ourTextBox.value;
-      ourTextBox.selectionStart = emoji.length; //this maintains the cursor position so adding multiple emojis at once will put them in the same place
-      ourTextBox.selectionEnd = emoji.length;
-      ourTextBox.focus();
-    }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      ourTextBox.value+=emoji;
-      ourTextBox.focus();
-    }
-  })
-  $("#postImageButton").click(function(){
-    $(".file-input").click();
-    let imagePrevCont = $('.custom-file-container')[0];
-    imagePrevCont.style.display = "block"
-    imagePrevCont.style.height = (imagePrevCont.parentElement.parentElement.offsetWidth * (2.0/3))+"px";
-    $('#imagePreviewContainer').slideDown('fast');
+  $("#emojiWindow>.add-emoji").click(function(){
+    pasteHtmlAtCaret($("#postForm").find('.editable-post-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
 
-  function resetImageUploadFields(){
-    $("#postImageUrl").val("");
-    $("#postImageTags").val("");
-    $("#postSubmit").html("Send <i class=\"fas fa-chevron-right\"></i>").prop('disabled', false);
-    $("#postContent").prop('required',true);
-    $(".image-preview")[0].style.backgroundImage = "url(/images/imagePreviewWindowDefault.jpg)";
-    $(".file-input").val(null);
-    $(".image-clear").off();
-  }
+    //IMAGE UPLOADER CODE
 
-  $(".file-input").change(function (e) {
-      var submitButtonValue = $("#postSubmit").html();
-      $("#postSubmit").html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
-      
-      let fr = new FileReader();
-      fr.onload = function(e){
-        $(".image-preview")[0].style.backgroundImage = "url("+e.target.result+")";
-      }
-      fr.readAsDataURL(this.files[0]);
+    //function called right after clicking the add image button on the post and comment forms
+    function fileselected (e) {
+      let previewContainer = $(this).parent()[0];
 
-      var fd = new FormData();
-      fd.append('image', this.files[0]);
-      var imageUploadReq = $.ajax({
-        url: '/api/image/v2',
-        type: 'POST',
-        data: fd,
-        processData: false,
-        contentType: false
-      })
-      .done(function( data ) {
-        var uploadedImage = JSON.parse(data)
-        if (uploadedImage.error){
-          if (uploadedImage.error == "filesize"){
-            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.", function(){
-              resetImageUploadFields();
-            });
+      for(var i = 0;i<this.files.length;i++){
+        //check to make sure it's a supported file type of the correct size
+        if(((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)){
+
+          if($(previewContainer).children().length == 5){ //if we already have 4 image previews + the file input, which is also a child of the preview container
+            bootbox.alert("We only take four images at once atm, sry");
+            break;
+          }
+
+          var submitbutton = $(this).closest('.contentForm').find('button[type="submit"]');
+          submitbutton.html("<i class='fas fa-spinner fa-spin'></i> Uploading").prop('disabled', true);
+
+          //initialize variables for this image uploady thing
+          if(!previewContainer.uploadsStarted){
+            previewContainer.uploadsStarted = 0;
+            previewContainer.uploadsCompleted = 0;
+            previewContainer.uploadsCancelled = 0;
+            previewContainer.uploadedImageUrls = [];
+            previewContainer.imageUploadRequests = [];
+          }
+
+          //add preview windows
+          var newimagecont = $(".newimageform").clone();
+          newimagecont.attr('class','newimagecont').attr('uploadnumber',previewContainer.uploadsStarted).appendTo(previewContainer);
+
+          //create filereader that will obtain us the preview
+          var fr = new FileReader();
+          fr.uploadNumber = previewContainer.uploadsStarted; //lets us find the preview window to give this image to when done
+          fr.previewContainer = previewContainer;
+          fr.onload = function(e){
+            let bgRecipient = $(this.previewContainer).find('.newimagecont[uploadnumber="'+this.uploadNumber+'"]');
+            if(bgRecipient){ //our preview window might have already been eliminated by a cancel operation
+              bgRecipient.find('.image-preview')[0].style.backgroundImage = "url("+e.target.result+")";
+            }
+          }
+          fr.fileType = this.files[i].type;
+          fr.readAsDataURL(this.files[i]);
+
+          //make the image-uploading ajax request
+          var fd = new FormData();
+          fd.append('image', this.files[i]);
+
+          let imageUploadReq = $.ajax({
+            url: '/api/image/v2',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false
+          });
+          imageUploadReq.uploadNumber = previewContainer.uploadsStarted;
+          imageUploadReq.previewContainer = previewContainer;
+          imageUploadReq.done(function(data, textstatus, jqXHR){
+            //find the corresponding preview window
+            thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="'+jqXHR.uploadNumber+'"]');
+
+            var serverResponse = JSON.parse(data);
+            //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
+            if(serverResponse.error && serverResponse.error == "filesize"){
+              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+              jqXHR.previewContainer.uploadsCancelled++;
+              thisImagesWindow.remove();
+              if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
+                let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
+                submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+              }
+            }else{
+              jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
+              thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
+              if(jqXHR.previewContainer.uploadsStarted-jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted){
+                let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
+                submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+              }
+            }
+          });
+          previewContainer.imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
+          ++previewContainer.uploadsStarted;
+        }else{
+          if(!(this.files[i].type === "image/jpeg" || this.files[i].type === "image/gif" || this.files[i].type === "image/png")){
+            bootbox.alert("You appear to have sent us a file of unsupported type! Atm we only take gifs, jpgs, and pngs");
+          }else{
+            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
           }
         }
-        else {
-          $("#postImageUrl").val(uploadedImage.url);
-          $("#postImageTags").val(uploadedImage.tags);
-          $("#postSubmit").html(submitButtonValue).prop('disabled', false);
-          $("#postContent").removeAttr("required");
-        }
-      });
-      $(".image-clear").click(function(e){
-        if(imageUploadReq.readyState != 4){
-          imageUploadReq.abort();
-        }else{
-          let jsonResponse = JSON.parse(imageUploadReq.responseText);
-          $.post( "/cleartempimage", { imageURL: jsonResponse.url } );
-        }
-        resetImageUploadFields();
-      })
+      }
+      $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
+    }
+
+  $("body").on('click','#postImageButton',function(e){
+    let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
+    //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+    if(!ourFileInputGuy[0].changeEventAttached){
+      ourFileInputGuy.change(fileselected);
+      ourFileInputGuy[0].changeEventAttached = true;
+    }
+    ourFileInputGuy.click();
   })
+
+  // function for sorting images in the upload area
+  /*sortable('.image-preview-holder', {
+    handle: '.image-move'
+  });*/
+
+
+  //function for removing an image from a post or comment
+  $("body").on('click','.image-clear',function(e){
+    let thisPreviewWindow = $(this).parent().parent();
+    let previewContainer = thisPreviewWindow.parent()[0];
+    let reqid = thisPreviewWindow.attr('uploadnumber');
+    let thisReq = previewContainer.imageUploadRequests[reqid];
+    if(thisReq.readyState != 4){ //if the upload is still in progress
+      thisReq.abort();
+      ++previewContainer.uploadsCancelled;
+      if(previewContainer.uploadsStarted-previewContainer.uploadsCancelled == previewContainer.uploadsCompleted){
+        var submitbutton = $(this).closest(".contentForm").find('button[type="submit"]');
+        submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
+      }
+    }else{
+      let url = previewContainer.uploadedImageUrls[thisPreviewWindow.attr('urlpos')];
+      $.post( "/cleartempimage", { imageURL: url } );
+      previewContainer.uploadedImageUrls[thisPreviewWindow.attr('urlpos')] = ""; //we can't just remove the url without throwing off the numbering for all following ones
+    }
+    thisPreviewWindow.remove();
+  })
+
+  //function for very specifically submitting a post, not a comment
+  $("#postSubmit").click(function(e){
+      e.preventDefault();
+      let pc = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
+      //only do anything if there are no pending uploads and there is some text or image(s) to post
+      if((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted-pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || $('#postContent').val() != "" )){
+        let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
+        let imagedescs = [];
+        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
+          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
+          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
+          imagedescs.push(imageWindow.find('#postImageDescription').val());
+        }
+        $.ajax({
+          url: '/createpost',
+          type: 'POST',
+          data: {
+            communityId: $('#postForm').attr("communityId"),
+            postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
+            postContent: $('#postContent').val(),
+            postContentWarnings: $('#postContentWarnings').val(),
+            postImageDescription: JSON.stringify(imagedescs),
+            postImageURL: JSON.stringify(sortedurls),
+            imageTags: ""
+        }}).done(function(data){
+          window.location.reload(true);
+        });
+      }else{
+        bootbox.alert("This post appears to be... empty");
+      }
+  });
+
+  //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever
+  $(window).on("unload", function(e) {
+    uploadedImageUrls.forEach(function(url){
+      if(url){
+        $.post( "/cleartempimage", { imageURL: url } );
+      }
+      })
+  });
+
+  //IMAGE DRAG-AND-DROP ORDERING STUFF
+
+  //PART 1: THE FUNCTIONS THAT DO THE WORK
+
+  //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
+  function prepareImageForMoving(selectedImage){
+    selectedImage.css("width",selectedImage.width()+"px");
+    selectedImage.css("height",selectedImage.height()+"px");
+
+    var imagecont = selectedImage.clone();
+    
+    selectedImage.addClass("imagecontspacer");
+
+    var imagecontpos = selectedImage.position();
+
+    selectedImage.prev().after(imagecont);
+   
+    imagecont.css("width", imagecont.width()+"px");
+    imagecont.css("left", imagecontpos.left+"px");
+    imagecont.css("top", imagecontpos.top+"px");
+    
+    //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here 
+    imagecont.css("position", "absolute");
+    imagecont.css("z-index",2147483647);
+    imagecont.css("background-color","white");
+    imagecont.css("border","solid #dfdfdf");
+
+    imagecont.addClass("onthemove");
+    
+    selectedImage.css("border","dashed")
+
+    selectedImage.empty();
+
+    return imagecont;
+  }
+
+  //this function is called when the user moves either their mouse or finger to reposition the image.
+  function moveimagecont(deltaY, imagecont, spacer){
+    //move the floaty element:
+    var imageconttop = imagecont.position().top;
+    //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
+    var newYPos = Math.min(Math.max(imageconttop+deltaY, imagecont.parent().position().top),imagecont.parent().position().top+(imagecont.parent().height()-imagecont.height())); //beauty
+    imagecont.css("top", newYPos+"px");
+
+    //move the spacer (maybe):
+
+    //Calculate how many spaces the image has moved (might be more or less than one)
+    //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
+    var spacertop = spacer.position().top;
+    var sHeight = imagecont.outerHeight(true);
+    if(Math.abs((imageconttop+0.5*sHeight) - spacertop) > Number.EPSILON){ //floating point imprecision fix :/ still acting up a tiny bit though if you go very slowly
+      var deltaImageIndex = Math.floor(imageconttop+0.5*sHeight > spacertop ? (imageconttop+0.5*sHeight-spacertop)/sHeight : (imageconttop-0.5*sHeight-spacertop)/sHeight)
+    }else{
+      var deltaImageIndex = 0;
+    }
+
+    //Move the spacer (in other words, set the future destination of the image) according to deltaImageIndex
+    while(deltaImageIndex < 0){
+      if(spacer.prev().prev()){
+        spacer.prev().prev().after(spacer);
+      }
+      deltaImageIndex += 1;
+    }
+    while(deltaImageIndex > 0){
+      if(spacer.next()){
+        spacer.next().after(spacer);
+      }
+      deltaImageIndex -= 1;
+    }
+  }
+
+  //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
+  function movementEnded(){
+    $('.imagecontspacer').prev().after($('.onthemove')); 
+    $('.onthemove').css("position","unset").css("border","none").css("z-index",10); //seems like a good number
+    $('.onthemove').removeClass("onthemove");
+    $('.imagecontspacer').remove();
+  }
+
+  //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
+
+  $('body').on('mousedown','.image-move',function(e){
+    e.preventDefault();
+    var selectedImage = $(this).parent().parent();
+    //only do something if there's at least one other image container to switch positions with
+    if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
+      return;
+    }   
+    
+    //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
+    var floatyImageCont = prepareImageForMoving(selectedImage);
+
+    $(document).mousemove(function(e){
+      moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
+    });
+    
+    $(document).on('mouseup',function(e){
+      movementEnded();
+      $(document).off('mousemove');
+    });
+  });
+
+  var touchinprogress = false;
+
+  $('body').on('touchstart','.image-move',function(e){
+
+    if(touchinprogress){
+      return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
+    }
+    touchinprogress = true;
+
+    var selectedImage = $(this).parent().parent();
+    //only do something if there's at least one other image container to switch positions with
+    if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
+      return;
+    }   
+    
+    var floatyImageCont = prepareImageForMoving(selectedImage);
+
+    var previousY = e.originalEvent.changedTouches[0].screenY;
+
+    //function to be passed to the touchmove handler and then later removed from it
+    function touchmoveevent(event){     
+      //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
+      if(e.cancelable){
+        event.preventDefault();
+      }
+
+      moveimagecont(-1*(previousY - event.changedTouches[0].screenY), floatyImageCont, selectedImage);
+      previousY = event.changedTouches[0].screenY;
+    }
+
+    //for some reason jQuery Did Not Want to work with these touch events. Possibly they would like us to be using jQuery Mobile. But, this is pretty simple, we don't need it.
+    this.addEventListener("touchmove",touchmoveevent,{passive: false});
+
+    this.addEventListener('touchend',function(e){
+      touchinprogress = false;
+      this.removeEventListener('touchmove',touchmoveevent);
+      movementEnded();
+    });
+
+    this.addEventListener('touchcancel',function(e){
+      touchinprogress = false;
+      this.removeEventListener('touchmove',touchmoveevent);
+      movementEnded();
+    });
+  });
+
+  //})
   // document.onpaste = function(event){
   //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
   //   for (var i = 0 ; i < items.length ; i++) {
@@ -104,19 +357,5 @@ $(function() {
   //   }
   // }
 
-  $(window).on("unload", function(e) {
-    $.post( "/cleartempimage", { imageURL: $("#postImageUrl")[0].value } );
-  });
-
-  $.post('/api/user/followers', function(data){
-    followers = JSON.parse(data).followers;
-    tribute = new Tribute({
-      values: followers,
-      menuItemTemplate: function (item) {
-        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
-      }
-    })
-    tribute.attach($("textarea"));
-  })
 })
 </script>

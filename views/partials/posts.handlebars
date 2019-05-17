@@ -42,7 +42,7 @@
                   <div class="author-username">
                     <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                   </div>
-                {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
               </div>
               <div class="post-header-row-2">
                 <div class="post-timestamp-privacy">
@@ -65,11 +65,7 @@
             {{/if}}
           </div>
           {{#if this.images}}
-            <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
-              {{#each this.images}}
-                <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
-              {{/each}}
-            </div>
+            {{> imagegallery }}
           {{/if}}
         </div>
       </div>
@@ -160,7 +156,12 @@
                   </div>
                 </div>
               </div>
-              {{{this.parsedContent}}}
+              <div class="comment-content">
+                {{{this.parsedContent}}}
+                {{#if this.images}}
+                  {{> imagegallery }}
+                {{/if}}
+              </div>
             </div>
             {{/each}}
             {{/if}}
@@ -212,7 +213,7 @@
                     <div class="author-username">
                       <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                     </div>
-                  {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                  {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
                 </div>
                 <div class="post-header-row-2">
                   <div class="post-timestamp-privacy">
@@ -235,11 +236,7 @@
               {{/if}}
             </div>
             {{#if this.images}}
-              <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
-                {{#each this.images}}
-                  <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
-                {{/each}}
-              </div>
+              {{> imagegallery }}
             {{/if}}
           </div>
         </div>
@@ -329,7 +326,12 @@
                     </div>
                   </div>
                 </div>
-                {{{this.parsedContent}}}
+                <div class="comment-content">
+                  {{{this.parsedContent}}}
+                  {{#if this.images}}
+                    {{> imagegallery }}
+                  {{/if}}
+                </div>
               </div>
               {{/each}}
               {{/if}}
@@ -376,7 +378,7 @@
                       <div class="author-username">
                         <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
                       </div>
-                    {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                    {{/if}} {{#contains ../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
                   </div>
                   <div class="post-header-row-2">
                     <div class="post-timestamp-privacy">
@@ -399,11 +401,7 @@
                 {{/if}}
               </div>
               {{#if this.images}}
-                <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}}">
-                  {{#each this.images}}
-                    <img alt="{{#if ../this.imageDescriptions}}{{../this.imageDescriptions}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" data-featherlight="{{this}}"/>
-                  {{/each}}
-                </div>
+                {{> imagegallery }}
               {{/if}}
             </div>
           </div>
@@ -479,7 +477,12 @@
                       </div>
                     </div>
                   </div>
-                  {{{this.parsedContent}}}
+                  <div class="comment-content">
+                    {{{this.parsedContent}}}
+                    {{#if this.images}}
+                      {{> imagegallery }}
+                    {{/if}}
+                  </div>
                 </div>
                 {{/each}}
                 {{/if}}

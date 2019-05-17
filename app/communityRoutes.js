@@ -1,13 +1,3 @@
-const User            = require('../app/models/user');
-const Relationship    = require('../app/models/relationship');
-const Post    = require('../app/models/post');
-const Tag    = require('../app/models/tag');
-const Community    = require('../app/models/community');
-const Vote    = require('../app/models/vote');
-const Image    = require('../app/models/image');
-
-var ObjectId = require('mongoose').Types.ObjectId;
-
 var moment = require('moment');
 
 const notifier = require('./notifier.js');
@@ -88,7 +78,7 @@ module.exports = function(app, passport) {
     // .then((user) => {
     Community.find({
       members: loggedInUserData._id
-    })
+    }).sort('name')
     .then((communities) => {
       res.render('communities', {
         loggedIn: true,
@@ -179,7 +169,7 @@ module.exports = function(app, passport) {
               if (bannedMemberIds.includes(member._id.toString()))
                 member.isBanned = true;
             })
-            let majorityMargin = isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
+            let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
             notifier.markRead(loggedInUserData._id, community._id);
             res.render('community', {
               loggedIn: isLoggedIn,
@@ -225,7 +215,7 @@ module.exports = function(app, passport) {
   app.post('/api/community/create', isLoggedIn, function(req, res) {
     console.log("Creating community")
     let newCommunityData = req.body;
-    let newCommunitySlug = slugify(newCommunityData.communityName);
+    let newCommunitySlug = helper.slugify(newCommunityData.communityName);
     Community.findOne({
       slug: newCommunitySlug
     })
@@ -276,9 +266,9 @@ module.exports = function(app, passport) {
           slug: newCommunitySlug,
           url: communityUrl,
           descriptionRaw: sanitize(newCommunityData.communityDescription),
-          descriptionParsed: parseText(newCommunityData.communityDescription),
+          descriptionParsed: helper.parseText(newCommunityData.communityDescription).text,
           rulesRaw: sanitize(newCommunityData.communityRules),
-          rulesParsed: parseText(newCommunityData.communityRules),
+          rulesParsed: helper.parseText(newCommunityData.communityRules).text,
           image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
           imageEnabled: imageEnabled,
           settings: {
@@ -725,7 +715,7 @@ module.exports = function(app, passport) {
     let parsedReference = parsedReferences[req.body.reference]
     if (req.body.reference == "description" || req.body.reference == "rules"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = parseText(req.body.proposedValue)
+      parsedProposedValue = helper.parseText(req.body.proposedValue).text
     }
     else if (req.body.reference == "joinType"){
       proposedValue = sanitize(req.body.proposedValue)
@@ -745,7 +735,7 @@ module.exports = function(app, passport) {
     }
     else if (req.body.reference == "name"){
       proposedValue = sanitize(req.body.proposedValue)
-      parsedProposedValue = parseText(req.body.proposedValue)
+      parsedProposedValue = helper.parseText(req.body.proposedValue).text
     }
     Community.findOne({
       _id: req.params.communityid
@@ -819,10 +809,20 @@ module.exports = function(app, passport) {
           _id: req.params.communityid
         })
         .then(community => {
-          let majorityMargin = isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
+          let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
           if (vote.votes >= majorityMargin) {
             console.log("Vote passed!")
-            if (vote.reference == "visibility" || vote.reference == "joinType" || vote.reference == "voteLength") {
+            if (vote.reference == "visibility"){
+              community.settings[vote.reference] = vote.proposedValue;
+              Image.find({context: "community", community: community._id}).then(images =>{
+                console.log(images);
+                images.forEach(function(image){
+                  console.log(image);
+                  image.privacy = vote.proposedValue;
+                  image.save();
+                })
+              })
+            }else if(vote.reference == "joinType" || vote.reference == "voteLength") {
               community.settings[vote.reference] = vote.proposedValue;
             }
             else if (vote.reference == "description" || vote.reference == "rules") {
@@ -968,12 +968,9 @@ module.exports = function(app, passport) {
     })
   });
 
+  //THIS FUNCTION IS NOT USED RIGHT NOW.
+  //LEAVING IT IN CASE THE COMMUNITY SECTION OF CREATEPOST IN ROUTES.JS BREAKS AND I WANT TO COMPARE IT TO THIS AGAIN TO TRY TO SEE WHY
   app.post('/api/community/post/create/:communityid/:communityurl', isLoggedIn, function(req, res) {
-    function wordCount(str) {
-         return str.split(' ')
-                .filter(function(n) { return n != '' })
-                .length;
-    }
     let communityId = req.params.communityid;
     let communityUrl = req.params.communityurl;
     newPostUrl = shortid.generate();
@@ -981,34 +978,8 @@ module.exports = function(app, passport) {
     var postImageTags = req.body.postImageTags != "" ? [req.body.postImageTags] : [];
     var postImageDescription = req.body.postImageDescription != "" ? [req.body.postImageDescription] : [];
 
-    let formattingEnabled = req.body.postFormattingEnabled ? true : false;
+    let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings)
 
-    let parsedContent = parseText(req.body.postContent, formattingEnabled)
-
-    if (!req.body.postContentWarnings){
-      let contentWordCount = wordCount(parsedContent);
-      if (contentWordCount > 160){
-        parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><a class="show-more" data-state="contracted">Show more</a>';
-      }
-    }
-
-    let mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
-    let hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-
-    let postMentions = Array.from(new Set(req.body.postContent.match( mentionRegex )))
-    let postTags = Array.from(new Set(req.body.postContent.match( hashtagRegex )))
-    let trimmedPostMentions = []
-    let trimmedPostTags = []
-    if (postMentions){
-      postMentions.forEach((el) => {
-        trimmedPostMentions.push(el.replace(/(@|\s)*/i, ''));
-      })
-    }
-    if (postTags){
-      postTags.forEach((el) => {
-        trimmedPostTags.push(el.replace(/(#|\s)*/i, ''));
-      })
-    }
     const post = new Post({
       type: 'community',
       community: communityId,
@@ -1019,10 +990,10 @@ module.exports = function(app, passport) {
       timestamp: new Date(),
       lastUpdated: new Date(),
       rawContent: sanitize(req.body.postContent),
-      parsedContent: parsedContent,
+      parsedContent: parsedResult.text,
       numberOfComments: 0,
-      mentions: trimmedPostMentions,
-      tags: trimmedPostTags,
+      mentions: parsedResult.mentions,
+      tags: parsedResult.tags,
       contentWarnings: sanitize(req.body.postContentWarnings),
       imageVersion: 2,
       images: postImage,
@@ -1053,18 +1024,17 @@ module.exports = function(app, passport) {
         })
         image.save();
       })
-
     }
 
     post.save()
     .then(() => {
-      trimmedPostTags.forEach((tag) => {
+      parsedResult.tags.forEach((tag) => {
         Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
             if (error) return
         });
       });
       // This is a public post, notify everyone in this community
-      trimmedPostMentions.forEach(function(mention){
+      parsedResult.mentions.forEach(function(mention){
         User.findOne({
           username: mention,
           communities: communityId
@@ -1098,64 +1068,4 @@ function isLoggedIn(req, res, next) {
     return next();
   }
   res.redirect('/');
-}
-
-function parseText(rawText, formattingEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
-  let splitContent = rawText.split(/\r\n|\r|\n/gi);
-  let parsedContent = [];
-  let mentionRegex   = /(^|[^@\w])@(\w{1,30})\b/g
-  let mentionReplace = '$1<a href="/$2">@$2</a>';
-  let hashtagRegex   = /(^|[^#\w])#(\w{1,60})\b/g
-  let hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-  let boldRegex = /(^|[^\*\w\d])\*(?!\*)((?:[^]*?[^\*])?)\*($|[^\*\w\d])(?!\*)/g
-  let italicsRegex = /(^|[^_\w\d])_(?!_)((?:[^]*?[^_])?)_($|[^_\w\d])(?!_)/g
-  let boldReplace = '$1<strong>$2</strong>$3';
-  let italicsReplace = '$1<em>$2</em>$3';
-  splitContent.forEach(function (line) {
-    if (line != ""){
-      line = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      line = "<p>" + line + "</p>";
-      if (urlsEnabled){
-        line = Autolinker.link( line );
-      }
-      if (mentionsEnabled){
-        line = line.replace( mentionRegex, mentionReplace )
-      }
-      if (hashtagsEnabled){
-        line = line.replace( hashtagRegex, hashtagReplace );
-      }
-      if (formattingEnabled){
-        line = line.replace( boldRegex, boldReplace ).replace( italicsRegex, italicsReplace );
-      }
-      parsedContent.push(line);
-    }
-  })
-  parsedContent = parsedContent.join('');
-  // parsedContent = sanitizeHtml(parsedContent, sanitizeHtmlOptions);
-  // parsedContent = parsedContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  parsedContent = sanitize(parsedContent);
-  return parsedContent;
-}
-
-function isEven(n) {
-   return n % 2 == 0;
-}
-function isOdd(n) {
-   return Math.abs(n % 2) == 1;
-}
-
-
-function slugify(string) {
-  const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
-  const b = 'aaaaaaaaceeeeghiiiimnnnoooooprssstuuuuuwxyz------'
-  const p = new RegExp(a.split('').join('|'), 'g')
-
-  return string.toString().toLowerCase()
-      .replace(/\s+/g, '-') // Replace spaces with -
-      .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
-      .replace(/&/g, '-and-') // Replace & with 'and'
-      .replace(/[^\w\-]+/g, '') // Remove all non-word characters
-      .replace(/\-\-+/g, '-') // Replace multiple - with single -
-      .replace(/^-+/, '') // Trim - from start of text
-      .replace(/-+$/, '') // Trim - from end of text
 }

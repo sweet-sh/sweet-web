@@ -1,0 +1,64 @@
+so the variables we need to keep track of are:
+	each preview window should get a number corresponding to what number image it contains. (something like uploadsstarted)
+	how many uploads have completed so that we can check to make sure that uploadsstarted == uploadscompleted before allowing the post to go through (uploadscompleted.)
+	each preview window should also keep track of which url in the imageurls array belongs to it. (this will have to come from uploadscompleted.)
+	uploadscancelled. this will let us run uploadsstarted-uploadscancelled and compare to uploadscompleted so that we can see if there are any truly pending uploads.
+	urlarray for urls returned by the server
+	array of xhr objects for cancelling arbitrary requests later
+	
+User selects image(s)
+for each image:
+	check to see if the file is supported type and size. if not, display an alert. if it is:
+		set the button to the uploading text
+		Create the preview window. give it attribute uploadnumber from uploadsstarted.
+		Create a file reader for the image. Give it the property uploadnumber from uploadsstarted.
+			When it completes:
+				find the preview window with the attribute uploadnumber == this.uploadnumber and give it the background from the filereader data.
+		Start the ajax request with the image file. give it the property uploadnumber also, so we can locate the preview window for it.
+				put the xhr object in an array for future reference. it's position in the array will be the uploadnumber property of its associated preview window.
+				when it completes:
+					identify the preview window with this.uploadnumber
+					If there is no error:
+						put the url in the url array
+						give the preview window the attribute urlpos. this comes from uploadscompleted, which we then increment.
+						if uploadsstarted-uploadscancelled == uploadscompleted, set the send button back to the ready-to-send text.
+					If there is filesize error (there shouldn't be bc it's caught at the start of the function):
+						display the message informing the user of the problem
+						increment uploadscancelled
+						delete the preview window.
+		Increment uploadsstarted.
+ 
+ User clicks the clear button on an image
+	In the case that the upload is finished (which we find by checking the xhr object in array at the position given by the window's attribute uploadnumber):
+		send the url at that position to cleartempimages on the server
+		set the url at the position given by the window's attribute urlpos to a blank string. (removing it would throw off the numbering for the following urls)
+	In the case that the upload is still in progress (check xhr object):
+		abort the request with the xhr object's method
+		increment uploadscancelled
+	Delete the preview window
+	
+User clicks the post send button
+	Check to see if uploadscompleted == uploadsstarted
+	Check to see if uploadscompleted > 0 OR there is text in the textarea that represents the post contents
+	If those are true we can send the post.
+		Put the urls in preview window order and gather the descriptions:
+			make a sortedurls array and a imagedescriptions array
+			for each preview window, in order of uploadnumber:
+				push the corresponding url into the sortedurls array (present at the position in the urlarray given by the urlpos attribute)
+				push the corresponding image description into the imagedescriptions array
+		ajax call!
+			create and send the request.
+				when complete: refresh the page.
+				
+User closes the page
+	send each non-empty string url in imageurls to cleartempimages.
+	
+Expansion to comments section:
+Add image-preview-holder div under comment text thing (no content initially)
+Add image-adding button
+Each variable becomes a property (?) of the image-preview-holder
+
+we definitely need different code for a comment submit button because. different ajax request is being sent. also, we're appending comments instead of refreshing the page?
+do we need different code for the image clear button? Just change it altogether to use the properties of the .parent().parent() element (the previews container in every case)
+also must change post submit button code then, to use those properties, to be compatible with the new image clear button
+the same image adder should also work for the comments. just use new variables and start telling the xhr request and the filereader what preview-holder they belong to with properties.

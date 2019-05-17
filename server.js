@@ -28,6 +28,14 @@ app.use(fileUpload());
 
 // Configuration ===============================================================
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
+User         = require('./app/models/user');
+Relationship = require('./app/models/relationship');
+Post         = require('./app/models/post');
+Tag          = require('./app/models/tag');
+Community    = require('./app/models/community');
+Vote         = require('./app/models/vote');
+Image        = require('./app/models/image');
+ObjectId     = require('mongoose').Types.ObjectId;
 
 require('./config/passport')(passport); // pass passport for configuration
 
@@ -87,7 +95,10 @@ app.on('SIGINT', function() {
 
 global.appRoot = path.resolve(__dirname);
 
+
+
 // routes ======================================================================
+helper = require('./app/helperFunctions.js');
 require('./app/notifier.js')
 require('./app/communityRoutes.js')(app, passport);
 require('./app/routes.js')(app, passport);
