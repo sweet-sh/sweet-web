@@ -303,6 +303,10 @@ $(function() {
 
   $('body').on('touchstart','.image-move',function(e){
 
+    if(e.cancelable){
+      e.preventDefault();
+    }
+
     if(touchinprogress){
       return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
     }
