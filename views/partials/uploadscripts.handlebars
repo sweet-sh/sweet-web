@@ -187,6 +187,52 @@ $(function() {
       }
   });
 
+  //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever
+  $(window).on("unload", function(e) {
+    uploadedImageUrls.forEach(function(url){
+      if(url){
+        $.post( "/cleartempimage", { imageURL: url } );
+      }
+      })
+  });
+
+  //IMAGE DRAG-AND-DROP ORDERING STUFF
+
+  //PART 1: THE FUNCTIONS THAT DO THE WORK
+
+  //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
+  function prepareImageForMoving(selectedImage){
+    selectedImage.css("width",selectedImage.width()+"px");
+    selectedImage.css("height",selectedImage.height()+"px");
+
+    var imagecont = selectedImage.clone();
+    
+    selectedImage.addClass("imagecontspacer");
+
+    var imagecontpos = selectedImage.position();
+
+    selectedImage.prev().after(imagecont);
+   
+    imagecont.css("width", imagecont.width()+"px");
+    imagecont.css("left", imagecontpos.left+"px");
+    imagecont.css("top", imagecontpos.top+"px");
+    
+    //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here 
+    imagecont.css("position", "absolute");
+    imagecont.css("z-index",2147483647);
+    imagecont.css("background-color","white");
+    imagecont.css("border","solid #dfdfdf");
+
+    imagecont.addClass("onthemove");
+    
+    selectedImage.css("border","dashed")
+
+    selectedImage.empty();
+
+    return imagecont;
+  }
+
+  //this function is called when the user moves either their mouse or finger to reposition the image.
   function moveimagecont(deltaY, imagecont, spacer){
     //move the floaty element:
 
@@ -198,16 +244,16 @@ $(function() {
     //move the spacer (maybe):
 
     //Calculate how many spaces the image has moved (might be more than one)
-    //This moves the spacer if the image's horizontal center line has gone above the bottom of the one above it or below the top of the one below it
+    //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
     var spacertop = spacer.position().top;
     var sHeight = imagecont.outerHeight(true);
-    if(Math.abs((imageconttop+0.5*sHeight) - spacertop) > Number.EPSILON){ //floating point imprecision fix :/
+    if(Math.abs((imageconttop+0.5*sHeight) - spacertop) > Number.EPSILON){ //floating point imprecision fix :/ still acting up a tiny bit though if you go very slowly
       var deltaImageIndex = Math.floor(imageconttop+0.5*sHeight > spacertop ? (imageconttop+0.5*sHeight-spacertop)/sHeight : (imageconttop-0.5*sHeight-spacertop)/sHeight)
     }else{
       var deltaImageIndex = 0;
     }
 
-    //Move the spacer (signifying the future destination of the image) according to deltaImageIndex
+    //Move the spacer (in other words, set the future destination of the image) according to deltaImageIndex
     while(deltaImageIndex < 0){
       if(spacer.prev().prev()){
         spacer.prev().prev().after(spacer);
@@ -222,33 +268,15 @@ $(function() {
     }
   }
 
-  function prepareImageForMoving(selectedImage){
-    selectedImage.css("width",selectedImage.width()+"px");
-    selectedImage.css("height",selectedImage.height()+"px");
-
-    var imagecont = selectedImage.clone();
-    
-    selectedImage.addClass("imagecontspacer");
-
-    var imagecontpos = selectedImage.position();
-
-    selectedImage.prev().after(imagecont);
-    
-    imagecont.css("width", imagecont.width()+"px");
-    imagecont.css("position", "absolute");
-    imagecont.css("left", imagecontpos.left+"px");
-    imagecont.css("top", imagecontpos.top+"px");
-    imagecont.css("z-index",2147483647);
-    imagecont.css("background-color","white");
-    imagecont.css("border","solid #dfdfdf")
-    imagecont.addClass("onthemove");
-    
-    selectedImage.css("border","dashed")
-
-    selectedImage.empty();
-
-    return imagecont;
+  //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
+  function movementEnded(){
+    $('.imagecontspacer').prev().after($('.onthemove')); 
+    $('.onthemove').css("position","unset").css("border","none").css("z-index",10); //seems like a good number
+    $('.onthemove').removeClass("onthemove");
+    $('.imagecontspacer').remove();
   }
+
+  //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
 
   $('body').on('mousedown','.image-move',function(e){
     e.preventDefault();
@@ -258,19 +286,62 @@ $(function() {
       return;
     }   
     
+    //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
     var floatyImageCont = prepareImageForMoving(selectedImage);
 
     $(document).mousemove(function(e){
       moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
-    })
+    });
+    
+    $(document).on('mouseup',function(e){
+      $(document).off('mousemove');
+    });
   });
 
-  $(document).on('mouseup',function(e){
-    $(document).off('mousemove');
-    $('.imagecontspacer').prev().after($('.onthemove')); 
-    $('.onthemove').css("position","unset").css("border","none").css("z-index",10); //seems like a good number
-    $('.onthemove').removeClass("onthemove");
-    $('.imagecontspacer').remove();
+  var touchinprogress = false;
+
+  $('body').on('touchstart','.image-move',function(e){
+
+    if(touchinprogress){
+      return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
+    }
+    touchinprogress = true;
+
+    var selectedImage = $(this).parent().parent();
+    //only do something if there's at least one other image container to switch positions with
+    if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
+      return;
+    }   
+    
+    var floatyImageCont = prepareImageForMoving(selectedImage);
+
+    var previousY = e.originalEvent.changedTouches[0].screenY;
+
+    //function to be passed to the touchmove handler and then later removed from it
+    function touchmoveevent(event){     
+      //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
+      if(e.cancelable){
+        event.preventDefault();
+      }
+
+      moveimagecont(-1*(previousY - event.changedTouches[0].screenY), floatyImageCont, selectedImage);
+      previousY = event.changedTouches[0].screenY;
+    }
+
+    //for some reason jQuery Did Not Want to work with these touch events. Possibly they would like us to be using jQuery Mobile. But, this is pretty simple, we don't need it.
+    this.addEventListener("touchmove",touchmoveevent,{passive: false});
+
+    this.addEventListener('touchend',function(e){
+      touchinprogress = false;
+      this.removeEventListener('touchmove',touchmoveevent);
+      movementEnded();
+    });
+
+    this.addEventListener('touchcancel',function(e){
+      touchinprogress = false;
+      this.removeEventListener('touchmove',touchmoveevent);
+      movementEnded();
+    });
   });
 
   //})
@@ -285,14 +356,6 @@ $(function() {
   //     }
   //   }
   // }
-
-  $(window).on("unload", function(e) {
-    uploadedImageUrls.forEach(function(url){
-      if(url){
-        $.post( "/cleartempimage", { imageURL: url } );
-      }
-      })
-  });
 
 })
 </script>

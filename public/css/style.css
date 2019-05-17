@@ -880,6 +880,10 @@ hr {
 	border-radius: 0 4px 4px 0;
 }
 
+.image-move {
+  touch-action: none;
+}
+
 .editable-text {
   width: 100%;
   padding: .375rem .75rem;
