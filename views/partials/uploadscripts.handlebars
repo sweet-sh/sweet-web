@@ -29,7 +29,9 @@ $(function() {
 
     //function called right after clicking the add image button on the post and comment forms
     function fileselected (e) {
-      let previewContainer = $(this).parent()[0];
+      let previewContainer = $(this).parent();
+      previewContainer.css('display','flex'); //this is where we unhide the preview container if this is a comment image. no need to rehide, it's not obtrusive there while empty (at least to me)
+      previewContainer = previewContainer[0];
 
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
