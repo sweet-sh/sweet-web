@@ -322,7 +322,7 @@ $(function() {
 
     var floatyImageCont = prepareImageForMoving(selectedImage);
 
-    var previousY = e.originalEvent.changedTouches[0].screenY;
+    var previousY = e.changedTouches[0].screenY;
 
     //function to be passed to the touchmove handler and then later removed from it
     function touchmoveevent(event){
