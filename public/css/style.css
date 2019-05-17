@@ -240,7 +240,7 @@ hr {
   border-right: 1px solid #dfdfdf;
   border-top: 1px solid #dfdfdf;
   color: #6c6c6c;
-  box-shadow: rgba(0, 0, 0, 0.1) 3px 3px 2px inset;
+  box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px inset;
 }
 #newPostsAvailable a{
   color: #6c6c6c;
@@ -255,7 +255,7 @@ hr {
 
 #replyForm {
   background-color: #ffffffaa;
-  box-shadow: inset 0 2px 2px rgba(0,0,0,0.09);
+  box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
 }
 
 p{
@@ -1134,6 +1134,10 @@ hr {
   justify-content: center;
 }
 
+.image-preview-controls > a:hover {
+  color: #666;
+}
+
 #postImageDescription {
   position: relative;
   transition: all 0.2s ease;
@@ -1141,6 +1145,7 @@ hr {
   width: 60%;
   margin: 0 0 0 10px;
   text-align: left;
+  resize: none;
 }
 
 .sortable-placeholder {
@@ -1150,6 +1155,13 @@ hr {
   width: 100%;
   margin-bottom: 0.5em;
   border-radius: 4px;
+}
+.newimagecont {
+  transition: scale .1s ease-in-out, opacity .1s ease-in-out;
+}
+.onthemove {
+  transform: scale(.99);
+  opacity: .75;
 }
 
 .post-images {
@@ -1328,6 +1340,7 @@ background-size: 5.66px 5.66px;
 #newPostsAvailable {
   /*border moved to colors*/
   font-weight: 500;
+  padding-bottom: .25rem;
 }
 
 #commentContent {

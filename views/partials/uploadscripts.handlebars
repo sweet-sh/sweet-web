@@ -208,25 +208,24 @@ $(function() {
     selectedImage.css("height",selectedImage.height()+"px");
 
     var imagecont = selectedImage.clone();
-    
+
     selectedImage.addClass("imagecontspacer");
 
     var imagecontpos = selectedImage.position();
 
     selectedImage.prev().after(imagecont);
-   
+
     imagecont.css("width", imagecont.width()+"px");
     imagecont.css("left", imagecontpos.left+"px");
     imagecont.css("top", imagecontpos.top+"px");
-    
-    //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here 
+
+    //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
     imagecont.css("position", "absolute");
-    imagecont.css("z-index",2147483647);
+    imagecont.css("z-index",2147483647); // over 9000
     imagecont.css("background-color","white");
-    imagecont.css("border","solid #dfdfdf");
 
     imagecont.addClass("onthemove");
-    
+
     selectedImage.css("border","dashed")
 
     selectedImage.empty();
@@ -271,7 +270,7 @@ $(function() {
 
   //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
   function movementEnded(){
-    $('.imagecontspacer').prev().after($('.onthemove')); 
+    $('.imagecontspacer').prev().after($('.onthemove'));
     $('.onthemove').css("position","unset").css("border","none").css("z-index",10); //seems like a good number
     $('.onthemove').removeClass("onthemove");
     $('.imagecontspacer').remove();
@@ -285,15 +284,15 @@ $(function() {
     //only do something if there's at least one other image container to switch positions with
     if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
       return;
-    }   
-    
+    }
+
     //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
     var floatyImageCont = prepareImageForMoving(selectedImage);
 
     $(document).mousemove(function(e){
       moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
     });
-    
+
     $(document).on('mouseup',function(e){
       movementEnded();
       $(document).off('mousemove');
@@ -313,14 +312,14 @@ $(function() {
     //only do something if there's at least one other image container to switch positions with
     if(selectedImage.parent().children().length <= 2){ //2 = one image container and the file input element.
       return;
-    }   
-    
+    }
+
     var floatyImageCont = prepareImageForMoving(selectedImage);
 
     var previousY = e.originalEvent.changedTouches[0].screenY;
 
     //function to be passed to the touchmove handler and then later removed from it
-    function touchmoveevent(event){     
+    function touchmoveevent(event){
       //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
       if(e.cancelable){
         event.preventDefault();
