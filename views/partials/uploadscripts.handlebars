@@ -235,7 +235,6 @@ $(function() {
   //this function is called when the user moves either their mouse or finger to reposition the image.
   function moveimagecont(deltaY, imagecont, spacer){
     //move the floaty element:
-
     var imageconttop = imagecont.position().top;
     //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
     var newYPos = Math.min(Math.max(imageconttop+deltaY, imagecont.parent().position().top),imagecont.parent().position().top+(imagecont.parent().height()-imagecont.height())); //beauty
@@ -243,7 +242,7 @@ $(function() {
 
     //move the spacer (maybe):
 
-    //Calculate how many spaces the image has moved (might be more than one)
+    //Calculate how many spaces the image has moved (might be more or less than one)
     //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
     var spacertop = spacer.position().top;
     var sHeight = imagecont.outerHeight(true);
@@ -294,6 +293,7 @@ $(function() {
     });
     
     $(document).on('mouseup',function(e){
+      movementEnded();
       $(document).off('mousemove');
     });
   });
