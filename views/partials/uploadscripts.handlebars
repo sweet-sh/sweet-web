@@ -56,6 +56,7 @@ $(function() {
 
           //add preview windows
           var newimagecont = $(".newimageform").clone();
+          newimagecont.find('.image-move')[0].addEventListener('touchstart',touchstartforimagemove,{passive:false});
           newimagecont.attr('class','newimagecont').attr('uploadnumber',previewContainer.uploadsStarted).appendTo(previewContainer);
 
           //create filereader that will obtain us the preview
@@ -301,7 +302,8 @@ $(function() {
 
   var touchinprogress = false;
 
-  $('body').on('touchstart','.image-move',function(e){
+  //this is attached to the preview window's arrow thing when the preview window is created input change event listener
+  function touchstartforimagemove(e){
 
     if(e.cancelable){
       e.preventDefault();
@@ -347,7 +349,7 @@ $(function() {
       this.removeEventListener('touchmove',touchmoveevent);
       movementEnded();
     });
-  });
+  }
 
   //})
   // document.onpaste = function(event){
