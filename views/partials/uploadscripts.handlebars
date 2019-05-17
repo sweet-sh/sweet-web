@@ -129,9 +129,10 @@ $(function() {
   })
 
   // function for sorting images in the upload area
-  sortable('.image-preview-holder', {
+  /*sortable('.image-preview-holder', {
     handle: '.image-move'
-  });
+  });*/
+
 
   //function for removing an image from a post or comment
   $("body").on('click','.image-clear',function(e){
@@ -184,6 +185,74 @@ $(function() {
       }else{
         bootbox.alert("This post appears to be... empty");
       }
+  });
+
+  var totalDeltaY = 0;
+
+  function moveimagecont(e){
+    var imagecontpos = e.imagecont.position();
+    e.imagecont.css("position", "absolute");
+    e.imagecont.css("left", imagecontpos.left+"px");
+    var newYPos = Math.min(Math.max(e.spacer.parent().position().top,imagecontpos.top+e.originalEvent.movementY),e.spacer.parent().position().top+e.spacer.parent().height()); //AUGH
+    e.imagecont.css("top", newYPos+"px");
+    totalDeltaY+=e.originalEvent.movementY;
+    if(totalDeltaY < (-1)*e.spacer.height()){
+      totalDeltaY = 0;
+      if(e.spacer.prev().prev()){
+        e.spacer.prev().prev().after(e.spacer);
+      }
+    }else if(totalDeltaY > e.spacer.height()){
+      totalDeltaY = 0;
+      if(e.spacer.next()){
+        e.spacer.next().after(e.spacer);
+      }
+    }
+  }
+
+  $('body').on('mousedown','.image-move',function(e){
+    e.preventDefault();
+    var spacer = $(this).parent().parent();
+    //only do something if there's at least one other image container to switch positions with
+    if(spacer.parent().children().length <= 2){ //2 = one image container and the file input element.
+      return;
+    }
+    
+    spacer.css("width",spacer.width()+"px");
+    spacer.css("height",spacer.height()+"px");
+
+    var imagecont = spacer.clone();
+    
+    spacer.addClass("imagecontspacer");
+
+    var imagecontpos = spacer.position();
+
+    spacer.prev().after(imagecont);
+    
+    imagecont.css("width", imagecont.width()+"px");
+    imagecont.css("position", "absolute");
+    imagecont.css("left", imagecontpos.left+"px");
+    imagecont.css("top", imagecontpos.top+"px");
+    imagecont.css("z-index",2147483647);
+    imagecont.addClass("onthemove");
+    
+    spacer.css("border","dashed")
+
+    spacer.empty();
+    
+    $(document).mousemove(function(e){
+      e.imagecont = imagecont;
+      e.spacer = spacer;
+      moveimagecont(e);
+    })
+  });
+
+  $(document).on('mouseup',function(e){
+    $(document).off('mousemove');
+    totalDeltaY = 0;
+    $('.imagecontspacer').prev().after($('.onthemove')); 
+    $('.onthemove').css("position","unset").css("z-index",10); //seems like a good number
+    $('.onthemove').removeClass("onthemove");
+    $('.imagecontspacer').remove();
   });
 
 
