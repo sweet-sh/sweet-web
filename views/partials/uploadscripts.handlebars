@@ -29,7 +29,9 @@ $(function() {
 
     //function called right after clicking the add image button on the post and comment forms
     function fileselected (e) {
-      let previewContainer = $(this).parent()[0];
+      let previewContainer = $(this).parent();
+      previewContainer.css('display','flex'); //this is where we unhide the preview container if this is a comment image. no need to rehide, it's not obtrusive there while empty (at least to me)
+      previewContainer = previewContainer[0];
 
       for(var i = 0;i<this.files.length;i++){
         //check to make sure it's a supported file type of the correct size
@@ -54,6 +56,7 @@ $(function() {
 
           //add preview windows
           var newimagecont = $(".newimageform").clone();
+          newimagecont.find('.image-move')[0].addEventListener('touchstart',touchstartforimagemove,{passive:false});
           newimagecont.attr('class','newimagecont').attr('uploadnumber',previewContainer.uploadsStarted).appendTo(previewContainer);
 
           //create filereader that will obtain us the preview
@@ -206,6 +209,7 @@ $(function() {
     selectedImage.css("height",selectedImage.height()+"px");
 
     var imagecont = selectedImage.clone();
+    imagecont.find('.image-move')[0].addEventListener('touchstart',touchstartforimagemove,{passive:false});
 
     selectedImage.addClass("imagecontspacer");
 
@@ -299,7 +303,12 @@ $(function() {
 
   var touchinprogress = false;
 
-  $('body').on('touchstart','.image-move',function(e){
+  //this is attached to the preview window's arrow thing when the preview window is created input change event listener
+  function touchstartforimagemove(e){
+
+    if(e.cancelable){
+      e.preventDefault();
+    }
 
     if(touchinprogress){
       return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
@@ -314,12 +323,12 @@ $(function() {
 
     var floatyImageCont = prepareImageForMoving(selectedImage);
 
-    var previousY = e.originalEvent.changedTouches[0].screenY;
+    var previousY = e.changedTouches[0].screenY;
 
     //function to be passed to the touchmove handler and then later removed from it
     function touchmoveevent(event){
       //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
-      if(e.cancelable){
+      if(event.cancelable){
         event.preventDefault();
       }
 
@@ -341,7 +350,7 @@ $(function() {
       this.removeEventListener('touchmove',touchmoveevent);
       movementEnded();
     });
-  });
+  }
 
   //})
   // document.onpaste = function(event){
