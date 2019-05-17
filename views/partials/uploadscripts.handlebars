@@ -321,7 +321,7 @@ $(function() {
     //function to be passed to the touchmove handler and then later removed from it
     function touchmoveevent(event){
       //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
-      if(e.cancelable){
+      if(event.cancelable){
         event.preventDefault();
       }
 
