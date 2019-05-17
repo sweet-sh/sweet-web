@@ -669,13 +669,16 @@ hr {
 .repliesContainer {
 	font-size: 0.9em;
   /*border moved to colors section*/
-  padding-top: 20px;
   padding-left: 20px;
   padding-right: 20px;
 }
 
 .individualReplyContainer {
     word-wrap: break-word;
+}
+
+.repliesContainer>.individualReplyContainer:first-of-type {
+  padding-top: 20px;
 }
 
 .comment-content {
@@ -1205,9 +1208,6 @@ background-size: 5.66px 5.66px;
   }
   .post-images{
     max-height:175px;
-  }
-  .newimagecont{
-    height: 150px;
   }
 }
 .comment-content .post-images {
