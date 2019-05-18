@@ -176,7 +176,7 @@ $(function() {
           type: 'POST',
           data: {
             communityId: $('#postForm').attr("communityId"),
-            postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
+            postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
             postContent: $('#postContent').val(),
             postContentWarnings: $('#postContentWarnings').val(),
             postImageDescription: JSON.stringify(imagedescs),
