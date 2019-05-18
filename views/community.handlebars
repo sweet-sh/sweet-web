@@ -32,9 +32,16 @@
             </div>
           {{/eq}}
         {{else}}
-          <div class="container commentsList" id="votesContainer">
+          {{#if communityData.welcomeMessageParsed}}
+            <div class="container commentsList" id="welcome-message-container">
+              {{{ communityData.welcomeMessageParsed }}}
+            </div>
+          {{/if}}
+          {{#gt votes.length 0 }}
+            <div class="container commentsList" id="votesContainer">
               {{> votes}}
-          </div>
+            </div>
+          {{/gt}}
           <div class="container commentsList" id="postsContainer"></div>
           {{> infinitescrollrequests}}
         {{/unless}}
@@ -73,104 +80,122 @@
       </div>
       <div id="editBody" class="community-container">
         <h3 class="page-header mx-2">Community editor</h3>
-        <nav>
-          <div class="nav nav-tabs" id="nav-tab" role="tablist">
-            <a class="nav-item nav-link active" id="nav-nameEditor-tab" data-toggle="tab" href="#nav-nameEditor" role="tab" aria-controls="nav-nameEditor" aria-selected="true">Name</a>
-            <a class="nav-item nav-link" id="nav-descriptionEditor-tab" data-toggle="tab" href="#nav-descriptionEditor" role="tab" aria-controls="nav-descriptionEditor" aria-selected="false">Description</a>
-            <a class="nav-item nav-link" id="nav-rulesEditor-tab" data-toggle="tab" href="#nav-rulesEditor" role="tab" aria-controls="nav-rulesEditor" aria-selected="false">Rules</a>
-            <a class="nav-item nav-link" id="nav-imageEditor-tab" data-toggle="tab" href="#nav-imageEditor" role="tab" aria-controls="nav-imageEditor" aria-selected="false">Image</a>
-            <a class="nav-item nav-link" id="nav-visibilityEditor-tab" data-toggle="tab" href="#nav-visibilityEditor" role="tab" aria-controls="nav-visibilityEditor" aria-selected="false">Visibility</a>
-            <a class="nav-item nav-link" id="nav-joinTypeEditor-tab" data-toggle="tab" href="#nav-joinTypeEditor" role="tab" aria-controls="nav-joinTypeEditor" aria-selected="false">Joining method</a>
-            <a class="nav-item nav-link" id="nav-voteLengthEditor-tab" data-toggle="tab" href="#nav-voteLengthEditor" role="tab" aria-controls="nav-voteLengthEditor" aria-selected="false">Vote length</a>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="nav flex-md-column nav-pills" id="nav-tab" role="tablist" aria-orientation="vertical">
+              <a class="nav-item nav-link active" id="nav-nameEditor-tab" data-toggle="tab" href="#nav-nameEditor" role="tab" aria-controls="nav-nameEditor" aria-selected="true">Name</a>
+              <a class="nav-item nav-link" id="nav-descriptionEditor-tab" data-toggle="tab" href="#nav-descriptionEditor" role="tab" aria-controls="nav-descriptionEditor" aria-selected="false">Description</a>
+              <a class="nav-item nav-link" id="nav-rulesEditor-tab" data-toggle="tab" href="#nav-rulesEditor" role="tab" aria-controls="nav-rulesEditor" aria-selected="false">Rules</a>
+              <a class="nav-item nav-link" id="nav-welcomeMessageEditor-tab" data-toggle="tab" href="#nav-welcomeMessageEditor" role="tab" aria-controls="nav-welcomeMessageEditor" aria-selected="false">Welcome message</a>
+              <a class="nav-item nav-link" id="nav-imageEditor-tab" data-toggle="tab" href="#nav-imageEditor" role="tab" aria-controls="nav-imageEditor" aria-selected="false">Image</a>
+              <a class="nav-item nav-link" id="nav-visibilityEditor-tab" data-toggle="tab" href="#nav-visibilityEditor" role="tab" aria-controls="nav-visibilityEditor" aria-selected="false">Visibility</a>
+              <a class="nav-item nav-link" id="nav-joinTypeEditor-tab" data-toggle="tab" href="#nav-joinTypeEditor" role="tab" aria-controls="nav-joinTypeEditor" aria-selected="false">Joining method</a>
+              <a class="nav-item nav-link" id="nav-voteLengthEditor-tab" data-toggle="tab" href="#nav-voteLengthEditor" role="tab" aria-controls="nav-voteLengthEditor" aria-selected="false">Vote length</a>
+            </div>
           </div>
-        </nav>
-        <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade show active" id="nav-nameEditor" role="tabpanel" aria-labelledby="nav-nameEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <div class="form-group">
-                <input type="hidden" name="reference" value="name" />
-                <label for="communityName">Name</label>
-                <input type="text" class="form-control" id="communityName" name="proposedValue" value="{{communityData.name}}">
+          <div class="col-md-8">
+            <div class="tab-content" id="nav-tabContent">
+              <div class="tab-pane fade show active" id="nav-nameEditor" role="tabpanel" aria-labelledby="nav-nameEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <div class="form-group">
+                    <input type="hidden" name="reference" value="name" />
+                    <label for="communityName">Name</label>
+                    <input type="text" class="form-control" id="communityName" name="proposedValue" value="{{communityData.name}}">
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <input type="hidden" name="reference" value="description" />
-              <div class="form-group">
-                <label for="communityDescription">Description</label>
-                <textarea class="form-control" id="communityDescription" name="proposedValue" rows="3">{{communityData.descriptionRaw}}</textarea>
+              <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <input type="hidden" name="reference" value="description" />
+                  <div class="form-group">
+                    <label for="communityDescription">Description</label>
+                    <textarea class="form-control" id="communityDescription" name="proposedValue" rows="3">{{communityData.descriptionRaw}}</textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <input type="hidden" name="reference" value="rules" />
-              <div class="form-group">
-                <label for="communityRules">Rules</label>
-                <textarea class="form-control" id="communityRules" name="proposedValue" rows="3">{{communityData.rulesRaw}}</textarea>
+              <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <input type="hidden" name="reference" value="rules" />
+                  <div class="form-group">
+                    <label for="communityRules">Rules</label>
+                    <textarea class="form-control" id="communityRules" name="proposedValue" rows="3">{{communityData.rulesRaw}}</textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post" enctype="multipart/form-data">
-              <div class="form-group">
-                <input type="hidden" name="reference" value="image" />
-                <input type="hidden" name="imageUrl" value="{{communityData.image}}" />
-                <label>Community image</label>
-                <div id="image-preview">
-                  <label for="image-upload" id="image-label">Choose file</label>
-                  <input type="file" name="proposedValue" id="image-upload" />
-                </div>
+              <div class="tab-pane fade" id="nav-welcomeMessageEditor" role="tabpanel" aria-labelledby="nav-welcomeMessageEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <input type="hidden" name="reference" value="welcomeMessage" />
+                  <div class="form-group">
+                    <label for="communityWelcomeMessage">Welcome message</label>
+                    <p class="small">
+                      This message will appear above the posts in the community's main view. You can use it to welcome new members or remind members of news or important announcements.
+                    </p>
+                    <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="proposedValue" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-visibilityEditor" role="tabpanel" aria-labelledby="nav-visibilityEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <input type="hidden" name="reference" value="visibility" />
-              <div class="form-group">
-                <label for="communityVisibility">Post visibility (currently set to <strong>{{communityData.settings.visibility}}</strong>)</label>
-                <select class="form-control" id="communityVisibility" name="proposedValue">
-                  <option value="public" {{#eq communityData.settings.visibility "public"}}selected{{/eq}}>Public (posts visible to all sweet users)</option>
-                  <option value="private" {{#eq communityData.settings.visibility "private"}}selected{{/eq}}>Private (posts visible only to members)</option>
-                </select>
+              <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post" enctype="multipart/form-data">
+                  <div class="form-group">
+                    <input type="hidden" name="reference" value="image" />
+                    <input type="hidden" name="imageUrl" value="{{communityData.image}}" />
+                    <label>Community image</label>
+                    <div id="image-preview">
+                      <label for="image-upload" id="image-label">Choose file</label>
+                      <input type="file" name="proposedValue" id="image-upload" />
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button" id="community-image-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-joinTypeEditor" role="tabpanel" aria-labelledby="nav-joinTypeEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <div class="form-group">
-                <input type="hidden" name="reference" value="joinType" />
-                <label for="communityJoinType">Joining method  (currently set to <strong>{{communityData.settings.joinType}}</strong>)</label>
-                <select class="form-control" id="communityJoinType" name="proposedValue">
-                  <option value="open" {{#eq communityData.settings.joinType "open"}}selected{{/eq}}>Open (anyone is free to join)</option>
-                  <option value="approval" {{#eq communityData.settings.joinType "approval"}}selected{{/eq}}>Approval (requests to join must be approved by a current member)</option>
-                  <!-- <option value="closed" {{#eq communityData.settings.joinType "closed"}}selected{{/eq}}>Closed (only invited users can join)</option> -->
-                </select>
+              <div class="tab-pane fade" id="nav-visibilityEditor" role="tabpanel" aria-labelledby="nav-visibilityEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <input type="hidden" name="reference" value="visibility" />
+                  <div class="form-group">
+                    <label for="communityVisibility">Post visibility (currently set to <strong>{{communityData.settings.visibility}}</strong>)</label>
+                    <select class="form-control" id="communityVisibility" name="proposedValue">
+                      <option value="public" {{#eq communityData.settings.visibility "public"}}selected{{/eq}}>Public (posts visible to all sweet users)</option>
+                      <option value="private" {{#eq communityData.settings.visibility "private"}}selected{{/eq}}>Private (posts visible only to members)</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
-          </div>
-          <div class="tab-pane fade" id="nav-voteLengthEditor" role="tabpanel" aria-labelledby="nav-voteLengthEditor-tab">
-            <form action="/api/community/vote/create/{{communityData._id}}" method="post">
-              <div class="form-group">
-                <input type="hidden" name="reference" value="voteLength" />
-                <label for="communityVoteLength">Vote length (currently set to <strong>{{communityData.settings.voteLength}} days</strong>)</label>
-                <select class="form-control" id="communityVoteLength" name="proposedValue">
-                  <option value="1" {{#eq communityData.settings.voteLength "1"}}selected{{/eq}}>1 day</option>
-                  <option value="3" {{#eq communityData.settings.voteLength "3"}}selected{{/eq}}>3 days</option>
-                  <option value="7" {{#eq communityData.settings.voteLength "7"}}selected{{/eq}}>7 days</option>
-                  <option value="14" {{#eq communityData.settings.voteLength "14"}}selected{{/eq}}>14 days</option>
-                  <option value="30" {{#eq communityData.settings.voteLength "30"}}selected{{/eq}}>30 days</option>
-                </select>
+              <div class="tab-pane fade" id="nav-joinTypeEditor" role="tabpanel" aria-labelledby="nav-joinTypeEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <div class="form-group">
+                    <input type="hidden" name="reference" value="joinType" />
+                    <label for="communityJoinType">Joining method  (currently set to <strong>{{communityData.settings.joinType}}</strong>)</label>
+                    <select class="form-control" id="communityJoinType" name="proposedValue">
+                      <option value="open" {{#eq communityData.settings.joinType "open"}}selected{{/eq}}>Open (anyone is free to join)</option>
+                      <option value="approval" {{#eq communityData.settings.joinType "approval"}}selected{{/eq}}>Approval (requests to join must be approved by a current member)</option>
+                      <!-- <option value="closed" {{#eq communityData.settings.joinType "closed"}}selected{{/eq}}>Closed (only invited users can join)</option> -->
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
               </div>
-              <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
-            </form>
+              <div class="tab-pane fade" id="nav-voteLengthEditor" role="tabpanel" aria-labelledby="nav-voteLengthEditor-tab">
+                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                  <div class="form-group">
+                    <input type="hidden" name="reference" value="voteLength" />
+                    <label for="communityVoteLength">Vote length (currently set to <strong>{{communityData.settings.voteLength}} days</strong>)</label>
+                    <select class="form-control" id="communityVoteLength" name="proposedValue">
+                      <option value="1" {{#eq communityData.settings.voteLength 1}}selected{{/eq}}>1 day</option>
+                      <option value="3" {{#eq communityData.settings.voteLength 3}}selected{{/eq}}>3 days</option>
+                      <option value="7" {{#eq communityData.settings.voteLength 7}}selected{{/eq}}>7 days</option>
+                      <option value="14" {{#eq communityData.settings.voteLength 14}}selected{{/eq}}>14 days</option>
+                      <option value="30" {{#eq communityData.settings.voteLength 30}}selected{{/eq}}>30 days</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -290,7 +315,7 @@ $('#postsContainer').infiniteScroll({
 
 {{#if loggedIn}}
 
-$('.community-action-button').click(function(e) {
+$('#community-image-button').click(function(e) {
   let button = $(this);
   if(button.parent().find("input[type='file']")){ //if a file is being submitted
     if(!button.parent().find("input[type='file']").val()){ //and its value isn't set

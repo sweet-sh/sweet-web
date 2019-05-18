@@ -12,6 +12,8 @@ var communitySchema = new mongoose.Schema({
   descriptionParsed: String,
   rulesRaw: String,
   rulesParsed: String,
+  welcomeMessageRaw: String,
+  welcomeMessageParsed: String,
   image: String,
   imageEnabled: Boolean,
   settings: {

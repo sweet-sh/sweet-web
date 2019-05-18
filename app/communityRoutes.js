@@ -379,7 +379,7 @@ module.exports = function(app, passport) {
       }
       voteUrl = shortid.generate();
       created = new Date();
-      expiryTime = created.setDate(created.getDate() + (community.settings.voteLength ? community.settings.voteLength : 7));
+      expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
       if (community.members.length - community.mutedMembers.length === 1){
         // This vote automatically passes
         votesNumber = 0;
@@ -439,7 +439,7 @@ module.exports = function(app, passport) {
       }
       voteUrl = shortid.generate();
       created = new Date();
-      expiryTime = created.setDate(created.getDate() + (community.settings.voteLength ? community.settings.voteLength : 7));
+      expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
       if (community.members.length - community.mutedMembers.length === 1){
         // This vote automatically passes
         votesNumber = 0;
@@ -499,7 +499,7 @@ module.exports = function(app, passport) {
       }
       voteUrl = shortid.generate();
       created = new Date();
-      expiryTime = created.setDate(created.getDate() + (community.settings.voteLength ? community.settings.voteLength : 7));
+      expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
       if (community.members.length - community.mutedMembers.length === 1){
         // This vote automatically passes
         votesNumber = 0;
@@ -559,7 +559,7 @@ module.exports = function(app, passport) {
       }
       voteUrl = shortid.generate();
       created = new Date();
-      expiryTime = created.setDate(created.getDate() + (community.settings.voteLength ? community.settings.voteLength : 7));
+      expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
       if (community.members.length - community.mutedMembers.length === 1){
         // This vote automatically passes
         votesNumber = 0;
@@ -693,6 +693,7 @@ module.exports = function(app, passport) {
       name: "name",
       description: "description",
       rules: "rules",
+      welcomeMessage: "welcome message",
       image: "display image",
       visibility: "post visibility",
       joinType: "joining method",
@@ -715,7 +716,7 @@ module.exports = function(app, passport) {
       30: '30 days'
     }
     let parsedReference = parsedReferences[req.body.reference]
-    if (req.body.reference == "description" || req.body.reference == "rules"){
+    if (req.body.reference == "description" || req.body.reference == "rules" || req.body.reference == "welcomeMessage"){
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
     }
@@ -743,11 +744,12 @@ module.exports = function(app, passport) {
       _id: req.params.communityid
     })
     .then(community => {
+      console.log(community)
       voteUrl = shortid.generate();
       created = new Date();
-      expiryTime = created.setDate(created.getDate() + (community.settings.voteLength ? community.settings.voteLength : 7));
+      expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
       if (community.members.length - community.mutedMembers.length === 1){
-        // This vote automatically passes
+        // This vote automatically passes so we force the single eligible member to vote on it
         votesNumber = 0;
       }
       else {
@@ -771,6 +773,7 @@ module.exports = function(app, passport) {
         voters: votesNumber == 1 ? [loggedInUserData._id] : [],
       })
       voteId = vote._id;
+      console.log(vote)
       vote.save()
       .then(vote => {
         var expireVote = schedule.scheduleJob(expiryTime, function(){
@@ -827,7 +830,7 @@ module.exports = function(app, passport) {
             }else if(vote.reference == "joinType" || vote.reference == "voteLength") {
               community.settings[vote.reference] = vote.proposedValue;
             }
-            else if (vote.reference == "description" || vote.reference == "rules") {
+            else if (vote.reference == "description" || vote.reference == "rules" || vote.reference == "welcomeMessage") {
               community[vote.reference + "Raw"] = vote.proposedValue;
               community[vote.reference + "Parsed"] = vote.parsedProposedValue;
             }

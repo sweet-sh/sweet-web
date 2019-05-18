@@ -231,6 +231,9 @@ hr {
   border-right: 1px solid #dee2e6;
   border-bottom: 1px solid #dee2e6;
 }
+#editBody #nav-tabContent {
+  border: 1px solid #dee2e6;
+}
 .loader-ellips__dot {
   background: #ababab; /* change color here */
 }
@@ -1387,3 +1390,17 @@ background-size: 5.66px 5.66px;
 /* .featherlight-next::before {
   content: '\f054'
 } */
+
+#welcome-message-container {
+  padding: 15px;
+  border-bottom: 0;
+  background: -moz-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
+  background: -webkit-linear-gradient(-45deg, #f7efff 0%,#d8cce5 100%);
+  background: linear-gradient(135deg, #f7efff 0%,#d8cce5 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7efff', endColorstr='#d8cce5',GradientType=1 );
+  color: #2c1445;
+}
+
+#welcome-message-container > p:last-child {
+  margin: 0;
+}
