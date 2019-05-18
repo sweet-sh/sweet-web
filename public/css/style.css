@@ -203,9 +203,9 @@ hr {
   background-color: #fff;
   border: 1px dashed #d5d5d5;
 }
-.two-images > *,
-.three-images > *,
-.four-images > * {
+.two-images img,
+.three-images img,
+.four-images img {
   border: 1px solid #eaeaea;
 }
 .post-single-image {
@@ -1184,6 +1184,7 @@ hr {
   height: 100%;
   max-height: 400px;
   transition: border 100ms ease-in;
+  border-radius: 4px;
 }
 
 .post-images.one-image {
@@ -1225,6 +1226,10 @@ background-size: 5.66px 5.66px;
 .comment-content .post-images {
     max-width: 400px;
     max-height: 200px;
+}
+
+.comment-content  .post-images.one-image {
+  display: inline-block;
 }
 .comment-content .post-images .post-single-image {
     max-height: 200px;
