@@ -21,8 +21,7 @@ var commentSchema = new mongoose.Schema({
   mentions: [String],
   tags: [String],
   images: [String],
-  imageDescriptions: [String],
-  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }] //not a thing atm
+  imageDescriptions: [String]
 });
 
 var postSchema = new mongoose.Schema({
