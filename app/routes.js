@@ -629,7 +629,8 @@ module.exports = function(app, passport) {
     },
     {
       $set: {
-        'settings.profileVisibility': updatedSettings.profileVisibility
+        'settings.profileVisibility': updatedSettings.profileVisibility,
+        'settings.newPostPrivacy': updatedSettings.newPostPrivacy
       }
     })
     .then(user => {
