@@ -96,7 +96,8 @@ $(function() {
     buttonLabels: 'fontawesome',
     imageDragging: false,
     toolbar: {
-      buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor']
+      buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
+      // diffTop: 70
     },
     keyboardCommands: {
       commands: [
@@ -120,5 +121,25 @@ $(function() {
         text: 'Write something. Highlight text to format.'
     }
   });
+  if($(window).width() <= 768){
+    mobileEditorToolbarOptions = {
+      buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
+      updateOnEmptySelection: true,
+      // relativeContainer: document.getElementById('mobile-formatting-toolbar-container')
+      static: true,
+      sticky: true
+    };
+    editor.destroy();
+    editor.options.toolbar = mobileEditorToolbarOptions;
+    editor.setup();
+    editor.subscribe('focus', function (event, editable) {
+      $(event.target).closest('.contentForm').find('.mobile-formatting-toolbar-container').show()
+      $(event.target).css('padding-top','40px')
+    })
+    editor.subscribe('blur', function (event, editable) {
+      $(editable).closest('.contentForm').find('.mobile-formatting-toolbar-container').hide()
+      $(editable).css('padding-top','.375rem')
+    })
+  }
 });
 </script>

@@ -190,17 +190,17 @@ hr {
 .comment-button:hover,
 .comment-button:active {
   /* color: #0069d9; */
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-link:hover,
 .btn-link:active {
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-primary:hover,
 .btn-primary:active {
-  color: #fff;
-  background-color: #cb5e4c;
-  border-color: #b06357;
+  color: #fff !important;
+  background-color: #cb5e4c !important;
+  border-color: #b06357 !important;
 }
 .image-preview {
   background-color: #fff;
@@ -1386,4 +1386,16 @@ background-size: 5.66px 5.66px;
 
 /* .featherlight-next::before {
   content: '\f054'
+} */
+
+.mobile-formatting-toolbar-container {
+  height:40px;
+  width:100%;
+  display: none;
+}
+
+/* .medium-toolbar-arrow-under::after {
+  border-color: transparent transparent #000 transparent !important;
+  top: -8px !important;
+  border-width: 0 8px 8px 8px !important;
 } */
