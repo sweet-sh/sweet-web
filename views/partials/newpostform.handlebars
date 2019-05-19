@@ -11,15 +11,6 @@
     <input type="hidden" id="postImageTags" name="postImageTags" /><!-- unused? p sure. -->
     </label>
   </div>
-  <div class="newimageform">
-    <div class="image-preview"></div>
-    <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
-    <div class="image-preview-controls">
-      <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
-      <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
-    </div>
-  </div>
-
   <div class="form-row my-2 card p-1" id="emojiWindow" style="display:none">
     {{> emojilist }}
   </div>
