@@ -81,7 +81,6 @@ module.exports = function(app, passport) {
     })
     .then(image => {
       if (image){
-        console.log(image)
         if (image.privacy === "public"){
           sendImageFile()
         }
@@ -95,7 +94,6 @@ module.exports = function(app, passport) {
               .then(trusts => {
                 usersWhoTrustMe = trusts.map(a => a.fromUser.toString());
                 usersWhoTrustMe.push(req.user._id.toString());
-                console.log(usersWhoTrustMe)
                 if (usersWhoTrustMe.includes(image.user)){
                   sendImageFile()
                 }
@@ -629,7 +627,8 @@ module.exports = function(app, passport) {
     },
     {
       $set: {
-        'settings.profileVisibility': updatedSettings.profileVisibility
+        'settings.profileVisibility': updatedSettings.profileVisibility,
+        'settings.newPostPrivacy': updatedSettings.newPostPrivacy
       }
     })
     .then(user => {
@@ -684,7 +683,6 @@ module.exports = function(app, passport) {
         }
         followedUserData.push(follower)
       })
-      console.log(followedUserData)
       res.setHeader('content-type', 'text/plain');
       res.end(JSON.stringify({followers: followedUserData}));
     })

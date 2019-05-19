@@ -22,9 +22,9 @@
     {{#unless isMember}}
     <div class="leftSideControls">
       <div class="switch-field" id="visibilityControls">
-        <input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" checked />
+        <input type="radio" id="postPrivacy-public" name="postPrivacy" value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}checked{{/eq}} />
         <label for="postPrivacy-public"><i class='fas fa-eye'></i></label>
-        <input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" />
+        <input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}checked{{/eq}}/>
         <label for="postPrivacy-private"><i class='fas fa-eye-slash'></i></label>
       </div>
     </div>

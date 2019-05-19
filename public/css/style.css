@@ -180,21 +180,25 @@ hr {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
 .show-more,
-.content-warning-show-more {
+.content-warning-show-more,
+.community-tags .badge {
   color: white !important;
   background: #aaa;
 }
 .comment-button {
   color: #aaa;
 }
-.comment-button:hover {
+.comment-button:hover,
+.comment-button:active {
   /* color: #0069d9; */
   color: #cb5e4c;
 }
-.btn-link:hover {
+.btn-link:hover,
+.btn-link:active {
   color: #cb5e4c;
 }
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:active {
   color: #fff;
   background-color: #cb5e4c;
   border-color: #b06357;
@@ -203,9 +207,9 @@ hr {
   background-color: #fff;
   border: 1px dashed #d5d5d5;
 }
-.two-images > *,
-.three-images > *,
-.four-images > * {
+.two-images img,
+.three-images img,
+.four-images img {
   border: 1px solid #eaeaea;
 }
 .post-single-image {
@@ -227,6 +231,9 @@ hr {
   border-left: 1px solid #dee2e6;
   border-right: 1px solid #dee2e6;
   border-bottom: 1px solid #dee2e6;
+}
+#editBody #nav-tabContent {
+  border: 1px solid #dee2e6;
 }
 .loader-ellips__dot {
   background: #ababab; /* change color here */
@@ -689,9 +696,14 @@ hr {
     padding: 0;
     margin: 0 0 10px 0;
     list-style: none;
-    display: flex;
+    /* display: flex; */
     justify-content: flex-start;
     flex-wrap: wrap;
+}
+
+.user-list.collapse.show,
+.user-list.collapsing {
+  display: flex !important;
 }
 
 .user-list li {
@@ -707,6 +719,21 @@ hr {
   height: 30px;
   border-radius: 4px;
   margin: 2px;
+}
+
+.user-list-toggle:hover{
+  text-decoration: none;
+}
+.user-list-toggle::before{
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  content: '\f0dd';
+  margin-left: 5px;
+}
+
+.user-list-toggle.collapsed::before{
+  font-family: "Font Awesome 5 Free";
+  content: '\f0da';
 }
 
 .btn-group-full-width {
@@ -1184,6 +1211,7 @@ hr {
   height: 100%;
   max-height: 400px;
   transition: border 100ms ease-in;
+  border-radius: 4px;
 }
 
 .post-images.one-image {
@@ -1225,6 +1253,10 @@ background-size: 5.66px 5.66px;
 .comment-content .post-images {
     max-width: 400px;
     max-height: 200px;
+}
+
+.comment-content  .post-images.one-image {
+  display: inline-block;
 }
 .comment-content .post-images .post-single-image {
     max-height: 200px;
@@ -1379,3 +1411,22 @@ background-size: 5.66px 5.66px;
 /* .featherlight-next::before {
   content: '\f054'
 } */
+
+#welcome-message-container {
+  padding: 15px;
+  border-bottom: 0;
+  background: -moz-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
+  background: -webkit-linear-gradient(-45deg, #f7efff 0%,#d8cce5 100%);
+  background: linear-gradient(135deg, #f7efff 0%,#d8cce5 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7efff', endColorstr='#d8cce5',GradientType=1 );
+  color: #2c1445;
+}
+
+#welcome-message-container > p:last-child {
+  margin: 0;
+}
+
+.community-tags .badge {
+  font-weight: 400;
+  font-size: 90%;
+}

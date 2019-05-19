@@ -144,12 +144,6 @@ $(function() {
     ourFileInputGuy.click();
   })
 
-  // function for sorting images in the upload area
-  /*sortable('.image-preview-holder', {
-    handle: '.image-move'
-  });*/
-
-
   //function for removing an image from a post or comment
   $("body").on('click','.image-clear',function(e){
     let thisPreviewWindow = $(this).parent().parent();
@@ -189,7 +183,7 @@ $(function() {
           type: 'POST',
           data: {
             communityId: $('#postForm').attr("communityId"),
-            postPrivacy: ($('#postPrivacy-public').attr('checked')) ? 'public' : 'private',
+            postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
             postContent: $('#postContent').val(),
             postContentWarnings: $('#postContentWarnings').val(),
             postImageDescription: JSON.stringify(imagedescs),
