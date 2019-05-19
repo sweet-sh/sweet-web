@@ -1391,11 +1391,11 @@ background-size: 5.66px 5.66px;
 .mobile-formatting-toolbar-container {
   height:40px;
   width:100%;
-  display: none;
+  position:absolute;
 }
 
-/* .medium-toolbar-arrow-under::after {
+ .medium-toolbar-arrow-under::after {
   border-color: transparent transparent #000 transparent !important;
   top: -8px !important;
   border-width: 0 8px 8px 8px !important;
-} */
+} 
