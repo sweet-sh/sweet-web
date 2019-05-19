@@ -180,7 +180,8 @@ hr {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
 .show-more,
-.content-warning-show-more {
+.content-warning-show-more,
+.community-tags .badge {
   color: white !important;
   background: #aaa;
 }
@@ -1423,4 +1424,9 @@ background-size: 5.66px 5.66px;
 
 #welcome-message-container > p:last-child {
   margin: 0;
+}
+
+.community-tags .badge {
+  font-weight: 400;
+  font-size: 90%;
 }
