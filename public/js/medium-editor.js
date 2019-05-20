@@ -6035,7 +6035,6 @@ MediumEditor.extensions = {};
                 }
             }.bind(this));
         },
-
         attachEventHandlers: function () {
             // MediumEditor custom events for when user beings and ends interaction with a contenteditable and its elements
             this.subscribe('blur', this.handleBlur.bind(this));
@@ -6055,11 +6054,11 @@ MediumEditor.extensions = {};
                   if (this.isToolbarDefaultActionsDisplayed()) {
                       this.handleDocumentMouseup(event);
                   }
-              }.bind(this), 500);
-          }.bind(this);
+                }.bind(this), 500);
+              }.bind(this);
 
           // Capture keyboard hide event: http://stackoverflow.com/questions/9819240/how-to-capture-the-hide-keyboard-event-on-ios-using-javascript
-          document.addEventListener('focusout', this.handleBlur.bind(this));
+          // document.addEventListener('focusout', this.handleBlur.bind(this));
 
             // Add a scroll event for sticky toolbar
             if (this.static && this.sticky) {
