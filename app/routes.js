@@ -2766,7 +2766,7 @@ module.exports = function(app, passport) {
 
   //Responds to requests that delete posts.
   //Inputs: id of post to delete (in req.params)
-  //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it causes, delete the post document.
+  //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it caused, delete the post document.
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
@@ -2845,6 +2845,10 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to post requests which create a comment.
+  //Inputs: comment body, filenames of comment images, descriptions of comment images
+  //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
+  //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
   app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function(req, res) {
     console.log(req.body)
     let parsedResult = helper.parseText(req.body.commentContent);
@@ -3038,9 +3042,21 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Responds to post requests that delete comments.
+  //Input: postid and commentid.
+  //Output: deletes each of the comment's images and removes the comment's document from the post. Then, updates the post's lastUpdated field to be
+  //that of the new most recent comment's (or the time of the post's creation if there are no comments left) with the relocatePost function. Also
+  //updates numberOfComments.
   app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
+
+      //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
+      if(post.comments.id(req.params.commentid).author._id.toString() != loggedInUserData._id.toString()){
+        res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
+        return;
+      }
+
       post.comments.id(req.params.commentid).images.forEach((image) => {
         fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {if(err) console.log("Image deletion error " + err)})
         Image.deleteOne({"filename": image})
@@ -3061,6 +3077,10 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Responds to a post request that boosts a post.
+  //Inputs: id of the post to be boosted
+  //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
+  //user whose post was boosted.
   app.post('/createboost/:postid', isLoggedInOrRedirect, function(req, res) {
     newPostUrl = shortid.generate();
     boostedTimestamp = new Date();
@@ -3069,6 +3089,10 @@ module.exports = function(app, passport) {
     })
     .populate('author')
     .then((boostedPost) => {
+      if(boostedPost.privacy != "public"){
+        res.status(400).send("post is not public and therefore may not be boosted");
+        return;
+      }
       const boost = new Post({
         type: 'boost',
         boostTarget: boostedPost._id,
@@ -3090,6 +3114,9 @@ module.exports = function(app, passport) {
     })
   })
 
+  //Responds to post requests from users who do not want notifications from activity on some post anymore.
+  //Inputs: the id of the post
+  //Outputs: removes the logged in user from the post's subscribedusers field, adds them to unsubscribedUsers
   app.post('/api/post/unsubscribe/:postid', isLoggedInOrRedirect, function(req,res) {
     Post.findOne({
       _id: req.params.postid
@@ -3107,6 +3134,7 @@ module.exports = function(app, passport) {
     })
   })
 
+  //Well, it's a bit like the last one but in reverse
   app.post('/api/post/subscribe/:postid', isLoggedInOrRedirect, function(req,res) {
     Post.findOne({
       _id: req.params.postid
@@ -3157,6 +3185,9 @@ module.exports = function(app, passport) {
     })
   }
 
+  //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
+  //to seen=true
+  //Input: 
   app.post("/api/notification/update/:id", isLoggedInOrRedirect, function(req,res) {
     User.findOneAndUpdate(
       { "_id": req.user._id, "notifications._id": req.params.id },
