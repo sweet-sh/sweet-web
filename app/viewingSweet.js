@@ -41,7 +41,7 @@ sgMail.setApiKey(apiConfig.sendgrid);
 
 module.exports = function (app) {
 
-  //Fun stats tracker
+  //Fun stats tracker. Non-interactive.
   var timeOfBirth = new Date();
   app.get('/admin/sweet-stats', function (req, res) {
     var currentTime = new Date();
@@ -52,9 +52,24 @@ module.exports = function (app) {
           $gte: new Date(new Date().setDate(new Date().getDate() - 1))
         }
       }).then(posts => {
-        res.render('systempost', {
-          postcontent: ["uptime " + uptime, "logged in users " + helper.loggedInUsers(), "total number of posts " + numberOfPosts, "posts in the last 24 hours " + posts.length]
-        });
+        var funstats = [
+          "uptime " + uptime, "logged in users " + 
+          helper.loggedInUsers(), "total number of posts " + 
+          numberOfPosts, "posts in the last 24 hours " + posts.length
+        ];
+        if (req.isAuthenticated()) {
+          var loggedInUserData = req.user;
+          res.render('systempost', {
+            postcontent: funstats,
+            loggedIn: true,
+            loggedInUserData: loggedInUserData
+          });
+        } else {
+          res.render('systempost', {
+            postcontent: funstats,
+            loggedIn: false
+          });
+        }
       })
     })
   })
