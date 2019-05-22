@@ -2238,8 +2238,9 @@ module.exports = function(app, passport) {
   });
 
   app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", function(req, res) {
-    if(req.params.from != loggedInUserData._id){
-      res.status(400).send("not allowed: creating a relationship from an account into which you're not logged in");
+    if(req.params.from != loggedInUserData._id.toString()){
+      res.status(400).send("action not permitted: following/unfollowing/flagging/unflagging/trusting/untrusting a user from an account you're not logged in to");
+      return;
     }
     User.findOne({
       _id: req.params.from
@@ -2733,6 +2734,11 @@ module.exports = function(app, passport) {
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
+
+      if(post.author._id.toString() != loggedInUserData._id.toString()){
+        res.status(400).send("you are not the owner of this post which you are attempting to delete. i know how you feel, but this is not allowed");
+        return;
+      }
 
       // Delete images
       post.images.forEach((image) => {
