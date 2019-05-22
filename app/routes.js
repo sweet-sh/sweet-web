@@ -2249,13 +2249,15 @@ module.exports = function(app, passport) {
   });
 
   //Responds to post requests that create relationships between users.
-  //Input: the parameters in the url. type can either be add (follow/flag) or remove (unfollow/unflag); action can be either follow or flag;
+  //Input: the parameters in the url. type can be either follow, flag, or trust; action can either be add (follow/flag/trust) or delete (unfollow/unflag/untrust);
   //from and fromid are both the id of the account taking the action (?), same with to and toid (??) and from username is the username of the account
   //taking the action.
-  //Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone.
-  app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", function(req, res) {
-    if(req.params.from != loggedInUserData._id){
-      res.status(400).send("action not permitted: following/unfollowing/flagging users from an account you're not logged in to");
+  //Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone. Or
+  //isLoggedInOrRedirect redirects you.
+  app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", isLoggedInOrRedirect, function(req, res) {
+    if(req.params.from != loggedInUserData._id.toString()){
+      res.status(400).send("action not permitted: following/unfollowing/flagging/unflagging/trusting/untrusting a user from an account you're not logged in to");
+      return;
     }
     User.findOne({
       _id: req.params.from
@@ -2314,6 +2316,9 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Respond to post requests that update the logged in user's display name, bio, location, website, and profile picture.
+  //Inputs: all the fields listed above, in req.params. new profile pictures arrive as raw image data, not a url (like in createpost.)
+  //Outputs: if the user has uploaded a new image, that image is saved; all the fields in the user's document are updated.
   app.post("/updateprofile", isLoggedInOrRedirect, function(req, res) {
     let imageEnabled = loggedInUserData.imageEnabled;
     let imageFilename = loggedInUserData.image;
@@ -2384,6 +2389,7 @@ module.exports = function(app, passport) {
     })
   });
 
+  //Old image uploading function. Didn't distinguish between public and private images. No longer used
   app.post("/api/image", isLoggedInOrRedirect, function(req, res) {
     if (req.files.image) {
       if (req.files.image.size <= 10485760){
@@ -2462,6 +2468,11 @@ module.exports = function(app, passport) {
     }
   })
 
+  //New image upload reciever.
+  //Inputs: image data.
+  //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
+  //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
+  //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
   app.post("/api/image/v2", isLoggedInOrRedirect, function(req, res) {
     if (req.files.image) {
       if (req.files.image.size <= 10485760){
@@ -2508,7 +2519,7 @@ module.exports = function(app, passport) {
             })
             .rotate()
             .jpeg({
-              quality: 70
+              quality: 85
             })
             .toFile('./cdn/images/temp/' + imageUrl + '.jpg') //to temp
             .then(image => {
@@ -2543,6 +2554,9 @@ module.exports = function(app, passport) {
     }
   })
 
+  //Responds to post requests that inform the server that a post that images were uploaded for will not be posted by deleting those images.
+  //Inputs: image file name
+  //Outputs: the image presumably in the temp folder with that filename is deleted
   app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
     if(req.body.imageURL != "" && !req.body.imageURL.includes("/")){
       fs.unlink("./cdn/images/temp/"+req.body.imageURL, function(e){
@@ -2554,6 +2568,11 @@ module.exports = function(app, passport) {
     }
   })
 
+  //Responds to post requests that create a new post.
+  //Input: in req.body: the post's privacy level, filenames for its images, descriptions for its images, the post body, and a communityid
+  //if it's a community post.
+  //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
+  //if not logged in.
   app.post("/createpost", isLoggedInOrRedirect, function(req, res) {
 
     newPostUrl = shortid.generate();
@@ -2612,7 +2631,6 @@ module.exports = function(app, passport) {
           }
         });
       }
-
       let newPostId = post._id;
       post.save()
       .then(() => {
@@ -2746,9 +2764,17 @@ module.exports = function(app, passport) {
     }
   });
 
+  //Responds to requests that delete posts.
+  //Inputs: id of post to delete (in req.params)
+  //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it causes, delete the post document.
   app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
     Post.findOne({"_id": req.params.postid})
     .then((post) => {
+
+      if(post.author._id.toString() != loggedInUserData._id.toString()){
+        res.status(400).send("you are not the owner of this post which you are attempting to delete. i know how you feel, but this is not allowed");
+        return;
+      }
 
       // Delete images
       post.images.forEach((image) => {
