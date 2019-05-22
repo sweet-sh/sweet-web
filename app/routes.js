@@ -1828,6 +1828,8 @@ module.exports = function(app, passport) {
   });
 
   //Responds to a get response for a specific post.
+  //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
+  //Outputs: a rendering of the post (based on singlepost.handlebars) or an error might happen i guess. if the post is private singleposts contains and will render an error message
   app.get('/:username/:posturl', function(req,res){
 
     var loggedInUserData = {}
@@ -2165,6 +2167,10 @@ module.exports = function(app, passport) {
     })
   })
 
+  //Responds to a post request containing signup information.
+  //Inputs: the request body, containing an email, a username, and a password.
+  //Outputs: either a redirect back to the signup html page with an error message in the sessionflash if some of the info is invalid;
+  //or a redirect to login if with a message telling you you've been sent a confirmation email otherwise. also passport is called to send the email for some reason
   app.post('/signup', function(req,res) {
 
     if (reservedUsernames.includes(req.body.username)){
@@ -2212,6 +2218,11 @@ module.exports = function(app, passport) {
   });
 
 
+  //Responds to post requests containing information theoretically used to log a user in.
+  //Input: info from the request body: the email field and the password field. the email field can actually also contain the user's username and
+  //work just as well.
+  //Output: either a redirect back to the login html page with a sessionflash message "Please check you email and password" (which shows up twice in fact if
+  //you didn't enter an email) or you are successfully logged in by passport.  
   app.post('/login', function(req,res) {
     req.checkBody('email', 'Please check your email and password.').isEmail().notEmpty();
     // req.checkBody('password', 'Please enter a password.').notEmpty();
@@ -2237,7 +2248,15 @@ module.exports = function(app, passport) {
     });
   });
 
+  //Responds to post requests that create relationships between users.
+  //Input: the parameters in the url. type can either be add (follow/flag) or remove (unfollow/unflag); action can be either follow or flag;
+  //from and fromid are both the id of the account taking the action (?), same with to and toid (??) and from username is the username of the account
+  //taking the action.
+  //Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone.
   app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", function(req, res) {
+    if(req.params.from != loggedInUserData._id){
+      res.status(400).send("action not permitted: following/unfollowing/flagging users from an account you're not logged in to");
+    }
     User.findOne({
       _id: req.params.from
     })

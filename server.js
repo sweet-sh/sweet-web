@@ -98,9 +98,9 @@ global.appRoot = path.resolve(__dirname);
 
 
 // routes ======================================================================
-helper = require('./app/helperFunctions.js');
+helper = require('./app/textUtilityFunctions.js');
 require('./app/notifier.js')
-require('./app/communityRoutes.js')(app, passport);
+require('./app/communityInteractionLogic.js')(app, passport);
 require('./app/routes.js')(app, passport);
 
 // launch ======================================================================
