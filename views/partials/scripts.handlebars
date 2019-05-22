@@ -77,11 +77,11 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      $(this).prev(".abbreviated-content").animate({height:"100%"},200);
+      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:"100%"},200);
       $(this).attr("data-state","expanded").css("margin-top", "0.25rem");
     }
     else {
-      $(this).prev(".abbreviated-content").animate({height:"7rem"},200);
+      $(this).prev(".post-content").addClass("abbreviated-content").removeClass("post-content").animate({height:"7rem"},200);
       $(this).attr("data-state","contracted").css("margin-top", "1rem");
     }
     var text = $(this).text();

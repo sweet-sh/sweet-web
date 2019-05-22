@@ -2238,6 +2238,9 @@ module.exports = function(app, passport) {
   });
 
   app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", function(req, res) {
+    if(req.params.from != loggedInUserData._id){
+      res.status(400).send("not allowed: creating a relationship from an account into which you're not logged in");
+    }
     User.findOne({
       _id: req.params.from
     })
