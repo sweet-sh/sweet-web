@@ -98,11 +98,11 @@ global.appRoot = path.resolve(__dirname);
 
 
 // routes ======================================================================
-helper = require('./app/textUtilityFunctions.js');
+helper = require('./app/utilityFunctionsMostlyText.js');
 require('./app/personalUserActions.js')(app, passport);
 require('./app/notifier.js')
 require('./app/communityInteractionLogic.js')(app, passport);
-require('./app/viewingSweet.js')(app, passport);
+require('./app/viewingSweet.js')(app);
 require('./app/postingToSweet.js')(app);
 
 // launch ======================================================================

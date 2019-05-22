@@ -1,10 +1,6 @@
-const reservedUsernames = require('../config/reserved-usernames.js')
-var bcrypt = require('bcrypt-nodejs');
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 const fileType = require('file-type');
-const crypto = require('crypto');
-var Autolinker = require('autolinker');
 var notifier = require('./notifier.js');
 
 sanitizeHtmlOptions = {

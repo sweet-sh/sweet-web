@@ -1,10 +1,5 @@
-const reservedUsernames = require('../config/reserved-usernames.js')
-var bcrypt = require('bcrypt-nodejs');
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
-const fileType = require('file-type');
-const crypto = require('crypto');
-var Autolinker = require('autolinker');
 var notifier = require('./notifier.js');
 
 sanitizeHtmlOptions = {
@@ -34,10 +29,7 @@ moment.updateLocale('en', {
 });
 
 var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
-var shortid = require('shortid');
 const fs = require('fs');
-const request = require('request');
 
 // APIs
 
@@ -46,13 +38,26 @@ var apiConfig = require('../config/apis.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
 
-var imaggaOptions = {
-  headers: {
-    'Authorization': apiConfig.imagga
-  }
-};
 
-module.exports = function (app, passport) {
+module.exports = function (app) {
+
+  //Fun stats tracker
+  var timeOfBirth = new Date();
+  app.get('/admin/sweet-stats', function (req, res) {
+    var currentTime = new Date();
+    var uptime = new Date(currentTime - timeOfBirth).toISOString().slice(11, -1);
+    Post.count().then(numberOfPosts => {
+      Post.find({
+        timestamp: {
+          $gte: new Date(new Date().setDate(new Date().getDate() - 1))
+        }
+      }).then(posts => {
+        res.render('systempost', {
+          postcontent: ["uptime " + uptime, "logged in users " + helper.loggedInUsers(), "total number of posts " + numberOfPosts, "posts in the last 24 hours " + posts.length]
+        });
+      })
+    })
+  })
 
   //Responds to get requests for images on the server. If the image is private, checks to see
   //if the user is trusted/in the community first.
@@ -1913,15 +1918,5 @@ function isLoggedInOrRedirect(req, res, next) {
     return next();
   }
   res.redirect('/');
-  next('route');
-}
-
-//For post requests where the jQuery code making the request will handle the response
-function isLoggedInOrErrorResponse(req, res, next) {
-  if (req.isAuthenticated()) {
-    loggedInUserData = req.user;
-    return next();
-  }
-  res.send('nope');
   next('route');
 }

@@ -2,8 +2,6 @@ const reservedUsernames = require('../config/reserved-usernames.js')
 var bcrypt = require('bcrypt-nodejs');
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
-const fileType = require('file-type');
-const crypto = require('crypto');
 var Autolinker = require('autolinker');
 var notifier = require('./notifier.js');
 
@@ -35,9 +33,6 @@ moment.updateLocale('en', {
 
 var sanitize = require('mongo-sanitize');
 const sharp = require('sharp');
-var shortid = require('shortid');
-const fs = require('fs');
-const request = require('request');
 
 // APIs
 
@@ -45,12 +40,6 @@ var apiConfig = require('../config/apis.js');
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
-
-var imaggaOptions = {
-    headers: {
-        'Authorization': apiConfig.imagga
-    }
-};
 
 module.exports = function (app, passport) {
 
@@ -130,10 +119,20 @@ module.exports = function (app, passport) {
                 }
                 res.redirect(301, '/login');
             } else {
-                passport.authenticate('login', {
-                    successRedirect: '/home',
-                    failureRedirect: '/login',
-                    failureFlash: true
+                passport.authenticate('login', function (err, user, info) {
+                    if (err) {
+                        return next(err);
+                    }
+                    if (!user) {
+                        return res.redirect('/login');
+                    }
+                    req.logIn(user, function (err) {
+                        if (err) {
+                            return next(err);
+                        }
+                        helper.someoneLoggedIn();
+                        return res.redirect('/home');
+                    });
                 })(req, res);
             }
         });
@@ -145,6 +144,7 @@ module.exports = function (app, passport) {
     //Output: user is logged out and redirected to the referring page or / if no referrer.
     app.get('/logout', function (req, res) {
         req.logout();
+        helper.someoneLoggedOut();
         res.redirect('back');
     });
 
@@ -717,15 +717,5 @@ function isLoggedInOrRedirect(req, res, next) {
         return next();
     }
     res.redirect('/');
-    next('route');
-}
-
-//For post requests where the jQuery code making the request will handle the response
-function isLoggedInOrErrorResponse(req, res, next) {
-    if (req.isAuthenticated()) {
-        loggedInUserData = req.user;
-        return next();
-    }
-    res.send('nope');
     next('route');
 }

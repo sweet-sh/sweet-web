@@ -1,6 +1,8 @@
 const Autolinker = require( 'autolinker' );
 var sanitize = require('mongo-sanitize');
 
+//initialized to 0 when the server starts, incremented when someone logs in, decremented on a timer or when someone logs out.
+var loggedInUsers = 0;
 module.exports = {
   // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
   parseText: function (rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, ) {
@@ -75,6 +77,18 @@ module.exports = {
         .replace(/\-\-+/g, '-') // Replace multiple - with single -
         .replace(/^-+/, '') // Trim - from start of text
         .replace(/-+$/, '') // Trim - from end of text
+  },
+  loggedInUsers: function(){
+    return loggedInUsers;
+  },
+  someoneLoggedIn: function(){
+    loggedInUsers++;
+    setTimeout(function(){
+      loggedInUsers--;
+    },86400000); //log in cookie expires in 24 hours
+  },
+  someoneLoggedOut: function(){
+    loggedInUsers--;
   }
 }
 
