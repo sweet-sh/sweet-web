@@ -264,6 +264,7 @@ module.exports = function (app) {
 
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
+            return;
         }
 
         //non-community post
@@ -586,6 +587,7 @@ module.exports = function (app) {
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
+            return;
         }
         const comment = {
             authorEmail: loggedInUserData.email,

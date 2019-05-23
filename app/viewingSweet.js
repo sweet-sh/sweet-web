@@ -47,29 +47,43 @@ module.exports = function (app) {
     var currentTime = new Date();
     var uptime = new Date(currentTime - timeOfBirth).toISOString().slice(11, -1);
     Post.count().then(numberOfPosts => {
-      Post.find({
-        timestamp: {
-          $gte: new Date(new Date().setDate(new Date().getDate() - 1))
-        }
-      }).then(posts => {
-        var funstats = [
-          "uptime " + uptime, "logged in users " + 
-          helper.loggedInUsers(), "total number of posts " + 
-          numberOfPosts, "posts in the last 24 hours " + posts.length
-        ];
-        if (req.isAuthenticated()) {
-          var loggedInUserData = req.user;
-          res.render('systempost', {
-            postcontent: funstats,
-            loggedIn: true,
-            loggedInUserData: loggedInUserData
+      Image.count().then(numberOfImages => {
+        Post.find({
+          timestamp: {
+            $gte: new Date(new Date().setDate(new Date().getDate() - 1))
+          }
+        }).then(posts => {
+          var daysImages = 0;
+          var daysReplies = 0;
+          posts.forEach(post=>{
+            daysImages += post.images.length;
+            daysReplies += post.comments.length;
           });
-        } else {
-          res.render('systempost', {
-            postcontent: funstats,
-            loggedIn: false
-          });
-        }
+          var funstats = [
+            "uptime " + uptime,
+            "logged in users " + helper.loggedInUsers(),
+            "total stored:" +
+            " posts " + numberOfPosts +
+            ", images " + numberOfImages,
+            "last 24 hours:" +
+            " posts " + posts.length +
+            ", images " + daysImages +
+            ", comments " + daysReplies
+          ];
+          if (req.isAuthenticated()) {
+            var loggedInUserData = req.user;
+            res.render('systempost', {
+              postcontent: funstats,
+              loggedIn: true,
+              loggedInUserData: loggedInUserData
+            });
+          } else {
+            res.render('systempost', {
+              postcontent: funstats,
+              loggedIn: false
+            });
+          }
+        })
       })
     })
   })
