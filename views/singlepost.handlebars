@@ -31,14 +31,14 @@
                   <div class="post-header-row-1">
                     {{#if post.author.displayName}}
                     <div class="author-display-name">
-                      <strong><a class="authorLink" href="/{{this.author.username}}">{{post.author.displayName}}</a></strong>
+                      <strong><a class="authorLink" href="/{{post.author.username}}">{{post.author.displayName}}</a></strong>
                     </div>
                     <div class="author-username">
                       <span class="text-muted">@{{post.author.username}}</span>
                     </div>
                     {{else}}
                       <div class="author-username">
-                        <strong><a class="authorLink" href="/{{this.author.username}}">@{{post.author.username}}</a></strong>
+                        <strong><a class="authorLink" href="/{{post.author.username}}">@{{post.author.username}}</a></strong>
                       </div>
                     {{/if}} {{#contains flaggedUsers post.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
                   </div>
