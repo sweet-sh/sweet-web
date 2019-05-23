@@ -56,7 +56,13 @@ module.exports = function (app) {
           var daysImages = 0;
           var daysReplies = 0;
           posts.forEach(post=>{
-            daysImages += post.images.length;
+            var imageCount = post.images.length;
+            post.comments.forEach(comment =>{
+              if(comment.images){
+                imageCount += comment.images.length;
+              }
+            })
+            daysImages += imageCount;
             daysReplies += post.comments.length;
           });
           var funstats = [
