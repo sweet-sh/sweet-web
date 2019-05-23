@@ -42,10 +42,10 @@ sgMail.setApiKey(apiConfig.sendgrid);
 module.exports = function (app) {
 
   //Fun stats tracker. Non-interactive.
-  var timeOfBirth = new Date();
+  var cameOnlineAt = new Date();
   app.get('/admin/sweet-stats', function (req, res) {
     var currentTime = new Date();
-    var uptime = new Date(currentTime - timeOfBirth).toISOString().slice(11, -1);
+    var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
     Post.count().then(numberOfPosts => {
       Image.count().then(numberOfImages => {
         Post.find({
@@ -68,10 +68,11 @@ module.exports = function (app) {
           var funstats = [
             "uptime " + uptime,
             "logged in users " + helper.loggedInUsers(),
-            "total stored:" +
+            "peak logged in users (since last restart) " + helper.peakLoggedInUsers(),
+            "totals... " +
             " posts " + numberOfPosts +
             ", images " + numberOfImages,
-            "last 24 hours:" +
+            "last 24 hours... " +
             " posts " + posts.length +
             ", images " + daysImages +
             ", comments " + daysReplies

@@ -3,6 +3,7 @@ var sanitize = require('mongo-sanitize');
 
 //initialized to 0 when the server starts, incremented when someone logs in, decremented on a timer or when someone logs out.
 var loggedInUsers = 0;
+var peakLoggedInUsers = 0;
 module.exports = {
   // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
   parseText: function (rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, ) {
@@ -81,8 +82,12 @@ module.exports = {
   loggedInUsers: function(){
     return loggedInUsers;
   },
+  peakLoggedInUsers: function(){
+    return peakLoggedInUsers;
+  },
   someoneLoggedIn: function(){
     loggedInUsers++;
+    peakLoggedInUsers = Math.max(peakLoggedInUsers,loggedInUsers);
     setTimeout(function(){
       loggedInUsers--;
     },86400000); //log in cookie expires in 24 hours

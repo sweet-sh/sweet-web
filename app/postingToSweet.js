@@ -443,7 +443,7 @@ module.exports = function (app) {
                             if (error) return
                         });
                     });
-                    // This is a public post, notify everyone in this community
+                    // This is a public post, notify everyone in this community. editor's note: somewhat unclear? we're not checking if it's public, and only people *mentioned* are notified. i think
                     parsedResult.mentions.forEach(function (mention) {
                         User.findOne({
                                 username: mention,
