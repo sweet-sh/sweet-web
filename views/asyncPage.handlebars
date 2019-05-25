@@ -5,7 +5,7 @@
         <div class="row">
           <div class="col commentContent">
             <div class="mb-3 d-flex">
-              <img alt="Profile image of sweet_mainframe_1100" class="postAuthorImage" src="/images/term_small.png">
+              <img alt="Profile image of sweet_mainframe_1100" class="postAuthorImage" src="/images/term_small_thinking.gif">
               <div class="post-header">
                 <div class="post-header-row-1">
                   <div class="author-username">
@@ -21,43 +21,7 @@
               </div>
             </div>
             <div class="post-content ">
-              <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
-
-            <canvas id="myChart" width="400" height="200"></canvas>
-            <script>
-            var ctx = document.getElementById('myChart');
-            var myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                  
-                  datasets: [{
-                    fill:false,
-                    borderColor: "rgb(75, 192, 192)",
-                    lineTension: 0,
-                    label: "cumulative sweet posts",
-                    data: [
-                      {{#each datapoint}}
-                        {
-                          x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{#if @last}}{{this.hour}},{{this.minute}},{{this.second}}{{else}}23,59,59,999{{/if}}),
-                          y: {{this.postcount}}
-                        }{{#unless @ last}},{{/unless}}
-                        {{/each}}
-                    ]}
-                  ]},
-                  options: {
-                    scales: {
-                        xAxes: [{
-                            type: 'time',
-                            distribution: 'linear',
-                            time: {
-                              tooltipFormat: "MMMM Do, YYYY",
-                              displayFormats: {day: "MMMM Do"}
-                            }
-                        }]
-                    }
-                }
-            });
-            </script>
+              <img src="/images/loading.gif" style="display: block; margin: 0 auto;">
             </div>
           </div>
         </div>
@@ -75,12 +39,16 @@
               <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="n/a" disabled>
                 <i class="far fa-bell"></i>
               </button>
-
             </div>
           </div>
         </div>
-
       </article>
     </div>
   </div>
 </div>
+<script>
+  $.get("{{this.getUrl}}").then(response=>{
+    $('.post-content').html(response);
+    $('.postAuthorImage').attr('src','/images/term_small.png');
+  })
+</script>

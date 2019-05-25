@@ -67,27 +67,35 @@ module.exports = function (app) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    app.get("/admin/postgraph", async function (req, res) {
+    app.get("/admin/postgraph", function(req, res) {
+        if (req.isAuthenticated()) {
+            var loggedInUserData = req.user;
+            res.render('asyncPage', {
+                getUrl: "/admin/justpostgraph",
+                loggedIn: true,
+                loggedInUserData: loggedInUserData
+            });
+        } else {
+            res.render('asyncPage', {
+                getUrl: "/admin/justpostgraph",
+                loggedIn: false
+            });
+        }
+    });
+
+    app.get("/admin/justpostgraph", async function (req, res) {
         if (!fs.existsSync("postTimeline.csv")) {
             rebuildPostTable();
         }
         while (rebuildingPostTable) {
-            await sleep(2000);
+            await sleep(500);
         }
         parseTableForGraph("postTimeline.csv").then((datapoints) => {
-            if (req.isAuthenticated()) {
-                var loggedInUserData = req.user;
-                res.render('systemgraph', {
-                    datapoint: datapoints,
-                    loggedIn: true,
-                    loggedInUserData: loggedInUserData
-                });
-            } else {
-                res.render('systemgraph', {
-                    datapoint: datapoints,
-                    loggedIn: false
-                });
-            }
+            res.render('partials/timeGraph', {
+                layout: false,
+                label: "cumulative sweet posts",
+                datapoint: datapoints
+            })
         })
     })
 };
@@ -184,6 +192,9 @@ async function parseTableForGraph(filename) {
                 year: lineComps[1],
                 month: lineComps[2],
                 date: lineComps[3],
+                hour: 23,
+                minute: 59,
+                second:59,
                 postcount: lineComps[4]
             });
         }
