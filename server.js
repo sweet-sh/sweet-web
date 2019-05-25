@@ -99,6 +99,7 @@ global.appRoot = path.resolve(__dirname);
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
+require('./app/statisticsTracker.js')(app);
 require('./app/personalAccountActions.js')(app, passport);
 require('./app/notifier.js')
 require('./app/inhabitingCommunities.js')(app, passport);

@@ -41,60 +41,6 @@ sgMail.setApiKey(apiConfig.sendgrid);
 
 module.exports = function (app) {
 
-  //Fun stats tracker. Non-interactive.
-  var cameOnlineAt = new Date();
-  app.get('/admin/sweet-stats', function (req, res) {
-    var currentTime = new Date();
-    var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
-    Post.count().then(numberOfPosts => {
-      Image.count().then(numberOfImages => {
-        Post.find({
-          timestamp: {
-            $gte: new Date(new Date().setDate(new Date().getDate() - 1))
-          }
-        }).then(posts => {
-          var daysImages = 0;
-          var daysReplies = 0;
-          posts.forEach(post=>{
-            var imageCount = post.images.length;
-            post.comments.forEach(comment =>{
-              if(comment.images){
-                imageCount += comment.images.length;
-              }
-            })
-            daysImages += imageCount;
-            daysReplies += post.comments.length;
-          });
-          var funstats = [
-            "uptime " + uptime,
-            "logged in users " + helper.loggedInUsers(),
-            "peak logged in users (since last restart) " + helper.peakLoggedInUsers(),
-            "totals... " +
-            " posts " + numberOfPosts +
-            ", images " + numberOfImages,
-            "last 24 hours... " +
-            " posts " + posts.length +
-            ", images " + daysImages +
-            ", comments " + daysReplies
-          ];
-          if (req.isAuthenticated()) {
-            var loggedInUserData = req.user;
-            res.render('systempost', {
-              postcontent: funstats,
-              loggedIn: true,
-              loggedInUserData: loggedInUserData
-            });
-          } else {
-            res.render('systempost', {
-              postcontent: funstats,
-              loggedIn: false
-            });
-          }
-        })
-      })
-    })
-  })
-
   //Responds to get requests for images on the server. If the image is private, checks to see
   //if the user is trusted/in the community first.
   //Input: URL of an image

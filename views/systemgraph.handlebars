@@ -1,0 +1,86 @@
+<div id="homeBody" class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="container commentsList" id="postContainer">
+      <article class="comment commentContainer" data-post-id="n/a">
+        <div class="row">
+          <div class="col commentContent">
+            <div class="mb-3 d-flex">
+              <img alt="Profile image of sweet_mainframe_1100" class="postAuthorImage" src="/images/term_small.png">
+              <div class="post-header">
+                <div class="post-header-row-1">
+                  <div class="author-username">
+                    <strong><a class="authorLink" href="/">sweet_mainframe_1100</a></strong>
+                  </div>
+
+                </div>
+                <div class="post-header-row-2">
+                  <div class="post-timestamp-privacy">
+                    <small class="commentTimestamp text-muted">1s ago</small><small class="text-muted"> · <i class="fas fa-eye"></i></small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="post-content ">
+              <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+
+            <canvas id="myChart" width="400" height="200"></canvas>
+            <script>
+            var ctx = document.getElementById('myChart');
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels:[{{#each datapoint}}"{{this.label}}"{{#unless @last}},{{/unless}}{{/each}}],
+                  
+                  datasets: [{
+                    fill:false,
+                    borderColor: "rgb(75, 192, 192)",
+                    lineTension: 0,
+                    label: "cumulative sweet posts",
+                    data: [
+                      {{#each datapoint}}
+                        {
+                          x: new Date({{this.year}}, {{this.month}}, {{this.date}}),
+                          y: {{this.postcount}}
+                        }{{#unless @ last}},{{/unless}}
+                        {{/each}}
+                    ]}
+                  ],
+                  options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        }]
+                    }
+                }
+              }
+            });
+            </script>
+            </div>
+          </div>
+        </div>
+        <div class="row commentMetadata">
+          <div class="col" style="display:flex;justify-content:space-between;">
+            <div id="generalTools">
+              <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button" disabled>
+                <i class="far fa-comment"></i>
+              </button>
+              <a class="btn btn-link btn-sm post-action-button" href="">
+                <i class="fas fa-link"></i>
+              </a>
+            </div>
+            <div id="authorTools">
+              <button type="button" class="btn btn-link btn-sm mutePost post-action-button" data-post-id="n/a" disabled>
+                <i class="far fa-bell"></i>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </div>
+</div>
