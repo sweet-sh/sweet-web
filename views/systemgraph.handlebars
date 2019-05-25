@@ -29,7 +29,6 @@
             var myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                  labels:[{{#each datapoint}}"{{this.label}}"{{#unless @last}},{{/unless}}{{/each}}],
                   
                   datasets: [{
                     fill:false,
@@ -39,23 +38,24 @@
                     data: [
                       {{#each datapoint}}
                         {
-                          x: new Date({{this.year}}, {{this.month}}, {{this.date}}),
+                          x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{#if @last}}{{this.hour}},{{this.minute}},{{this.second}}{{else}}23,59,59,999{{/if}}),
                           y: {{this.postcount}}
                         }{{#unless @ last}},{{/unless}}
                         {{/each}}
                     ]}
-                  ],
+                  ]},
                   options: {
                     scales: {
                         xAxes: [{
                             type: 'time',
+                            distribution: 'linear',
                             time: {
-                                unit: 'day'
+                              tooltipFormat: "MMMM Do, YYYY",
+                              displayFormats: {day: "MMMM Do"}
                             }
                         }]
                     }
                 }
-              }
             });
             </script>
             </div>

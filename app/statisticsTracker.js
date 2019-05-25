@@ -58,36 +58,37 @@ module.exports = function (app) {
         })
     })
 
-    app.get("/admin/buildpostgraph", function(req,res){
+    app.get("/admin/buildpostgraph", function (req, res) {
         rebuildPostTable();
         res.send("building...");
     })
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-      }
+    }
 
-    app.get("/admin/postgraph", async function(req, res){
-        if(!fs.existsSync("postTimeline.csv")){
+    app.get("/admin/postgraph", async function (req, res) {
+        if (!fs.existsSync("postTimeline.csv")) {
             rebuildPostTable();
         }
-        while(rebuildingPostTable){
+        while (rebuildingPostTable) {
             await sleep(2000);
         }
-        var datapoints = parseTimetableForGraph("postTimeline.csv");
-        if (req.isAuthenticated()) {
-            var loggedInUserData = req.user;
-            res.render('systemgraph', {
-                datapoint: datapoints,
-                loggedIn: true,
-                loggedInUserData: loggedInUserData
-            });
-        } else {
-            res.render('systemgraph', {
-                datapoint: datapoints,
-                loggedIn: false
-            });
-        }
+        parseTableForGraph("postTimeline.csv").then((datapoints) => {
+            if (req.isAuthenticated()) {
+                var loggedInUserData = req.user;
+                res.render('systemgraph', {
+                    datapoint: datapoints,
+                    loggedIn: true,
+                    loggedInUserData: loggedInUserData
+                });
+            } else {
+                res.render('systemgraph', {
+                    datapoint: datapoints,
+                    loggedIn: false
+                });
+            }
+        })
     })
 };
 
@@ -95,18 +96,18 @@ var postCountByDay = [];
 var rebuildingPostTable = false;
 var postTableFileName = "postTimeline.csv";
 
-function postTableUpToDate(){
+function postTableUpToDate() {
     var lastLine = "";
-    fs.readFileSync(postTableFileName,'utf-8').split('\n').forEach(function(line){
-        if(line && line != "\n"){
+    fs.readFileSync(postTableFileName, 'utf-8').split('\n').forEach(function (line) {
+        if (line && line != "\n") {
             lastLine = line;
         }
     });
     var yesterday = new Date();
-    yesterday.setDate(yesterday.getDate()-1);
-    if(lastLine.split(",")[0] == yesterday.toDateString()){
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (lastLine.split(",")[0] == yesterday.toDateString()) {
         return true;
-    }else{
+    } else {
         return false;
     }
 }
@@ -119,7 +120,7 @@ function rebuildPostTable() {
     today.setSeconds(59);
     today.setMilliseconds(999);
     Post.find({}).sort('timestamp').then(posts => {
-        
+
         var startDate = posts[0].timestamp;
         var before = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59, 999);
 
@@ -127,14 +128,18 @@ function rebuildPostTable() {
 
         var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1;
 
-        while (before < today) {
-            before.setDate(before.getDate() + 1);
-            getPostsAtEndOfDay(new Date(before), totalDays);
+        var everyHowMany = Math.ceil(totalDays / 100);
+
+        var howManyDaysWeUse = Math.floor(totalDays / everyHowMany);
+
+        for (var i = 0; i < howManyDaysWeUse - 1; i++) {
+            before.setDate(before.getDate() + everyHowMany);
+            getPostsAtEndOfDay(new Date(before), howManyDaysWeUse);
         }
     })
 }
 
-function getPostsAtEndOfDay(day, totalDays){
+function getPostsAtEndOfDay(day, totalDays) {
     Post.find({
         timestamp: {
             $lte: day
@@ -143,37 +148,58 @@ function getPostsAtEndOfDay(day, totalDays){
         day.postCount = posts.length;
         postCountByDay.push(day);
 
-        if(postCountByDay.length == totalDays){
+        if (postCountByDay.length == totalDays) {
             sortCounts(postTableFileName, postCountByDay);
 
         }
     })
 }
 
-function sortCounts(fileName, countByDay, notRebuilding = false){
-    if(fs.existsSync(fileName) && !notRebuilding){
+function sortCounts(fileName, countByDay, notRebuilding = false) {
+    if (fs.existsSync(fileName) && !notRebuilding) {
         fs.unlinkSync(fileName);
     }
     var ourFile = fs.createWriteStream(fileName);
-    ourFile.on('close',()=>{
+    ourFile.on('close', () => {
         rebuildingPostTable = false;
         postCountByDay = [];
     })
-    countByDay.sort(function(a,b){return a-b});
-    countByDay.forEach(date=>{
-        ourFile.write(date.toDateString()+","+date.getFullYear()+","+date.getMonth()+","+date.getDate());
-        ourFile.write(","+date.postCount+"\n");
+    countByDay.sort(function (a, b) {
+        return a - b
+    });
+    countByDay.forEach(date => {
+        ourFile.write(date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
+        ourFile.write("," + date.postCount + "\n");
     })
     ourFile.end();
 }
 
-function parseTimetableForGraph(filename){
+async function parseTableForGraph(filename) {
     jsonVersion = [];
-    fs.readFileSync(filename,'utf-8').split('\n').forEach(function(line){
-        if(line && line !== "\n"){
+    fs.readFileSync(filename, 'utf-8').split('\n').forEach(function (line) {
+        if (line && line !== "\n") {
             var lineComps = line.split(",");
-            jsonVersion.push({label: lineComps[0], year: lineComps[1], month: lineComps[2], date: lineComps[3], postcount: lineComps[4]});
+            jsonVersion.push({
+                label: lineComps[0],
+                year: lineComps[1],
+                month: lineComps[2],
+                date: lineComps[3],
+                postcount: lineComps[4]
+            });
         }
-      });
-      return jsonVersion;
+    });
+    var now = new Date();
+    await Post.count().then((numberOfPosts) => {
+        jsonVersion.push({
+            label: now.toLocaleString(),
+            year: now.getFullYear(),
+            month: now.getMonth(),
+            date: now.getDate(),
+            hour: now.getHours(),
+            minute: now.getMinutes(),
+            second: now.getSeconds(),
+            postcount: numberOfPosts
+        });
+    })
+    return jsonVersion;
 }
