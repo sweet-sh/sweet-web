@@ -70,9 +70,9 @@ module.exports = function (app) {
     app.get("/admin/postgraph", async function(req, res){
         if(!fs.existsSync("postTimeline.csv")){
             rebuildPostTable();
-            while(rebuildingPostTable){
-                await sleep(2000);
-            }
+        }
+        while(rebuildingPostTable){
+            await sleep(2000);
         }
         var datapoints = parseTimetableForGraph("postTimeline.csv");
         if (req.isAuthenticated()) {
