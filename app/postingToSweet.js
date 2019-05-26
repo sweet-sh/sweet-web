@@ -310,7 +310,7 @@ module.exports = function (app) {
                     }
                 });
             }
-            let newPostId = post._id;
+            var newPostId = post._id;
             post.save()
                 .then(() => {
                     parsedResult.tags.forEach((tag) => {
@@ -362,12 +362,14 @@ module.exports = function (app) {
                         console.log("This post is public!")
                         // This is a public post, notify everyone
                         parsedResult.mentions.forEach(function (mention) {
-                            User.findOne({
+                            if (mention != req.user.username) { //don't get notified from mentioning yourself
+                                User.findOne({
                                     username: mention
                                 })
                                 .then((user) => {
                                     notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                                 })
+                            }
                         });
                     }
                     res.redirect('back');
@@ -443,15 +445,17 @@ module.exports = function (app) {
                             if (error) return
                         });
                     });
-                    // This is a public post, notify everyone in this community. editor's note: somewhat unclear? we're not checking if it's public, and only people *mentioned* are notified. i think
+                    // Notify everyone mentioned that belongs to this community
                     parsedResult.mentions.forEach(function (mention) {
-                        User.findOne({
+                        if (mention != req.user.username) { //don't get notified from mentioning yourself
+                            User.findOne({
                                 username: mention,
-                                communities: communityId
+                                communities: {$in: [communityId]}
                             })
                             .then((user) => {
                                 notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                             })
+                        }
                     });
                     Community.findOneAndUpdate({
                         _id: communityId
