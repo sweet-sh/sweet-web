@@ -86,26 +86,25 @@ module.exports = function (app) {
             if (!postTablePromise) {
                 postTablePromise = rebuildPostTable();
             }
+            //note that this is an assignment statement, not a comparison. postTableNotUpToDate will give us false if it is up to date or the last line
+            //of the file (in split/array form) otherwise, which we save in mostRecentDate to pass to rebuildPostTable so it knows where to start building from
         } else if (mostRecentDate = postTableNotUpToDate()) {
             if (!postTablePromise) {
-                console.log("table not up to date");
                 postTablePromise = rebuildPostTable(mostRecentDate);
             }
         }
         await postTablePromise;
         postTablePromise = null;
-        parseTableForGraph("postTimeline.csv").then((datapoints) => {
-            res.render('partials/timeGraph', {
-                layout: false,
-                label: "cumulative sweet posts",
-                datapoint: datapoints
-            })
+        var datapoints = await parseTableForGraph(postTableFileName);
+        res.render('partials/timeGraph', {
+            layout: false,
+            label: "cumulative sweet posts",
+            datapoint: datapoints
         })
     })
 };
 
 var postCountByDay = [];
-var rebuildingPostTable = false;
 var postTableFileName = "postTimeline.csv";
 
 //Checks if the last line of the post table file describes yesterday.
@@ -141,25 +140,23 @@ async function rebuildPostTable(startDate) {
     today.setMinutes(59);
     today.setSeconds(59);
     today.setMilliseconds(999); //this actually sets today to the last millisecond that counts as yesterday. that's the most recent data we're looking at for end-of-day totals.
-    //sets startdate to the date of the oldest post with a timestamp
+
+    //before will store the end of day time upon which we'll base our first end-of-day total.
+    var before;
     if (!startDate) {
         await Post.find({}).sort('timestamp').then(async posts => {
-            startDate = posts[0].timestamp;
+            before = new Date(posts[0].timestamp.getFullYear(), posts[0].timestamp.getMonth(), posts[0].timestamp.getDate(), 23, 59, 59, 999);
         })
     } else {
         //if we have it, startDate is passed in as the components of the last line (describing the most recent saved date) from the existing file.
-        startDate = new Date(startDate[1], startDate[2], startDate[3]);
+        before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999); //start with the day after the most recently saved one (hence the plus one)
     }
-    //set before to the last millisecond of the day of the oldest recorded post timestamp; the time on which we'll base our first end-of-day total.
-    var before = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59, 999);
-
-    getPostsAtEndOfDay(new Date(before)); //result saved in postCountByDay
 
     var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1; //it's plus one to account for the day before the date stored by before
 
-    for (var i = 0; i < totalDays - 1; i++) { // it's minus one bc we already called getPostsAtEndOfDay on the first date we're looking at, the one before the date stored by before
-        before.setDate(before.getDate() + 1); //the last date it loops to should be equal to the today variable. assert this maybe?
-        await getPostsAtEndOfDay(new Date(before), totalDays);
+    for (var i = 0; i < totalDays; i++) { // it's minus one bc we already called getPostsAtEndOfDay on the first date we're looking at, the one before the date stored by before
+        await getPostsAtEndOfDay(new Date(before), totalDays); //we need "new" because otherwise this function will just push "before" into the array however many times
+        before.setDate(before.getDate() + 1);
     }
 
 }
@@ -205,6 +202,7 @@ function sortCounts(filename, countByDay) {
 //should be current every time we build/display the graph.
 async function parseTableForGraph(filename) {
     jsonVersion = [];
+    //reads in file values
     fs.readFileSync(filename, 'utf-8').split('\n').forEach(function (line) {
         if (line && line !== "\n") {
             var lineComps = line.split(",");
@@ -220,6 +218,7 @@ async function parseTableForGraph(filename) {
             });
         }
     });
+    //add in a datapoint representing the current exact second
     var now = new Date();
     await Post.count().then((numberOfPosts) => {
         jsonVersion.push({

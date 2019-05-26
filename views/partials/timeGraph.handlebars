@@ -1,46 +1,46 @@
-            <script>
-                function chartMake(){
-            var ctx = document.getElementById('myChart');
-            var myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                  datasets: [{
-                    fill:false,
-                    borderColor: "rgb(75, 192, 192)",
-                    lineTension: 0,
-                    label: "{{this.label}}",
-                    data: [
-                      {{#each datapoint}}
-                        {
-                          x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{this.hour}},{{this.minute}},{{this.second}}),
-                          y: {{this.postcount}}
-                        }{{#unless @ last}},{{/unless}}
-                        {{/each}}
-                    ]}
-                  ]},
-                  options: {
-                    scales: {
-                        xAxes: [{
-                            type: 'time',
-                            distribution: 'linear',
-                            time: {
-                              tooltipFormat: "MMMM Do, YYYY",
-                              displayFormats: {day: "MMMM Do"}
-                            }
-                        }]
-                    }
-                }
-            });
-                }
-                //have to use this instead of a <script> tag to load this script bc this content is going to be added into an already-loaded
-                //html page by jquery and all seperate script tags will be executed in the order that they load, and bc the chart.js script
-                //is from an external source it will load after the above script, which needs it to already be in place. so, we make the execution
-                //order explicit by making chartMake a callback function.
-                $.ajax({
-                    url: "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js",
-                    dataType: 'script',
-                    success: chartMake,
-                    async: true
-                })
-            </script>
-            <canvas id="myChart" width="400" height="200"></canvas>
+<script>
+    function chartMake(){
+      var ctx = document.getElementById('myChart');
+      var myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets: [{
+              fill:false,
+              borderColor: "rgb(75, 192, 192)",
+              lineTension: 0,
+              label: "{{this.label}}",
+              data: [
+                {{#each datapoint}}
+                  {
+                    x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{this.hour}},{{this.minute}},{{this.second}}),
+                    y: {{this.postcount}}
+                  }{{#unless @ last}},{{/unless}}
+                  {{/each}}
+              ]}
+            ]},
+            options: {
+              scales: {
+                  xAxes: [{
+                      type: 'time',
+                      distribution: 'linear',
+                      time: {
+                        tooltipFormat: "MMMM Do, YYYY",
+                        displayFormats: {day: "MMMM Do"}
+                      }
+                  }]
+              }
+          }
+      });
+    }
+    //have to use this instead of a <script> tag to load this script bc this content is going to be added into an already-loaded
+    //html page by jquery and all seperate script tags will be executed in the order that they load, and bc the chart.js script
+    //is from an external source it will load after the above script, which needs it to already be in place. so, we make the execution
+    //order explicit by making chartMake a callback function.
+    $.ajax({
+        url: "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js",
+        dataType: 'script',
+        success: chartMake,
+        async: true
+    })
+</script>
+<canvas id="myChart" width="400" height="200"></canvas>
