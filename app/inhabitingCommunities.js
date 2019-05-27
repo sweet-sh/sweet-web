@@ -63,7 +63,7 @@ module.exports = function(app, passport) {
       else {
         res.render('partials/communities', {
           layout: false,
-          loggedInUserData: loggedInUserData,
+          loggedInUserData: req.user,
           communities: communities
         });
       }
@@ -71,20 +71,15 @@ module.exports = function(app, passport) {
   })
 
   app.get('/communities', isLoggedIn, function(req, res) {
-    // User.findOne({
-    //   _id: loggedInUserData._id
-    // })
-    // .populate('communities')
-    // .then((user) => {
     Community.find({
-      members: loggedInUserData._id
+      members: req.user._id
     })
     .collation({ locale: "en" })
     .sort('name')
     .then((communities) => {
       res.render('communities', {
         loggedIn: true,
-        loggedInUserData: loggedInUserData,
+        loggedInUserData: req.user,
         communities: communities,
         activePage: 'communities'
       })
@@ -98,7 +93,6 @@ module.exports = function(app, passport) {
   app.get('/community/:slug', function(req, res) {
     if (req.isAuthenticated()){
       isLoggedIn = true;
-      loggedInUserData = req.user;
     }
     else {
       isLoggedIn = false;
@@ -121,16 +115,16 @@ module.exports = function(app, passport) {
           let bannedMemberIds = community.bannedMembers.map(a => a._id.toString());
           let mutedMemberIds = community.mutedMembers.map(a => a._id.toString());
           let membershipRequestIds = community.membershipRequests.map(a => a._id.toString());
-          if (memberIds.includes(loggedInUserData._id.toString())){
+          if (memberIds.includes(req.user._id.toString())){
             isMember = true;
           }
-          if (membershipRequestIds.includes(loggedInUserData._id.toString())){
+          if (membershipRequestIds.includes(req.user._id.toString())){
             hasRequested = true;
           }
-          if (bannedMemberIds.includes(loggedInUserData._id.toString())){
+          if (bannedMemberIds.includes(req.user._id.toString())){
             isBanned = true;
           }
-          if (mutedMemberIds.includes(loggedInUserData._id.toString())){
+          if (mutedMemberIds.includes(req.user._id.toString())){
             isMuted = true;
           }
           Vote.find({
@@ -172,10 +166,10 @@ module.exports = function(app, passport) {
                 member.isBanned = true;
             })
             let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
-            notifier.markRead(loggedInUserData._id, community._id);
+            notifier.markRead(req.user._id, community._id);
             res.render('community', {
               loggedIn: isLoggedIn,
-              loggedInUserData: loggedInUserData,
+              loggedInUserData: req.user,
               communityData: community,
               isMember: isMember,
               hasRequested: hasRequested,
@@ -279,12 +273,12 @@ module.exports = function(app, passport) {
             voteThreshold: 50,
             voteLength: newCommunityData.communityVoteLength
           },
-          members: [loggedInUserData._id]
+          members: [req.user._id]
         });
         community.save()
         .then(community => {
           User.findOne({
-            _id: loggedInUserData._id
+            _id: req.user._id
           })
           .then(user => {
             user.communities.push(community._id);
@@ -312,12 +306,12 @@ module.exports = function(app, passport) {
       _id: req.params.communityid
     })
     .then(community => {
-      community.members.push(loggedInUserData._id)
+      community.members.push(req.user._id)
       community.save()
     })
     .then(community => {
       User.findOne({
-        _id: loggedInUserData._id
+        _id: req.user._id
       })
       .then(user => {
         user.communities.push(req.params.communityid)
@@ -335,7 +329,7 @@ module.exports = function(app, passport) {
       _id: req.params.communityid
     })
     .then(community => {
-      community.membershipRequests.push(loggedInUserData._id)
+      community.membershipRequests.push(req.user._id)
       community.save()
       .then(save => {
         community.members.forEach(member => {
@@ -351,12 +345,12 @@ module.exports = function(app, passport) {
       _id: req.params.communityid
     })
     .then(community => {
-      community.members.pull(loggedInUserData._id)
+      community.members.pull(req.user._id)
       community.save()
     })
     .then(community => {
       User.findOne({
-        _id: loggedInUserData._id
+        _id: req.user._id
       })
       .then(user => {
         user.communities.pull(req.params.communityid)
@@ -374,7 +368,7 @@ module.exports = function(app, passport) {
     })
     .then(community => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       voteUrl = shortid.generate();
@@ -393,15 +387,15 @@ module.exports = function(app, passport) {
           community: req.params.communityid,
           reference: 'usermute',
           proposedValue: req.params.userid,
-          creatorEmail: loggedInUserData.email,
-          creator: loggedInUserData._id,
+          creatorEmail: req.user.email,
+          creator: req.user._id,
           url: voteUrl,
           timestamp: created,
           lastUpdated: created,
           voteThreshold: 50,
           expiryTime: expiryTime,
           votes: votesNumber,
-          voters: votesNumber == 1 ? [loggedInUserData._id] : [],
+          voters: votesNumber == 1 ? [req.user._id] : [],
         })
         voteId = vote._id;
         vote.save()
@@ -434,7 +428,7 @@ module.exports = function(app, passport) {
     })
     .then((community) => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       voteUrl = shortid.generate();
@@ -453,15 +447,15 @@ module.exports = function(app, passport) {
           community: req.params.communityid,
           reference: 'userunmute',
           proposedValue: req.params.userid,
-          creatorEmail: loggedInUserData.email,
-          creator: loggedInUserData._id,
+          creatorEmail: req.user.email,
+          creator: req.user._id,
           url: voteUrl,
           timestamp: created,
           lastUpdated: created,
           voteThreshold: 50,
           expiryTime: expiryTime,
           votes: votesNumber,
-          voters: votesNumber == 1 ? [loggedInUserData._id] : [],
+          voters: votesNumber == 1 ? [req.user._id] : [],
         })
         voteId = vote._id;
         vote.save()
@@ -494,7 +488,7 @@ module.exports = function(app, passport) {
     })
     .then((community) => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       voteUrl = shortid.generate();
@@ -513,15 +507,15 @@ module.exports = function(app, passport) {
           community: req.params.communityid,
           reference: 'userban',
           proposedValue: req.params.userid,
-          creatorEmail: loggedInUserData.email,
-          creator: loggedInUserData._id,
+          creatorEmail: req.user.email,
+          creator: req.user._id,
           url: voteUrl,
           timestamp: created,
           lastUpdated: created,
           voteThreshold: 50,
           expiryTime: expiryTime,
           votes: votesNumber,
-          voters: votesNumber == 1 ? [loggedInUserData._id] : [],
+          voters: votesNumber == 1 ? [req.user._id] : [],
         })
         voteId = vote._id;
         vote.save()
@@ -554,7 +548,7 @@ module.exports = function(app, passport) {
     })
     .then((community) => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       voteUrl = shortid.generate();
@@ -573,15 +567,15 @@ module.exports = function(app, passport) {
           community: req.params.communityid,
           reference: 'userunban',
           proposedValue: req.params.userid,
-          creatorEmail: loggedInUserData.email,
-          creator: loggedInUserData._id,
+          creatorEmail: req.user.email,
+          creator: req.user._id,
           url: voteUrl,
           timestamp: created,
           lastUpdated: created,
           voteThreshold: 50,
           expiryTime: expiryTime,
           votes: votesNumber,
-          voters: votesNumber == 1 ? [loggedInUserData._id] : [],
+          voters: votesNumber == 1 ? [req.user._id] : [],
         })
         voteId = vote._id;
         vote.save()
@@ -614,7 +608,7 @@ module.exports = function(app, passport) {
     })
     .then(community => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       if (isMember) {
@@ -645,7 +639,7 @@ module.exports = function(app, passport) {
     })
     .then(community => {
       let memberIds = community.members.map(a => a._id.toString());
-      if (memberIds.includes(loggedInUserData._id.toString())){
+      if (memberIds.includes(req.user._id.toString())){
         isMember = true;
       }
       if (isMember) {
@@ -762,15 +756,15 @@ module.exports = function(app, passport) {
         parsedReference: parsedReference,
         proposedValue: proposedValue,
         parsedProposedValue: parsedProposedValue,
-        creatorEmail: loggedInUserData.email,
-        creator: loggedInUserData._id,
+        creatorEmail: req.user.email,
+        creator: req.user._id,
         url: voteUrl,
         timestamp: created,
         lastUpdated: created,
         voteThreshold: 50,
         expiryTime: expiryTime,
         votes: votesNumber,
-        voters: votesNumber == 1 ? [loggedInUserData._id] : [],
+        voters: votesNumber == 1 ? [req.user._id] : [],
       })
       voteId = vote._id;
       console.log(vote)
@@ -807,7 +801,7 @@ module.exports = function(app, passport) {
     })
     .then(vote => {
       vote.votes++;
-      vote.voters.push(loggedInUserData._id);
+      vote.voters.push(req.user._id);
       vote.save()
       .then(vote => {
         Community.findOne({
@@ -965,7 +959,7 @@ module.exports = function(app, passport) {
     })
     .then(vote => {
       vote.votes--;
-      vote.voters.pull(loggedInUserData._id);
+      vote.voters.pull(req.user._id);
       vote.save()
       .then(vote => {
         res.end('{"success" : "Updated Successfully", "status" : 200}');
@@ -988,8 +982,8 @@ module.exports = function(app, passport) {
     const post = new Post({
       type: 'community',
       community: communityId,
-      authorEmail:  loggedInUserData.email,
-      author: loggedInUserData._id,
+      authorEmail:  req.user.email,
+      author: req.user._id,
       url: newPostUrl,
       privacy: 'public',
       timestamp: new Date(),
@@ -1004,7 +998,7 @@ module.exports = function(app, passport) {
       images: postImage,
       imageTags: postImageTags,
       imageDescriptions: postImageDescription,
-      subscribedUsers: [loggedInUserData._id]
+      subscribedUsers: [req.user._id]
     });
     let newPostId = post._id;
 
@@ -1024,7 +1018,7 @@ module.exports = function(app, passport) {
           context: "community",
           filename: postImage,
           privacy: community.settings.visibility,
-          user: loggedInUserData._id,
+          user: req.user._id,
           community: communityId
         })
         image.save();
@@ -1069,7 +1063,6 @@ function touchCommunity(id) {
 
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()){
-    loggedInUserData = req.user;
     return next();
   }
   res.redirect('/');
