@@ -155,7 +155,7 @@ module.exports = function (app, passport) {
     //Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone. Or
     //isLoggedInOrRedirect redirects you.
     app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", isLoggedInOrRedirect, function (req, res) {
-        if (req.params.from != loggedInUserData._id.toString()) {
+        if (req.params.from != req.user._id.toString()) {
             res.status(400).send("action not permitted: following/unfollowing/flagging/unflagging/trusting/untrusting a user from an account you're not logged in to");
             return;
         }
@@ -219,8 +219,8 @@ module.exports = function (app, passport) {
     //Inputs: all the fields listed above, in req.params. new profile pictures arrive as raw image data, not a url (like in createpost.)
     //Outputs: if the user has uploaded a new image, that image is saved; all the fields in the user's document are updated.
     app.post("/updateprofile", isLoggedInOrRedirect, function (req, res) {
-        let imageEnabled = loggedInUserData.imageEnabled;
-        let imageFilename = loggedInUserData.image;
+        let imageEnabled = req.user.imageEnabled;
+        let imageFilename = req.user.image;
         if (Object.keys(req.files).length != 0) {
             console.log(req.files.imageUpload.data.length)
             if (req.files.imageUpload.data.length > 3145728) {
@@ -240,19 +240,19 @@ module.exports = function (app, passport) {
                     .jpeg({
                         quality: 70
                     })
-                    .toFile('./public/images/' + loggedInUserData._id + '.jpg')
+                    .toFile('./public/images/' + req.user._id + '.jpg')
                     .catch(err => {
                         console.error(err);
                     });
-                imageFilename = loggedInUserData._id + '.jpg';
+                imageFilename = req.user._id + '.jpg';
             }
         }
         User.findOne({
-                _id: loggedInUserData._id
+                _id: req.user._id
             })
             .then((user) => {
-                let parsedAbout = loggedInUserData.aboutParsed;
-                if (req.body.about != loggedInUserData.aboutRaw) {
+                let parsedAbout = req.user.aboutParsed;
+                if (req.body.about != req.user.aboutRaw) {
                     // Parse about section
                     let splitAbout = req.body.about.split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
@@ -296,8 +296,8 @@ module.exports = function (app, passport) {
                 _id: req.params.postid
             })
             .then(post => {
-                post.subscribedUsers.pull(loggedInUserData._id)
-                post.unsubscribedUsers.push(loggedInUserData._id)
+                post.subscribedUsers.pull(req.user._id)
+                post.unsubscribedUsers.push(req.user._id)
                 post.save()
                     .then(response => {
                         res.sendStatus(200);
@@ -314,8 +314,8 @@ module.exports = function (app, passport) {
                 _id: req.params.postid
             })
             .then(post => {
-                post.unsubscribedUsers.pull(loggedInUserData._id)
-                post.subscribedUsers.push(loggedInUserData._id)
+                post.unsubscribedUsers.pull(req.user._id)
+                post.subscribedUsers.push(req.user._id)
                 post.save()
                     .then(response => {
                         res.sendStatus(200);
@@ -333,7 +333,7 @@ module.exports = function (app, passport) {
     app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
         let updatedSettings = req.body;
         User.update({
-                _id: loggedInUserData._id
+                _id: req.user._id
             }, {
                 $set: {
                     'settings.profileVisibility': updatedSettings.profileVisibility,
@@ -341,7 +341,7 @@ module.exports = function (app, passport) {
                 }
             })
             .then(user => {
-                res.redirect('/' + loggedInUserData.username)
+                res.redirect('/' + req.user.username)
             })
             .catch(error => {
                 console.log("Error updating settings!")
@@ -702,12 +702,11 @@ module.exports = function (app, passport) {
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {
     if (req.isAuthenticated()) {
-        loggedInUserData = req.user;
         // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
         currentTime = new Date();
-        if ((currentTime - loggedInUserData.lastUpdated) > 3600000) { // If the timestamp is older than an hour
+        if ((currentTime - req.user.lastUpdated) > 3600000) { // If the timestamp is older than an hour
             User.findOne({
-                    _id: loggedInUserData._id
+                    _id: req.user._id
                 })
                 .then(user => {
                     user.lastUpdated = currentTime;
