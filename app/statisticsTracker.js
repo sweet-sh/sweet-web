@@ -63,11 +63,10 @@ module.exports = function (app) {
     //the getUrl path which leads to the route below.
     app.get("/admin/postgraph", function (req, res) {
         if (req.isAuthenticated()) {
-            var loggedInUserData = req.user;
             res.render('asyncPage', {
                 getUrl: "/admin/justpostgraph",
                 loggedIn: true,
-                loggedInUserData: loggedInUserData
+                loggedInUserData: req.user
             });
         } else {
             res.render('asyncPage', {
@@ -77,40 +76,83 @@ module.exports = function (app) {
         }
     });
 
+    app.get("/admin/usergraph", function (req, res) {
+        if (req.isAuthenticated()) {
+            res.render('asyncPage', {
+                getUrl: "/admin/justusergraph",
+                loggedIn: true,
+                loggedInUserData: req.user
+            });
+        } else {
+            res.render('asyncPage', {
+                getUrl: "/admin/justusergraph",
+                loggedIn: false
+            });
+        }
+    })
+
     //storing a promise for the post table building function out here lets us check if the function is currently running so we don't call it again if it is
     var postTablePromise = null;
     //this function just checks if the file with the post totals by day exists and is up to date and then builds the graph from it if it does and is
     //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justpostgraph", async function (req, res) {
         var mostRecentDate;
-        if (!fs.existsSync("postTimeline.csv")) {
+        if (!fs.existsSync(postTableFileName)) {
             if (!postTablePromise) {
                 postTablePromise = rebuildPostTable();
             }
-            //note that this is an assignment statement, not a comparison. postTableNotUpToDate will give us false if it is up to date or the last line
+            //note that this is an assignment statement, not a comparison. tableNotUpToDate will give us false if it is up to date or the last line
             //of the file (in split/array form) otherwise, which we save in mostRecentDate to pass to rebuildPostTable so it knows where to start building from
-        } else if (mostRecentDate = postTableNotUpToDate()) {
+        } else if (mostRecentDate = tableNotUpToDate(postTableFileName)) {
             if (!postTablePromise) {
                 postTablePromise = rebuildPostTable(mostRecentDate);
             }
         }
         await postTablePromise;
         postTablePromise = null;
-        var datapoints = await parseTableForGraph(postTableFileName);
+        var datapoints = await parseTableForGraph(postTableFileName, Post);
         res.render('partials/timeGraph', {
             layout: false,
             label: "cumulative sweet posts",
             datapoint: datapoints
         })
     })
+
+    //storing a promise for the user table building function out here lets us check if the function is currently running so we don't call it again if it is
+    var userTablePromise = null;
+    //this function just checks if the file with the user totals by day exists and is up to date and then builds the graph from it if it does and is
+    //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
+    app.get("/admin/justusergraph", async function (req, res) {
+        var mostRecentDate;
+        if (!fs.existsSync(userTableFileName)) {
+            if (!userTablePromise) {
+                userTablePromise = rebuildUserTable();
+            }
+            //note that this is an assignment statement, not a comparison. tableNotUpToDate will give us false if it is up to date or the last line
+            //of the file (in split/array form) otherwise, which we save in mostRecentDate to pass to rebuildUserTable so it knows where to start building from
+        } else if (mostRecentDate = tableNotUpToDate()) {
+            if (!userTablePromise) {
+                userTablePromise = rebuildUserTable(mostRecentDate);
+            }
+        }
+        await userTablePromise;
+        userTablePromise = null;
+        var datapoints = await parseTableForGraph(userTableFileName, User);
+        res.render('partials/timeGraph', {
+            layout: false,
+            label: "cumulative sweet users",
+            datapoint: datapoints
+        })
+    })
 };
 
 var postTableFileName = "postTimeline.csv";
+var userTableFileName = "userTimeline.csv";
 
-//Checks if the last line of the post table file describes yesterday.
-function postTableNotUpToDate() {
+//Checks if the last line of the table file describes yesterday.
+function tableNotUpToDate(tableFilename) {
     var lastLine = "";
-    fs.readFileSync(postTableFileName, 'utf-8').split('\n').forEach(function (line) {
+    fs.readFileSync(tableFilename, 'utf-8').split('\n').forEach(function (line) {
         if (line && line != "\n") {
             lastLine = line;
         }
@@ -126,7 +168,7 @@ function postTableNotUpToDate() {
 }
 
 //Creates a file that contains dates and the number of posts that were stored by that date. Starts from the earliest post or the
-//last line in the existing file (startDate). This function figures out the date range that our posts are in and then h saves the number of posts that
+//last line in the existing file (startDate). This function figures out the date range that our posts are in and then saves the number of posts that
 //were created as of that day into the postCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildPostTable(startDate) {
     //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file. 
@@ -152,7 +194,7 @@ async function rebuildPostTable(startDate) {
     }
 
     var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1; //it's plus one to account for the day before the date stored by before
-    
+
     var postCountByDay = [];
 
     //populate postCountByDay with date objects that also have a property indicating what the post count was at the end of that day
@@ -179,13 +221,68 @@ async function rebuildPostTable(startDate) {
 
     //make way for next update/rebuild
     postCountByDay = [];
+}
 
+//Creates a file that contains dates and the number of users that were stored by that date. Starts from the earliest user or the
+//last line in the existing file (startDate). This function figures out the date range that our users are in and then saves the number of users that
+//were created as of that day into the userCountByDay array. Then we write all the dates into our file. Then we're done.
+async function rebuildUserTable(startDate) {
+    //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file. 
+    if (fs.existsSync(userTableFileName) && !startDate) {
+        fs.unlinkSync(userTableFileName);
+    }
+
+    var today = new Date(new Date().setDate(new Date().getDate() - 1));
+    today.setHours(23)
+    today.setMinutes(59);
+    today.setSeconds(59);
+    today.setMilliseconds(999); //this actually sets today to the last millisecond that counts as yesterday. that's the most recent data we're looking at for end-of-day totals.
+
+    //before will store the end of day time upon which we'll base our first end-of-day total.
+    var before;
+    if (!startDate) {
+        await User.find({}).sort('joined').then(async users => {
+            before = new Date(users[0].joined.getFullYear(), users[0].joined.getMonth(), users[0].joined.getDate(), 23, 59, 59, 999);
+        })
+    } else {
+        //if we have it, startDate is passed in as the components of the last line (describing the most recent saved date) from the existing file.
+        before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999); //start with the day after the most recently saved one (hence the plus one)
+    }
+
+    var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1; //it's plus one to account for the day before the date stored by before
+
+    var userCountByDay = [];
+
+    //populate userCountByDay with date objects that also have a property indicating what the user count was at the end of that day
+    for (var i = 0; i < totalDays; i++) {
+        var sequentialDate = new Date(before);
+        await User.find({
+            joined: {
+                $lte: sequentialDate
+            }
+        }).then(users => {
+            sequentialDate.userCount = users.length;
+            userCountByDay.push(sequentialDate);
+        })
+        before.setDate(before.getDate() + 1);
+    }
+
+    //Write each line in CSV format (so it can be opened in excel or openoffice calc or gnumeric.)
+    //Note that the file always ends with a \n, and this needs to be true for this code to work when appending new lines to the file
+    userCountByDay.forEach((date) => {
+        fs.appendFileSync(userTableFileName, date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
+        fs.appendFileSync(userTableFileName, "," + date.userCount);
+        fs.appendFileSync(userTableFileName, "\n");
+    })
+
+    //make way for next update/rebuild
+    userCountByDay = [];
 }
 
 //this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
 //decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
 //should be current every time we build/display the graph.
-async function parseTableForGraph(filename) {
+async function parseTableForGraph(filename, collection) {
     jsonVersion = [];
     //reads in file values
     fs.readFileSync(filename, 'utf-8').split('\n').forEach(function (line) {
@@ -199,13 +296,13 @@ async function parseTableForGraph(filename) {
                 hour: 23,
                 minute: 59,
                 second: 59,
-                postcount: lineComps[4]
+                y: lineComps[4]
             });
         }
     });
     //add in a datapoint representing the current exact second
     var now = new Date();
-    await Post.countDocuments().then((numberOfPosts) => {
+    await collection.countDocuments().then((numberOfDocs) => {
         jsonVersion.push({
             label: now.toLocaleString(),
             year: now.getFullYear(),
@@ -214,7 +311,7 @@ async function parseTableForGraph(filename) {
             hour: now.getHours(),
             minute: now.getMinutes(),
             second: now.getSeconds(),
-            postcount: numberOfPosts
+            y: numberOfDocs
         });
     })
     return jsonVersion;

@@ -13,7 +13,7 @@
                 {{#each datapoint}}
                   {
                     x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{this.hour}},{{this.minute}},{{this.second}}),
-                    y: {{this.postcount}}
+                    y: {{this.y}}
                   }{{#unless @ last}},{{/unless}}
                   {{/each}}
               ]}
