@@ -7,8 +7,8 @@ module.exports = function (app) {
     app.get('/admin/sweet-stats', function (req, res) {
         var currentTime = new Date();
         var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
-        Post.count().then(numberOfPosts => {
-            Image.count().then(numberOfImages => {
+        Post.countDocuments({}).then(numberOfPosts => {
+            Image.countDocuments({}).then(numberOfImages => {
                 Post.find({
                     timestamp: {
                         $gte: new Date(new Date().setDate(new Date().getDate() - 1))
@@ -220,7 +220,7 @@ async function parseTableForGraph(filename) {
     });
     //add in a datapoint representing the current exact second
     var now = new Date();
-    await Post.count().then((numberOfPosts) => {
+    await Post.countDocuments().then((numberOfPosts) => {
         jsonVersion.push({
             label: now.toLocaleString(),
             year: now.getFullYear(),
