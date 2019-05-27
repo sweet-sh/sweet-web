@@ -77,9 +77,10 @@ module.exports = function (app) {
         }
     });
 
+    //storing a promise for the post table building function out here lets us check if the function is currently running so we don't call it again if it is
     var postTablePromise = null;
     //this function just checks if the file with the post totals by day exists and is up to date and then builds the graph from it if it does and is
-    //and calls the function that creates the csv and waits for it to finish if it doesn't.
+    //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justpostgraph", async function (req, res) {
         var mostRecentDate;
         if (!fs.existsSync("postTimeline.csv")) {
@@ -104,7 +105,6 @@ module.exports = function (app) {
     })
 };
 
-var postCountByDay = [];
 var postTableFileName = "postTimeline.csv";
 
 //Checks if the last line of the post table file describes yesterday.
@@ -125,16 +125,15 @@ function postTableNotUpToDate() {
     }
 }
 
-//Creates a file that contains dates and the number of posts that were stored by that date. Starts from the earliest post or the last line in the existing file (startDate).
-//This function figures out the date range that our posts are in and then calls getPostsAtEndOfDay for each day, which saves the number of posts that
-//were created as of that day into the postCountByDay array (not necessarily in chronological order, because the .find function is
-//async and just kind of finishes whenever each time you call it.) We also tell getPostsAtEndOfDay how many days we're doing this with, and when
-//postCountByDay has that many post counts stored, sortCounts is called to write all those dates into our file in order. Then we're done.
+//Creates a file that contains dates and the number of posts that were stored by that date. Starts from the earliest post or the
+//last line in the existing file (startDate). This function figures out the date range that our posts are in and then h saves the number of posts that
+//were created as of that day into the postCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildPostTable(startDate) {
     //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file. 
     if (fs.existsSync(postTableFileName) && !startDate) {
         fs.unlinkSync(postTableFileName);
     }
+
     var today = new Date(new Date().setDate(new Date().getDate() - 1));
     today.setHours(23)
     today.setMinutes(59);
@@ -153,48 +152,34 @@ async function rebuildPostTable(startDate) {
     }
 
     var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1; //it's plus one to account for the day before the date stored by before
+    
+    var postCountByDay = [];
 
-    for (var i = 0; i < totalDays; i++) { // it's minus one bc we already called getPostsAtEndOfDay on the first date we're looking at, the one before the date stored by before
-        await getPostsAtEndOfDay(new Date(before), totalDays); //we need "new" because otherwise this function will just push "before" into the array however many times
+    //populate postCountByDay with date objects that also have a property indicating what the post count was at the end of that day
+    for (var i = 0; i < totalDays; i++) {
+        var sequentialDate = new Date(before);
+        await Post.find({
+            timestamp: {
+                $lte: sequentialDate
+            }
+        }).then(posts => {
+            sequentialDate.postCount = posts.length;
+            postCountByDay.push(sequentialDate);
+        })
         before.setDate(before.getDate() + 1);
     }
 
-}
-
-//finds how many posts were created by the end of day and calls the .find, which, when it completes, will push that day with its postCount
-//property set to postCountByDay. totalDays tells the function how many days we're doing this with; when we've saved that many days into postCountByDay,
-//we're assumed to be done and can call sortCounts to write all this data into our file.
-async function getPostsAtEndOfDay(day, totalDays) {
-    await Post.find({
-        timestamp: {
-            $lte: day
-        }
-    }).then(posts => {
-        day.postCount = posts.length;
-        postCountByDay.push(day);
-
-        if (postCountByDay.length == totalDays) {
-            sortCounts(postTableFileName, postCountByDay);
-        }
-    })
-}
-
-//this function writes the data the above functions collect about how many posts were made by such-and-such a date into a file in order. when the writing is complete,
-//we are no longer rebuilding the post table and it can be accessed for creating a graph from it.
-function sortCounts(filename, countByDay) {
-    countByDay.sort(function (a, b) {
-        return a - b
-    });
-
-    //write data in csv form, so it can be opened in excel or openoffice calc or gnumeric
-    countByDay.forEach((date) => {
-        fs.appendFileSync(filename, date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
-        fs.appendFileSync(filename, "," + date.postCount);
-        fs.appendFileSync(filename, "\n");
+    //Write each line in CSV format (so it can be opened in excel or openoffice calc or gnumeric.)
+    //Note that the file always ends with a \n, and this needs to be true for this code to work when appending new lines to the file
+    postCountByDay.forEach((date) => {
+        fs.appendFileSync(postTableFileName, date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
+        fs.appendFileSync(postTableFileName, "," + date.postCount);
+        fs.appendFileSync(postTableFileName, "\n");
     })
 
     //make way for next update/rebuild
     postCountByDay = [];
+
 }
 
 //this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
