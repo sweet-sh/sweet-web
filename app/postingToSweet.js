@@ -271,8 +271,8 @@ module.exports = function (app) {
         if (!req.body.communityId) {
             var post = new Post({
                 type: 'original',
-                authorEmail: loggedInUserData.email,
-                author: loggedInUserData._id,
+                authorEmail: req.user.email,
+                author: req.user._id,
                 url: newPostUrl,
                 privacy: postPrivacy,
                 timestamp: postCreationTime,
@@ -287,7 +287,7 @@ module.exports = function (app) {
                 images: postImages,
                 imageTags: postImageTags,
                 imageDescriptions: postImageDescriptions,
-                subscribedUsers: [loggedInUserData._id]
+                subscribedUsers: [req.user._id]
             });
 
             // Parse images
@@ -304,7 +304,7 @@ module.exports = function (app) {
                             context: "user",
                             filename: imageFileName,
                             privacy: postPrivacy,
-                            user: loggedInUserData._id
+                            user: req.user._id
                         })
                         image.save();
                     }
@@ -334,7 +334,7 @@ module.exports = function (app) {
                         console.log("This post is private!")
                         // Make sure to only notify mentioned people if they are trusted
                         Relationship.find({
-                                from: loggedInUserData.email,
+                                from: req.user.email,
                                 value: "trust"
                             }, {
                                 'to': 1
@@ -385,8 +385,8 @@ module.exports = function (app) {
             const post = new Post({
                 type: 'community',
                 community: communityId,
-                authorEmail: loggedInUserData.email,
-                author: loggedInUserData._id,
+                authorEmail: req.user.email,
+                author: req.user._id,
                 url: newPostUrl,
                 privacy: 'public',
                 timestamp: new Date(),
@@ -401,7 +401,7 @@ module.exports = function (app) {
                 images: postImages,
                 imageTags: postImageTags,
                 imageDescriptions: postImageDescriptions,
-                subscribedUsers: [loggedInUserData._id]
+                subscribedUsers: [req.user._id]
             });
 
             // Parse images
@@ -421,7 +421,7 @@ module.exports = function (app) {
                                 context: "community",
                                 filename: imageFileName,
                                 privacy: community.settings.visibility,
-                                user: loggedInUserData._id,
+                                user: req.user._id,
                                 community: communityId
                             })
                             image.save();
@@ -483,7 +483,7 @@ module.exports = function (app) {
             })
             .then((post) => {
 
-                if (post.author._id.toString() != loggedInUserData._id.toString()) {
+                if (post.author._id.toString() != req.user._id.toString()) {
                     res.status(400).send("you are not the owner of this post which you are attempting to delete. i know how you feel, but this is not allowed");
                     return;
                 }
@@ -594,8 +594,8 @@ module.exports = function (app) {
             return;
         }
         const comment = {
-            authorEmail: loggedInUserData.email,
-            author: loggedInUserData._id,
+            authorEmail: req.user.email,
+            author: req.user._id,
             timestamp: commentTimestamp,
             rawContent: sanitize(req.body.commentContent),
             parsedContent: parsedResult.text,
@@ -615,8 +615,8 @@ module.exports = function (app) {
                 post.numberOfComments = post.comments.length;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
-                if ((post.author._id.toString() != loggedInUserData._id.toString() || post.subscribedUsers.includes(loggedInUserData._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
-                    post.subscribedUsers.push(loggedInUserData._id.toString());
+                if ((post.author._id.toString() != req.user._id.toString() || post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
+                    post.subscribedUsers.push(req.user._id.toString());
                 }
                 post.save()
                     .then(() => {
@@ -635,7 +635,7 @@ module.exports = function (app) {
                                         context: "user",
                                         filename: imageFileName,
                                         privacy: post.privacy,
-                                        user: loggedInUserData._id
+                                        user: req.user._id
                                     })
                                     image.save();
                                 }
@@ -651,7 +651,7 @@ module.exports = function (app) {
 
                                 // REPLY NOTIFICATION (X REPLIED TO YOUR POST)
 
-                                if (post.author._id.toString() != loggedInUserData._id.toString() && (post.unsubscribedUsers.includes(post.author._id.toString()) === false)) { // You don't need to know about your own comments, and about replies on your posts you're not subscribed to
+                                if (post.author._id.toString() != req.user._id.toString() && (post.unsubscribedUsers.includes(post.author._id.toString()) === false)) { // You don't need to know about your own comments, and about replies on your posts you're not subscribed to
                                     console.log("Notifying post author of a reply")
                                     notifier.notify('user', 'reply', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
                                 }
@@ -667,7 +667,7 @@ module.exports = function (app) {
                                     subscribedUsers.forEach(user => {
                                         // console.log("Checking if trustedUserIds contains " + user)
                                         // console.log(trustedUserIds.includes(user) === checkTrust);
-                                        if ((user.toString() != loggedInUserData._id.toString()) // Do not notify yourself
+                                        if ((user.toString() != req.user._id.toString()) // Do not notify yourself
                                             &&
                                             (user.toString() != post.author._id.toString()) //don't notify the post author (because they get a different notification, above)
                                             &&
@@ -734,7 +734,7 @@ module.exports = function (app) {
                                                 username: mention
                                             })
                                             .then((user) => {
-                                                if (emailsArray.includes(user.email) && user.email != post.author.email && user.email != loggedInUserData.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
+                                                if (emailsArray.includes(user.email) && user.email != post.author.email && user.email != req.user.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
                                                     notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
                                                 }
                                             })
@@ -752,27 +752,27 @@ module.exports = function (app) {
                                         username: mention
                                     })
                                     .then((user) => {
-                                        if (user.email != post.author.email && user.email != loggedInUserData.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
+                                        if (user.email != post.author.email && user.email != req.user.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
                                             notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
                                         }
                                     })
                             });
                         }
-                        if (loggedInUserData.imageEnabled) {
-                            image = loggedInUserData.image
+                        if (req.user.imageEnabled) {
+                            image = req.user.image
                         } else {
                             image = 'cake.svg'
                         }
-                        if (loggedInUserData.displayName) {
-                            name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">' + loggedInUserData.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + loggedInUserData.username + '</span></div>';
+                        if (req.user.displayName) {
+                            name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + req.user.username + '">' + req.user.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + req.user.username + '</span></div>';
                         } else {
-                            name = '<div class="author-username"><strong><a class="authorLink" href="/' + loggedInUserData.username + '">@' + loggedInUserData.username + '</a></strong></div>';
+                            name = '<div class="author-username"><strong><a class="authorLink" href="/' + req.user.username + '">@' + req.user.username + '</a></strong></div>';
                         }
 
                         result = {
                             image: image,
                             name: name,
-                            username: loggedInUserData.username,
+                            username: req.user.username,
                             timestamp: moment(commentTimestamp).fromNow(),
                             content: parsedResult.text,
                             comment_id: post.comments[post.numberOfComments - 1]._id.toString(),
@@ -800,7 +800,7 @@ module.exports = function (app) {
             .then((post) => {
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (post.comments.id(req.params.commentid).author._id.toString() != loggedInUserData._id.toString()) {
+                if (post.comments.id(req.params.commentid).author._id.toString() != req.user._id.toString()) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }
@@ -848,8 +848,8 @@ module.exports = function (app) {
                 const boost = new Post({
                     type: 'boost',
                     boostTarget: boostedPost._id,
-                    authorEmail: loggedInUserData.email,
-                    author: loggedInUserData._id,
+                    authorEmail: req.user.email,
+                    author: req.user._id,
                     url: newPostUrl,
                     privacy: 'public',
                     timestamp: boostedTimestamp,
@@ -892,12 +892,11 @@ setTimeout(cleanTempFolder, 3600000); //clean temp image folder every hour
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {
     if (req.isAuthenticated()) {
-        loggedInUserData = req.user;
         // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
         currentTime = new Date();
-        if ((currentTime - loggedInUserData.lastUpdated) > 3600000) { // If the timestamp is older than an hour
+        if ((currentTime - req.user.lastUpdated) > 3600000) { // If the timestamp is older than an hour
             User.findOne({
-                    _id: loggedInUserData._id
+                    _id: req.user._id
                 })
                 .then(user => {
                     user.lastUpdated = currentTime;
@@ -913,7 +912,6 @@ function isLoggedInOrRedirect(req, res, next) {
 //For post requests where the jQuery code making the request will handle the response
 function isLoggedInOrErrorResponse(req, res, next) {
     if (req.isAuthenticated()) {
-        loggedInUserData = req.user;
         return next();
     }
     res.send('nope');
