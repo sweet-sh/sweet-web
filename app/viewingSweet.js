@@ -73,7 +73,7 @@ module.exports = function (app) {
             if (req.isAuthenticated()) {
               if (image.context === "user") {
                 Relationship.find({
-                    toUser: loggedInUserData._id,
+                    toUser: req.user._id,
                     value: "trust"
                   })
                   .then(trusts => {
@@ -90,7 +90,7 @@ module.exports = function (app) {
                   })
               } else if (image.context === "community") {
                 Community.find({
-                    members: loggedInUserData._id
+                    members: req.user._id
                   })
                   .then(communities => {
                     joinedCommunities = communities.map(a => a._id.toString());
@@ -178,20 +178,19 @@ module.exports = function (app) {
   app.get('/home', isLoggedInOrRedirect, function (req, res) {
     res.render('home', {
       loggedIn: true,
-      loggedInUserData: loggedInUserData,
+      loggedInUserData: req.user,
       activePage: 'home'
     });
   });
 
   //Responds to get requests for the 404 page.
   //Input: user data from req.user
-  //Output: the 404 page, which at the moment doesn't actually use the user data this function passes it
+  //Output: the 404 page
   app.get('/404', function (req, res) {
     if (req.isAuthenticated()) {
-      let loggedInUserData = req.user;
       res.render('404', {
         loggedIn: true,
-        loggedInUserData: loggedInUserData
+        loggedInUserData: req.user
       });
     } else {
       res.render('404', {
@@ -212,7 +211,7 @@ module.exports = function (app) {
           res.render('tag', {
             name: req.params.name,
             loggedIn: true,
-            loggedInUserData: loggedInUserData
+            loggedInUserData: req.user
           })
         } else {
           res.redirect('/404');
@@ -225,15 +224,14 @@ module.exports = function (app) {
   //Output: renders notifications page, which renders as "you're not logged in" if you're not logged in
   app.get('/notifications', function (req, res) {
     if (req.isAuthenticated()) {
-      let loggedInUserData = req.user;
       User.findOne({
-          _id: loggedInUserData._id
+          _id: req.user._id
         }, 'notifications')
         .then(user => {
           user.notifications.reverse();
           res.render('notifications', {
             loggedIn: true,
-            loggedInUserData: loggedInUserData,
+            loggedInUserData: req.user,
             notifications: user.notifications,
             activePage: 'notifications'
           });
@@ -252,7 +250,7 @@ module.exports = function (app) {
   app.get('/settings', isLoggedInOrRedirect, function (req, res) {
     res.render('settings', {
       loggedIn: true,
-      loggedInUserData: loggedInUserData,
+      loggedInUserData: req.user,
       activePage: 'settings'
     })
   })
@@ -263,7 +261,7 @@ module.exports = function (app) {
   app.get('/search', isLoggedInOrRedirect, function (req, res) {
     res.render('search', {
       loggedIn: true,
-      loggedInUserData: loggedInUserData,
+      loggedInUserData: req.user,
       activePage: 'search'
     })
   })
@@ -274,7 +272,7 @@ module.exports = function (app) {
   app.get('/search/:query', isLoggedInOrRedirect, function (req, res) {
     res.render('search', {
       loggedIn: true,
-      loggedInUserData: loggedInUserData,
+      loggedInUserData: req.user,
       activePage: 'search',
       query: sanitize(sanitizeHtml(req.params.query, sanitizeHtmlOptions))
     })
@@ -287,7 +285,7 @@ module.exports = function (app) {
   app.post('/api/user/followers', isLoggedInOrRedirect, function (req, res) {
     followedUserData = []
     Relationship.find({
-        fromUser: loggedInUserData._id,
+        fromUser: req.user._id,
         value: "follow"
       })
       .populate("toUser")
@@ -387,7 +385,7 @@ module.exports = function (app) {
                       res.render('partials/searchresults', {
                         layout: false,
                         loggedIn: true,
-                        loggedInUserData: loggedInUserData,
+                        loggedInUserData: req.user,
                         noResults: true
                       });
                     } else {
@@ -448,7 +446,7 @@ module.exports = function (app) {
                     res.render('partials/searchresults', {
                       layout: false,
                       loggedIn: true,
-                      loggedInUserData: loggedInUserData,
+                      loggedInUserData: req.user,
                       results: parsedResults
                     });
                   }
@@ -465,10 +463,8 @@ module.exports = function (app) {
   //of the logged in user in that case. (??????????????????) Page means page.
   //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
   app.get('/showposts/:context/:identifier/:page', function (req, res) {
-    var loggedInUserData = {}
     if (req.isAuthenticated()) {
       isLoggedIn = true;
-      loggedInUserData = req.user;
     } else {
       isLoggedIn = false;
     }
@@ -479,7 +475,7 @@ module.exports = function (app) {
     let myFollowedUserEmails = () => {
       myFollowedUserEmails = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "follow"
         })
         .then((follows) => {
@@ -497,7 +493,7 @@ module.exports = function (app) {
     let myFlaggedUserEmails = () => {
       myFlaggedUserEmails = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "flag"
         })
         .then((flags) => {
@@ -516,7 +512,7 @@ module.exports = function (app) {
       myTrustedUserEmails = []
       usersFlaggedByMyTrustedUsers = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -543,7 +539,7 @@ module.exports = function (app) {
     let usersWhoTrustMe = () => {
       usersWhoTrustMeEmails = []
       return Relationship.find({
-          to: loggedInUserData.email,
+          to: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -562,7 +558,7 @@ module.exports = function (app) {
       myCommunities = [];
       myMutedUsers = [];
       return Community.find({
-          members: loggedInUserData._id
+          members: req.user._id
         })
         .then((communities) => {
           for (var key in communities) {
@@ -585,7 +581,7 @@ module.exports = function (app) {
           })
           .then(community => {
             mutedMemberIds = community.mutedMembers.map(a => a.toString());
-            if (mutedMemberIds.includes(loggedInUserData._id.toString()))
+            if (mutedMemberIds.includes(req.user._id.toString()))
               isMuted = true;
             console.log(isMuted)
           })
@@ -602,9 +598,9 @@ module.exports = function (app) {
       const thisyear = moment().clone().startOf('year');
 
       if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(loggedInUserData.email)
-        usersWhoTrustMeEmails.push(loggedInUserData.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
+        myFollowedUserEmails.push(req.user.email)
+        usersWhoTrustMeEmails.push(req.user.email)
+        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
         if (req.params.context == "home") {
           var postDisplayContext = {
             "$or": [{
@@ -769,7 +765,7 @@ module.exports = function (app) {
                     comment.images[i] = '/api/image/display/' + comment.images[i];
                   }
                   // If the comment's author is logged in, or the post's author is logged in
-                  if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
+                  if ((comment.author._id.toString() == req.user._id) || (displayContext.author._id.toString() == req.user._id)) {
                     comment.canDelete = true;
                   }
                 });
@@ -899,7 +895,7 @@ module.exports = function (app) {
               layout: false,
               loggedIn: isLoggedIn,
               isMuted: isMuted,
-              loggedInUserData: loggedInUserData,
+              loggedInUserData: req.user,
               posts: displayedPosts,
               flaggedUsers: flagged,
               context: req.params.context,
@@ -921,7 +917,7 @@ module.exports = function (app) {
     let myFlaggedUserEmails = () => {
       myFlaggedUserEmails = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "flag"
         })
         .then((flags) => {
@@ -940,7 +936,7 @@ module.exports = function (app) {
       myTrustedUserEmails = []
       usersFlaggedByMyTrustedUsers = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -967,7 +963,7 @@ module.exports = function (app) {
     let usersWhoTrustMe = () => {
       usersWhoTrustMeEmails = []
       return Relationship.find({
-          to: loggedInUserData.email,
+          to: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -987,9 +983,8 @@ module.exports = function (app) {
       const today = moment().clone().startOf('day');
       const thisyear = moment().clone().startOf('year');
 
-      // myFollowedUserEmails.push(loggedInUserData.email)
-      usersWhoTrustMeEmails.push(loggedInUserData.email)
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
+      usersWhoTrustMeEmails.push(req.user.email);
+      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
       Tag.findOne({
           name: req.params.name
         })
@@ -1090,7 +1085,7 @@ module.exports = function (app) {
                 res.render('partials/posts', {
                   layout: false,
                   loggedIn: true,
-                  loggedInUserData: loggedInUserData,
+                  loggedInUserData: req.user,
                   posts: displayedPosts,
                   flaggedUsers: flagged,
                   context: req.params.context
@@ -1105,10 +1100,8 @@ module.exports = function (app) {
   //Inputs: username is the user's username.
   //Outputs: a 404 if the user isn't found
   app.get('/:username', function (req, res) {
-    var loggedInUserData = {}
     if (req.isAuthenticated()) {
       isLoggedInOrRedirect = true;
-      loggedInUserData = req.user;
     } else {
       isLoggedInOrRedirect = false;
     }
@@ -1181,7 +1174,7 @@ module.exports = function (app) {
         myTrustedUserEmails = []
         myTrustedUserData = []
         return Relationship.find({
-            from: loggedInUserData.email,
+            from: req.user.email,
             value: "trust"
           })
           .then((trusts) => {
@@ -1237,7 +1230,7 @@ module.exports = function (app) {
         myFlaggedUserEmails = []
         myFlaggedUserData = []
         return Relationship.find({
-            from: loggedInUserData.email,
+            from: req.user.email,
             value: "flag"
           })
           .then((flags) => {
@@ -1265,7 +1258,7 @@ module.exports = function (app) {
       if (req.isAuthenticated()) {
         myBlockedUserEmails = []
         return Relationship.find({
-            from: loggedInUserData.email,
+            from: req.user.email,
             value: "block"
           })
           .then((flags) => {
@@ -1294,7 +1287,7 @@ module.exports = function (app) {
         myFollowedUserEmails = []
         myFollowedUserData = []
         return Relationship.find({
-            from: loggedInUserData.email,
+            from: req.user.email,
             value: "follow"
           })
           .then((follows) => {
@@ -1404,7 +1397,7 @@ module.exports = function (app) {
       var userFollowsYou = false;
       if (req.isAuthenticated()) {
         // Is this the logged in user's own profile?
-        if (results.profileData.email == loggedInUserData.email) {
+        if (results.profileData.email == req.user.email) {
           isOwnProfile = true;
           trustedUserData = results.myTrustedUserData
           followedUserData = results.myFollowedUserData
@@ -1413,11 +1406,11 @@ module.exports = function (app) {
           trustedUserData = results.theirTrustedUserData
           followedUserData = results.theirFollowedUserData
           // Check if profile user trusts logged in user
-          if (theirTrustedUserEmails.includes(loggedInUserData.email)) {
+          if (theirTrustedUserEmails.includes(req.user.email)) {
             userTrustsYou = true;
           }
           // Check if profile user follows logged in user
-          if (theirFollowedUserEmails.includes(loggedInUserData.email)) {
+          if (theirFollowedUserEmails.includes(req.user.email)) {
             userFollowsYou = true;
           }
         }
@@ -1439,7 +1432,7 @@ module.exports = function (app) {
         for (var key in results.flagsOnUser) {
           var flag = results.flagsOnUser[key];
           // Check if logged in user has flagged profile user
-          if (flag.from == loggedInUserData.email) {
+          if (flag.from == req.user.email) {
             var flagged = true;
           }
           // Check if any of the logged in user's trusted users have flagged profile user
@@ -1462,7 +1455,7 @@ module.exports = function (app) {
       res.render('user', {
         loggedIn: isLoggedInOrRedirect,
         isOwnProfile: isOwnProfile,
-        loggedInUserData: loggedInUserData,
+        loggedInUserData: req.user,
         profileData: results.profileData,
         trusted: trusted,
         flagged: flagged,
@@ -1490,17 +1483,15 @@ module.exports = function (app) {
   //Outputs: a rendering of the post (based on singlepost.handlebars) or an error might happen i guess. if the post is private singleposts contains and will render an error message
   app.get('/:username/:posturl', function (req, res) {
 
-    var loggedInUserData = {}
     var isLoggedIn = false;
     if (req.isAuthenticated()) {
       isLoggedIn = true;
-      loggedInUserData = req.user;
     }
 
     let myFollowedUserEmails = () => {
       myFollowedUserEmails = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "follow"
         })
         .then((follows) => {
@@ -1518,7 +1509,7 @@ module.exports = function (app) {
     let myFlaggedUserEmails = () => {
       myFlaggedUserEmails = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "flag"
         })
         .then((flags) => {
@@ -1537,7 +1528,7 @@ module.exports = function (app) {
       myTrustedUserEmails = []
       usersFlaggedByMyTrustedUsers = []
       return Relationship.find({
-          from: loggedInUserData.email,
+          from: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -1564,7 +1555,7 @@ module.exports = function (app) {
     let usersWhoTrustMe = () => {
       usersWhoTrustMeEmails = []
       return Relationship.find({
-          to: loggedInUserData.email,
+          to: req.user.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -1583,7 +1574,7 @@ module.exports = function (app) {
       myCommunities = [];
       myMutedUsers = [];
       return Community.find({
-          members: loggedInUserData._id
+          members: req.user._id
         })
         .then((communities) => {
           for (var key in communities) {
@@ -1613,10 +1604,10 @@ module.exports = function (app) {
                   })
                   .then(community => {
                     mutedMemberIds = community.mutedMembers.map(a => a.toString());
-                    if (mutedMemberIds.includes(loggedInUserData._id.toString()))
+                    if (mutedMemberIds.includes(req.user._id.toString()))
                       isMuted = true;
                     communityMemberIds = community.members.map(a => a.toString());
-                    if (communityMemberIds.includes(loggedInUserData._id.toString()))
+                    if (communityMemberIds.includes(req.user._id.toString()))
                       isMember = true;
                   })
                   .catch((err) => {
@@ -1635,9 +1626,9 @@ module.exports = function (app) {
       const today = moment().clone().startOf('day');
       const thisyear = moment().clone().startOf('year');
       if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(loggedInUserData.email)
-        usersWhoTrustMeEmails.push(loggedInUserData.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
+        myFollowedUserEmails.push(req.user.email)
+        usersWhoTrustMeEmails.push(req.user.email)
+        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
       }
       Post.findOne({
           url: req.params.posturl
@@ -1656,7 +1647,7 @@ module.exports = function (app) {
             res.render('singlepost', {
               canDisplay: false,
               loggedIn: isLoggedIn,
-              loggedInUserData: loggedInUserData,
+              loggedInUserData: req.user,
               activePage: 'singlepost'
             })
           } else {
@@ -1666,7 +1657,7 @@ module.exports = function (app) {
             if (req.isAuthenticated()) {
               if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
                 if (post.community) {
-                  isInCommunity = (loggedInUserData.communities.indexOf(post.community._id.toString()) > -1);
+                  isInCommunity = (req.user.communities.indexOf(post.community._id.toString()) > -1);
                   if (isInCommunity) {
                     let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
                     if (mutedMemberIds.includes(post.author._id.toString())) {
@@ -1776,14 +1767,14 @@ module.exports = function (app) {
                 comment.images[i] = '/api/image/display/' + comment.images[i];
               }
               // If the comment's author is logged in, or the post's author is logged in
-              if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
+              if ((comment.author._id.toString() == req.user._id) || (displayContext.author._id.toString() == req.user._id)) {
                 comment.canDelete = true;
               }
             });
             if (canDisplay) {
               // Mark associated notifications read if post is visible
               if (req.isAuthenticated())
-                notifier.markRead(loggedInUserData._id, displayContext._id);
+                notifier.markRead(req.user._id, displayContext._id);
 
               // Show metadata
               if (displayedPost.images != "") {
@@ -1808,7 +1799,7 @@ module.exports = function (app) {
             res.render('singlepost', {
               canDisplay: canDisplay,
               loggedIn: isLoggedIn,
-              loggedInUserData: loggedInUserData,
+              loggedInUserData: req.user,
               post: displayedPost,
               flaggedUsers: flagged,
               metadata: metadata,
@@ -1860,16 +1851,15 @@ module.exports = function (app) {
 
   app.get('/api/notification/display', function (req, res) {
     if (req.isAuthenticated()) {
-      let loggedInUserData = req.user;
       User.findOne({
-          _id: loggedInUserData._id
+          _id: req.user._id
         }, 'notifications')
         .then(user => {
           user.notifications.reverse();
           res.render('partials/notifications', {
             layout: false,
             loggedIn: true,
-            loggedInUserData: loggedInUserData,
+            loggedInUserData: req.user,
             notifications: user.notifications
           });
         })
@@ -1885,12 +1875,11 @@ module.exports = function (app) {
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {
   if (req.isAuthenticated()) {
-    loggedInUserData = req.user;
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
     currentTime = new Date();
-    if ((currentTime - loggedInUserData.lastUpdated) > 3600000) { // If the timestamp is older than an hour
+    if ((currentTime - req.user.lastUpdated) > 3600000) { // If the timestamp is older than an hour
       User.findOne({
-          _id: loggedInUserData._id
+          _id: req.user._id
         })
         .then(user => {
           user.lastUpdated = currentTime;
