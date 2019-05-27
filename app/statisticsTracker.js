@@ -130,7 +130,7 @@ module.exports = function (app) {
             }
             //note that this is an assignment statement, not a comparison. tableNotUpToDate will give us false if it is up to date or the last line
             //of the file (in split/array form) otherwise, which we save in mostRecentDate to pass to rebuildUserTable so it knows where to start building from
-        } else if (mostRecentDate = tableNotUpToDate()) {
+        } else if (mostRecentDate = tableNotUpToDate(userTableFileName)) {
             if (!userTablePromise) {
                 userTablePromise = rebuildUserTable(mostRecentDate);
             }
