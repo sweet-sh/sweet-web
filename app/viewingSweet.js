@@ -127,6 +127,26 @@ module.exports = function (app) {
       })
   })
 
+  //Very like the above, but responds to requests for images still in the temp folder, which will only be viewed in the image preview windows
+  //by the poster before their post is actually made. We don't need any security checks because the only person with access to the urls of
+  //these images in the first place is the person who just uploaded them.
+  //Input: filename of an image
+  //Output: Either the image file they requested or a 404 error
+  app.get('/api/image/display/temp/:filename', function (req, res) {
+    var imagePath = global.appRoot + '/cdn/images/temp/' + req.params.filename;
+    try {
+      if (fs.existsSync(imagePath)) {
+        res.sendFile(imagePath);
+      }
+    } catch (err) {
+      // Image file doesn't exist on server
+      console.log("Image " + req.params.filename + " doesn't exist on server!")
+      console.log(err)
+      //in theory we should probably have an image to send that has the text 'sorry' or something
+      res.status('404').send('could not find requested temp image')
+    }
+  })
+
   //Responds to get requests for '/'.
   //Input: none
   //Output: redirect to '/home' if logged in, render of the index page if logged out.
@@ -1790,7 +1810,7 @@ module.exports = function (app) {
             res.render('singlepost', {
               canDisplay: canDisplay,
               loggedIn: isLoggedIn,
-              loggedInUserData:loggedInUserData,
+              loggedInUserData: loggedInUserData,
               post: displayedPost,
               flaggedUsers: flagged,
               metadata: metadata,
