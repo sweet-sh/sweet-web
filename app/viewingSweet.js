@@ -463,8 +463,10 @@ module.exports = function (app) {
   //of the logged in user in that case. (??????????????????) Page means page.
   //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
   app.get('/showposts/:context/:identifier/:page', function (req, res) {
+    var loggedInUserData = {};
     if (req.isAuthenticated()) {
       isLoggedIn = true;
+      loggedInUserData = req.user;
     } else {
       isLoggedIn = false;
     }
@@ -475,7 +477,7 @@ module.exports = function (app) {
     let myFollowedUserEmails = () => {
       myFollowedUserEmails = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "follow"
         })
         .then((follows) => {
@@ -493,7 +495,7 @@ module.exports = function (app) {
     let myFlaggedUserEmails = () => {
       myFlaggedUserEmails = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "flag"
         })
         .then((flags) => {
@@ -512,7 +514,7 @@ module.exports = function (app) {
       myTrustedUserEmails = []
       usersFlaggedByMyTrustedUsers = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -539,7 +541,7 @@ module.exports = function (app) {
     let usersWhoTrustMe = () => {
       usersWhoTrustMeEmails = []
       return Relationship.find({
-          to: req.user.email,
+          to: loggedInUserData.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -558,7 +560,7 @@ module.exports = function (app) {
       myCommunities = [];
       myMutedUsers = [];
       return Community.find({
-          members: req.user._id
+          members: loggedInUserData._id
         })
         .then((communities) => {
           for (var key in communities) {
@@ -581,7 +583,7 @@ module.exports = function (app) {
           })
           .then(community => {
             mutedMemberIds = community.mutedMembers.map(a => a.toString());
-            if (mutedMemberIds.includes(req.user._id.toString()))
+            if (mutedMemberIds.includes(loggedInUserData._id.toString()))
               isMuted = true;
             console.log(isMuted)
           })
@@ -598,9 +600,9 @@ module.exports = function (app) {
       const thisyear = moment().clone().startOf('year');
 
       if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(req.user.email)
-        usersWhoTrustMeEmails.push(req.user.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
+        myFollowedUserEmails.push(loggedInUserData.email)
+        usersWhoTrustMeEmails.push(loggedInUserData.email)
+        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
         if (req.params.context == "home") {
           var postDisplayContext = {
             "$or": [{
@@ -765,7 +767,7 @@ module.exports = function (app) {
                     comment.images[i] = '/api/image/display/' + comment.images[i];
                   }
                   // If the comment's author is logged in, or the post's author is logged in
-                  if ((comment.author._id.toString() == req.user._id) || (displayContext.author._id.toString() == req.user._id)) {
+                  if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
                     comment.canDelete = true;
                   }
                 });
@@ -895,7 +897,7 @@ module.exports = function (app) {
               layout: false,
               loggedIn: isLoggedIn,
               isMuted: isMuted,
-              loggedInUserData: req.user,
+              loggedInUserData: loggedInUserData,
               posts: displayedPosts,
               flaggedUsers: flagged,
               context: req.params.context,

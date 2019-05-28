@@ -678,7 +678,12 @@ module.exports = function (app) {
                                             User.findOne({
                                                 username: mentionedUsername
                                             }).then(mentionedUser => {
-                                                // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post)
+                                                // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post).
+                                                // The post's author is implicitly trusted by the post's author
+                                                if(mentionedUser._id.toString() == originalPoster._id.toString()){
+                                                    notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                                    return; //no need to go down there and check for relationships and stuff
+                                                }
                                                 Relationship.findOne({
                                                     fromUser: originalPoster._id,
                                                     toUser: mentionedUser._id,
@@ -718,21 +723,22 @@ module.exports = function (app) {
                                     notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                 }
 
-                                //NOTIFY PEOPLE WHO BOOSTED THE POST (which will be no-one if it's private btw, that's why we're not checking privacy in this section)
+                                //NOTIFY PEOPLE WHO BOOSTED THE POST AND ALSO PEOPLE WHO COMMENTED ON OR WERE MENTIONED IN THE ORIGINAL (all together so we can try not to do anyone twice)
                                 var boosterIDs = [];
                                 post.boosts.forEach(boostID => {
                                     Post.findById(boostID).then(boost => {
                                         boosterIDs.push(boost.author);
                                         //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
-                                        if (boosterIDs.length == post.boost.length) {
+                                        if (boosterIDs.length == post.boosts.length) {
                                             //remove duplicate ids for people who've boosted it more than once, 
                                             //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
                                             //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
                                             boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
                                             boosterIDs.forEach(boosterID => {
                                                 User.findById(boosterID).then(booster => {
-                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above)
-                                                    if (!parsedResult.mentions.includes(booster.username)) {
+                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
+                                                    //or anyone who unsubscribed from the post
+                                                    if (!parsedResult.mentions.includes(booster.username) && !post.unsubscribedUsers.includes(boosterID)) {
                                                         notifier.notify('user', 'boostedPostReply', boosterID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                                     }
                                                 }).catch(err => {
@@ -740,11 +746,31 @@ module.exports = function (app) {
                                                     console.log(err);
                                                 })
                                             })
+
+                                            //now that we have the full list of boosters, we can check the other "subscribers" against it and then notify them
+                                            var workingSubscribers = post.subscribedUsers.filter(u=>!boosterIDs.contains(u));
+                                            if (postPrivacy == "private") {
+                                                workingSubscribers.forEach(subscriberID => {
+                                                    Relationship.findOne({
+                                                        from: originalPoster.email,
+                                                        toUser: subscriberID,
+                                                        value: "trust"
+                                                    }, {
+                                                        _id: 1
+                                                    }).then(theRelationshipExists => {
+                                                        if (theRelationshipExists) {
+                                                            notifySubscriber(subscriberID);
+                                                        }
+                                                    })
+                                                })
+                                            } else {
+                                                workingSubscribers.forEach(subscriberID => {
+                                                    notifySubscriber(subscriberID);
+                                                })
+                                            }
                                         }
                                     })
                                 })
-
-                                // NOTIFY PEOPLE WHO HAVE COMMENTED ON OR BEEN MENTIONED IN THE POST
 
                                 function notifySubscriber(subscriberID) {
                                     if ((subscriberID != req.user._id.toString()) // Do not notify the comment's author about the comment
@@ -769,26 +795,6 @@ module.exports = function (app) {
                                     }
                                 }
 
-                                if (postPrivacy == "private") {
-                                    post.subscribedUsers.forEach(subscriberID => {
-                                        Relationship.findOne({
-                                            from: originalPoster.email,
-                                            toUser: ObjectID(subscriber),
-                                            value: "trust"
-                                        }, {
-                                            _id: 1
-                                        }).then(theRelationshipExists => {
-                                            if (theRelationshipExists) {
-                                                notifySubscriber(subscriberID);
-                                            }
-                                        })
-                                    })
-
-                                } else {
-                                    post.subscribedUsers.forEach(subscriberID => {
-                                        notifySubscriber(subscriberID);
-                                    })
-                                }
                             }).catch(err => {
                                 console.log("can't find author of commented-upon post, error:");
                                 console.log(err);
@@ -893,6 +899,7 @@ module.exports = function (app) {
                 });
                 let newPostId = boostedPost._id;
                 boostedPost.boosts.push(boost._id);
+                boostedPost.subscribedUsers.push(req.user._id.toString());
                 // boostedPost.lastUpdated = boostedTimestamp;
                 boostedPost.save();
                 boost.save().then(() => {
