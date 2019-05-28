@@ -646,7 +646,7 @@ module.exports = function (app) {
 
                         //Notify any and all interested parties
                         User.findOne({
-                                id: post.author
+                                _id: post.author
                             })
                             .then((originalPoster) => {
                                 //remove duplicates from subscribed/unsubscribed users
@@ -683,8 +683,12 @@ module.exports = function (app) {
                                                     fromUser: originalPoster._id,
                                                     toUser: mentionedUser._id,
                                                     value: "trust"
-                                                }).then(r => {
-                                                    notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                                }, {
+                                                    _id: 1
+                                                }).then(theRelationshipExists => {
+                                                    if (theRelationshipExists) {
+                                                        notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                                    }
                                                 })
                                             }).catch(err => {
                                                 console.log("could not find document for mentioned user " + mention + ", error:");
@@ -731,8 +735,8 @@ module.exports = function (app) {
                                                     if (!parsedResult.mentions.includes(booster.username)) {
                                                         notifier.notify('user', 'boostedPostReply', boosterID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                                     }
-                                                }).catch(err=>{
-                                                    console.log("could not find document for booster "+boosterID+", error:")
+                                                }).catch(err => {
+                                                    console.log("could not find document for booster " + boosterID + ", error:")
                                                     console.log(err);
                                                 })
                                             })
@@ -758,8 +762,8 @@ module.exports = function (app) {
                                                     notifier.notify('user', 'subscribedReply', subscriberID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                                 }
                                             }
-                                        }).catch(err=>{
-                                            console.log("could not find subscribed user "+subscriberID+", error:")
+                                        }).catch(err => {
+                                            console.log("could not find subscribed user " + subscriberID + ", error:")
                                             console.log(err);
                                         })
                                     }
@@ -772,9 +776,11 @@ module.exports = function (app) {
                                             toUser: ObjectID(subscriber),
                                             value: "trust"
                                         }, {
-                                            id: 1
-                                        }).then(r => {
-                                            notifySubscriber(subscriberID);
+                                            _id: 1
+                                        }).then(theRelationshipExists => {
+                                            if (theRelationshipExists) {
+                                                notifySubscriber(subscriberID);
+                                            }
                                         })
                                     })
 
