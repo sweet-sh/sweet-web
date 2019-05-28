@@ -364,11 +364,11 @@ module.exports = function (app) {
                         parsedResult.mentions.forEach(function (mention) {
                             if (mention != req.user.username) { //don't get notified from mentioning yourself
                                 User.findOne({
-                                    username: mention
-                                })
-                                .then((user) => {
-                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                })
+                                        username: mention
+                                    })
+                                    .then((user) => {
+                                        notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                    })
                             }
                         });
                     }
@@ -449,12 +449,14 @@ module.exports = function (app) {
                     parsedResult.mentions.forEach(function (mention) {
                         if (mention != req.user.username) { //don't get notified from mentioning yourself
                             User.findOne({
-                                username: mention,
-                                communities: {$in: [communityId]}
-                            })
-                            .then((user) => {
-                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                            })
+                                    username: mention,
+                                    communities: {
+                                        $in: [communityId]
+                                    }
+                                })
+                                .then((user) => {
+                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                })
                         }
                     });
                     Community.findOneAndUpdate({
@@ -642,122 +644,150 @@ module.exports = function (app) {
                             });
                         }
 
+                        //Notify any and all interested parties
                         User.findOne({
-                                "_id": post.author._id
+                                id: post.author
                             })
-                            .then((user) => {
+                            .then((originalPoster) => {
+                                //remove duplicates from subscribed/unsubscribed users
                                 subscribedUsers = post.subscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
                                 unsubscribedUsers = post.unsubscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
 
-                                // REPLY NOTIFICATION (X REPLIED TO YOUR POST)
+                                //NOTIFY EVERYONE WHO IS MENTIONED
 
-                                if (post.author._id.toString() != req.user._id.toString() && (post.unsubscribedUsers.includes(post.author._id.toString()) === false)) { // You don't need to know about your own comments, and about replies on your posts you're not subscribed to
-                                    console.log("Notifying post author of a reply")
-                                    notifier.notify('user', 'reply', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
-                                }
+                                //we're never going to notify the author of the comment about them mentioning themself
+                                workingMentions = parsedResult.mentions.filter(m => m != req.user.username);
 
-                                // SUBSCRIBED NOTIFICATION (X REPLIED TO POST YOU ALSO REPLIED TO)
-
-                                function notifySubscribedUsers() {
-                                    if (postPrivacy == "private") {
-                                        checkTrust = true;
-                                    } else {
-                                        checkTrust = false;
-                                    }
-                                    subscribedUsers.forEach(user => {
-                                        // console.log("Checking if trustedUserIds contains " + user)
-                                        // console.log(trustedUserIds.includes(user) === checkTrust);
-                                        if ((user.toString() != req.user._id.toString()) // Do not notify yourself
-                                            &&
-                                            (user.toString() != post.author._id.toString()) //don't notify the post author (because they get a different notification, above)
-                                            &&
-                                            (post.unsubscribedUsers.includes(user.toString()) === false) //don't notify undubscribed users
-                                            &&
-                                            (trustedUserIds.includes(user.toString()) === checkTrust)) { //don't notify people who you don't trust if it's a private post
-                                            console.log("Notifying subscribed users")
-                                            User.findById(user).then((thisuser) => {
-                                                if (!parsedResult.mentions.includes(thisuser.username)) { //don't notify people who are going to be notified anyway bc they're mentioned. this would be cleaner if user (and subscribedUsers) stored usernames instead of ids.
-                                                    notifier.notify('user', 'subscribedReply', user.toString(), req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'post')
-                                                }
-                                            })
-                                        }
-                                    })
-                                }
-
-                                // Stopgap code to check if people being notified of replies on a private post can actually view it (are trusted by the post's author)
-                                if (postPrivacy == "private") {
-                                    Relationship.find({
-                                            from: post.author.email,
-                                            value: "trust"
-                                        }, {
-                                            'to': 1
+                                if (post.type == "community") {
+                                    workingMentions.forEach(function (mentionedUsername) {
+                                        User.findOne({
+                                            username: mentionedUsername
+                                        }).then((mentionedUser) => {
+                                            //within communities: notify the mentioned user if this post's community is one they belong to
+                                            if (mentionedUser.communities.some(c => c.toString() == post.community.toString())) {
+                                                notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                            }
+                                        }).catch(err => {
+                                            console.log("could not find document for mentioned user " + mentionedUsername + ", error:");
+                                            console.log(err);
                                         })
-                                        .then((emails) => {
-                                            trustedUserEmails = emails.map(({
-                                                to
-                                            }) => to)
-                                            User.find({
-                                                    email: {
-                                                        $in: trustedUserEmails
-                                                    }
-                                                }, "_id")
-                                                .then(users => {
-                                                    trustedUserIds = users.map(({
-                                                        _id
-                                                    }) => _id.toString())
-                                                    notifySubscribedUsers();
+                                    })
+                                } else {
+                                    if (postPrivacy == "private") {
+                                        workingMentions.forEach(mentionedUsername => {
+                                            User.findOne({
+                                                username: mentionedUsername
+                                            }).then(mentionedUser => {
+                                                // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post)
+                                                Relationship.findOne({
+                                                    fromUser: originalPoster._id,
+                                                    toUser: mentionedUser._id,
+                                                    value: "trust"
+                                                }).then(r => {
+                                                    notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                                })
+                                            }).catch(err => {
+                                                console.log("could not find document for mentioned user " + mention + ", error:");
+                                                console.log(err);
+                                            })
+                                        })
+                                    } else if (postPrivacy == "public") {
+                                        workingMentions.forEach(function (mention) {
+                                            User.findOne({
+                                                    username: mention
+                                                })
+                                                .then((mentionedGuy) => {
+                                                    //notify everyone
+                                                    notifier.notify('user', 'mention', mentionedGuy._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
+                                                }).catch(err => {
+                                                    console.log("could not find document for mentioned user " + mention + ", error:");
+                                                    console.log(err);
                                                 })
                                         });
-                                } else {
-                                    trustedUserIds = []
-                                    notifySubscribedUsers();
+                                    }
                                 }
-                            })
 
-                        // MENTIONS NOTIFICATION (X MENTIONED YOU IN A REPLY)
+                                // NOTIFY THE POST'S AUTHOR
+                                // Author doesn't need to know about their own comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above
+                                if (originalPoster._id.toString() != req.user._id.toString() && (post.unsubscribedUsers.includes(originalPoster._id.toString()) === false) && (!parsedResult.mentions.includes(originalPoster.username))) {
+                                    console.log("Notifying post author of a reply")
+                                    notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                }
 
-                        if (postPrivacy == "private") {
-                            console.log("This comment is private!")
-                            // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post)
-                            Relationship.find({
-                                    from: post.author.email,
-                                    value: "trust"
-                                }, {
-                                    'to': 1
-                                })
-                                .then((emails) => {
-                                    let emailsArray = emails.map(({
-                                        to
-                                    }) => to)
-                                    parsedResult.mentions.forEach(function (mention) {
-                                        User.findOne({
-                                                username: mention
+                                //NOTIFY PEOPLE WHO BOOSTED THE POST (which will be no-one if it's private btw, that's why we're not checking privacy in this section)
+                                var boosterIDs = [];
+                                post.boosts.forEach(boostID => {
+                                    Post.findById(boostID).then(boost => {
+                                        boosterIDs.push(boost.author);
+                                        //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
+                                        if (boosterIDs.length == post.boost.length) {
+                                            //remove duplicate ids for people who've boosted it more than once, 
+                                            //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
+                                            //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
+                                            boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
+                                            boosterIDs.forEach(boosterID => {
+                                                User.findById(boosterID).then(booster => {
+                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above)
+                                                    if (!parsedResult.mentions.includes(booster.username)) {
+                                                        notifier.notify('user', 'boostedPostReply', boosterID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                                    }
+                                                }).catch(err=>{
+                                                    console.log("could not find document for booster "+boosterID+", error:")
+                                                    console.log(err);
+                                                })
                                             })
-                                            .then((user) => {
-                                                if (emailsArray.includes(user.email) && user.email != post.author.email && user.email != req.user.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
-                                                    notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
-                                                }
-                                            })
-                                    })
-                                })
-                                .catch((err) => {
-                                    console.log("Error in profileData.")
-                                    console.log(err);
-                                });
-                        } else if (postPrivacy == "public") {
-                            console.log("This comment is public!")
-                            // This is a public post, notify everyone
-                            parsedResult.mentions.forEach(function (mention) {
-                                User.findOne({
-                                        username: mention
-                                    })
-                                    .then((user) => {
-                                        if (user.email != post.author.email && user.email != req.user.email) { // Don't send the post's author a second notification if they're also being mentioned, and don't notify yourself
-                                            notifier.notify('user', 'mention', user._id, req.user._id, post._id, '/' + post.author.username + '/' + post.url, 'reply')
                                         }
                                     })
-                            });
-                        }
+                                })
+
+                                // NOTIFY PEOPLE WHO HAVE COMMENTED ON OR BEEN MENTIONED IN THE POST
+
+                                function notifySubscriber(subscriberID) {
+                                    if ((subscriberID != req.user._id.toString()) // Do not notify the comment's author about the comment
+                                        &&
+                                        (subscriberID != originalPoster._id.toString()) //don't notify the post's author (because they get a different notification, above)
+                                        &&
+                                        (post.unsubscribedUsers.includes(subscriberID) === false) //don't notify unsubscribed users
+                                    ) {
+                                        console.log("Notifying subscribed users")
+                                        User.findById(subscriberID).then((subscriber) => {
+                                            if (!parsedResult.mentions.includes(subscriber.username)) { //don't notify people who are going to be notified anyway bc they're mentioned
+                                                if (post.mentions.includes(subscriber.username)) {
+                                                    notifier.notify('user', 'mentionedInPostReply', subscriberID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                                } else {
+                                                    notifier.notify('user', 'subscribedReply', subscriberID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                                }
+                                            }
+                                        }).catch(err=>{
+                                            console.log("could not find subscribed user "+subscriberID+", error:")
+                                            console.log(err);
+                                        })
+                                    }
+                                }
+
+                                if (postPrivacy == "private") {
+                                    post.subscribedUsers.forEach(subscriberID => {
+                                        Relationship.findOne({
+                                            from: originalPoster.email,
+                                            toUser: ObjectID(subscriber),
+                                            value: "trust"
+                                        }, {
+                                            id: 1
+                                        }).then(r => {
+                                            notifySubscriber(subscriberID);
+                                        })
+                                    })
+
+                                } else {
+                                    post.subscribedUsers.forEach(subscriberID => {
+                                        notifySubscriber(subscriberID);
+                                    })
+                                }
+                            }).catch(err => {
+                                console.log("can't find author of commented-upon post, error:");
+                                console.log(err);
+                            })
+
                         if (req.user.imageEnabled) {
                             image = req.user.image
                         } else {

@@ -1101,9 +1101,9 @@ module.exports = function (app) {
   //Outputs: a 404 if the user isn't found
   app.get('/:username', function (req, res) {
     if (req.isAuthenticated()) {
-      isLoggedInOrRedirect = true;
+      isLoggedIn = true;
     } else {
-      isLoggedInOrRedirect = false;
+      isLoggedIn = false;
     }
 
     let results = {};
@@ -1138,18 +1138,6 @@ module.exports = function (app) {
           console.log("Error in profileData.")
           console.log(err);
         });
-      // }
-      // return User.findOne({
-      //     username: req.params.username
-      //   })
-      //   .populate('communities')
-      //   .then((user) => {
-      //     results.communitiesData = user.communities
-      //   })
-      //   .catch((err) => {
-      //     console.log("Error in profileData.")
-      //     console.log(err);
-      //   });
     }
 
     let flagsOnUser = (user) => {
@@ -1453,7 +1441,7 @@ module.exports = function (app) {
       }
 
       res.render('user', {
-        loggedIn: isLoggedInOrRedirect,
+        loggedIn: isLoggedIn,
         isOwnProfile: isOwnProfile,
         loggedInUserData: req.user,
         profileData: results.profileData,
@@ -1482,16 +1470,17 @@ module.exports = function (app) {
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
   //Outputs: a rendering of the post (based on singlepost.handlebars) or an error might happen i guess. if the post is private singleposts contains and will render an error message
   app.get('/:username/:posturl', function (req, res) {
-
+    var loggedInUserData = {};
     var isLoggedIn = false;
     if (req.isAuthenticated()) {
       isLoggedIn = true;
+      loggedInUserData = req.user;
     }
 
     let myFollowedUserEmails = () => {
       myFollowedUserEmails = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "follow"
         })
         .then((follows) => {
@@ -1509,7 +1498,7 @@ module.exports = function (app) {
     let myFlaggedUserEmails = () => {
       myFlaggedUserEmails = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "flag"
         })
         .then((flags) => {
@@ -1528,7 +1517,7 @@ module.exports = function (app) {
       myTrustedUserEmails = []
       usersFlaggedByMyTrustedUsers = []
       return Relationship.find({
-          from: req.user.email,
+          from: loggedInUserData.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -1555,7 +1544,7 @@ module.exports = function (app) {
     let usersWhoTrustMe = () => {
       usersWhoTrustMeEmails = []
       return Relationship.find({
-          to: req.user.email,
+          to: loggedInUserData.email,
           value: "trust"
         })
         .then((trusts) => {
@@ -1574,7 +1563,7 @@ module.exports = function (app) {
       myCommunities = [];
       myMutedUsers = [];
       return Community.find({
-          members: req.user._id
+          members: loggedInUserData._id
         })
         .then((communities) => {
           for (var key in communities) {
@@ -1604,10 +1593,10 @@ module.exports = function (app) {
                   })
                   .then(community => {
                     mutedMemberIds = community.mutedMembers.map(a => a.toString());
-                    if (mutedMemberIds.includes(req.user._id.toString()))
+                    if (mutedMemberIds.includes(loggedInUserData._id.toString()))
                       isMuted = true;
                     communityMemberIds = community.members.map(a => a.toString());
-                    if (communityMemberIds.includes(req.user._id.toString()))
+                    if (communityMemberIds.includes(loggedInUserData._id.toString()))
                       isMember = true;
                   })
                   .catch((err) => {
@@ -1626,9 +1615,9 @@ module.exports = function (app) {
       const today = moment().clone().startOf('day');
       const thisyear = moment().clone().startOf('year');
       if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(req.user.email)
-        usersWhoTrustMeEmails.push(req.user.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
+        myFollowedUserEmails.push(loggedInUserData.email)
+        usersWhoTrustMeEmails.push(loggedInUserData.email)
+        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
       }
       Post.findOne({
           url: req.params.posturl
@@ -1647,7 +1636,7 @@ module.exports = function (app) {
             res.render('singlepost', {
               canDisplay: false,
               loggedIn: isLoggedIn,
-              loggedInUserData: req.user,
+              loggedInUserData: loggedInUserData,
               activePage: 'singlepost'
             })
           } else {
@@ -1657,7 +1646,7 @@ module.exports = function (app) {
             if (req.isAuthenticated()) {
               if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
                 if (post.community) {
-                  isInCommunity = (req.user.communities.indexOf(post.community._id.toString()) > -1);
+                  isInCommunity = (loggedInUserData.communities.indexOf(post.community._id.toString()) > -1);
                   if (isInCommunity) {
                     let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
                     if (mutedMemberIds.includes(post.author._id.toString())) {
@@ -1767,14 +1756,14 @@ module.exports = function (app) {
                 comment.images[i] = '/api/image/display/' + comment.images[i];
               }
               // If the comment's author is logged in, or the post's author is logged in
-              if ((comment.author._id.toString() == req.user._id) || (displayContext.author._id.toString() == req.user._id)) {
+              if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
                 comment.canDelete = true;
               }
             });
             if (canDisplay) {
               // Mark associated notifications read if post is visible
               if (req.isAuthenticated())
-                notifier.markRead(req.user._id, displayContext._id);
+                notifier.markRead(loggedInUserData._id, displayContext._id);
 
               // Show metadata
               if (displayedPost.images != "") {
@@ -1799,7 +1788,7 @@ module.exports = function (app) {
             res.render('singlepost', {
               canDisplay: canDisplay,
               loggedIn: isLoggedIn,
-              loggedInUserData: req.user,
+              loggedInUserData:loggedInUserData,
               post: displayedPost,
               flaggedUsers: flagged,
               metadata: metadata,

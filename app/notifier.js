@@ -8,13 +8,11 @@ function markRead(userId, subjectId) {
         notification.seen = true;
       }
     })
-    user.save()
-    // .then(user => {
-    // })
+    user.save();
   })
 }
 
-function notify(type, category, userId, sourceId, subjectId, url, context) {
+function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
   function buildNotification(){
     switch(type){
       case 'user':
@@ -24,7 +22,7 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
         .then(user => {
           image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg');
           username = '@' + user.username;
-          switch(category){
+          switch(cause){
             case 'reply':
               text = 'replied to your post.'
               break;
@@ -33,6 +31,12 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
               break;
             case 'subscribedReply':
               text = 'replied to a post you have also replied to.'
+              break;
+            case 'mentioningPostReply':
+              text = 'replied to a post you were mentioned in.'
+              break;
+            case 'boostedPostReply':
+              text = 'replied to a post you boosted.'
               break;
             case 'mention':
               text = 'mentioned you in a ' + context + '.'
@@ -59,7 +63,7 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
           .then(community => {
             image = '/images/communities/' + (community.imageEnabled ? community.image : 'cake.svg');
             username = '@' + user.username;
-            switch(category){
+            switch(cause){
               case 'request':
                 text = '<strong>@' + user.username + '</strong> has asked to join <strong>' + community.name + '</strong>.'
                 break;
@@ -88,13 +92,13 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
   }
   console.log("creating notification")
   User.findOne({
-    _id: userId
+    _id: notifieeID
   })
   .then(notifiedUser => {
     buildNotification()
     .then(response => {
       notification = {
-        category: category,
+        category: cause,
         sourceId: sourceId,
         subjectId: subjectId,
         text: response.text,
@@ -105,7 +109,7 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
       notifiedUser.save()
       .then(response => {
         User.findOne({
-          _id: userId
+          _id: notifieeID
         })
         .then(sliceUser => {
           notificationsSlice = (sliceUser.notifications.length > 14 ? sliceUser.notifications.length-14 : 0);
@@ -131,9 +135,3 @@ function notify(type, category, userId, sourceId, subjectId, url, context) {
 
 module.exports.markRead = markRead;
 module.exports.notify = notify;
-
-function isLoggedIn(req, res, next) {
-    if (req.isAuthenticated())
-        return next();
-    res.redirect('/');
-}
