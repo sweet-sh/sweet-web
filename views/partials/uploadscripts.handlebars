@@ -252,7 +252,8 @@ $(function() {
     imagecont.addClass("onthemove");
 
     selectedImage.css("border", "dashed")
-
+    selectedImage.attr('urlpos','');
+    selectedImage.attr('uploadNumber','');
     selectedImage.empty();
 
     return imagecont;
@@ -272,10 +273,10 @@ $(function() {
     //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
     var spacertop = spacer.position().top;
     var sHeight = imagecont.outerHeight(true);
-    if (Math.abs((imageconttop + 0.5 * sHeight) - spacertop) > Number.EPSILON) { //floating point imprecision fix :/ still acting up a tiny bit though if you go very slowly
-      var deltaImageIndex = Math.floor(imageconttop + 0.5 * sHeight > spacertop ? (imageconttop + 0.5 * sHeight - spacertop) / sHeight : (imageconttop - 0.5 * sHeight - spacertop) / sHeight)
-    } else {
-      var deltaImageIndex = 0;
+    var movementOfMiddleLine = imageconttop + 0.5 * sHeight > spacertop ? (imageconttop + 0.5 * sHeight - spacertop) : (imageconttop - 0.5 * sHeight - spacertop);
+    var deltaImageIndex = Math.floor(movementOfMiddleLine/sHeight);
+    if((movementOfMiddleLine % sHeight > sHeight-5 || movementOfMiddleLine % sHeight < 5) && deltaImageIndex != 0){ //10 pixels deadzone on either side of the imaginary line
+      deltaImageIndex -= deltaImageIndex > 0 ? 1 : -1;
     }
 
     //Move the spacer (in other words, set the future destination of the image) according to deltaImageIndex
