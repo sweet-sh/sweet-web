@@ -916,7 +916,10 @@ module.exports = function (app) {
                 // boostedPost.lastUpdated = boostedTimestamp;
                 boostedPost.save();
                 boost.save().then(() => {
-                    notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                    //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
+                    if(!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && boostedPost.author._id.toString()!=req.user._id.toString()){
+                        notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                    }
                     res.redirect("back");
                 })
             })

@@ -291,11 +291,14 @@ module.exports = function (app, passport) {
     //Responds to post requests from users who do not want notifications from activity on some post anymore.
     //Inputs: the id of the post
     //Outputs: removes the logged in user from the post's subscribedusers field, adds them to unsubscribedUsers
-    app.post('/api/post/unsubscribe/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/api/post/unsubscribe/:postid', isLoggedInOrRedirect, async function (req, res) {
         Post.findOne({
                 _id: req.params.postid
             })
-            .then(post => {
+            .then(async post => {
+                if(post.type=="boost"){
+                    post = await Post.findById(post.boostTarget);
+                }
                 post.subscribedUsers.pull(req.user._id)
                 post.unsubscribedUsers.push(req.user._id)
                 post.save()
@@ -309,11 +312,14 @@ module.exports = function (app, passport) {
     })
 
     //Well, it's a bit like the last one but in reverse
-    app.post('/api/post/subscribe/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/api/post/subscribe/:postid', isLoggedInOrRedirect, async function (req, res) {
         Post.findOne({
                 _id: req.params.postid
             })
-            .then(post => {
+            .then(async post => {
+                if(post.type=="boost"){
+                    post = await Post.findById(post.boostTarget);
+                }
                 post.unsubscribedUsers.pull(req.user._id)
                 post.subscribedUsers.push(req.user._id)
                 post.save()
