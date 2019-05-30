@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-module.exports = function (app) {
+module.exports = function (app, mongoose) {
 
     //Fun stats tracker. Non-interactive.
     var cameOnlineAt = new Date();
@@ -9,51 +9,54 @@ module.exports = function (app) {
         var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
         Post.countDocuments({}).then(numberOfPosts => {
             Image.countDocuments({}).then(numberOfImages => {
-                Post.find({
-                    timestamp: {
-                        $gte: new Date(new Date().setDate(new Date().getDate() - 1))
-                    }
-                }).then(posts => {
-                    var daysImages = 0;
-                    var daysReplies = 0;
-                    posts.forEach(post => {
-                        var imageCount = post.images.length;
-                        post.comments.forEach(comment => {
-                            if (comment.images) {
-                                imageCount += comment.images.length;
-                            }
-                        })
-                        daysImages += imageCount;
-                        daysReplies += post.comments.length;
-                    });
-                    var funstats = [
-                        "uptime " + uptime,
-                        "logged in users " + helper.loggedInUsers(),
-                        "peak logged in users (since last restart) " + helper.peakLoggedInUsers(),
-
-                        "totals... " +
-                        " posts " + numberOfPosts +
-                        ", images " + numberOfImages,
-
-                        "last 24 hours... " +
-                        " posts " + posts.length +
-                        ", images " + daysImages +
-                        ", comments " + daysReplies
-                    ];
-                    if (req.isAuthenticated()) {
-                        var loggedInUserData = req.user;
-                        res.render('systempost', {
-                            postcontent: funstats,
-                            loggedIn: true,
-                            loggedInUserData: loggedInUserData
+                mongoose.connection.db.collection('sessions', (err, collection) =>{
+                    collection.countDocuments().then(numberOfActiveSessions=>{
+                    Post.find({
+                        timestamp: {
+                            $gte: new Date(new Date().setDate(new Date().getDate() - 1))
+                        }
+                    }).then(posts => {
+                        var daysImages = 0;
+                        var daysReplies = 0;
+                        posts.forEach(post => {
+                            var imageCount = post.images.length;
+                            post.comments.forEach(comment => {
+                                if (comment.images) {
+                                    imageCount += comment.images.length;
+                                }
+                            })
+                            daysImages += imageCount;
+                            daysReplies += post.comments.length;
                         });
-                    } else {
-                        res.render('systempost', {
-                            postcontent: funstats,
-                            loggedIn: false
-                        });
-                    }
+                        var funstats = [
+                            "uptime " + uptime,
+                            "logged in users " + numberOfActiveSessions,
+
+                            "totals... " +
+                            " posts " + numberOfPosts +
+                            ", images " + numberOfImages,
+
+                            "last 24 hours... " +
+                            " posts " + posts.length +
+                            ", images " + daysImages +
+                            ", comments " + daysReplies
+                        ];
+                        if (req.isAuthenticated()) {
+                            var loggedInUserData = req.user;
+                            res.render('systempost', {
+                                postcontent: funstats,
+                                loggedIn: true,
+                                loggedInUserData: loggedInUserData
+                            });
+                        } else {
+                            res.render('systempost', {
+                                postcontent: funstats,
+                                loggedIn: false
+                            });
+                        }
+                    })
                 })
+            })
             })
         })
     })

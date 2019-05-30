@@ -119,21 +119,11 @@ module.exports = function (app, passport) {
                 }
                 res.redirect(301, '/login');
             } else {
-                passport.authenticate('login', function (err, user, info) {
-                    if (err) {
-                        return next(err);
-                    }
-                    if (!user) {
-                        return res.redirect('/login');
-                    }
-                    req.logIn(user, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        helper.someoneLoggedIn();
-                        return res.redirect('/home');
-                    });
-                })(req, res);
+                passport.authenticate('login', {
+                    successRedirect : '/home',
+                    failureRedirect : '/login',
+                    failureFlash : true
+                  })(req,res);
             }
         });
     });
@@ -144,7 +134,7 @@ module.exports = function (app, passport) {
     //Output: user is logged out and redirected to the referring page or / if no referrer.
     app.get('/logout', function (req, res) {
         req.logout();
-        helper.someoneLoggedOut();
+        req.session.destroy();
         res.redirect('back');
     });
 
