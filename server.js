@@ -69,14 +69,18 @@ app.set('view engine', 'handlebars');
 // Static files
 app.use(express.static('public'));
 
+//persist sessions across restarts via their storage in mongodb
+const MongoStore = require('connect-mongo')(session);
+
 // Required for passport
 var passportAuth = require('./config/auth.js');
 app.use(session({
   secret: passportAuth.secret,
-  cookie:{ _expires: (12 * 60 * 60 * 1000) }, // 12 hours
+  cookie:{ maxAge: (12 * 60 * 60 * 1000) }, // 12 hours
   rolling: true,
   resave: true,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: new MongoStore({mongooseConnection: mongoose.connection, secret:passportAuth.secret})
 }));
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
