@@ -12,4 +12,6 @@ var imageSchema = new mongoose.Schema({
   description: String
 });
 
+imageSchema.index({filename:1});
+
 module.exports = mongoose.model('Image', imageSchema);

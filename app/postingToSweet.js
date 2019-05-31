@@ -767,7 +767,7 @@ module.exports = function (app) {
                                     if (postPrivacy == "private") {
                                         subscriberList.forEach(subscriberID => {
                                             Relationship.findOne({
-                                                from: originalPoster.email,
+                                                fromUser: originalPoster._id,
                                                 toUser: subscriberID,
                                                 value: "trust"
                                             }, {

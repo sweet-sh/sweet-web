@@ -73,5 +73,7 @@ var postSchema = new mongoose.Schema({
   unsubscribedUsers: [String]
 });
 
+postSchema.index({lastUpdated:-1});
+
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);
