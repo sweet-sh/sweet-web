@@ -781,13 +781,16 @@ module.exports = function(app, passport) {
         });
         expiryTimers.push(expireVote);
         community.members.forEach(member => {
-          notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'created')
+          if(!member._id.equals(req.user._id)){
+            notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'created')
+          }
         })
         touchCommunity(req.params.communityid)
         res.redirect('back')
       })
     })
   });
+
   app.post('/api/community/vote/delete/:voteid', isLoggedIn, function(req, res) {
     Vote.findByIdAndRemove(req.params.voteid)
     .then(vote => {

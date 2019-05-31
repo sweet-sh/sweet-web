@@ -485,7 +485,7 @@ module.exports = function (app) {
             })
             .then((post) => {
 
-                if (post.author._id.toString() != req.user._id.toString()) {
+                if (!post.author._id.equals(req.user._id)) {
                     res.status(400).send("you are not the owner of this post which you are attempting to delete. i know how you feel, but this is not allowed");
                     return;
                 }
@@ -617,7 +617,7 @@ module.exports = function (app) {
                 post.numberOfComments = post.comments.length;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
-                if ((post.author._id.toString() != req.user._id.toString() && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
+                if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
                     post.subscribedUsers.push(req.user._id.toString());
                 }
                 post.save()
@@ -680,7 +680,7 @@ module.exports = function (app) {
                                             }).then(mentionedUser => {
                                                 // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post).
                                                 // The post's author is implicitly trusted by the post's author
-                                                if (mentionedUser._id.toString() == originalPoster._id.toString()) {
+                                                if (mentionedUser._id.equals(originalPoster._id)) {
                                                     notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
                                                     return; //no need to go down there and check for relationships and stuff
                                                 }
@@ -718,7 +718,7 @@ module.exports = function (app) {
 
                                 // NOTIFY THE POST'S AUTHOR
                                 // Author doesn't need to know about their own comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above
-                                if (originalPoster._id.toString() != req.user._id.toString() && (post.unsubscribedUsers.includes(originalPoster._id.toString()) === false) && (!parsedResult.mentions.includes(originalPoster.username))) {
+                                if (!originalPoster._id.equals(req.user._id) && (post.unsubscribedUsers.includes(originalPoster._id.toString()) === false) && (!parsedResult.mentions.includes(originalPoster.username))) {
                                     console.log("Notifying post author of a reply")
                                     notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                 }
@@ -855,7 +855,7 @@ module.exports = function (app) {
             .then((post) => {
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (post.comments.id(req.params.commentid).author._id.toString() != req.user._id.toString()) {
+                if (!post.comments.id(req.params.commentid).author._id.equals(req.user._id)) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }
@@ -874,6 +874,7 @@ module.exports = function (app) {
                     .then((comment) => {
                         relocatePost(ObjectId(req.params.postid));
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
+                        
                         if (!post.comments.some((v, i, a) => {
                                 return v.author.toString() == req.user._id.toString();
                             })) {
@@ -928,7 +929,7 @@ module.exports = function (app) {
                 boostedPost.save();
                 boost.save().then(() => {
                     //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
-                    if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && boostedPost.author._id.toString() != req.user._id.toString()) {
+                    if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
                         notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                     }
                     res.redirect("back");

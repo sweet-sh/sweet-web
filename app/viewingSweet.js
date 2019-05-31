@@ -787,7 +787,7 @@ module.exports = function (app) {
                     comment.images[i] = '/api/image/display/' + comment.images[i];
                   }
                   // If the comment's author is logged in, or the post's author is logged in
-                  if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
+                  if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
                     comment.canDelete = true;
                   }
                 });
@@ -1778,7 +1778,7 @@ module.exports = function (app) {
                 comment.images[i] = '/api/image/display/' + comment.images[i];
               }
               // If the comment's author is logged in, or the post's author is logged in
-              if ((comment.author._id.toString() == loggedInUserData._id) || (displayContext.author._id.toString() == loggedInUserData._id)) {
+              if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
                 comment.canDelete = true;
               }
             });
