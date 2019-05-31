@@ -107,11 +107,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
       }
       notifiedUser.notifications.push(notification);
       notifiedUser.save()
-      .then(response => {
-        User.findOne({
-          _id: notifieeID
-        })
-        .then(sliceUser => {
+      .then((sliceUser) => {
           notificationsSlice = (sliceUser.notifications.length > 14 ? sliceUser.notifications.length-14 : 0);
           sliceUser.notifications = sliceUser.notifications.slice(notificationsSlice)
           sliceUser.save()
@@ -119,12 +115,18 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
             console.log("Notification sent to " + sliceUser.username)
             return true;
           })
+        .catch(error=>{
+          console.error(error)
+          return false;
         })
       })
       .catch(error => {
         console.error(error)
         return false;
       })
+    }).catch(error =>{
+      console.error(error)
+      return false;
     })
   })
   .catch(error => {

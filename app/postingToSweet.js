@@ -617,7 +617,7 @@ module.exports = function (app) {
                 post.numberOfComments = post.comments.length;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
-                if ((post.author._id.toString() != req.user._id.toString() || post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
+                if ((post.author._id.toString() != req.user._id.toString() && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
                     post.subscribedUsers.push(req.user._id.toString());
                 }
                 post.save()
@@ -680,7 +680,7 @@ module.exports = function (app) {
                                             }).then(mentionedUser => {
                                                 // Make sure to only notify mentioned people if they are trusted by the post's author (and can therefore see the post).
                                                 // The post's author is implicitly trusted by the post's author
-                                                if(mentionedUser._id.toString() == originalPoster._id.toString()){
+                                                if (mentionedUser._id.toString() == originalPoster._id.toString()) {
                                                     notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
                                                     return; //no need to go down there and check for relationships and stuff
                                                 }
@@ -749,7 +749,7 @@ module.exports = function (app) {
 
                                             //if there are boosters, we notify the other "subscribers" here, because here we have the full list of
                                             //boosters and can check the subscribers against it before notifying them
-                                            var workingSubscribers = post.subscribedUsers.filter(u=>!boosterIDs.includes(u));
+                                            var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u));
                                             notifySubscribers(workingSubscribers);
                                         }
                                     })
@@ -758,12 +758,12 @@ module.exports = function (app) {
                                 //NOTIFY THE OTHER SUBSCRIBERS (PEOPLE WHO WERE MENTIONED IN THE ORGINAL POST AND THOSE WHO COMMENTED ON IT)
 
                                 //if there are boosts for this post, this was called a few lines up from here. otherwise, we do it now
-                                if(post.boosts.length===0){
+                                if (post.boosts.length === 0) {
                                     notifySubscribers(post.subscribedUsers)
                                 }
 
                                 //checks each subscriber for trustedness if this is a private post, notifies all of 'em otherwise
-                                function notifySubscribers(subscriberList){
+                                function notifySubscribers(subscriberList) {
                                     if (postPrivacy == "private") {
                                         subscriberList.forEach(subscriberID => {
                                             Relationship.findOne({
@@ -873,6 +873,17 @@ module.exports = function (app) {
                 post.save()
                     .then((comment) => {
                         relocatePost(ObjectId(req.params.postid));
+                        //unsubscribe the author of the deleted comment from the post if they have no other comments on it
+                        if (!post.comments.some((v, i, a) => {
+                                return v.author.toString() == req.user._id.toString();
+                            })) {
+                            post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
+                                return v != req.user._id.toString();
+                            })
+                            post.save().catch(err => {
+                                console.error(err)
+                            })
+                        }
                         res.sendStatus(200);
                     })
                     .catch((error) => {
@@ -917,7 +928,7 @@ module.exports = function (app) {
                 boostedPost.save();
                 boost.save().then(() => {
                     //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
-                    if(!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && boostedPost.author._id.toString()!=req.user._id.toString()){
+                    if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && boostedPost.author._id.toString() != req.user._id.toString()) {
                         notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                     }
                     res.redirect("back");
@@ -1055,14 +1066,16 @@ function relocatePost(postid) {
                         console.log(updatedPost)
                     })
             } else {
-                Post.findOneAndUpdate({
-                    _id: postid
-                }, {
-                    $set: {
-                        lastUpdated: timestamp
-                    }
-                }, {
-                    returnNewDocument: true
+                Post.findById(postid).then(post => {
+                    Post.findOneAndUpdate({
+                        _id: postid
+                    }, {
+                        $set: {
+                            lastUpdated: post.timestamp
+                        }
+                    }, {
+                        returnNewDocument: true
+                    })
                 })
             }
         })
