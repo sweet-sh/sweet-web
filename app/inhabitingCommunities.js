@@ -854,7 +854,6 @@ module.exports = function(app, passport) {
               })
             }
             else if (vote.reference == "usermute") {
-              // community.members.pull(vote.proposedValue)
               community.mutedMembers.push(vote.proposedValue)
               User.findOne({
                 _id: vote.proposedValue
@@ -915,30 +914,38 @@ module.exports = function(app, passport) {
                     notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'banned')
                   })
                   notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'banned')
-                }
-                if (vote.reference == "userunban"){
+                }else if (vote.reference == "userunban"){
                   community.members.forEach(member => {
                     notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unbanned')
                   })
                   notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unbanned')
-                }
-                if (vote.reference == "usermute"){
+                }else if (vote.reference == "usermute"){
                   console.log("User muted - sending notifications")
                   community.members.forEach(member => {
-                    console.log("Notification sending to " + member)
-                    notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'muted')
+                    console.log("Notification sending to " + member);
+                    if(member.equals(vote.proposedValue)){
+                      notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'muted')
+                    }else{
+                      notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'muted')
+                    }
                   })
-                  notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'muted')
-                }
-                if (vote.reference == "userunmute"){
+                  
+                }else if (vote.reference == "userunmute"){
                   community.members.forEach(member => {
-                    notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
+                    if(member.equals(vote.proposedValue)){
+                      notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
+                    }else{
+                      notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
+                    }
                   })
-                  notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
-                }
-                else {
+                  
+                }else {
                   community.members.forEach(member => {
-                    notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'passed')
+                    if(member.equals(vote.creator)){
+                      notifier.notify('community', 'yourVote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'passed')
+                    }else{
+                      notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'passed')
+                    }
                   })
                 }
                 touchCommunity(req.params.communityid)

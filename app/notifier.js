@@ -73,6 +73,9 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               case 'vote':
                 text = 'A vote has been ' + context + ' in <strong>' + community.name + '</strong>.'
                 break;
+              case 'yourVote':
+                text = 'Your vote has been ' + context + ' in <strong>' + community.name + '</strong>.'
+                break;
               case 'management':
                 text = '<strong>@' + user.username + '</strong> has been ' + context + ' from <strong>' + community.name + '</strong>.'
                 break;
