@@ -76,7 +76,7 @@ const MongoStore = require('connect-mongo')(session);
 var passportAuth = require('./config/auth.js');
 app.use(session({
   secret: passportAuth.secret,
-  cookie:{ maxAge: (12 * 60 * 60 * 1000) }, // 12 hours
+  cookie:{ maxAge: (48 * 60 * 60 * 1000) }, // 48 hours
   rolling: true,
   resave: true,
   saveUninitialized: false,
