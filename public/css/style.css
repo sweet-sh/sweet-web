@@ -836,6 +836,7 @@ hr {
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
+  flex-shrink: 0; /* Fixing images squishing on Android Chrome, hopefully? */
 }
 
 @media (min-width: 576px) {
