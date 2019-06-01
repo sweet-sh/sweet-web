@@ -17,6 +17,15 @@
           <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>Private</option>
         </select>
       </div>
+      <div class="form-group">
+        <label for="newPostPrivacy">Quality of uploaded images</label>
+        <select name="imageQuality" class="form-control" id="imageQuality">
+          <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>Standard (up to 1200px standard quality JPGs)</option>
+          <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up to 2048px high quality JPGs/PNGs)</option>
+          <option value="ridiculous" {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to 4096px high quality JPGs/PNGs)</option>
+        </select>
+        <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large number of high quality images, we may ask you in future to help out with sweet's web hosting costs.</p>
+      </div>
       <button type="submit" class="btn btn-secondary">Save settings</button>
     </form>
   </div>

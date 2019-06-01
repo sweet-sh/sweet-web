@@ -2,6 +2,7 @@ var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 const fileType = require('file-type');
 var notifier = require('./notifier.js');
+var sizeOf = require('image-size');
 
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -145,6 +146,24 @@ module.exports = function (app) {
     //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
     app.post("/api/image/v2", isLoggedInOrRedirect, function (req, res) {
+        var imageQualitySettingsArray = {
+          'standard': {
+            resize: 1200,
+            filetype: 'jpg',
+            jpegQuality: 85
+          },
+          'high': {
+            resize: 2048,
+            filetype: 'png',
+            jpegQuality: 95
+          },
+          'ridiculous': {
+            resize: 4096,
+            filetype: 'png',
+            jpegQuality: 95
+          }
+        };
+        var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality];
         if (req.files.image) {
             if (req.files.image.size <= 10485760) {
                 let imageFormat = fileType(req.files.image.data);
@@ -185,44 +204,76 @@ module.exports = function (app) {
                             error: "filesize"
                         }));
                     }
-                } else if (imageFormat.mime == "image/jpeg" || imageFormat.mime == "image/png") {
+                } else if (imageFormat.mime == "image/jpeg") {
                     sharp(req.files.image.data)
                         .resize({
-                            width: 1200,
+                            width: imageQualitySettings.resize,
                             withoutEnlargement: true
                         })
                         .rotate()
+                        .flatten({
+                          background: {r:255,g:255,b:255} // White background for transparent images
+                        })
                         .jpeg({
-                            quality: 85
+                            quality: imageQualitySettings.jpegQuality
                         })
                         .toFile('./cdn/images/temp/' + imageUrl + '.jpg') //to temp
                         .then(image => {
-                            // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
-                            // .then((tags) => {
-                            //   if (tags.auto){
-                            //     imageTags = tags.auto.join(", ");
-                            //   }
-                            //   else {
-                            //     imageTags = ""
-                            //   }
                             imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.jpg',
                                 tags: imageTags
                             }));
-                            // })
-                            // .catch(err => {
-                            //   console.error(err);
-                            //   imageTags = ""
-                            //   res.setHeader('content-type', 'text/plain');
-                            //   res.end(JSON.stringify({url: imageUrl + '.jpg', tags: imageTags}));
-                            // })
                         })
                         .catch(err => {
                             console.error(err);
                         });
-                }
+              } else if (imageFormat.mime == "image/png") { // This isn't DRY but I can't work out how to store and then drop in the single changing variable (whether the method is .jpeg() or .png()).
+                  if (req.user.settings.imageQuality == "standard") {
+                    sharp(req.files.image.data)
+                        .resize({
+                            width: imageQualitySettings.resize,
+                            withoutEnlargement: true
+                        })
+                        .rotate()
+                        .jpeg({
+                            quality: imageQualitySettings.jpegQuality
+                        })
+                        .toFile('./cdn/images/temp/' + imageUrl + '.' + imageQualitySettings.filetype) //to temp
+                        .then(image => {
+                            imageTags = ""
+                            res.setHeader('content-type', 'text/plain');
+                            res.end(JSON.stringify({
+                                url: imageUrl + '.' + imageQualitySettings.filetype,
+                                tags: imageTags
+                            }));
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                  } else if (req.user.settings.imageQuality == "high" || req.user.settings.imageQuality == "ridiculous") {
+                    sharp(req.files.image.data)
+                        .resize({
+                            width: imageQualitySettings.resize,
+                            withoutEnlargement: true
+                        })
+                        .rotate()
+                        .png()
+                        .toFile('./cdn/images/temp/' + imageUrl + '.' + imageQualitySettings.filetype) //to temp
+                        .then(image => {
+                            imageTags = ""
+                            res.setHeader('content-type', 'text/plain');
+                            res.end(JSON.stringify({
+                                url: imageUrl + '.' + imageQualitySettings.filetype,
+                                tags: imageTags
+                            }));
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                      }
+              }
             } else {
                 res.setHeader('content-type', 'text/plain');
                 res.end(JSON.stringify({
@@ -259,6 +310,7 @@ module.exports = function (app) {
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
         var postImageTags = [""]; //what
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
+        var postImageQuality = req.user.settings.imageQuality;
 
         let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
 
@@ -300,11 +352,15 @@ module.exports = function (app) {
                                 console.log(e);
                             }
                         }) //move images out of temp storage
+                        var dimensions = sizeOf('./cdn/images/' + imageFileName);
                         image = new Image({
                             context: "user",
                             filename: imageFileName,
                             privacy: postPrivacy,
-                            user: req.user._id
+                            user: req.user._id,
+                            quality: postImageQuality,
+                            height: dimensions.height,
+                            width: dimensions.width
                         })
                         image.save();
                     }
@@ -730,7 +786,7 @@ module.exports = function (app) {
                                         boosterIDs.push(boost.author.toString());
                                         //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
                                         if (boosterIDs.length == post.boosts.length) {
-                                            //remove duplicate ids for people who've boosted it more than once, 
+                                            //remove duplicate ids for people who've boosted it more than once,
                                             //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
                                             //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
                                             boosterIDs = boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
@@ -874,7 +930,7 @@ module.exports = function (app) {
                     .then((comment) => {
                         relocatePost(ObjectId(req.params.postid));
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
-                        
+
                         if (!post.comments.some((v, i, a) => {
                                 return v.author.toString() == req.user._id.toString();
                             })) {
