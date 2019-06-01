@@ -52,6 +52,7 @@ var userSchema = new mongoose.Schema({
   settings: {
     profileVisibility: { type: String, default: "invisible" },
     newPostPrivacy: { type: String, default: "public" },
+    imageQuality: { type: String, default: "standard" },
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],

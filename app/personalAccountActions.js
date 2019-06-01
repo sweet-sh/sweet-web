@@ -103,7 +103,7 @@ module.exports = function (app, passport) {
     //Input: info from the request body: the email field and the password field. the email field can actually also contain the user's username and
     //work just as well.
     //Output: either a redirect back to the login html page with a sessionflash message "Please check you email and password" (which shows up twice in fact if
-    //you didn't enter an email) or you are successfully logged in by passport.  
+    //you didn't enter an email) or you are successfully logged in by passport.
     app.post('/login', function (req, res) {
         req.checkBody('email', 'Please check your email and password.').isEmail().notEmpty();
         // req.checkBody('password', 'Please enter a password.').notEmpty();
@@ -323,7 +323,7 @@ module.exports = function (app, passport) {
     })
 
     //Responds to post request that's updating settings
-    //Input: the settings; pretty much just profileVisiblity right now
+    //Input: the settings
     //Output: settings are saved for the user in the database, we're redirected back to the user's page.
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
     app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
@@ -333,7 +333,8 @@ module.exports = function (app, passport) {
             }, {
                 $set: {
                     'settings.profileVisibility': updatedSettings.profileVisibility,
-                    'settings.newPostPrivacy': updatedSettings.newPostPrivacy
+                    'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
+                    'settings.imageQuality': updatedSettings.imageQuality
                 }
             })
             .then(user => {
