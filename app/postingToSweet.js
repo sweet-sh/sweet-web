@@ -164,9 +164,11 @@ module.exports = function (app) {
         var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality];
         if (req.files.image) {
             if (req.files.image.size <= 10485760) {
+                var sharpImage;
                 var imageMeta;
                 try{
-                    imageMeta = await sharp(req.files.image.data).metadata();
+                    sharpImage = sharp(req.files.image.data);
+                    imageMeta = await sharpImage.metadata();
                 }catch(err){
                     console.log("image not loaded by sharp for format determination");
                     res.setHeader('content-type', 'text/plain');
@@ -185,6 +187,7 @@ module.exports = function (app) {
                             if (err) {
                                 return console.log(err);
                             }
+                            //WHAT IS THIS
                             // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
                             // .then((tags) => {
                             //   if (tags.auto){
@@ -199,6 +202,7 @@ module.exports = function (app) {
                                 url: imageUrl + '.gif',
                                 tags: imageTags
                             }));
+                            //WHAT IS THIS
                             // })
                             // .catch(err => {
                             //   console.error(err);
@@ -214,15 +218,12 @@ module.exports = function (app) {
                         }));
                     }
                 } else if (imageFormat == "jpeg") {
-                    sharp(req.files.image.data)
+                    sharpImage
                         .resize({
                             width: imageQualitySettings.resize,
                             withoutEnlargement: true
                         })
                         .rotate()
-                        .flatten({
-                          background: {r:255,g:255,b:255} // White background for transparent images
-                        })
                         .jpeg({
                             quality: imageQualitySettings.jpegQuality
                         })
@@ -240,12 +241,15 @@ module.exports = function (app) {
                         });
               } else if (imageFormat == "png") { // This isn't DRY but I can't work out how to store and then drop in the single changing variable (whether the method is .jpeg() or .png()).
                   if (req.user.settings.imageQuality == "standard") {
-                    sharp(req.files.image.data)
+                    sharpImage
                         .resize({
                             width: imageQualitySettings.resize,
                             withoutEnlargement: true
                         })
                         .rotate()
+                        .flatten({
+                          background: {r:255,g:255,b:255} // White background for transparent images
+                        })
                         .jpeg({
                             quality: imageQualitySettings.jpegQuality
                         })
