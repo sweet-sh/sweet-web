@@ -145,32 +145,32 @@ module.exports = function (app) {
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
     app.post("/api/image/v2", isLoggedInOrRedirect, async function (req, res) {
         var imageQualitySettingsArray = {
-          'standard': {
-            resize: 1200,
-            filetype: 'jpg',
-            jpegQuality: 85
-          },
-          'high': {
-            resize: 2048,
-            filetype: 'png',
-            jpegQuality: 95
-          },
-          'ridiculous': {
-            resize: 4096,
-            filetype: 'png',
-            jpegQuality: 95
-          }
+            'standard': {
+                resize: 1200,
+                filetype: 'jpg',
+                jpegQuality: 85
+            },
+            'high': {
+                resize: 2048,
+                filetype: 'png',
+                jpegQuality: 95
+            },
+            'ridiculous': {
+                resize: 4096,
+                filetype: 'png',
+                jpegQuality: 95
+            }
         };
         var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality];
         if (req.files.image) {
             if (req.files.image.size <= 10485760) {
                 var sharpImage;
                 var imageMeta;
-                try{
+                try {
                     sharpImage = sharp(req.files.image.data);
                     imageMeta = await sharpImage.metadata();
-                }catch(err){
-                    console.log("image not loaded by sharp for format determination");
+                } catch (err) {
+                    console.log("image failed to be loaded by sharp for format determination");
                     res.setHeader('content-type', 'text/plain');
                     res.end(JSON.stringify({
                         error: "filetype"
@@ -217,83 +217,50 @@ module.exports = function (app) {
                             error: "filesize"
                         }));
                     }
-                } else if (imageFormat == "jpeg") {
-                    sharpImage
-                        .resize({
+                } else if (imageFormat == "jpeg" || imageFormat == "png") {
+                    sharpImage = sharpImage.resize({
                             width: imageQualitySettings.resize,
                             withoutEnlargement: true
                         })
-                        .rotate()
-                        .jpeg({
+                        .rotate();
+                    if(imageFormat == "png" && req.user.settings.imageQuality == "standard"){
+                        sharpImage = sharpImage.flatten({
+                            background: {
+                                r: 255,
+                                g: 255,
+                                b: 255
+                            }
+                        });
+                    }
+                    if (imageFormat == "jpeg" || req.user.settings.imageQuality == "standard") {
+                        sharpImage = sharpImage.jpeg({
                             quality: imageQualitySettings.jpegQuality
                         })
-                        .toFile('./cdn/images/temp/' + imageUrl + '.jpg') //to temp
+                    } else {
+                        sharpImage = sharpImage.png();
+                    }
+                    sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
                         .then(image => {
                             imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
-                                url: imageUrl + '.jpg',
+                                url: imageUrl + '.' + imageFormat,
                                 tags: imageTags
                             }));
                         })
                         .catch(err => {
+                            console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-              } else if (imageFormat == "png") { // This isn't DRY but I can't work out how to store and then drop in the single changing variable (whether the method is .jpeg() or .png()).
-                  if (req.user.settings.imageQuality == "standard") {
-                    sharpImage
-                        .resize({
-                            width: imageQualitySettings.resize,
-                            withoutEnlargement: true
-                        })
-                        .rotate()
-                        .flatten({
-                          background: {r:255,g:255,b:255} // White background for transparent images
-                        })
-                        .jpeg({
-                            quality: imageQualitySettings.jpegQuality
-                        })
-                        .toFile('./cdn/images/temp/' + imageUrl + '.' + imageQualitySettings.filetype) //to temp
-                        .then(image => {
-                            imageTags = ""
-                            res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.' + imageQualitySettings.filetype,
-                                tags: imageTags
-                            }));
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                  } else if (req.user.settings.imageQuality == "high" || req.user.settings.imageQuality == "ridiculous") {
-                    sharp(req.files.image.data)
-                        .resize({
-                            width: imageQualitySettings.resize,
-                            withoutEnlargement: true
-                        })
-                        .rotate()
-                        .png()
-                        .toFile('./cdn/images/temp/' + imageUrl + '.' + imageQualitySettings.filetype) //to temp
-                        .then(image => {
-                            imageTags = ""
-                            res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.' + imageQualitySettings.filetype,
-                                tags: imageTags
-                            }));
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                      }
-              }else{
-                console.log("image not a gif or a png or a jpg according to sharp!");
-                res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filetype"
-                }));
-                return;
-              }
+
+                } else {
+                    console.log("image not a gif or a png or a jpg according to sharp!");
+                    res.setHeader('content-type', 'text/plain');
+                    res.end(JSON.stringify({
+                        error: "filetype"
+                    }));
+                    return;
+                }
             } else {
                 res.setHeader('content-type', 'text/plain');
                 res.end(JSON.stringify({
@@ -372,7 +339,7 @@ module.exports = function (app) {
                                 console.log(e);
                             }
                         }) //move images out of temp storage
-                        sharp('./cdn/images/' + imageFileName).metadata().then(metadata=>{
+                        sharp('./cdn/images/' + imageFileName).metadata().then(metadata => {
                             image = new Image({
                                 context: "user",
                                 filename: imageFileName,

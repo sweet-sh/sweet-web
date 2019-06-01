@@ -106,14 +106,18 @@ $(function() {
 
           var serverResponse = JSON.parse(data);
           //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
-          if (serverResponse.error && serverResponse.error == "filesize") {
-            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+          if (serverResponse.error) {
+            if(serverResponse.error == "filesize"){
+              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+            }else if(serverResponse.error == "filetype"){
+              bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
+            }
             jqXHR.previewContainer.uploadsCancelled++;
-            thisImagesWindow.remove();
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {
               let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
               submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
             }
+            thisImagesWindow.remove();
           } else {
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
             thisImagesWindow.find('.image-preview').css('background-image','url("/api/image/display/temp/'+serverResponse.url+'")');
