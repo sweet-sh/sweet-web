@@ -1,6 +1,5 @@
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
-const fileType = require('file-type');
 var notifier = require('./notifier.js');
 
 sanitizeHtmlOptions = {
@@ -144,7 +143,7 @@ module.exports = function (app) {
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
     //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
-    app.post("/api/image/v2", isLoggedInOrRedirect, function (req, res) {
+    app.post("/api/image/v2", isLoggedInOrRedirect, async function (req, res) {
         var imageQualitySettingsArray = {
           'standard': {
             resize: 1200,
@@ -165,9 +164,20 @@ module.exports = function (app) {
         var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality];
         if (req.files.image) {
             if (req.files.image.size <= 10485760) {
-                let imageFormat = fileType(req.files.image.data);
+                var imageMeta;
+                try{
+                    imageMeta = await sharp(req.files.image.data).metadata();
+                }catch(err){
+                    console.log("image not loaded by sharp for format determination");
+                    res.setHeader('content-type', 'text/plain');
+                    res.end(JSON.stringify({
+                        error: "filetype"
+                    }));
+                    return;
+                }
+                var imageFormat = imageMeta.format;
                 let imageUrl = shortid.generate();
-                if (imageFormat.mime == "image/gif") {
+                if (imageFormat == "gif") {
                     if (req.files.image.size <= 5242880) {
                         var imageData = req.files.image.data;
                         console.log(imageUrl + '.gif');
@@ -203,7 +213,7 @@ module.exports = function (app) {
                             error: "filesize"
                         }));
                     }
-                } else if (imageFormat.mime == "image/jpeg") {
+                } else if (imageFormat == "jpeg") {
                     sharp(req.files.image.data)
                         .resize({
                             width: imageQualitySettings.resize,
@@ -228,7 +238,7 @@ module.exports = function (app) {
                         .catch(err => {
                             console.error(err);
                         });
-              } else if (imageFormat.mime == "image/png") { // This isn't DRY but I can't work out how to store and then drop in the single changing variable (whether the method is .jpeg() or .png()).
+              } else if (imageFormat == "png") { // This isn't DRY but I can't work out how to store and then drop in the single changing variable (whether the method is .jpeg() or .png()).
                   if (req.user.settings.imageQuality == "standard") {
                     sharp(req.files.image.data)
                         .resize({
@@ -272,6 +282,13 @@ module.exports = function (app) {
                             console.error(err);
                         });
                       }
+              }else{
+                console.log("image not a gif or a png or a jpg according to sharp!");
+                res.setHeader('content-type', 'text/plain');
+                res.end(JSON.stringify({
+                    error: "filetype"
+                }));
+                return;
               }
             } else {
                 res.setHeader('content-type', 'text/plain');
