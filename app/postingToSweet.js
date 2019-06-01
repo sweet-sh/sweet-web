@@ -2,7 +2,6 @@ var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 const fileType = require('file-type');
 var notifier = require('./notifier.js');
-var sizeOf = require('image-size');
 
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -346,23 +345,24 @@ module.exports = function (app) {
             if (postImages) {
                 postImages.forEach(function (imageFileName) {
                     if (imageFileName) {
-                        fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                        fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
                             if (e) {
                                 console.log("could not move " + imageFileName + " out of temp");
                                 console.log(e);
                             }
                         }) //move images out of temp storage
-                        var dimensions = sizeOf('./cdn/images/' + imageFileName);
-                        image = new Image({
-                            context: "user",
-                            filename: imageFileName,
-                            privacy: postPrivacy,
-                            user: req.user._id,
-                            quality: postImageQuality,
-                            height: dimensions.height,
-                            width: dimensions.width
+                        sharp('./cdn/images/' + imageFileName).metadata().then(metadata=>{
+                            image = new Image({
+                                context: "user",
+                                filename: imageFileName,
+                                privacy: postPrivacy,
+                                user: req.user._id,
+                                quality: postImageQuality,
+                                height: metadata.height,
+                                width: metadata.width
+                            })
+                            image.save();
                         })
-                        image.save();
                     }
                 });
             }
