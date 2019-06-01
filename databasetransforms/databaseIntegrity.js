@@ -1,6 +1,6 @@
-const User = require('./app/models/user');
-const Community = require('./app/models/community');
-var configDatabase = require('./config/database.js');
+const User = require('../app/models/user');
+const Community = require('../app/models/community');
+var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
 

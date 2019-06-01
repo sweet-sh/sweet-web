@@ -1,6 +1,6 @@
-const User = require('./app/models/user');
-const Post = require('./app/models/post');
-var configDatabase = require('./config/database.js');
+const User = require('../app/models/user');
+const Post = require('../app/models/post');
+var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, {
     useNewUrlParser: true

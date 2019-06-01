@@ -2,8 +2,8 @@
 //Do not run more than once
 
 
-User = require('./app/models/user');
-var configDatabase = require('./config/database.js');
+User = require('../app/models/user');
+var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
 
