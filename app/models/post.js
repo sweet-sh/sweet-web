@@ -62,6 +62,7 @@ var postSchema = new mongoose.Schema({
   mentions: [String],
   tags: [String],
   boosts: [String],
+  boosters: [{type: Schema.Types.ObjectId, ref: 'User' }],
   contentWarnings: String,
   commentsDisabled: Boolean,
   imageVersion: Number,
