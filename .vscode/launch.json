@@ -38,6 +38,12 @@
             "request": "launch",
             "name": "Smol DB Check",
             "program": "${workspaceFolder}\\databasetransforms\\databaseIntegrity.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Add width and height to images",
+            "program": "${workspaceFolder}\\databasetransforms\\addImageSizesToDB.js"
         }
     ]
 }
