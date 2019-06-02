@@ -109,6 +109,9 @@ module.exports = function (app, passport) {
         // req.checkBody('password', 'Please enter a password.').notEmpty();
 
         req.getValidationResult().then(function (result) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+            res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+            res.setHeader("Expires", "0"); // Proxies.
             if (!result.isEmpty()) {
                 var errors = result.array().map(function (elem) {
                     return elem.msg
