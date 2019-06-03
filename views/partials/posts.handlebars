@@ -59,9 +59,29 @@
               <a class="content-warning-show-more" data-state="contracted">Show post</a>
               <div class="abbreviated-content content-warning-content" style="height:0">
                 {{{this.parsedContent}}}
+                {{#if this.linkPreview.url}}
+                    <a class="link-preview-container" target="_blank" rel="noopener noreferrer" href="{{this.linkPreview.url}}">
+                        <img class="link-preview-image" src="{{this.linkPreview.image}}" />
+                        <div class="link-preview-text-container">
+                            <span class="link-preview-title">{{this.linkPreview.title}}</span>
+                            <span class="link-preview-description">{{this.linkPreview.description}}</span>
+                            <span class="link-preview-domain">{{this.linkPreview.domain}}</span>
+                        </div>
+                    </a>
+                {{/if}}
               </div>
             {{else}}
               {{{this.parsedContent}}}
+              {{#if this.linkPreview.url}}
+                  <a class="link-preview-container" target="_blank" rel="noopener noreferrer" href="{{this.linkPreview.url}}">
+                      <img class="link-preview-image" src="{{this.linkPreview.image}}" />
+                      <div class="link-preview-text-container">
+                          <span class="link-preview-title">{{this.linkPreview.title}}</span>
+                          <span class="link-preview-description">{{truncate (sanitize this.linkPreview.description) 120}}</span>
+                          <span class="link-preview-domain">{{this.linkPreview.domain}}</span>
+                      </div>
+                  </a>
+              {{/if}}
             {{/if}}
           </div>
           {{#if this.images}}

@@ -76,7 +76,14 @@ var postSchema = new mongoose.Schema({
   imageDescriptions: [String],
   images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }],
   subscribedUsers: [String],
-  unsubscribedUsers: [String]
+  unsubscribedUsers: [String],
+  linkPreview: {
+    url: String,
+    domain: String,
+    title: String,
+    description: String,
+    image: String
+  }
 });
 
 postSchema.index({lastUpdated:-1});

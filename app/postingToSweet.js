@@ -2,6 +2,16 @@ var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
 
+const url = require('url');
+const metascraper = require('metascraper')([
+  require('metascraper-image')(),
+  require('metascraper-title')(),
+  require('metascraper-url')(),
+  require('metascraper-description')()
+])
+
+const got = require('got');
+
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
     allowedAttributes: {
@@ -306,225 +316,255 @@ module.exports = function (app) {
             return;
         }
 
-        //non-community post
-        if (!req.body.communityId) {
-            var post = new Post({
-                type: 'original',
-                authorEmail: req.user.email,
-                author: req.user._id,
-                url: newPostUrl,
-                privacy: postPrivacy,
-                timestamp: postCreationTime,
-                lastUpdated: postCreationTime,
-                rawContent: sanitize(req.body.postContent),
-                parsedContent: parsedResult.text,
-                numberOfComments: 0,
-                mentions: parsedResult.mentions,
-                tags: parsedResult.tags,
-                contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                imageVersion: 2,
-                images: postImages,
-                imageTags: postImageTags,
-                imageDescriptions: postImageDescriptions,
-                subscribedUsers: [req.user._id],
-                boostsV2: [{
-                    booster: req.user._id,
-                    timestamp: postCreationTime
-                }]
-            });
+        function savePost(linkPreviewEnabled, linkPreviewMetadata) {
+            if (linkPreviewEnabled) {
+                linkPreview = {
+                    url: linkPreviewMetadata.url,
+                    domain: url.parse(linkPreviewMetadata.url).hostname,
+                    title: linkPreviewMetadata.title,
+                    description: linkPreviewMetadata.description,
+                    image: linkPreviewMetadata.image,
+                }
+            } else {
+                linkPreview = {};
+            }
+            //non-community post
+            if (!req.body.communityId) {
+                var post = new Post({
+                    type: 'original',
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: newPostUrl,
+                    privacy: postPrivacy,
+                    timestamp: postCreationTime,
+                    lastUpdated: postCreationTime,
+                    rawContent: sanitize(req.body.postContent),
+                    parsedContent: parsedResult.text,
+                    numberOfComments: 0,
+                    mentions: parsedResult.mentions,
+                    tags: parsedResult.tags,
+                    contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
+                    imageVersion: 2,
+                    images: postImages,
+                    imageTags: postImageTags,
+                    imageDescriptions: postImageDescriptions,
+                    subscribedUsers: [req.user._id],
+                    boostsV2: [{
+                        booster: req.user._id,
+                        timestamp: postCreationTime
+                    }],
+                    linkPreview: linkPreview
+                });
 
-            // Parse images
-            if (postImages) {
-                postImages.forEach(function (imageFileName) {
-                    if (imageFileName) {
-                        fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                // Parse images
+                if (postImages) {
+                    postImages.forEach(function (imageFileName) {
+                        if (imageFileName) {
+                            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                                if (e) {
+                                    console.log("could not move " + imageFileName + " out of temp");
+                                    console.log(e);
+                                }
+                            }) //move images out of temp storage
+                            sharp('./cdn/images/' + imageFileName).metadata().then(metadata => {
+                                image = new Image({
+                                    context: "user",
+                                    filename: imageFileName,
+                                    privacy: postPrivacy,
+                                    user: req.user._id,
+                                    quality: postImageQuality,
+                                    height: metadata.height,
+                                    width: metadata.width
+                                })
+                                image.save();
+                            })
+                        }
+                    });
+                }
+                var newPostId = post._id;
+                post.save()
+                    .then(() => {
+                        parsedResult.tags.forEach((tag) => {
+                            Tag.findOneAndUpdate({
+                                name: tag
+                            }, {
+                                "$push": {
+                                    "posts": newPostId
+                                },
+                                "$set": {
+                                    "lastUpdated": postCreationTime
+                                }
+                            }, {
+                                upsert: true,
+                                new: true
+                            }, function (error, result) {
+                                if (error) return
+                            });
+                        });
+                        if (postPrivacy == "private") {
+                            console.log("This post is private!")
+                            // Make sure to only notify mentioned people if they are trusted
+                            Relationship.find({
+                                    from: req.user.email,
+                                    value: "trust"
+                                }, {
+                                    'to': 1
+                                })
+                                .then((emails) => {
+                                    let emailsArray = emails.map(({
+                                        to
+                                    }) => to)
+                                    parsedResult.mentions.forEach(function (mention) {
+                                        User.findOne({
+                                                username: mention
+                                            })
+                                            .then((user) => {
+                                                if (emailsArray.includes(user.email)) {
+                                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                                }
+                                            })
+                                    })
+                                })
+                                .catch((err) => {
+                                    console.log("Error in profileData.")
+                                    console.log(err);
+                                });
+                        } else if (postPrivacy == "public") {
+                            console.log("This post is public!")
+                            // This is a public post, notify everyone
+                            parsedResult.mentions.forEach(function (mention) {
+                                if (mention != req.user.username) { //don't get notified from mentioning yourself
+                                    User.findOne({
+                                            username: mention
+                                        })
+                                        .then((user) => {
+                                            notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                        })
+                                }
+                            });
+                        }
+                        res.redirect('back');
+                    })
+                    .catch((err) => {
+                        console.log("Database error: " + err)
+                    });
+
+                //community post
+            } else {
+                let communityId = req.body.communityId;
+
+                const post = new Post({
+                    type: 'community',
+                    community: communityId,
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: newPostUrl,
+                    privacy: 'public',
+                    timestamp: new Date(),
+                    lastUpdated: new Date(),
+                    rawContent: sanitize(req.body.postContent),
+                    parsedContent: parsedResult.text,
+                    numberOfComments: 0,
+                    mentions: parsedResult.mentions,
+                    tags: parsedResult.tags,
+                    contentWarnings: sanitize(req.body.postContentWarnings),
+                    imageVersion: 2,
+                    images: postImages,
+                    imageTags: postImageTags,
+                    imageDescriptions: postImageDescriptions,
+                    subscribedUsers: [req.user._id],
+                    boostsV2: [{
+                        booster: req.user._id,
+                        timestamp: postCreationTime
+                    }],
+                    linkPreview: linkPreview
+                });
+
+                // Parse images
+                if (postImages) {
+                    postImages.forEach(function (imageFileName) {
+                        fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
                             if (e) {
                                 console.log("could not move " + imageFileName + " out of temp");
                                 console.log(e);
                             }
                         }) //move images out of temp storage
-                        sharp('./cdn/images/' + imageFileName).metadata().then(metadata => {
-                            image = new Image({
-                                context: "user",
-                                filename: imageFileName,
-                                privacy: postPrivacy,
-                                user: req.user._id,
-                                quality: postImageQuality,
-                                height: metadata.height,
-                                width: metadata.width
+                        Community.findOne({
+                                _id: communityId
                             })
-                            image.save();
-                        })
-                    }
-                });
-            }
-            var newPostId = post._id;
-            post.save()
-                .then(() => {
-                    parsedResult.tags.forEach((tag) => {
-                        Tag.findOneAndUpdate({
-                            name: tag
-                        }, {
-                            "$push": {
-                                "posts": newPostId
-                            },
-                            "$set": {
-                                "lastUpdated": postCreationTime
-                            }
-                        }, {
-                            upsert: true,
-                            new: true
-                        }, function (error, result) {
-                            if (error) return
-                        });
-                    });
-                    if (postPrivacy == "private") {
-                        console.log("This post is private!")
-                        // Make sure to only notify mentioned people if they are trusted
-                        Relationship.find({
-                                from: req.user.email,
-                                value: "trust"
-                            }, {
-                                'to': 1
-                            })
-                            .then((emails) => {
-                                let emailsArray = emails.map(({
-                                    to
-                                }) => to)
-                                parsedResult.mentions.forEach(function (mention) {
-                                    User.findOne({
-                                            username: mention
-                                        })
-                                        .then((user) => {
-                                            if (emailsArray.includes(user.email)) {
-                                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                            }
-                                        })
+                            .then(community => {
+                                image = new Image({
+                                    context: "community",
+                                    filename: imageFileName,
+                                    privacy: community.settings.visibility,
+                                    user: req.user._id,
+                                    community: communityId
                                 })
+                                image.save();
                             })
-                            .catch((err) => {
-                                console.log("Error in profileData.")
-                                console.log(err);
+                    });
+                }
+
+                post.save()
+                    .then(() => {
+                        parsedResult.tags.forEach((tag) => {
+                            Tag.findOneAndUpdate({
+                                name: tag
+                            }, {
+                                "$push": {
+                                    "posts": newPostId
+                                }
+                            }, {
+                                upsert: true,
+                                new: true
+                            }, function (error, result) {
+                                if (error) return
                             });
-                    } else if (postPrivacy == "public") {
-                        console.log("This post is public!")
-                        // This is a public post, notify everyone
+                        });
+                        // Notify everyone mentioned that belongs to this community
                         parsedResult.mentions.forEach(function (mention) {
                             if (mention != req.user.username) { //don't get notified from mentioning yourself
                                 User.findOne({
-                                        username: mention
+                                        username: mention,
+                                        communities: {
+                                            $in: [communityId]
+                                        }
                                     })
                                     .then((user) => {
                                         notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                                     })
                             }
                         });
-                    }
-                    res.redirect('back');
-                })
-                .catch((err) => {
-                    console.log("Database error: " + err)
-                });
-
-            //community post
-        } else {
-            let communityId = req.body.communityId;
-
-            const post = new Post({
-                type: 'community',
-                community: communityId,
-                authorEmail: req.user.email,
-                author: req.user._id,
-                url: newPostUrl,
-                privacy: 'public',
-                timestamp: new Date(),
-                lastUpdated: new Date(),
-                rawContent: sanitize(req.body.postContent),
-                parsedContent: parsedResult.text,
-                numberOfComments: 0,
-                mentions: parsedResult.mentions,
-                tags: parsedResult.tags,
-                contentWarnings: sanitize(req.body.postContentWarnings),
-                imageVersion: 2,
-                images: postImages,
-                imageTags: postImageTags,
-                imageDescriptions: postImageDescriptions,
-                subscribedUsers: [req.user._id],
-                boostsV2: [{
-                    booster: req.user._id,
-                    timestamp: postCreationTime
-                }]
-            });
-
-            // Parse images
-            if (postImages) {
-                postImages.forEach(function (imageFileName) {
-                    fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
-                        if (e) {
-                            console.log("could not move " + imageFileName + " out of temp");
-                            console.log(e);
-                        }
-                    }) //move images out of temp storage
-                    Community.findOne({
+                        Community.findOneAndUpdate({
                             _id: communityId
-                        })
-                        .then(community => {
-                            image = new Image({
-                                context: "community",
-                                filename: imageFileName,
-                                privacy: community.settings.visibility,
-                                user: req.user._id,
-                                community: communityId
-                            })
-                            image.save();
-                        })
-                });
-            }
-
-            post.save()
-                .then(() => {
-                    parsedResult.tags.forEach((tag) => {
-                        Tag.findOneAndUpdate({
-                            name: tag
                         }, {
-                            "$push": {
-                                "posts": newPostId
+                            $set: {
+                                lastUpdated: new Date()
                             }
-                        }, {
-                            upsert: true,
-                            new: true
-                        }, function (error, result) {
-                            if (error) return
-                        });
-                    });
-                    // Notify everyone mentioned that belongs to this community
-                    parsedResult.mentions.forEach(function (mention) {
-                        if (mention != req.user.username) { //don't get notified from mentioning yourself
-                            User.findOne({
-                                    username: mention,
-                                    communities: {
-                                        $in: [communityId]
-                                    }
-                                })
-                                .then((user) => {
-                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                })
-                        }
-                    });
-                    Community.findOneAndUpdate({
-                        _id: communityId
-                    }, {
-                        $set: {
-                            lastUpdated: new Date()
-                        }
-                    }).then(community => {
-                        console.log("Updated community!")
+                        }).then(community => {
+                            console.log("Updated community!")
+                        })
+                        res.redirect('back');
                     })
-                    res.redirect('back');
+                    .catch((err) => {
+                        console.log("Database error: " + err)
+                    });
+            }
+        }
+
+        //get link preview for first link in content
+        contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
+        if (contentURLMatch) {
+            contentURL = contentURLMatch[2]
+            got(contentURL)
+            .then(({ body: html, url }) => {
+                metascraper({ html, url })
+                    .then(metadata => {
+                        savePost(true, metadata);
                 })
-                .catch((err) => {
-                    console.log("Database error: " + err)
-                });
+            })
+        } else {
+            savePost(false);
         }
     });
 

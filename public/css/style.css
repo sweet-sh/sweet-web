@@ -1431,3 +1431,51 @@ background-size: 5.66px 5.66px;
   font-weight: 400;
   font-size: 90%;
 }
+
+.link-preview-container {
+    display: flex;
+    height: 100px;
+    padding: 10px;
+    color: #1a1717;
+    font-weight: 500;
+    border: 1px solid #dfdfdf;
+    border-radius: 4px;
+    margin: 0.5em 0;
+}
+
+.link-preview-container:hover {
+    text-decoration: none;
+    background: #fcfcfc;
+}
+
+.link-preview-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.link-preview-text-container>span {
+    margin: 0;
+    padding: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.link-preview-image {
+    flex: 0;
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+.link-preview-description {
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.link-preview-domain {
+    font-weight: 300;
+    font-size: 0.9em;
+    font-variant: small-caps;
+}
