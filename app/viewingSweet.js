@@ -787,7 +787,8 @@ module.exports = function (app) {
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: displayContext.subscribedUsers,
-                  unsubscribedUsers: displayContext.unsubscribedUsers
+                  unsubscribedUsers: displayContext.unsubscribedUsers,
+                  linkPreview: displayContext.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -902,7 +903,8 @@ module.exports = function (app) {
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: displayContext.subscribedUsers,
-                  unsubscribedUsers: displayContext.unsubscribedUsers
+                  unsubscribedUsers: displayContext.unsubscribedUsers,
+                  linkPreview: displayContext.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1101,7 +1103,8 @@ module.exports = function (app) {
                       recentlyCommented: recentlyCommented,
                       lastCommentAuthor: lastCommentAuthor,
                       subscribedUsers: displayContext.subscribedUsers,
-                      unsubscribedUsers: displayContext.unsubscribedUsers
+                      unsubscribedUsers: displayContext.unsubscribedUsers,
+                      linkPreview: displayContext.linkPreview
                     }
                     displayedPost.comments.forEach(function (comment) {
                       comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1778,7 +1781,8 @@ module.exports = function (app) {
               recentlyCommented: recentlyCommented,
               lastCommentAuthor: lastCommentAuthor,
               subscribedUsers: displayContext.subscribedUsers,
-              unsubscribedUsers: displayContext.unsubscribedUsers
+              unsubscribedUsers: displayContext.unsubscribedUsers,
+              linkPreview: displayContext.linkPreview
             }
             displayedPost.comments.forEach(function (comment) {
               comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1834,7 +1838,7 @@ module.exports = function (app) {
 
   //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
   //to seen=true
-  //Input: 
+  //Input:
   app.post("/api/notification/update/:id", isLoggedInOrRedirect, function (req, res) {
     User.findOneAndUpdate({
         "_id": req.user._id,
