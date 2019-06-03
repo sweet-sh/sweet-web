@@ -22,7 +22,6 @@
     "express-messages": "^1.0.1",
     "express-session": "^1.15.6",
     "express-validator": "^5.3.1",
-    "file-type": "^10.10.0",
     "got": "^9.6.0",
     "handlebars-helpers": "^0.10.0",
     "metascraper": "^5.4.0",

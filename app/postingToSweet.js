@@ -1028,8 +1028,12 @@ module.exports = function (app) {
                 '_id': req.params.postid
             }, {
                 boostsV2: 1,
-                lastUpdated: 1
-            })
+                lastUpdated: 1,
+                privacy: 1,
+                unsubscribedUsers: 1,
+                author: 1,
+                url:1
+            }).populate('author')
             .then((boostedPost) => {
                 if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
                     res.status(400).send("post is not public and therefore may not be boosted");
@@ -1045,13 +1049,13 @@ module.exports = function (app) {
                 boostedPost.boostsV2.push(boost);
                 boostedPost.lastUpdated = boostedTimestamp;
 
-                //replace this later when comment-on-a-boost notifications use the boostsV2 array instead of the subscribed/unsubscribed users
-                boostedPost.subscribedUsers.push(req.user._id.toString());
+                // don't think so
+                //boostedPost.subscribedUsers.push(req.user._id.toString());
 
                 boostedPost.save().then(() => {
                     //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
                     if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
-                        notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                        notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, null, '/' + boostedPost.author.username + '/' + boostedPost.url, 'post')
                     }
                     res.redirect("back");
                 })

@@ -7,8 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Create/confirm 'boosters' field",
-            "program": "${workspaceFolder}\\databasetransforms\\dbBoostedByUserFieldCreation.js"
+            "name": "Create 'boostsV2' field",
+            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsProperly.js"
         },
         {
             "type": "node",

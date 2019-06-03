@@ -635,7 +635,7 @@ module.exports = function (app) {
           var postDisplayContext = {
             "$or": [{
                 "boostsV2.booster": {
-                  $in: myFollowedUserIds
+                  $in: myFollowedUserIds //this finds original and boosted posts by these users, bc the author "implicitly boosts" their post by default
                 }
               },
               {
@@ -648,7 +648,7 @@ module.exports = function (app) {
           }
         } else if (req.params.context == "user") {
           var postDisplayContext = {
-            author: req.params.identifier
+            "boostsV2.booster": req.params.identifier
           }
         } else if (req.params.context == "single") {
           var postDisplayContext = {
@@ -673,7 +673,7 @@ module.exports = function (app) {
           }
         } else {
           var postDisplayContext = {
-            author: req.params.identifier,
+            "boostsV2.booster": req.params.identifier,
             privacy: 'public'
           }
         }
@@ -687,18 +687,7 @@ module.exports = function (app) {
         .populate('author', '-password')
         .populate('community')
         .populate('comments.author', '-password')
-        .populate({
-          path: 'boosts',
-          populate: {
-            path: 'author'
-          }
-        })
-        .populate({
-          path: 'boostTarget',
-          populate: {
-            path: 'author comments.author'
-          }
-        })
+        .populate('boostsV2.booster')
         .then((posts) => {
           if (!posts.length) {
             res.status(404)
@@ -718,22 +707,17 @@ module.exports = function (app) {
                     canDisplay = false;
                   }
                 }
-                if (post.type == "boost") {
-                  displayContext = post.boostTarget;
+                if (moment(post.timestamp).isSame(today, 'd')) {
+                  parsedTimestamp = moment(post.timestamp).fromNow();
+                } else if (moment(post.timestamp).isSame(thisyear, 'y')) {
+                  parsedTimestamp = moment(post.timestamp).format('D MMM');
                 } else {
-                  displayContext = post;
+                  parsedTimestamp = moment(post.timestamp).format('D MMM YYYY');
                 }
-                if (moment(displayContext.timestamp).isSame(today, 'd')) {
-                  parsedTimestamp = moment(displayContext.timestamp).fromNow();
-                } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-                  parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-                } else {
-                  parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-                }
-                if (displayContext.comments != "") {
-                  if (moment(displayContext.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+                if (post.comments != "") {
+                  if (moment(post.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
                     recentlyCommented = true;
-                    lastCommentAuthor = displayContext.comments.slice(-1)[0].author
+                    lastCommentAuthor = post.comments.slice(-1)[0].author
                   } else {
                     recentlyCommented = false;
                     lastCommentAuthor = "";
@@ -744,51 +728,60 @@ module.exports = function (app) {
                 }
 
                 imageUrlsArray = []
-                if (displayContext.imageVersion === 2) {
-                  displayContext.images.forEach(image => {
+                if (post.imageVersion === 2) {
+                  post.images.forEach(image => {
                     imageUrlsArray.push('/api/image/display/' + image)
                   })
                 } else {
-                  displayContext.images.forEach(image => {
+                  post.images.forEach(image => {
                     imageUrlsArray.push('/images/uploads/' + image)
                   })
                 }
 
+                var followedBoosters = [];
+                if (post.boostsV2.length > 1) {
+                  post.boostsV2.forEach((v, i, a) => {
+                    if (myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
+                      followedBoosters.push(v.booster.username);
+                    }
+                  })
+                }
+
+
                 displayedPost = {
                   canDisplay: canDisplay,
-                  _id: displayContext._id,
+                  _id: post._id,
                   deleteid: post._id,
                   type: post.type,
                   owner: post.author.username,
                   author: {
-                    email: displayContext.author.email,
-                    _id: displayContext.author._id,
-                    username: displayContext.author.username,
-                    displayName: displayContext.author.displayName,
-                    imageEnabled: displayContext.author.imageEnabled,
-                    image: displayContext.author.image,
+                    email: post.author.email,
+                    _id: post.author._id,
+                    username: post.author.username,
+                    displayName: post.author.displayName,
+                    imageEnabled: post.author.imageEnabled,
+                    image: post.author.image,
                   },
-                  url: displayContext.url,
-                  privacy: displayContext.privacy,
+                  url: post.url,
+                  privacy: post.privacy,
                   parsedTimestamp: parsedTimestamp,
                   lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-                  rawContent: displayContext.rawContent,
-                  parsedContent: displayContext.parsedContent,
-                  commentsDisabled: displayContext.commentsDisabled,
-                  comments: displayContext.comments,
-                  numberOfComments: displayContext.numberOfComments,
-                  contentWarnings: displayContext.contentWarnings,
+                  rawContent: post.rawContent,
+                  parsedContent: post.parsedContent,
+                  commentsDisabled: post.commentsDisabled,
+                  comments: post.comments,
+                  numberOfComments: post.numberOfComments,
+                  contentWarnings: post.contentWarnings,
                   images: imageUrlsArray,
-                  imageTags: displayContext.imageTags,
-                  imageDescriptions: displayContext.imageDescriptions,
-                  community: displayContext.community,
-                  boosts: displayContext.boosts,
-                  boostTarget: post.boostTarget,
+                  imageTags: post.imageTags,
+                  imageDescriptions: post.imageDescriptions,
+                  community: post.community,
+                  followedBoosters: followedBoosters,
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
-                  subscribedUsers: displayContext.subscribedUsers,
-                  unsubscribedUsers: displayContext.unsubscribedUsers,
-                  linkPreview: displayContext.linkPreview
+                  subscribedUsers: post.subscribedUsers,
+                  unsubscribedUsers: post.unsubscribedUsers,
+                  linkPreview: post.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -796,24 +789,12 @@ module.exports = function (app) {
                     comment.images[i] = '/api/image/display/' + comment.images[i];
                   }
                   // If the comment's author is logged in, or the post's author is logged in
-                  if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
+                  if ((comment.author._id.equals(loggedInUserData._id)) || (post.author._id.equals(loggedInUserData._id))) {
                     comment.canDelete = true;
                   }
                 });
                 displayedPosts.push(displayedPost);
               });
-
-              // console.log(displayedPosts.map(a => a._id.toString()));
-              //
-              // Remove boosts with same ids as original post from displayedPosts array
-              // if (req.params.context == "home"){
-              //   displayedPosts = displayedPosts.filter((post, index, self) =>
-              //     index === self.findIndex((t) => (
-              //       t._id.equals(post._id)
-              //     ))
-              //   )
-              // }
-
             } else {
               posts.forEach(function (post, i) {
                 let canDisplay = false;
@@ -834,11 +815,7 @@ module.exports = function (app) {
                     canDisplay = true;
                   }
                 }
-                if (post.type == "boost") {
-                  displayContext = post.boostTarget;
-                } else {
-                  displayContext = post;
-                }
+                var displayContext = post;
                 if (moment(displayContext.timestamp).isSame(today, 'd')) {
                   parsedTimestamp = moment(displayContext.timestamp).fromNow();
                 } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {

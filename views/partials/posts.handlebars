@@ -16,6 +16,11 @@
               </p>
             {{/isnt}}
           {{/if}}
+          {{#if followedBoosters}}
+          <p class="text-secondary">
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+          </p>
+          {{/if}}
           {{#eq ../context "community"}}
           {{else}}
             {{#contains ../loggedInUserData.communities this.community._id}}
@@ -210,6 +215,11 @@
                 </p>
               {{/isnt}}
             {{/if}}
+            {{#if followedBoosters}}
+          <p class="text-secondary">
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+          </p>
+          {{/if}}
             {{#isnt ../context "community"}}
               <div class="text-secondary d-flex align-items-center mb-3">
                 <img alt="Display image for the community '{{this.community.name}}'" style="width:20px;height:20px;border-radius:2px;" class="postAuthorImage mr-1" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
@@ -383,6 +393,11 @@
                   </p>
                 {{/isnt}}
               {{/if}}
+              {{#if followedBoosters}}
+          <p class="text-secondary">
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+          </p>
+          {{/if}}
               <div class="mb-3 d-flex">
                 <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
                 <div class="post-header">
