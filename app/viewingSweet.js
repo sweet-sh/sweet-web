@@ -681,7 +681,7 @@ module.exports = function (app) {
       Post.find(
           postDisplayContext
         )
-        .sort(req.params.context=="user" ? '-timestamp' : '-lastUpdated')
+        .sort('-lastUpdated')
         .skip(postsPerPage * page)
         .limit(postsPerPage)
         .populate('author', '-password')
@@ -748,7 +748,7 @@ module.exports = function (app) {
                     }
                   })
                 }
-                
+
                 var fullBoosters = [];
                 if(post.author._id.equals(req.user._id)){
                   fullBoosters = post.boostsV2.filter(b=>{return !(b.timestamp==post.timestamp)});
@@ -789,7 +789,7 @@ module.exports = function (app) {
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: post.subscribedUsers,
                   unsubscribedUsers: post.unsubscribedUsers,
-                  linkPreview: post.linkPreview
+                  // linkPreview: post.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -889,7 +889,7 @@ module.exports = function (app) {
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: displayContext.subscribedUsers,
                   unsubscribedUsers: displayContext.unsubscribedUsers,
-                  linkPreview: displayContext.linkPreview
+                  // linkPreview: displayContext.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1089,7 +1089,7 @@ module.exports = function (app) {
                       lastCommentAuthor: lastCommentAuthor,
                       subscribedUsers: displayContext.subscribedUsers,
                       unsubscribedUsers: displayContext.unsubscribedUsers,
-                      linkPreview: displayContext.linkPreview
+                      // linkPreview: displayContext.linkPreview
                     }
                     displayedPost.comments.forEach(function (comment) {
                       comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1767,7 +1767,7 @@ module.exports = function (app) {
               lastCommentAuthor: lastCommentAuthor,
               subscribedUsers: displayContext.subscribedUsers,
               unsubscribedUsers: displayContext.unsubscribedUsers,
-              linkPreview: displayContext.linkPreview
+              // linkPreview: displayContext.linkPreview
             }
             displayedPost.comments.forEach(function (comment) {
               comment.parsedTimestamp = moment(comment.timestamp).fromNow();
