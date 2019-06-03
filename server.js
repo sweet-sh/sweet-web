@@ -43,7 +43,7 @@ require('./config/passport')(passport); // pass passport for configuration
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
-
+ 
 // View engine (Handlebars)
 var hbs = handlebars.create({
   defaultLayout: 'main',
