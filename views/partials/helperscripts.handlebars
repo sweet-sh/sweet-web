@@ -83,11 +83,47 @@ $(function() {
     })
     tribute.attach($(".editable-text"));
   });
-  // Attach tribute to comment fields
+
+  // Attach scripts to newly loaded posts
   $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+    console.log("Loading!")
     editor.addElements('.editable-text');
-    tribute.attach($(".editable-comment-content"));
-    $('*[data-featherlight-gallery]').featherlightGallery();
+    if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded
+        tribute.attach($(".editable-comment-content"));
+    }
+    $.adaptiveBackground.run();
+    // $('*[data-featherlight-gallery]').featherlightGallery();
+    if ($('.post-images').length > 0) {
+    var $images = $('.post-images a');
+    var $imagesGrouped = $images.filter('[data-group]');
+    var $imagesAlone = $images.not($imagesGrouped);
+    var params = {
+        // your params
+    };
+
+    // Handle standalone images
+    $imagesAlone.each(function (index, element) {
+        $(element).simpleLightbox(params);
+    });
+
+    // Handle grouped imags
+    if ($imagesGrouped.length > 0) {
+        // Select all groups
+        var groupNames = $imagesGrouped.map(function() {
+            return $(this).data('group');
+        }).get();
+        groupNames = $.unique(groupNames);
+
+        // Apply on each group
+        $.each(groupNames, function(key, value) {
+            $imagesGrouped.filter(function () {
+                return $(this).data('group') == value;
+            })
+            .simpleLightbox(params);
+        });
+    }
+}
+console.log("Loaded!")
   });
 
   // RICH TEXT EDITOR INIT

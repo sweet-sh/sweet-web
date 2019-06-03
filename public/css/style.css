@@ -1222,7 +1222,8 @@ background-size: 5.66px 5.66px;
   grid-template-rows: 100%;
 }
 
-.post-images.one-image > img {
+.post-images.one-image > img,
+.post-images.one-image > a {
   object-fit: contain;
   height:auto;
 }
