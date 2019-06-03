@@ -739,21 +739,18 @@ module.exports = function (app) {
                 }
 
                 var followedBoosters = [];
+                var otherBoosters = [];
                 if (post.boostsV2.length > 1) {
                   post.boostsV2.forEach((v, i, a) => {
                     if(!( v.timestamp == post.timestamp )){ //do not include implicit boost
                       if (myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
                         followedBoosters.push(v.booster.username);
+                      }else if(post.author._id.equals(req.user._id)){
+                        otherBoosters.push(v.booster.username);
                       }
                     }
                   })
                 }
-                
-                var fullBoosters = [];
-                if(post.author._id.equals(req.user._id)){
-                  fullBoosters = post.boostsV2.filter(b=>{return !(b.timestamp==post.timestamp)});
-                }
-
 
                 displayedPost = {
                   canDisplay: canDisplay,
@@ -784,7 +781,7 @@ module.exports = function (app) {
                   imageDescriptions: post.imageDescriptions,
                   community: post.community,
                   followedBoosters: followedBoosters,
-                  fullBoosters: fullBoosters,
+                  otherBoosters: otherBoosters,
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: post.subscribedUsers,
