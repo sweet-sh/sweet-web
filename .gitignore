@@ -134,5 +134,7 @@ typings/
 /cdn/images/temp/*.png
 /cdn/images/temp/*.gif
 
-postTimeline.*
-userTimeline.*
+# End of https://www.gitignore.io/api/node,macos
+
+postTimeline.csv
+userTimeline.csv

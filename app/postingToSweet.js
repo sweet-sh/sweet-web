@@ -3,14 +3,6 @@ var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
 
 const url = require('url');
-const metascraper = require('metascraper')([
-  require('metascraper-image')(),
-  require('metascraper-title')(),
-  require('metascraper-url')(),
-  require('metascraper-description')()
-])
-
-const got = require('got');
 
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -317,17 +309,17 @@ module.exports = function (app) {
         }
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
-            if (linkPreviewEnabled) {
-                linkPreview = {
-                    url: linkPreviewMetadata.url,
-                    domain: url.parse(linkPreviewMetadata.url).hostname,
-                    title: linkPreviewMetadata.title,
-                    description: linkPreviewMetadata.description,
-                    image: linkPreviewMetadata.image,
-                }
-            } else {
-                linkPreview = {};
-            }
+            // if (linkPreviewEnabled) {
+            //     linkPreview = {
+            //         url: linkPreviewMetadata.url,
+            //         domain: url.parse(linkPreviewMetadata.url).hostname,
+            //         title: linkPreviewMetadata.title,
+            //         description: linkPreviewMetadata.description,
+            //         image: linkPreviewMetadata.image,
+            //     }
+            // } else {
+            //     linkPreview = {};
+            // }
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -353,7 +345,7 @@ module.exports = function (app) {
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -477,7 +469,7 @@ module.exports = function (app) {
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -553,19 +545,20 @@ module.exports = function (app) {
         }
 
         //get link preview for first link in content
-        contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
-        if (contentURLMatch) {
-            contentURL = contentURLMatch[2]
-            got(contentURL)
-            .then(({ body: html, url }) => {
-                metascraper({ html, url })
-                    .then(metadata => {
-                        savePost(true, metadata);
-                })
-            })
-        } else {
-            savePost(false);
-        }
+        // contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
+        // if (contentURLMatch) {
+        //     contentURL = contentURLMatch[2]
+        //     got(contentURL)
+        //     .then(({ body: html, url }) => {
+        //         metascraper({ html, url })
+        //             .then(metadata => {
+        //                 savePost(true, metadata);
+        //         })
+        //     })
+        // } else {
+        //     savePost(false);
+        // }
+        savePost();
     });
 
     //Responds to requests that delete posts.
