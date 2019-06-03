@@ -151,6 +151,9 @@ module.exports = function(app, passport) {
   //Input: none
   //Output: redirect to '/home' if logged in, render of the index page if logged out.
   app.get('/', function(req, res) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+    res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+    res.setHeader("Expires", "0"); // Proxies.
     if (req.isAuthenticated()){
       res.redirect('/home');
     }
@@ -537,6 +540,9 @@ module.exports = function(app, passport) {
   //Input: none
   //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
   app.get('/home', isLoggedInOrRedirect, function(req, res) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+    res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+    res.setHeader("Expires", "0"); // Proxies.
     res.render('home', {
       loggedIn: true,
       loggedInUserData: loggedInUserData,
@@ -2217,6 +2223,9 @@ module.exports = function(app, passport) {
     // req.checkBody('password', 'Please enter a password.').notEmpty();
 
     req.getValidationResult().then(function (result) {
+       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+       res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+       res.setHeader("Expires", "0"); // Proxies.
       if (!result.isEmpty()) {
           var errors = result.array().map(function (elem) {
             return elem.msg
