@@ -345,7 +345,7 @@ module.exports = function (app) {
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -469,7 +469,7 @@ module.exports = function (app) {
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
