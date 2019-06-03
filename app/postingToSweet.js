@@ -223,7 +223,7 @@ module.exports = function (app) {
                             withoutEnlargement: true
                         })
                         .rotate();
-                    if(imageFormat == "png" && req.user.settings.imageQuality == "standard"){
+                    if (imageFormat == "png" && req.user.settings.imageQuality == "standard") {
                         sharpImage = sharpImage.flatten({
                             background: {
                                 r: 255,
@@ -326,7 +326,11 @@ module.exports = function (app) {
                 images: postImages,
                 imageTags: postImageTags,
                 imageDescriptions: postImageDescriptions,
-                subscribedUsers: [req.user._id]
+                subscribedUsers: [req.user._id],
+                boostsV2: [{
+                    booster: req.user._id,
+                    timestamp: postCreationTime
+                }]
             });
 
             // Parse images
@@ -445,7 +449,11 @@ module.exports = function (app) {
                 images: postImages,
                 imageTags: postImageTags,
                 imageDescriptions: postImageDescriptions,
-                subscribedUsers: [req.user._id]
+                subscribedUsers: [req.user._id],
+                boostsV2: [{
+                    booster: req.user._id,
+                    timestamp: postCreationTime
+                }]
             });
 
             // Parse images
@@ -768,6 +776,35 @@ module.exports = function (app) {
                                 }
 
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
+                                if (post.boostsV2.length > 1) {
+                                    var boosterIDs = [];
+                                    post.boostsV2.populate('booster', (err, boosts) => {
+                                        if (err) {
+                                            console.log('could not notify people who boosted post ' + post._id.toString() + " of a recent reply:");
+                                            console.log(err);
+                                        } else {
+                                            boosts.forEach(boost => {
+                                                boosterIDs.push(boost.booster._id);
+                                                //make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
+                                                //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
+                                                //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
+                                                //or anyone who unsubscribed from the post
+                                                if (!boost.booster._id.equals(req.user._id) &&
+                                                    !boost.booster._id.equals(originalPoster._id) &&
+                                                    !parsedResult.mentions.includes(boost.booster.username) &&
+                                                    !post.unsubscribedUsers.includes(boost.booster._id.toString())) {
+                                                    notifier.notify('user', 'boostedPostReply', boost.booster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                                }
+                                            })
+                                        }
+                                        //if there are boosters, we notify the other "subscribers" here, because here we have the full list of
+                                        //boosters and can check the subscribers against it before notifying them
+                                        var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u));
+                                        notifySubscribers(workingSubscribers);
+                                    })
+                                }
+
+/*                              This is the version of the above that worked with the old model of storing boosts in the database.
                                 var boosterIDs = [];
                                 post.boosts.forEach(boostID => {
                                     Post.findById(boostID).then(boost => {
@@ -798,6 +835,7 @@ module.exports = function (app) {
                                         }
                                     })
                                 })
+*/
 
                                 //NOTIFY THE OTHER SUBSCRIBERS (PEOPLE WHO WERE MENTIONED IN THE ORGINAL POST AND THOSE WHO COMMENTED ON IT)
 
@@ -945,33 +983,32 @@ module.exports = function (app) {
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
     app.post('/createboost/:postid', isLoggedInOrRedirect, function (req, res) {
-        newPostUrl = shortid.generate();
         boostedTimestamp = new Date();
         Post.findOne({
                 '_id': req.params.postid
+            }, {
+                boostsV2: 1,
+                lastUpdated: 1
             })
-            .populate('author')
             .then((boostedPost) => {
-                if (boostedPost.privacy != "public") {
+                if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
                     res.status(400).send("post is not public and therefore may not be boosted");
                     return;
                 }
-                const boost = new Post({
-                    type: 'boost',
-                    boostTarget: boostedPost._id,
-                    authorEmail: req.user.email,
-                    author: req.user._id,
-                    url: newPostUrl,
-                    privacy: 'public',
-                    timestamp: boostedTimestamp,
-                    lastUpdated: boostedTimestamp
-                });
-                let newPostId = boostedPost._id;
-                boostedPost.boosts.push(boost._id);
+                const boost = {
+                    booster: req.user._id,
+                    timestamp: boostedTimestamp
+                }
+                boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                    return !boost.booster.equals(req.user._id)
+                })
+                boostedPost.boostsV2.push(boost);
+                boostedPost.lastUpdated = boostedTimestamp;
+
+                //replace this later when comment-on-a-boost notifications use the boostsV2 array instead of the subscribed/unsubscribed users
                 boostedPost.subscribedUsers.push(req.user._id.toString());
-                // boostedPost.lastUpdated = boostedTimestamp;
-                boostedPost.save();
-                boost.save().then(() => {
+
+                boostedPost.save().then(() => {
                     //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
                     if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
                         notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')

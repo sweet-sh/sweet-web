@@ -24,6 +24,11 @@ var commentSchema = new mongoose.Schema({
   imageDescriptions: [String]
 });
 
+var boostSchema = new mongoose.Schema({
+  booster: {type: Schema.Types.ObjectId, ref: 'User', required: true},
+  timestamp: {type: Date, required: true}
+})
+
 var postSchema = new mongoose.Schema({
   type: String,
   community: { type: Schema.Types.ObjectId, ref: 'Community' },
@@ -54,15 +59,15 @@ var postSchema = new mongoose.Schema({
     type: String
   },
   comments: [commentSchema],
-  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' },
-  // boosts: [boostSchema],
+  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' }, //deprecated
   numberOfComments: {
     type: Number
   },
   mentions: [String],
   tags: [String],
-  boosts: [String],
-  boosters: [{type: Schema.Types.ObjectId, ref: 'User' }],
+  boosts: [String], //deprecated
+  boostsV2: [{type:boostSchema, required: true}],
+  boosters: [{type: Schema.Types.ObjectId, ref: 'User' }], //deprecated
   contentWarnings: String,
   commentsDisabled: Boolean,
   imageVersion: Number,
@@ -75,6 +80,7 @@ var postSchema = new mongoose.Schema({
 });
 
 postSchema.index({lastUpdated:-1});
+postSchema.index({"boostsV2.booster":1});
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

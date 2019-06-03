@@ -502,6 +502,7 @@ module.exports = function (app) {
 
     let myFollowedUserEmails = () => {
       myFollowedUserEmails = []
+      myFollowedUserIds = [req.user._id]
       return Relationship.find({
           from: loggedInUserData.email,
           value: "follow"
@@ -510,6 +511,7 @@ module.exports = function (app) {
           for (var key in follows) {
             var follow = follows[key];
             myFollowedUserEmails.push(follow.to);
+            myFollowedUserIds.push(follow.toUser)
           }
         })
         .catch((err) => {
@@ -632,8 +634,8 @@ module.exports = function (app) {
         if (req.params.context == "home") {
           var postDisplayContext = {
             "$or": [{
-                authorEmail: {
-                  $in: myFollowedUserEmails
+                "boostsV2.booster": {
+                  $in: myFollowedUserIds
                 }
               },
               {
