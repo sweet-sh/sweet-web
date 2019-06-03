@@ -786,7 +786,7 @@ module.exports = function (app) {
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: post.subscribedUsers,
                   unsubscribedUsers: post.unsubscribedUsers,
-                  linkPreview: post.linkPreview
+                  // linkPreview: post.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -886,7 +886,7 @@ module.exports = function (app) {
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: displayContext.subscribedUsers,
                   unsubscribedUsers: displayContext.unsubscribedUsers,
-                  linkPreview: displayContext.linkPreview
+                  // linkPreview: displayContext.linkPreview
                 }
                 displayedPost.comments.forEach(function (comment) {
                   comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1086,7 +1086,7 @@ module.exports = function (app) {
                       lastCommentAuthor: lastCommentAuthor,
                       subscribedUsers: displayContext.subscribedUsers,
                       unsubscribedUsers: displayContext.unsubscribedUsers,
-                      linkPreview: displayContext.linkPreview
+                      // linkPreview: displayContext.linkPreview
                     }
                     displayedPost.comments.forEach(function (comment) {
                       comment.parsedTimestamp = moment(comment.timestamp).fromNow();
@@ -1764,7 +1764,7 @@ module.exports = function (app) {
               lastCommentAuthor: lastCommentAuthor,
               subscribedUsers: displayContext.subscribedUsers,
               unsubscribedUsers: displayContext.unsubscribedUsers,
-              linkPreview: displayContext.linkPreview
+              // linkPreview: displayContext.linkPreview
             }
             displayedPost.comments.forEach(function (comment) {
               comment.parsedTimestamp = moment(comment.timestamp).fromNow();
