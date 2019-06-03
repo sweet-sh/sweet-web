@@ -681,7 +681,7 @@ module.exports = function (app) {
       Post.find(
           postDisplayContext
         )
-        .sort('-lastUpdated')
+        .sort(req.params.context=="user" ? '-timestamp' : '-lastUpdated')
         .skip(postsPerPage * page)
         .limit(postsPerPage)
         .populate('author', '-password')
