@@ -4,11 +4,6 @@
     <article class="comment commentContainer" data-post-id="{{this._id}}">
       <div class="row">
         <div class="col commentContent">
-          {{#eq this.type "boost"}}
-            <p class="text-secondary">
-              <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-            </p>
-          {{/eq}}
           {{#if this.recentlyCommented}}
             {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
               <p class="text-secondary">
@@ -18,7 +13,7 @@
           {{/if}}
           {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if fullBoosters}}<a class="fullBoostList" data-html="true" data-content="{{#each fullBoosters}}{{this.booster.username}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(full list)</a></a>{{/if}}
           </p>
           {{/if}}
           {{#eq ../context "community"}}
@@ -203,11 +198,6 @@
       <article class="comment commentContainer" data-post-id="{{this._id}}">
         <div class="row">
           <div class="col commentContent">
-            {{#eq this.type "boost"}}
-              <p class="text-secondary">
-                <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-              </p>
-            {{/eq}}
             {{#if this.recentlyCommented}}
               {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
                 <p class="text-secondary">
@@ -217,7 +207,7 @@
             {{/if}}
             {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if fullBoosters}}<a class="fullBoostList" data-content="{{#each fullBoosters}}this.booster.username{{/each}}">(full list)</a></a>{{/if}}
           </p>
           {{/if}}
             {{#isnt ../context "community"}}
@@ -381,11 +371,6 @@
         <article class="comment commentContainer" data-post-id="{{this._id}}">
           <div class="row">
             <div class="col commentContent">
-              {{#eq this.type "boost"}}
-                <p class="text-secondary">
-                  <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-                </p>
-              {{/eq}}
               {{#if this.recentlyCommented}}
                 {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
                   <p class="text-secondary">
@@ -395,7 +380,7 @@
               {{/if}}
               {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}} and {{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if fullBoosters}}<a class="fullBoostList" data-content="{{#each fullBoosters}}this.booster.username{{/each}}">(full list)</a></a>{{/if}}
           </p>
           {{/if}}
               <div class="mb-3 d-flex">
