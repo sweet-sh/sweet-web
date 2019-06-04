@@ -179,6 +179,9 @@ hr {
 .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
+.comment-content .abbreviated-content:not(.content-warning-content)::after {
+  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
+}
 .show-more,
 .content-warning-show-more,
 .community-tags .badge {
@@ -734,8 +737,13 @@ hr {
   padding-top: 20px;
 }
 
+.post-content {
+  position: relative;
+}
+
 .comment-content {
   margin: 0.5rem 0 1rem 0;
+  position: relative;
 }
 
 .user-list {
@@ -1034,7 +1042,7 @@ hr {
 }
 
 .abbreviated-content {
-  height: 7rem;
+  height: 125px;
   overflow: hidden;
 }
 
@@ -1042,11 +1050,11 @@ hr {
   content: "";
   position: absolute;
   z-index: 1;
-  top: 9.5rem;
+  top: 85px;
   left: 0;
   pointer-events: none;
   width: 100%;
-  height: 1.5rem;
+  height: 40px;
 }
 
 .show-more,
