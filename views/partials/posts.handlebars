@@ -13,7 +13,7 @@
           {{/if}}
           {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(others)</a></a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
           {{/if}}
           {{#eq ../context "community"}}
@@ -207,7 +207,7 @@
             {{/if}}
             {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(others)</a></a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless otherBoosters}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/unless}}{{#if otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
           {{/if}}
             {{#isnt ../context "community"}}
@@ -380,7 +380,7 @@
               {{/if}}
               {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="{{#each otherBoosters}}@{{this.booster.username}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(others)</a></a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless otherBoosters}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/unless}}{{#if otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
           {{/if}}
               <div class="mb-3 d-flex">

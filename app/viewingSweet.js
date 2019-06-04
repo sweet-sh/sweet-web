@@ -743,9 +743,9 @@ module.exports = function (app) {
                 if (post.boostsV2.length > 1) {
                   post.boostsV2.forEach((v, i, a) => {
                     if(!( v.timestamp == post.timestamp )){ //do not include implicit boost
-                      if (myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
+                      if (followedBoosters.length < 3 && myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
                         followedBoosters.push(v.booster.username);
-                      }else if(post.author._id.equals(req.user._id)){
+                      }else if(post.author._id.equals(req.user._id) || followedBoosters.length == 3){
                         otherBoosters.push(v.booster.username);
                       }
                     }
