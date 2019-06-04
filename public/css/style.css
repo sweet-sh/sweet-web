@@ -341,7 +341,31 @@ h1, h2, h3, h4, h5, h6 {
   position:relative;
 }
 
-.fullBoostListClicked:after{
+.fullBoostList::after{
+  transition : all .2s linear;
+  background : rgba(0,0,0,0);
+  color      : rgba(0,0,0,0);
+  content: attr(data-content);
+  white-space: pre-line;
+  position: absolute;
+  left: 0;
+  top: 24px;
+  min-width: 200px;
+  border: 1px rgba(0,0,0,0) solid;
+  border-radius: 3px;
+  padding: 6px;
+  z-index: 1;
+}
+
+.fullBoostListClicked {
+  margin:3px;
+  text-decoration:underline;
+  cursor: pointer;
+  position:relative;
+}
+
+.fullBoostListClicked::after{
+  transition : all .2s linear;
   content: attr(data-content);
   white-space: pre-line;
   position: absolute;
@@ -349,11 +373,10 @@ h1, h2, h3, h4, h5, h6 {
   top: 24px;
   min-width: 200px;
   border: 1px #aaaaaa solid;
-  border-radius: 10px;
-  background-color: #ffffcc;
-  padding: 12px;
+  border-radius: 3px;
+  background-color: #ebebeb;
+  padding: 6px;
   color: #000000;
-  font-size: 14px;
   z-index: 1;
 }
 

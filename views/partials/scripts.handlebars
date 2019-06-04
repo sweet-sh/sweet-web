@@ -95,12 +95,15 @@ $(function() {
     pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
   $('body').on('click', '.fullBoostList', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    $(this).addClass('fullBoostListClicked');
-    $('body').on('click',e=>{
-      $(this).removeClass('fullBoostListClicked');
-    })
+    var thisList = $(this);
+    thisList.removeClass('fullBoostList');
+    thisList.addClass('fullBoostListClicked');
+    function removeBoostListPopUp(e){
+      thisList.removeClass('fullBoostListClicked');
+      thisList.addClass('fullBoostList');
+      $('body').off('click', removeBoostListPopUp);
+    }
+    $('body').on('click', removeBoostListPopUp);
   })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
