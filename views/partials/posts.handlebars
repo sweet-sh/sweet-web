@@ -13,8 +13,14 @@
           {{/if}}
           {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others{{#unless isYourPost}} you follow{{/unless}}:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
+          {{else}}
+          {{#if otherBoosters}}
+          <p class="text-secondary">
+            <a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>
+          </p>
+          {{/if}}
           {{/if}}
           {{#eq ../context "community"}}
           {{else}}
@@ -129,11 +135,11 @@
                 <i class="far fa-bell-slash"></i>
               </button>
             {{/contains}}
-            {{#eq ../loggedInUserData.username this.owner}}
+            {{#if isYourPost}}
               <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                 <i class="far fa-trash-alt"></i>
               </button>
-            {{/eq}}
+            {{/if}}
           </div>
         </div>
       </div>
@@ -207,7 +213,7 @@
             {{/if}}
             {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless otherBoosters}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/unless}}{{#if otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others{{#unless isYourPost}} you follow{{/unless}}:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
           {{/if}}
             {{#isnt ../context "community"}}
@@ -299,11 +305,11 @@
                   <i class="far fa-bell-slash"></i>
                 </button>
               {{/contains}}
-              {{#eq ../loggedInUserData.username this.owner}}
+              {{#if isYourPost}}
                 <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                   <i class="far fa-trash-alt"></i>
                 </button>
-              {{/eq}}
+              {{/if}}
             </div>
           </div>
         </div>
@@ -380,7 +386,7 @@
               {{/if}}
               {{#if followedBoosters}}
           <p class="text-secondary">
-            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless otherBoosters}}{{#if ../this.followedBoosters.[1]}}  and {{/if}}{{/unless}}{{#if otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
+            <i class="far fa-comment"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}, {{/if}}{{/if}}<strong><a href="/{{this}}" class="text-secondary">@{{this}}</a></strong>{{/each}}{{#if otherBoosters}}<a class="fullBoostList" data-html="true" data-content="others{{#unless isYourPost}} you follow{{/unless}}:&#10;{{#each otherBoosters}}@{{this}}{{#unless @last}}&#10;{{/unless}}{{/each}}">(...)</a>{{/if}}
           </p>
           {{/if}}
               <div class="mb-3 d-flex">
@@ -450,11 +456,11 @@
                     <i class="far fa-bell-slash"></i>
                   </button>
                 {{/contains}}
-                {{#eq ../loggedInUserData.username this.owner}}
+                {{#if isYourPost}}
                   <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                     <i class="far fa-trash-alt"></i>
                   </button>
-                {{/eq}}
+                {{/if}}
               </div>
             </div>
           </div>

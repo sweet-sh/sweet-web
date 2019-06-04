@@ -740,12 +740,13 @@ module.exports = function (app) {
 
                 var followedBoosters = [];
                 var otherBoosters = [];
+                var isYourPost = post.author._id.equals(req.user._id);
                 if (post.boostsV2.length > 1) {
                   post.boostsV2.forEach((v, i, a) => {
                     if(!( v.timestamp == post.timestamp )){ //do not include implicit boost
                       if (followedBoosters.length < 3 && myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
                         followedBoosters.push(v.booster.username);
-                      }else if(post.author._id.equals(req.user._id) || followedBoosters.length == 3){
+                      }else if(isYourPost || followedBoosters.length == 3){
                         otherBoosters.push(v.booster.username);
                       }
                     }
@@ -782,6 +783,7 @@ module.exports = function (app) {
                   community: post.community,
                   followedBoosters: followedBoosters,
                   otherBoosters: otherBoosters,
+                  isYourPost: isYourPost,
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: post.subscribedUsers,
