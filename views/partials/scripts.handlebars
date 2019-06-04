@@ -77,12 +77,14 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:"100%"},200);
+      var h = $(this).prev(".abbreviated-content").css('height','100%').height();
+      $(this).prev(".abbreviated-content").css('height','125px');
+      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:h},200);
       $(this).attr("data-state","expanded").css("margin-top", "0.25rem");
     }
     else {
-      $(this).prev(".post-content").addClass("abbreviated-content").removeClass("post-content").animate({height:"7rem"},200);
-      $(this).attr("data-state","contracted").css("margin-top", "1rem");
+      $(this).prev(".post-content").addClass("abbreviated-content").removeClass("post-content").animate({height:"125px"},200);
+      $(this).attr("data-state","contracted").css("margin-top", "0.25rem");
     }
     var text = $(this).text();
     $(this).text(
@@ -107,13 +109,16 @@ $(function() {
   })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
+    var abbContent = $(this).closest(".post-content").find(".abbreviated-content");
     if (state == "contracted") {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
+      var h = abbContent.css('height','100%').height();
+      abbContent.css('height','0');
+      abbContent.animate({height:h},200);
       $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","expanded");
     }
     else {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"0"},200);
+      abbContent.animate({height:"0"},200);
       $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","contracted");
     }
