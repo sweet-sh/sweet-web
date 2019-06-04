@@ -1042,7 +1042,7 @@ hr {
 }
 
 .abbreviated-content {
-  height: 125px;
+  height: 7rem;
   overflow: hidden;
 }
 
@@ -1050,11 +1050,11 @@ hr {
   content: "";
   position: absolute;
   z-index: 1;
-  top: 85px;
+  bottom: 1.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;
-  height: 40px;
+  height: 3rem;
 }
 
 .show-more,
@@ -1070,11 +1070,11 @@ hr {
 }
 
 .show-more {
-  margin: 1rem auto;
+  margin: 0.5rem auto;
 }
 
 .content-warning-show-more {
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 0.5rem auto;
 }
 /*
 .post-meta {
