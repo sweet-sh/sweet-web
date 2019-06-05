@@ -1,7 +1,7 @@
 <div id="homeBody" class="row justify-content-center">
   <div class="col-lg-8">
     <h3 class="page-header mx-2">Settings</h3>
-    <form id="settingsForm" method="post" action="/updatesettings">
+    <form id="settingsForm" method="post" action="/updatesettings" class="pane">
       <h4>Privacy</h4>
       <div class="form-group">
         <label for="profileVisibility">Profile page and public posts visibility</label>
@@ -11,6 +11,7 @@
           <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
         </select>
       </div>
+      <hr />
       <h4>Posting</h4>
       <div class="form-group">
         <label for="newPostPrivacy">Default privacy for new posts</label>
@@ -28,6 +29,7 @@
         </select>
         <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large number of high quality images, we may ask you in future to help out with sweet's web hosting costs.</p>
       </div>
+      <hr />
       <h4>Viewing</h4>
       <div class="form-group">
         <label for="homeTagTimelineSorting">Sorting of posts in Home and Tag timelines</label>

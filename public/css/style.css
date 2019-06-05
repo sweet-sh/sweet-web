@@ -267,6 +267,10 @@ hr {
   background-color: #ffffffaa;
   box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
 }
+.pane {
+    background: #fff;
+    border: 1px solid #dee2e6;
+}
 
 p{
   margin-bottom: 0.5em;
@@ -1532,4 +1536,7 @@ background-size: 5.66px 5.66px;
     font-weight: 300;
     font-size: 0.9em;
     font-variant: small-caps;
+}
+.pane {
+    padding: 15px;
 }
