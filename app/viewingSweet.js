@@ -741,16 +741,25 @@ module.exports = function (app) {
                 var followedBoosters = [];
                 var otherBoosters = [];
                 var isYourPost = post.author._id.equals(req.user._id);
+                var youBoosted = false;
                 if (post.boostsV2.length > 1) {
                   post.boostsV2.forEach((v, i, a) => {
                     if(!( v.timestamp == post.timestamp )){ //do not include implicit boost
-                      if (followedBoosters.length < 3 && myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
-                        followedBoosters.push(v.booster.username);
-                      }else if(isYourPost || followedBoosters.length == 3){
-                        otherBoosters.push(v.booster.username);
+                      if(v.booster._id.equals(req.user._id)){
+                        followedBoosters.push('you');
+                        youBoosted = true;
+                      }else{
+                        if (followedBoosters.length < 3 && myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
+                          followedBoosters.push(v.booster.username);
+                        }else if(isYourPost || followedBoosters.length == 3){
+                          otherBoosters.push(v.booster.username);
+                        }
                       }
                     }
                   })
+                }else if(post.boostsV2[0].timestamp!=post.timestamp){ //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
+                  followedBoosters.push('you');
+                  youBoosted = true;
                 }
 
                 displayedPost = {
@@ -784,6 +793,7 @@ module.exports = function (app) {
                   followedBoosters: followedBoosters,
                   otherBoosters: otherBoosters,
                   isYourPost: isYourPost,
+                  youBoosted: youBoosted,
                   recentlyCommented: recentlyCommented,
                   lastCommentAuthor: lastCommentAuthor,
                   subscribedUsers: post.subscribedUsers,

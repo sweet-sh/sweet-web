@@ -1054,6 +1054,32 @@ module.exports = function (app) {
                 })
             })
     })
+
+//Responds to a post request that boosts a post.
+    //Inputs: id of the post to be boosted
+    //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
+    //user whose post was boosted.
+    app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
+        Post.findOne({
+                '_id': req.params.postid
+            }, {
+                boostsV2: 1,
+                lastUpdated: 1,
+                privacy: 1,
+                unsubscribedUsers: 1,
+                author: 1,
+                url:1
+            })
+            .then((boostedPost) => {
+                boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                    return !boost.booster.equals(req.user._id)
+                })
+                boostedPost.save().then(() => {
+                    relocatePost(req.params.postid);
+                    res.redirect("back");
+                })
+            })
+    })
 };
 
 function cleanTempFolder() {
@@ -1148,41 +1174,47 @@ function getTags(url) {
 //input: post id
 //output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
 function relocatePost(postid) {
-    Post.aggregate([{
-                "$match": {
-                    "_id": postid
-                }
-            },
+    Post.aggregate(
+        [
             {
-                "$unwind": "$comments"
-            },
-            {
-                "$sort": {
-                    "comments.timestamp": -1
+              '$match': {
+                '_id': new ObjectId(postid)
+              }
+            }, {
+              '$project': {
+                'activity': {
+                  '$concatArrays': [
+                    '$comments', '$boostsV2'
+                  ]
                 }
-            },
-            {
-                "$group": {
-                    "_id": "$_id",
-                    "latest_timestamp": {
-                        "$first": "$comments"
-                    }
-                }
+              }
+            }, {
+              '$unwind': {
+                'path': '$activity'
+              }
+            }, {
+              '$sort': {
+                'activity.timestamp': 1
+              }
             }
-        ])
+          ]
+        )
         .then(result => {
             if (result.length) {
                 Post.findOneAndUpdate({
                         _id: postid
                     }, {
                         $set: {
-                            lastUpdated: result[0].latest_timestamp.timestamp
+                            lastUpdated: result[0].timestamp
                         }
                     }, {
                         returnNewDocument: true
                     })
                     .then(updatedPost => {
                         console.log(updatedPost)
+                    }).catch(err=>{
+                        console.log('could not relocate post:');
+                        console.log(err)
                     })
             } else {
                 Post.findById(postid).then(post => {
@@ -1194,6 +1226,9 @@ function relocatePost(postid) {
                         }
                     }, {
                         returnNewDocument: true
+                    }).catch(err=>{
+                        console.log('could not relocate post:')
+                        console.log(err)
                     })
                 })
             }

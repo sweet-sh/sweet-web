@@ -113,7 +113,7 @@
             {{/unless}}
             {{#eq this.privacy "public"}}
               {{#if ../loggedIn}}
-                <form class="d-inline" action="/createboost/{{this._id}}" method="post">
+                <form class="d-inline" action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post">
                   <button type="submit" class="btn btn-link btn-sm boostPost  post-action-button">
                     <i class="fas fa-retweet"></i>
                   </button>
