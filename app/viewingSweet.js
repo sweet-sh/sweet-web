@@ -646,18 +646,37 @@ module.exports = function (app) {
               }
             ]
           }
+          if (req.user.settings.homeTagTimelineSorting == "fluid"){
+              sortMethod = '-lastUpdated';
+          }
+          else {
+              sortMethod = '-timestamp';
+          }
         } else if (req.params.context == "user") {
           var postDisplayContext = {
             "boostsV2.booster": req.params.identifier
+          }
+          if (req.user.settings.userTimelineSorting == "fluid"){
+              sortMethod = '-lastUpdated';
+          }
+          else {
+              sortMethod = '-timestamp';
           }
         } else if (req.params.context == "single") {
           var postDisplayContext = {
             _id: req.params.identifier
           }
+          sortMethod = '-lastUpdated';
         } else if (req.params.context == "community") {
           var postDisplayContext = {
             type: 'community',
             community: req.params.identifier
+          }
+          if (req.user.settings.communityTimelineSorting == "fluid"){
+              sortMethod = '-lastUpdated';
+          }
+          else {
+              sortMethod = '-timestamp';
           }
         }
       } else {
@@ -666,22 +685,25 @@ module.exports = function (app) {
             _id: req.params.identifier,
             privacy: 'public'
           }
+          sortMethod = '-lastUpdated';
         } else if (req.params.context == "community") {
           var postDisplayContext = {
             type: 'community',
             community: req.params.identifier
           }
+          sortMethod = '-lastUpdated';
         } else {
           var postDisplayContext = {
             "boostsV2.booster": req.params.identifier,
             privacy: 'public'
           }
+          sortMethod = '-timestamp';
         }
       }
       Post.find(
           postDisplayContext
         )
-        .sort(req.params.context=="user" ? '-timestamp' : '-lastUpdated')
+        .sort(sortMethod)
         .skip(postsPerPage * page)
         .limit(postsPerPage)
         .populate('author', '-password')
@@ -1015,12 +1037,18 @@ module.exports = function (app) {
           name: req.params.name
         })
         .then((tag) => {
+            if (req.user.settings.homeTagTimelineSorting == "fluid"){
+                sortMethod = '-lastUpdated';
+            }
+            else {
+                sortMethod = '-timestamp';
+            }
           Post.find({
               _id: {
                 $in: tag.posts
               }
             })
-            .sort('-lastUpdated')
+            .sort(sortMethod)
             .skip(postsPerPage * page)
             .limit(postsPerPage)
             .populate('author', '-password')
