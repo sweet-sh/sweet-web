@@ -1194,7 +1194,7 @@ function relocatePost(postid) {
               }
             }, {
               '$sort': {
-                'activity.timestamp': 1
+                'activity.timestamp': -1
               }
             }
           ]
