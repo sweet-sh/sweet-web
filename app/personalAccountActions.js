@@ -337,7 +337,10 @@ module.exports = function (app, passport) {
                 $set: {
                     'settings.profileVisibility': updatedSettings.profileVisibility,
                     'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
-                    'settings.imageQuality': updatedSettings.imageQuality
+                    'settings.imageQuality': updatedSettings.imageQuality,
+                    'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
+                    'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
+                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting
                 }
             })
             .then(user => {
