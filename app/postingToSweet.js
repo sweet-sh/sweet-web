@@ -970,7 +970,7 @@ module.exports = function (app) {
             .then((post) => {
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (!post.comments.id(req.params.commentid).author._id.equals(req.user._id)) {
+                if (!post.comments.id(req.params.commentid).author.equals(req.user._id) && post.author.toString()!=req.user._id.toString()) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }

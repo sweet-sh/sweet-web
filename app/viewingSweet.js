@@ -648,11 +648,8 @@ module.exports = function (app) {
     //if we need the aggregate thing, we don't bother setting either of the aforementioned variables, because the thing we pass to aggregate is mostly unchanged
     //by context, we have it all in one piece down below.
 
-
-
     var sortMethod = "";
     var postDisplayContext = {};
-
 
     //build query for home page (only a thing if this is for a logged in user:)
     if (req.isAuthenticated()) {
@@ -677,30 +674,29 @@ module.exports = function (app) {
           sortMethod = '-lastUpdated'
         }
       }
-
     }
 
     //build query for user profile page:
     if (req.params.context == "user") {
-      if (req.user.settings.userTimelineSorting == "fluid") {
-        var postDisplayContext = {
+      if (req.user && req.user.settings.userTimelineSorting == "fluid") {
+        postDisplayContext = {
           "boostsV2.booster": req.params.identifier
         }
         sortMethod = '-lastUpdated';
       }
       //build query for just looking at a single post:
     } else if (req.params.context == "single") {
-      var postDisplayContext = {
+      postDisplayContext = {
         _id: req.params.identifier
       }
       sortMethod = '-lastUpdated';
       //build query for looking at a community page:
     } else if (req.params.context == "community") {
-      var postDisplayContext = {
+      postDisplayContext = {
         type: 'community',
-        community: req.params.identifier
+        community: new ObjectId(req.params.identifier)
       }
-      if (req.user.settings.communityTimelineSorting == "fluid") {
+      if (req.user && req.user.settings.communityTimelineSorting == "fluid") {
         sortMethod = '-lastUpdated';
       } else {
         sortMethod = '-timestamp';
@@ -710,6 +706,8 @@ module.exports = function (app) {
     if (!req.isAuthenticated()) {
       //users that aren't logged in can only see public posts, so we add that restriction to the query
       postDisplayContext.privacy = 'public';
+      //and let's assume that they like "fluid" order, we don't their actual settings to reference
+      sortMethod = "-lastUpdated"
     }
 
     //if we don't have to use aggregate, running our query is simple:
@@ -810,8 +808,7 @@ module.exports = function (app) {
           }
         }, {
           '$unwind': {
-            'path': '$community',
-            'preserveNullAndEmptyArrays': true
+            'path': '$community'
           }
         }]
       )
@@ -824,7 +821,7 @@ module.exports = function (app) {
           .send('Not found');
         return "no posts";
       } else {
-        //now we build the array of the posts we can display. some that we just retrieved might still not make the cut
+        //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
         displayedPosts = [];
 
         for (const post of posts) {
@@ -842,7 +839,6 @@ module.exports = function (app) {
             boost.booster = await User.findById(boost.booster);
           }
 
-
           var canDisplay = false;
           if (req.isAuthenticated()) {
             //logged in users can't see private posts by users who don't trust them or community posts by muted members
@@ -858,9 +854,9 @@ module.exports = function (app) {
             }
           } else {
             //for logged out users, we already eliminated private posts by specifying privacy: 'public' in the query,
-            //so we just have to hide posts boosted from non-visible accounts and posts from private communities that
+            //so we just have to hide posts boosted from non-publicly-visible accounts and posts from private communities that
             //the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
-            //community pages are hidden from logged-out users by a return at the very, very beginning of this function
+            //community pages are hidden from logged-out users by a return at the very, very beginning of this function)
             if (post.author.settings.profileVisibility == "profileAndPosts") {
               // User has allowed non-logged-in users to see their posts
               if (post.community) {
