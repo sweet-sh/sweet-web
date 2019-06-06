@@ -631,187 +631,175 @@ module.exports = function (app) {
         }
       }
 
-
-      var buildUserLists = myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
-      await buildUserLists;
+      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
 
       myFollowedUserEmails.push(loggedInUserData.email)
       usersWhoTrustMeEmails.push(loggedInUserData.email)
+      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
     }
 
     const today = moment().clone().startOf('day');
     const thisyear = moment().clone().startOf('year');
 
-    //construct the query that will retrieve the posts we want. postDisplayContext is constructed to contain the query that we will pass to the find function,
-    //which is what we use if we're looking at a single post, a community, or a user profile or a home page in fluid mode. for user profiles or home pages in
-    //chronological mode, we have to use a more complex call to aggregate instead of using find, so that we put all posts in chronological order except boosts, which break that order slightly.
-    //if we need the aggregate thing, we don't bother setting either of the aforementioned variables, because the thing we pass to aggregate is mostly unchanged
-    //by context, we have it all in one piece down below.
+    //construct the query that will retrieve the posts we want. if we are looking at a community page, we can do it with Post.find. otherwise,
+    //we have to do some juggling to factor boosts into the sort order of our posts, so we use a more complex Post.aggregate call.
 
-    var sortMethod = "";
-    var postDisplayContext = {};
-
-    //build query for home page (only a thing if this is for a logged in user:)
-    if (req.isAuthenticated()) {
-
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
-      if (req.params.context == "home") {
-        if (req.user.settings.homeTagTimelineSorting == "fluid") {
-          postDisplayContext = {
-            "$or": [{
-                "boostsV2.booster": {
-                  $in: myFollowedUserIds //this finds original and boosted posts by these users, bc the author "implicitly boosts" their post by default
-                }
-              },
-              {
-                type: 'community',
-                community: {
-                  $in: myCommunities
-                }
-              }
-            ]
-          }
-          sortMethod = '-lastUpdated'
-        }
-      }
-    }
-
-    //build query for user profile page:
-    if (req.params.context == "user") {
-      if (req.user && req.user.settings.userTimelineSorting == "fluid") {
-        postDisplayContext = {
-          "boostsV2.booster": req.params.identifier
-        }
-        sortMethod = '-lastUpdated';
-      }
-      //build query for just looking at a single post:
-    } else if (req.params.context == "single") {
-      postDisplayContext = {
-        _id: req.params.identifier
-      }
-      sortMethod = '-lastUpdated';
-      //build query for looking at a community page:
-    } else if (req.params.context == "community") {
-      postDisplayContext = {
-        type: 'community',
-        community: new ObjectId(req.params.identifier)
-      }
-      if (req.user && req.user.settings.communityTimelineSorting == "fluid") {
-        sortMethod = '-lastUpdated';
-      } else {
-        sortMethod = '-timestamp';
-      }
-    }
-
-    if (!req.isAuthenticated()) {
-      //users that aren't logged in can only see public posts, so we add that restriction to the query
-      postDisplayContext.privacy = 'public';
-      //and let's assume that they like "fluid" order, we don't their actual settings to reference
-      sortMethod = "-lastUpdated"
-    }
-
-    //if we don't have to use aggregate, running our query is simple:
-    if (sortMethod) {
+    if (req.params.context == "community") {
+      var postDisplayCriteria = {
+        type: community,
+        community: req.params.identifier
+      };
+      //this defaults to fluid mode for logged out users
+      var sortMethod = req.isAuthenticated() && req.user.settings.communityTimelineSorting == "chronological" ? "-timestamp" : "-lastUpdated";
       var query = Post.find(
-          postDisplayContext
+          postDisplayCriteria
         ).sort(sortMethod)
         .skip(postsPerPage * page)
         .limit(postsPerPage)
         //these populate commands retrieve the complete data for these things that are referenced in the post documents we retrieve
         .populate('author', '-password')
         .populate('community')
-
-      //if we do have to use aggregate, it's a little more complex:
     } else {
-      //set the criteria for the kind of post we wish to find:
-      if (req.params.context == "user") {
-        //this criteria finds all posts ever boosted or posted by this user (bc posting counts as an implicit boost)
-        var postCriteria = {
+      if (req.params.context == "home") {
+        //on the home page, we're concerned about boosts by users we follow for sorting, and overall we're looking for posts
+        //that were boosted (implicitly or explicitly) by users we follow OR are from a community we're in.
+        var matchBoosts = {
+          'boostsV2.booster': {
+            $in: myFollowedUserIds
+          }
+        }
+        var matchPosts = {
+          '$or': [matchBoosts,
+            {
+              type: 'community',
+              community: {
+                $in: myCommunities
+              }
+            }
+          ]
+        };
+        var sortingType = req.user.settings.homeTagTimelineSorting;
+      } else if (req.params.context == "user") {
+        //on a user profile page, we're just concerned about boosts by that user, for sorting or for finding the posts in the first place.
+        var matchBoosts = {
           'boostsV2.booster': new ObjectId(req.params.identifier)
         };
-      } else if (req.params.context == "home") {
-        //this criteria finds all posts ever boosted or posted by the user's followed users and all the posts from the communities they're in
-        var postCriteria = {
-          '$or': [{
-            'boostsV2.booster': {
-              $in: myFollowedUserIds
-            }
-          }, {
-            type: 'community',
-            community: {
-              $in: myCommunities
-            }
-          }]
-        };
+        var matchPosts = matchBoosts;
+        var sortingType = req.user.settings.userTimelineSorting;
       }
 
-      var query = Post.aggregate(
-        [{
-          '$match': postCriteria
-        }, {
-          //get a separate document for each boost that has occured for our retrieved posts
-          '$unwind': {
-            'path': '$boostsV2'
+      var aggregateQuery = [{
+        '$match': matchPosts
+      }, {
+        //get a separate document for each boost that has occured for our retrieved posts
+        '$unwind': {
+          'path': '$boostsV2'
+        }
+      }, {
+        //keep the documents for boosts we care about
+        '$match': matchPosts
+      }]
+
+      if (sortingType == "fluid") {
+        //for fluid sorting, we have to count comments in, so we add some aggregation stages to combine the boosts and comments
+        //and find the most recent timestamp between them.
+        aggregateQuery = aggregateQuery.concat([{
+          '$group': {
+            '_id': '$_id',
+            'boostsV2': {
+              '$addToSet': '$boostsV2'
+            },
+            'comments': {
+              '$last': '$comments'
+            }
           }
         }, {
-          //find all the specific stored instances of boosting by this user/users - should only be one per post
-          //unless the database has been incorrectly modified. we only store/care about the most recent time
-          //anyone boosted everything. community posts should only have one boost anyway (the implicit one).
-          '$match': postCriteria
-        }, {
-          //sort all of these instances of these posts by the timestamp of the time they were boosted/implicitly boosted
-          //by the user/users whose posts we're looking for.
-          '$sort': {
-            'boostsV2.timestamp': -1
+          '$project': {
+            'activity': {
+              '$concatArrays': [
+                '$boostsV2', '$comments'
+              ]
+            }
           }
         }, {
-          '$skip': postsPerPage * page
-        }, {
-          '$limit': postsPerPage
-        }, {
-          //these three stages get us back the full post document with all the boosts intact, since we eliminated all but the 
-          //ones that we're sorting by with the second $match above
-          '$lookup': {
-            'from': 'posts',
-            'localField': '_id',
-            'foreignField': '_id',
-            'as': 'fullDocument'
+          '$project': {
+            'sortByTimestamp': {
+              '$max': '$activity.timestamp'
+            }
           }
-        }, {
-          '$unwind': {
-            'path': '$fullDocument'
+        }])
+      } else {
+        //if order is chronological, we just use the most recent timestamp of the relevant boosts, ignoring comments.
+        if (req.params.context == "home") {
+          //if we're home, there might be more than one relevant boost, so we group them before finding the max.
+          aggregateQuery = aggregateQuery.concat([{
+            '$group': {
+              '_id': '$_id',
+              'boostsV2': {
+                '$addToSet': '$boostsV2'
+              }
+            }
+          }]);
+        }
+        aggregateQuery = aggregateQuery.concat([{
+          '$project': {
+            'sortByTimestamp': {
+              '$max': '$boostsV2.timestamp'
+            }
           }
-        }, {
-          '$replaceRoot': {
-            'newRoot': '$fullDocument'
-          }
-        }, {
-          //find the full document that the author field references
-          '$lookup': {
-            'from': 'users',
-            'localField': 'author',
-            'foreignField': '_id',
-            'as': 'author'
-          }
-        }, {
-          //it's returned as an array for no reason so we have to unwind
-          '$unwind': {
-            'path': '$author'
-          }
-        }, {
-          //do the same thing for communities
-          '$lookup': {
-            'from': 'communities',
-            'localField': 'community',
-            'foreignField': '_id',
-            'as': 'community'
-          }
-        }, {
-          '$unwind': {
-            'path': '$community'
-          }
-        }]
-      )
+        }])
+      }
+
+      aggregateQuery = aggregateQuery.concat([{
+        //then we do some boring stuff.
+        '$skip': postsPerPage * page
+      }, {
+        '$limit': postsPerPage
+      }, {
+        //these three stages get us back the full post document with all the boosts and various fields intact, since we eliminated all but the 
+        //ones that we're sorting by with the second $match and potentially the $group and i guess definitely the project above
+        '$lookup': {
+          'from': 'posts',
+          'localField': '_id',
+          'foreignField': '_id',
+          'as': 'fullDocument'
+        }
+      }, {
+        '$unwind': {
+          'path': '$fullDocument'
+        }
+      }, {
+        '$replaceRoot': {
+          'newRoot': '$fullDocument'
+        }
+      }, {
+        //find the full document that the author field references
+        '$lookup': {
+          'from': 'users',
+          'localField': 'author',
+          'foreignField': '_id',
+          'as': 'author'
+        }
+      }, {
+        //it's returned as an array for no reason so we have to unwind
+        '$unwind': {
+          'path': '$author'
+        }
+      }, {
+        //do the same thing for communities
+        '$lookup': {
+          'from': 'communities',
+          'localField': 'community',
+          'foreignField': '_id',
+          'as': 'community'
+        }
+      }, {
+        '$unwind': {
+          'path': '$community',
+          'preserveNullAndEmptyArrays': true
+        }
+      }])
+      var query = Post.aggregate(aggregateQuery);
     }
 
     //so this will be called when the query retrieves the posts we want
