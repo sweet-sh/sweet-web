@@ -729,7 +729,7 @@ module.exports = function (app) {
       if (req.params.context == "user") {
         //this criteria finds all posts ever boosted or posted by this user (bc posting counts as an implicit boost)
         var postCriteria = {
-          'boostsV2.booster': req.params.identifier
+          'boostsV2.booster': new ObjectId(req.params.identifier)
         };
       } else if (req.params.context == "home") {
         //this criteria finds all posts ever boosted or posted by the user's followed users and all the posts from the communities they're in
@@ -829,8 +829,8 @@ module.exports = function (app) {
 
         for (const post of posts) {
 
-          //get the full documents that these fields reference. you could do this with mongoose's populate() for the find() query but
-          //not for the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
+          //get the full documents that these fields reference. you could do this with mongoose's populate() when using the find() query but
+          //not with the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
           //boostsV2.booster) it would take a lookup, an unwind, an addFields, and a group that listed every field in the post document.
           //might be faster though, since it's done by the mongodb program. also maybe there's a better way to write it that i can't figure out
 
@@ -882,6 +882,7 @@ module.exports = function (app) {
           }
 
           if (!canDisplay) {
+            //if we can't display the post, move on to the next one in the loop
             continue;
           }
 
@@ -941,7 +942,8 @@ module.exports = function (app) {
                   }
                 }
               })
-            } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) { //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
+            } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) {
+              //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
               followedBoosters.push('you');
               youBoosted = true;
             }
