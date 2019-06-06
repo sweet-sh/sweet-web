@@ -105,27 +105,36 @@ $(function() {
     pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
 
-  $('.fullBoostList').on('show.bs.modal', function (event) {
-    var link = $(event.relatedTarget)
-    var recipient = button.data('whatever') // Extract info from data-* attributes
-    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-    var modal = $(this)
-    modal.find('.modal-title').text('New message to ' + recipient)
-    modal.find('.modal-body input').val(recipient)
-  })
+    $('#boostersModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget)
+        var users = button.data('users')
+        var modal = $(this)
+        modal.find('#boosters-list').empty()
+        if (users.followedBoosters.includes("you")){
+            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">You</li>');
+        }
+        users.followedBoosters.forEach(function(user) {
+            if (user === "you") {
+                return;
+            }
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="badge badge-secondary float-right">Followed</span></li>')
+        })
+        users.otherBoosters.forEach(function(user) {
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'</li>')
+        })
+    })
 
-  $('body').on('click', '.fullBoostList', function(e) {
-    var thisList = $(this);
-    thisList.removeClass('fullBoostList');
-    thisList.addClass('fullBoostListClicked');
-    function removeBoostListPopUp(e){
-      thisList.removeClass('fullBoostListClicked');
-      thisList.addClass('fullBoostList');
-      $('body').off('click', removeBoostListPopUp);
-    }
-    $('body').on('click', removeBoostListPopUp);
-  })
+  // $('body').on('click', '.fullBoostList', function(e) {
+  //   var thisList = $(this);
+  //   thisList.removeClass('fullBoostList');
+  //   thisList.addClass('fullBoostListClicked');
+  //   function removeBoostListPopUp(e){
+  //     thisList.removeClass('fullBoostListClicked');
+  //     thisList.addClass('fullBoostList');
+  //     $('body').off('click', removeBoostListPopUp);
+  //   }
+  //   $('body').on('click', removeBoostListPopUp);
+  // })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
     var abbContent = $(this).closest(".post-content").find(".abbreviated-content");

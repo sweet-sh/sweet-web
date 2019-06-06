@@ -341,7 +341,7 @@ h1, h2, h3, h4, h5, h6 {
   padding-right: 0px;
 }
 
-.fullBoostList {
+/* .fullBoostList {
   margin:3px;
   text-decoration:underline;
   cursor: pointer;
@@ -385,6 +385,17 @@ h1, h2, h3, h4, h5, h6 {
   padding: 6px;
   color: #000000;
   z-index: 1;
+} */
+
+.fullBoostList {
+    font-size: 0.7em;
+    padding: 1px 5px;
+    font-weight: 300;
+    text-transform: uppercase;
+    height: 100%;
+    background: #aaa;
+    border: #aaa;
+    margin-left: 2px;
 }
 
 hr {
