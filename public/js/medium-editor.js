@@ -6381,6 +6381,7 @@ MediumEditor.extensions = {};
                 toolbarElement = this.getToolbarElement(),
                 containerRect = container.getBoundingClientRect(),
                 containerTop = containerRect.top + scrollTop,
+                containerBottom = containerRect.bottom + scrollTop,
                 containerCenter = (containerRect.left + (containerRect.width / 2)),
                 toolbarHeight = toolbarElement.offsetHeight,
                 toolbarWidth = toolbarElement.offsetWidth,
@@ -6399,10 +6400,10 @@ MediumEditor.extensions = {};
                 // Normal static toolbar position
                 } else {
                     toolbarElement.classList.remove('medium-editor-sticky-toolbar');
-                    toolbarElement.style.top = containerTop - toolbarHeight + 'px';
+                    toolbarElement.style.top = containerBottom + 'px';
                 }
             } else {
-                toolbarElement.style.top = containerTop - toolbarHeight + 'px';
+                toolbarElement.style.top = containerBottom + 'px';
             }
 
             switch (this.align) {
