@@ -344,7 +344,7 @@ module.exports = function (app) {
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
-                    }],
+                    }]
                     // linkPreview: linkPreview
                 });
 
@@ -452,8 +452,8 @@ module.exports = function (app) {
                     author: req.user._id,
                     url: newPostUrl,
                     privacy: 'public',
-                    timestamp: new Date(),
-                    lastUpdated: new Date(),
+                    timestamp: postCreationTime,
+                    lastUpdated: postCreationTime,
                     rawContent: sanitize(req.body.postContent),
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,

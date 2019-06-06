@@ -18,7 +18,7 @@ async function asyncForEach(array, callback) {
 
 //populates the new post field boostsV2, which is an embedded array of boost documents that works similarly to the embedded array of comments.
 async function createBoostsField() {
-    await Post.find({type:'original'},{author:1,timestamp:1,lastUpdated:1,comments:1,boosts:1,boostsV2:1}).then(async posts => {
+    await Post.find({$or:[{type:'original'},{type:'community'}]},{author:1,timestamp:1,lastUpdated:1,comments:1,boosts:1,boostsV2:1}).then(async posts => {
         await asyncForEach(posts, async function (post) {
             //the first item in the boostsV2 field is always just the implicit one created by the post's author when they post it.
             if(post.boostsV2.length===0){
@@ -84,7 +84,7 @@ async function validateStuff(n){
         console.log("not as many boostV2 documents added as should have been")
         areWeGood = false;
     }
-    await Post.find({type:'original'},{author:1,timestamp:1,lastUpdated:1,comments:1,boosts:1,boostsV2:1}).then(async posts => {
+    await Post.find({$or:[{type:'original'},{type:'community'}]},{author:1,timestamp:1,lastUpdated:1,comments:1,boosts:1,boostsV2:1}).then(async posts => {
         await asyncForEach(posts, async function (post) {
             if(post.boostsV2.length < 1){
                 console.log(post._id.toString()+" has no boostsV2, not even the implicit authorial one");

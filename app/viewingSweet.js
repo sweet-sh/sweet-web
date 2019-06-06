@@ -488,151 +488,181 @@ module.exports = function (app) {
   //community, or the post. I don't believe it's used when the context is home? It appears to be the url of the image
   //of the logged in user in that case. (??????????????????) Page means page.
   //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
-  app.get('/showposts/:context/:identifier/:page', function (req, res) {
+  app.get('/showposts/:context/:identifier/:page', async function (req, res) {
     var loggedInUserData = {};
     if (req.isAuthenticated()) {
       isLoggedIn = true;
       loggedInUserData = req.user;
     } else {
       isLoggedIn = false;
+      //logged out users can't get any posts from pages of non-completely-public users and communities
+      if (req.params.context == "user" && (await Post.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
+        res.sendStatus(404);
+        return;
+      } else if (req.params.context == "community" && (await Community.findById(req.params.identifier)).settings.visibility != "public") {
+        res.sendStatus(404);
+        return;
+      }
     }
 
     let postsPerPage = 10;
     let page = req.params.page - 1;
 
-    let myFollowedUserEmails = () => {
-      myFollowedUserEmails = []
-      myFollowedUserIds = [req.user._id]
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "follow"
-        })
-        .then((follows) => {
-          for (var key in follows) {
-            var follow = follows[key];
-            myFollowedUserEmails.push(follow.to);
-            myFollowedUserIds.push(follow.toUser)
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
+    //build some user lists. only a thing if the user is logged in.
 
-    let myFlaggedUserEmails = () => {
-      myFlaggedUserEmails = []
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "flag"
-        })
-        .then((flags) => {
-          for (var key in flags) {
-            var flag = flags[key];
-            myFlaggedUserEmails.push(flag.to);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersFlaggedByMyTrustedUsers = () => {
-      myTrustedUserEmails = []
-      usersFlaggedByMyTrustedUsers = []
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            myTrustedUserEmails.push(trust.to);
-          }
-          return Relationship.find({
-              value: "flag",
-              from: {
-                $in: myTrustedUserEmails
-              }
-            })
-            .then((users) => {
-              usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersWhoTrustMe = () => {
-      usersWhoTrustMeEmails = []
-      return Relationship.find({
-          to: loggedInUserData.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            usersWhoTrustMeEmails.push(trust.from);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let myCommunitites = () => {
-      myCommunities = [];
-      myMutedUsers = [];
-      return Community.find({
-          members: loggedInUserData._id
-        })
-        .then((communities) => {
-          for (var key in communities) {
-            var community = communities[key];
-            myCommunities.push(community._id);
-            myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let isMuted = () => {
-      isMuted = false;
-      if (req.params.context == "community" && isLoggedIn) {
-        return Community.findOne({
-            _id: req.params.identifier
+    if (req.isAuthenticated()) {
+      var myFollowedUserEmails = () => {
+        myFollowedUserEmails = []
+        myFollowedUserIds = [req.user._id]
+        return Relationship.find({
+            from: loggedInUserData.email,
+            value: "follow"
           })
-          .then(community => {
-            mutedMemberIds = community.mutedMembers.map(a => a.toString());
-            if (mutedMemberIds.includes(loggedInUserData._id.toString()))
-              isMuted = true;
-            console.log(isMuted)
+          .then((follows) => {
+            for (var key in follows) {
+              var follow = follows[key];
+              myFollowedUserEmails.push(follow.to);
+              myFollowedUserIds.push(follow.toUser)
+            }
           })
           .catch((err) => {
             console.log("Error in profileData.")
             console.log(err);
           });
       }
+
+      var myFlaggedUserEmails = () => {
+        myFlaggedUserEmails = []
+        return Relationship.find({
+            from: loggedInUserData.email,
+            value: "flag"
+          })
+          .then((flags) => {
+            for (var key in flags) {
+              var flag = flags[key];
+              myFlaggedUserEmails.push(flag.to);
+            }
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
+      var usersFlaggedByMyTrustedUsers = () => {
+        myTrustedUserEmails = []
+        usersFlaggedByMyTrustedUsers = []
+        return Relationship.find({
+            from: loggedInUserData.email,
+            value: "trust"
+          })
+          .then((trusts) => {
+            for (var key in trusts) {
+              var trust = trusts[key];
+              myTrustedUserEmails.push(trust.to);
+            }
+            return Relationship.find({
+                value: "flag",
+                from: {
+                  $in: myTrustedUserEmails
+                }
+              })
+              .then((users) => {
+                usersFlaggedByMyTrustedUsers = users.map(a => a.to);
+              })
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
+      var usersWhoTrustMe = () => {
+        usersWhoTrustMeEmails = []
+        return Relationship.find({
+            to: loggedInUserData.email,
+            value: "trust"
+          })
+          .then((trusts) => {
+            for (var key in trusts) {
+              var trust = trusts[key];
+              usersWhoTrustMeEmails.push(trust.from);
+            }
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
+      var myCommunitites = () => {
+        myCommunities = [];
+        myMutedUsers = [];
+        return Community.find({
+            members: loggedInUserData._id
+          })
+          .then((communities) => {
+            for (var key in communities) {
+              var community = communities[key];
+              myCommunities.push(community._id);
+              myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
+            }
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
+      var isMuted = () => {
+        isMuted = false;
+        if (req.params.context == "community" && isLoggedIn) {
+          return Community.findOne({
+              _id: req.params.identifier
+            })
+            .then(community => {
+              mutedMemberIds = community.mutedMembers.map(a => a.toString());
+              if (mutedMemberIds.includes(loggedInUserData._id.toString()))
+                isMuted = true;
+              console.log(isMuted)
+            })
+            .catch((err) => {
+              console.log("Error in profileData.")
+              console.log(err);
+            });
+        }
+      }
+
+
+      var buildUserLists = myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
+      await buildUserLists;
+
+      myFollowedUserEmails.push(loggedInUserData.email)
+      usersWhoTrustMeEmails.push(loggedInUserData.email)
     }
 
-    myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted).then(() => {
+    const today = moment().clone().startOf('day');
+    const thisyear = moment().clone().startOf('year');
 
-      const today = moment().clone().startOf('day');
-      const thisyear = moment().clone().startOf('year');
+    //construct the query that will retrieve the posts we want. postDisplayContext is constructed to contain the query that we will pass to the find function,
+    //which is what we use if we're looking at a single post, a community, or a user profile or a home page in fluid mode. for user profiles or home pages in
+    //chronological mode, we have to use a more complex call to aggregate instead of using find, so that we put all posts in chronological order except boosts, which break that order slightly.
+    //if we need the aggregate thing, we don't bother setting either of the aforementioned variables, because the thing we pass to aggregate is mostly unchanged
+    //by context, we have it all in one piece down below.
 
-      if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(loggedInUserData.email)
-        usersWhoTrustMeEmails.push(loggedInUserData.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
-        if (req.params.context == "home") {
-          var postDisplayContext = {
+
+
+    var sortMethod = "";
+    var postDisplayContext = {};
+
+
+    //build query for home page (only a thing if this is for a logged in user:)
+    if (req.isAuthenticated()) {
+
+      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
+      if (req.params.context == "home") {
+        if (req.user.settings.homeTagTimelineSorting == "fluid") {
+          postDisplayContext = {
             "$or": [{
                 "boostsV2.booster": {
                   $in: myFollowedUserIds //this finds original and boosted posts by these users, bc the author "implicitly boosts" their post by default
@@ -646,313 +676,364 @@ module.exports = function (app) {
               }
             ]
           }
-          if (req.user.settings.homeTagTimelineSorting == "fluid"){
-              sortMethod = '-lastUpdated';
-          }
-          else {
-              sortMethod = '-timestamp';
-          }
-        } else if (req.params.context == "user") {
-          var postDisplayContext = {
-            "boostsV2.booster": req.params.identifier
-          }
-          if (req.user.settings.userTimelineSorting == "fluid"){
-              sortMethod = '-lastUpdated';
-          }
-          else {
-              sortMethod = '-timestamp';
-          }
-        } else if (req.params.context == "single") {
-          var postDisplayContext = {
-            _id: req.params.identifier
-          }
-          sortMethod = '-lastUpdated';
-        } else if (req.params.context == "community") {
-          var postDisplayContext = {
-            type: 'community',
-            community: req.params.identifier
-          }
-          if (req.user.settings.communityTimelineSorting == "fluid"){
-              sortMethod = '-lastUpdated';
-          }
-          else {
-              sortMethod = '-timestamp';
-          }
-        }
-      } else {
-        if (req.params.context == "single") {
-          var postDisplayContext = {
-            _id: req.params.identifier,
-            privacy: 'public'
-          }
-          sortMethod = '-lastUpdated';
-        } else if (req.params.context == "community") {
-          var postDisplayContext = {
-            type: 'community',
-            community: req.params.identifier
-          }
-          sortMethod = '-lastUpdated';
-        } else {
-          var postDisplayContext = {
-            "boostsV2.booster": req.params.identifier,
-            privacy: 'public'
-          }
-          sortMethod = '-timestamp';
+          sortMethod = '-lastUpdated'
         }
       }
-      Post.find(
+
+    }
+
+    //build query for user profile page:
+    if (req.params.context == "user") {
+      if (req.user.settings.userTimelineSorting == "fluid") {
+        var postDisplayContext = {
+          "boostsV2.booster": req.params.identifier
+        }
+        sortMethod = '-lastUpdated';
+      }
+      //build query for just looking at a single post:
+    } else if (req.params.context == "single") {
+      var postDisplayContext = {
+        _id: req.params.identifier
+      }
+      sortMethod = '-lastUpdated';
+      //build query for looking at a community page:
+    } else if (req.params.context == "community") {
+      var postDisplayContext = {
+        type: 'community',
+        community: req.params.identifier
+      }
+      if (req.user.settings.communityTimelineSorting == "fluid") {
+        sortMethod = '-lastUpdated';
+      } else {
+        sortMethod = '-timestamp';
+      }
+    }
+
+    if (!req.isAuthenticated()) {
+      //users that aren't logged in can only see public posts, so we add that restriction to the query
+      postDisplayContext.privacy = 'public';
+    }
+
+    //if we don't have to use aggregate, running our query is simple:
+    if (sortMethod) {
+      var query = Post.find(
           postDisplayContext
-        )
-        .sort(sortMethod)
+        ).sort(sortMethod)
         .skip(postsPerPage * page)
         .limit(postsPerPage)
+        //these populate commands retrieve the complete data for these things that are referenced in the post documents we retrieve
         .populate('author', '-password')
         .populate('community')
-        .populate('comments.author', '-password')
-        .populate('boostsV2.booster')
-        .then((posts) => {
-          if (!posts.length) {
-            res.status(404)
-              .send('Not found');
+
+      //if we do have to use aggregate, it's a little more complex:
+    } else {
+      var whosePostsWeWant = req.params.context == "user" ? [new ObjectId(req.params.identifier)] : myFollowedUserIds;
+      var query = Post.aggregate(
+        [{
+          //find all posts that have ever been boosted by the user/users (remember the initial "implicit" boost)
+          '$match': {
+            'boostsV2.booster': {
+              $in: whosePostsWeWant
+            }
+          }
+        }, {
+          //get a seperate document for each boost that has occured for our retrieved posts
+          '$unwind': {
+            'path': '$boostsV2'
+          }
+        }, {
+          //find all the specific stored instances of boosting by this user/users - should only be one per post
+          //unless the database has been incorrectly modified. we only store/care about the most recent time anyone boosted anything
+          '$match': {
+            '$or': [{
+              'boostsV2.booster': {
+                $in: whosePostsWeWant
+              }
+            }, {
+              type: 'community',
+              community: {
+                $in: myCommunities
+              }
+            }]
+          }
+        }, {
+          //sort all of these instances of these posts by the timestamp of the time they were boosted/implicitly boosted
+          //by the user/users whose posts we're looking for.
+          '$sort': {
+            'boostsV2.timestamp': -1
+          }
+        }, {
+          '$skip': 10
+        }, {
+          '$limit': 10
+        }, {
+          //these three stages get us back the full post document with all the boosts intact, since we eliminated all but the 
+          //ones that we're sorting by with the second $match above
+          '$lookup': {
+            'from': 'posts',
+            'localField': '_id',
+            'foreignField': '_id',
+            'as': 'fullDocument'
+          }
+        }, {
+          '$unwind': {
+            'path': '$fullDocument'
+          }
+        }, {
+          '$replaceRoot': {
+            'newRoot': '$fullDocument'
+          }
+        }, {
+          //find the full document that the author field references
+          '$lookup': {
+            'from': 'users',
+            'localField': 'author',
+            'foreignField': '_id',
+            'as': 'author'
+          }
+        }, {
+          //it's returned as an array for no reason so we have to unwind
+          '$unwind': {
+            'path': '$author'
+          }
+        }, {
+          //do the same thing for communities
+          '$lookup': {
+            'from': 'communities',
+            'localField': 'community',
+            'foreignField': '_id',
+            'as': 'community'
+          }
+        }, {
+          '$unwind': {
+            'path': '$community',
+            'preserveNullAndEmptyArrays': true
+          }
+        }]
+      )
+    }
+
+    //so this will be called when the query retrieves the posts we want
+    query.then(async posts => {
+      if (!posts.length) {
+        res.status(404)
+          .send('Not found');
+        return;
+      } else {
+        //now we build the array of the posts we can display. some that we just retrieved might still not make the cut
+        displayedPosts = [];
+
+        for (const post of posts) {
+
+          //get the full documents that these fields reference. you could do this with mongoose's populate() for the find() query but
+          //not for the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
+          //boostsV2.booster) it would take a lookup, an unwind, an addFields, and a group that listed every field in the post document.
+          //might be faster though, since it's done by the mongodb program. also maybe there's a better way to write it that i can't figure out
+
+          for (const comment of post.comments) {
+            comment.author = await User.findById(comment.author);
+          }
+
+          for (const boost of post.boostsV2) {
+            boost.booster = await User.findById(boost.booster);
+          }
+
+
+          var canDisplay = false;
+          if (req.isAuthenticated()) {
+            //logged in users can't see private posts by users who don't trust them or community posts by muted members
+            if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
+              canDisplay = true;
+            }
+            if (post.type == "community") {
+              // Hide muted community members
+              let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+              if (mutedMemberIds.includes(post.author._id.toString())) {
+                canDisplay = false;
+              }
+            }
           } else {
-            displayedPosts = [];
-            if (req.isAuthenticated()) {
-              posts.forEach(function (post, i) {
-                let canDisplay = false;
-                if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-                  canDisplay = true;
-                }
-                if (post.type == "community") {
-                  // Hide muted community members
+            //for logged out users, we already eliminated private posts by specifying privacy: 'public' in the query,
+            //so we just have to hide posts boosted from non-visible accounts and posts from private communities that
+            //the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
+            //community pages are hidden from logged-out users by a return at the very, very beginning of this function
+            if (post.author.settings.profileVisibility == "profileAndPosts") {
+              // User has allowed non-logged-in users to see their posts
+              if (post.community) {
+                if (post.community.settings.visibility == "public") {
+                  // Public community, can display post
                   let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
                   if (mutedMemberIds.includes(post.author._id.toString())) {
                     canDisplay = false;
-                  }
-                }
-                if (moment(post.timestamp).isSame(today, 'd')) {
-                  parsedTimestamp = moment(post.timestamp).fromNow();
-                } else if (moment(post.timestamp).isSame(thisyear, 'y')) {
-                  parsedTimestamp = moment(post.timestamp).format('D MMM');
-                } else {
-                  parsedTimestamp = moment(post.timestamp).format('D MMM YYYY');
-                }
-                if (post.comments != "") {
-                  if (moment(post.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
-                    recentlyCommented = true;
-                    lastCommentAuthor = post.comments.slice(-1)[0].author
                   } else {
-                    recentlyCommented = false;
-                    lastCommentAuthor = "";
-                  }
-                } else {
-                  recentlyCommented = false;
-                  lastCommentAuthor = "";
-                }
-
-                imageUrlsArray = []
-                if (post.imageVersion === 2) {
-                  post.images.forEach(image => {
-                    imageUrlsArray.push('/api/image/display/' + image)
-                  })
-                } else {
-                  post.images.forEach(image => {
-                    imageUrlsArray.push('/images/uploads/' + image)
-                  })
-                }
-
-                var followedBoosters = [];
-                var otherBoosters = [];
-                var isYourPost = post.author._id.equals(req.user._id);
-                var youBoosted = false;
-                if (post.boostsV2.length > 1) {
-                  post.boostsV2.forEach((v, i, a) => {
-                    if(!( v.timestamp == post.timestamp )){ //do not include implicit boost
-                      if(v.booster._id.equals(req.user._id)){
-                        followedBoosters.push('you');
-                        youBoosted = true;
-                      }else{
-                        if (followedBoosters.length < 3 && myFollowedUserIds.some(following=>{return following.equals(v.booster._id)})) {
-                          followedBoosters.push(v.booster.username);
-                        }else if(isYourPost || followedBoosters.length == 3){
-                          otherBoosters.push(v.booster.username);
-                        }
-                      }
-                    }
-                  })
-                }else if(post.boostsV2[0].timestamp!=post.timestamp){ //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
-                  followedBoosters.push('you');
-                  youBoosted = true;
-                }
-
-                displayedPost = {
-                  canDisplay: canDisplay,
-                  _id: post._id,
-                  deleteid: post._id,
-                  type: post.type,
-                  owner: post.author.username,
-                  author: {
-                    email: post.author.email,
-                    _id: post.author._id,
-                    username: post.author.username,
-                    displayName: post.author.displayName,
-                    imageEnabled: post.author.imageEnabled,
-                    image: post.author.image,
-                  },
-                  url: post.url,
-                  privacy: post.privacy,
-                  parsedTimestamp: parsedTimestamp,
-                  lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-                  rawContent: post.rawContent,
-                  parsedContent: post.parsedContent,
-                  commentsDisabled: post.commentsDisabled,
-                  comments: post.comments,
-                  numberOfComments: post.numberOfComments,
-                  contentWarnings: post.contentWarnings,
-                  images: imageUrlsArray,
-                  imageTags: post.imageTags,
-                  imageDescriptions: post.imageDescriptions,
-                  community: post.community,
-                  followedBoosters: followedBoosters,
-                  otherBoosters: otherBoosters,
-                  isYourPost: isYourPost,
-                  youBoosted: youBoosted,
-                  recentlyCommented: recentlyCommented,
-                  lastCommentAuthor: lastCommentAuthor,
-                  subscribedUsers: post.subscribedUsers,
-                  unsubscribedUsers: post.unsubscribedUsers,
-                  // linkPreview: post.linkPreview
-                }
-                displayedPost.comments.forEach(function (comment) {
-                  comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                  for (var i = 0; i < comment.images.length; i++) {
-                    comment.images[i] = '/api/image/display/' + comment.images[i];
-                  }
-                  // If the comment's author is logged in, or the post's author is logged in
-                  if ((comment.author._id.equals(loggedInUserData._id)) || (post.author._id.equals(loggedInUserData._id))) {
-                    comment.canDelete = true;
-                  }
-                });
-                displayedPosts.push(displayedPost);
-              });
-            } else {
-              posts.forEach(function (post, i) {
-                let canDisplay = false;
-                if (post.author.settings.profileVisibility == "profileAndPosts") {
-                  // User has allowed non-logged-in users to see their posts
-                  if (post.community) {
-                    if (post.community.settings.visibility == "public") {
-                      // Public community, can display post
-                      let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-                      if (mutedMemberIds.includes(post.author._id.toString())) {
-                        canDisplay = false;
-                      } else {
-                        canDisplay = true;
-                      }
-                    }
-                  } else {
-                    // Not a community post, can display
                     canDisplay = true;
                   }
                 }
-                var displayContext = post;
-                if (moment(displayContext.timestamp).isSame(today, 'd')) {
-                  parsedTimestamp = moment(displayContext.timestamp).fromNow();
-                } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-                  parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-                } else {
-                  parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-                }
-                if (displayContext.comments != "") {
-                  if (moment(displayContext.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
-                    recentlyCommented = true;
-                    lastCommentAuthor = displayContext.comments.slice(-1)[0].author
-                  } else {
-                    recentlyCommented = false;
-                    lastCommentAuthor = "";
-                  }
-                } else {
-                  recentlyCommented = false;
-                  lastCommentAuthor = "";
-                }
 
-                imageUrlsArray = []
-                if (displayContext.imageVersion === 2) {
-                  displayContext.images.forEach(image => {
-                    imageUrlsArray.push('/api/image/display/' + image)
-                  })
-                } else {
-                  displayContext.images.forEach(image => {
-                    imageUrlsArray.push('/images/uploads/' + image)
-                  })
-                }
-
-                displayedPost = {
-                  canDisplay: canDisplay,
-                  _id: displayContext._id,
-                  deleteid: post._id,
-                  type: post.type,
-                  owner: post.author.username,
-                  author: {
-                    email: displayContext.author.email,
-                    _id: displayContext.author._id,
-                    username: displayContext.author.username,
-                    displayName: displayContext.author.displayName,
-                    imageEnabled: displayContext.author.imageEnabled,
-                    image: displayContext.author.image,
-                  },
-                  url: displayContext.url,
-                  privacy: displayContext.privacy,
-                  parsedTimestamp: parsedTimestamp,
-                  lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-                  rawContent: displayContext.rawContent,
-                  parsedContent: displayContext.parsedContent,
-                  commentsDisabled: displayContext.commentsDisabled,
-                  comments: displayContext.comments,
-                  numberOfComments: displayContext.numberOfComments,
-                  contentWarnings: displayContext.contentWarnings,
-                  images: imageUrlsArray,
-                  imageTags: displayContext.imageTags,
-                  imageDescriptions: displayContext.imageDescriptions,
-                  community: displayContext.community,
-                  boosts: displayContext.boosts,
-                  boostTarget: post.boostTarget,
-                  recentlyCommented: recentlyCommented,
-                  lastCommentAuthor: lastCommentAuthor,
-                  subscribedUsers: displayContext.subscribedUsers,
-                  unsubscribedUsers: displayContext.unsubscribedUsers,
-                  // linkPreview: displayContext.linkPreview
-                }
-                displayedPost.comments.forEach(function (comment) {
-                  comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                  for (var i = 0; i < comment.images.length; i++) {
-                    comment.images[i] = '/api/image/display/' + comment.images[i];
-                  }
-                });
-                displayedPosts.push(displayedPost);
-              })
-            }
-            metadata = {};
-            if (req.params.context == "single") {
-              metadata = {
-                title: "sweet",
-                description: displayedPosts[0].rawContent.split('.')[0],
-                image: "https://sweet.sh/images/uploads/" + displayedPosts[0].image
+              } else {
+                // Not a community post, can display
+                canDisplay = true;
               }
             }
-            res.render('partials/posts', {
-              layout: false,
-              loggedIn: isLoggedIn,
-              isMuted: isMuted,
-              loggedInUserData: loggedInUserData,
-              posts: displayedPosts,
-              flaggedUsers: flagged,
-              context: req.params.context,
-              metadata: metadata
-            });
           }
-        })
+
+          if (!canDisplay) {
+            continue;
+          }
+
+          //some fun logic that creates a "recently commented on by" label for recently commented on posts
+          if (moment(post.timestamp).isSame(today, 'd')) {
+            parsedTimestamp = moment(post.timestamp).fromNow();
+          } else if (moment(post.timestamp).isSame(thisyear, 'y')) {
+            parsedTimestamp = moment(post.timestamp).format('D MMM');
+          } else {
+            parsedTimestamp = moment(post.timestamp).format('D MMM YYYY');
+          }
+          if (post.comments != "") {
+            if (moment(post.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+              recentlyCommented = true;
+              lastCommentAuthor = post.comments.slice(-1)[0].author
+            } else {
+              recentlyCommented = false;
+              lastCommentAuthor = "";
+            }
+          } else {
+            recentlyCommented = false;
+            lastCommentAuthor = "";
+          }
+
+          //get the full url for all images in the post
+          imageUrlsArray = []
+          if (post.imageVersion === 2) {
+            post.images.forEach(image => {
+              imageUrlsArray.push('/api/image/display/' + image)
+            })
+          } else {
+            post.images.forEach(image => {
+              imageUrlsArray.push('/images/uploads/' + image)
+            })
+          }
+
+          //generate some arrays containing usernames that will be put in "boosted by" labels
+          if (req.isAuthenticated()) {
+            var followedBoosters = [];
+            var otherBoosters = [];
+            var isYourPost = post.author._id.equals(req.user._id);
+            var youBoosted = false;
+            if (post.boostsV2.length > 1) {
+              post.boostsV2.forEach((v, i, a) => {
+                if (!(v.timestamp.getTime() == post.timestamp.getTime())) { //do not include implicit boost
+                  if (v.booster._id.equals(req.user._id)) {
+                    followedBoosters.push('you');
+                    youBoosted = true;
+                  } else {
+                    if (followedBoosters.length < 3 && myFollowedUserIds.some(following => {
+                        return following.equals(v.booster._id)
+                      })) {
+                      followedBoosters.push(v.booster.username);
+                    } else if (isYourPost || followedBoosters.length == 3) {
+                      otherBoosters.push(v.booster.username);
+                    }
+                  }
+                }
+              })
+            } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) { //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
+              followedBoosters.push('you');
+              youBoosted = true;
+            }
+          } else {
+            //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
+            if (req.params.context == "user") {
+              if (post.author._id.toString() != req.params.identifier) {
+                followedBoosters = [(await (User.findById(req.params.identifier))).username];
+              }
+            }
+          }
+
+          displayedPost = {
+            canDisplay: canDisplay,
+            _id: post._id,
+            deleteid: post._id,
+            type: post.type,
+            owner: post.author.username,
+            author: {
+              email: post.author.email,
+              _id: post.author._id,
+              username: post.author.username,
+              displayName: post.author.displayName,
+              imageEnabled: post.author.imageEnabled,
+              image: post.author.image,
+            },
+            url: post.url,
+            privacy: post.privacy,
+            parsedTimestamp: parsedTimestamp,
+            lastUpdated: post.lastUpdated,
+            rawContent: post.rawContent,
+            parsedContent: post.parsedContent,
+            commentsDisabled: post.commentsDisabled,
+            comments: post.comments,
+            numberOfComments: post.numberOfComments,
+            contentWarnings: post.contentWarnings,
+            images: imageUrlsArray,
+            imageDescriptions: post.imageDescriptions,
+            community: post.community,
+            followedBoosters: followedBoosters,
+            recentlyCommented: recentlyCommented,
+            lastCommentAuthor: lastCommentAuthor,
+            subscribedUsers: post.subscribedUsers,
+            unsubscribedUsers: post.unsubscribedUsers,
+            // linkPreview: post.linkPreview
+          }
+
+          //these are only a thing for logged in users
+          if (req.isAuthenticated()) {
+            displayedPost.otherBoosters = otherBoosters;
+            displayedPost.isYourPost = isYourPost;
+            displayedPost.youBoosted = youBoosted
+          }
+
+          //get timestamps and full image urls for each comment
+          displayedPost.comments.forEach(function (comment) {
+            comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+            for (var i = 0; i < comment.images.length; i++) {
+              comment.images[i] = '/api/image/display/' + comment.images[i];
+            }
+            // If the comment's author is logged in, or the post's author is logged in
+            if ((comment.author._id.equals(loggedInUserData._id)) || (post.author._id.equals(loggedInUserData._id))) {
+              comment.canDelete = true;
+            }
+          });
+
+          //wow, finally.
+          displayedPosts.push(displayedPost);
+        }
+      }
+    }).then(() => {
+
+
+      metadata = {};
+      if (req.params.context == "single") {
+        metadata = {
+          title: "sweet",
+          description: displayedPosts[0].rawContent.split('.')[0],
+          image: "https://sweet.sh/images/uploads/" + displayedPosts[0].image
+        }
+      }
+      res.render('partials/posts', {
+        layout: false,
+        loggedIn: isLoggedIn,
+        isMuted: isMuted,
+        loggedInUserData: loggedInUserData,
+        posts: displayedPosts,
+        flaggedUsers: flagged,
+        context: req.params.context,
+        metadata: metadata
+      });
     })
+
   })
+
+
 
   //API method that responds to requests for posts tagged a certain way.
   //Input: name is the name of the tag, page is the page number of posts we're viewing.
@@ -1037,12 +1118,11 @@ module.exports = function (app) {
           name: req.params.name
         })
         .then((tag) => {
-            if (req.user.settings.homeTagTimelineSorting == "fluid"){
-                sortMethod = '-lastUpdated';
-            }
-            else {
-                sortMethod = '-timestamp';
-            }
+          if (req.user.settings.homeTagTimelineSorting == "fluid") {
+            sortMethod = '-lastUpdated';
+          } else {
+            sortMethod = '-timestamp';
+          }
           Post.find({
               _id: {
                 $in: tag.posts
