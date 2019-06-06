@@ -70,14 +70,14 @@ $(function() {
         if(commentsContainer.height() > $(window).height()){
           var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
           $("html, body").animate({ scrollTop: scroll+"px" },200);
-        }        
+        }
         var post = $(this).closest('.commentContainer');
         $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
           $("#notificationsContainer").load( "/api/notification/display" );
         })
       }
     })
-    
+
   })
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
@@ -104,6 +104,17 @@ $(function() {
   $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
     pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
+
+  $('.fullBoostList').on('show.bs.modal', function (event) {
+    var link = $(event.relatedTarget)
+    var recipient = button.data('whatever') // Extract info from data-* attributes
+    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    var modal = $(this)
+    modal.find('.modal-title').text('New message to ' + recipient)
+    modal.find('.modal-body input').val(recipient)
+  })
+
   $('body').on('click', '.fullBoostList', function(e) {
     var thisList = $(this);
     thisList.removeClass('fullBoostList');
