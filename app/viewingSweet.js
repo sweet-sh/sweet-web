@@ -751,7 +751,11 @@ module.exports = function (app) {
       }
 
       aggregateQuery = aggregateQuery.concat([{
-        //then we do some boring stuff.
+        //now we do some really boring stuff
+        '$sort': {
+          'sortByTimestamp': -1
+        }
+      }, {
         '$skip': postsPerPage * page
       }, {
         '$limit': postsPerPage
@@ -796,6 +800,7 @@ module.exports = function (app) {
       }, {
         '$unwind': {
           'path': '$community',
+          //extremely necessary for non-community posts:
           'preserveNullAndEmptyArrays': true
         }
       }])
