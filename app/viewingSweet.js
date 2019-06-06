@@ -491,10 +491,8 @@ module.exports = function (app) {
   app.get('/showposts/:context/:identifier/:page', async function (req, res) {
     var loggedInUserData = {};
     if (req.isAuthenticated()) {
-      isLoggedIn = true;
       loggedInUserData = req.user;
     } else {
-      isLoggedIn = false;
       //logged out users can't get any posts from pages of non-completely-public users and communities
       if (req.params.context == "user" && (await Post.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
         res.sendStatus(404);
@@ -616,7 +614,7 @@ module.exports = function (app) {
 
       var isMuted = () => {
         isMuted = false;
-        if (req.params.context == "community" && isLoggedIn) {
+        if (req.params.context == "community" && req.isAuthenticated()) {
           return Community.findOne({
               _id: req.params.identifier
             })
@@ -727,35 +725,41 @@ module.exports = function (app) {
 
       //if we do have to use aggregate, it's a little more complex:
     } else {
-      var whosePostsWeWant = req.params.context == "user" ? [new ObjectId(req.params.identifier)] : myFollowedUserIds;
+      //set the criteria for the kind of post we wish to find:
+      if (req.params.context == "user") {
+        //this criteria finds all posts ever boosted or posted by this user (bc posting counts as an implicit boost)
+        var postCriteria = {
+          'boostsV2.booster': req.params.identifier
+        };
+      } else if (req.params.context == "home") {
+        //this criteria finds all posts ever boosted or posted by the user's followed users and all the posts from the communities they're in
+        var postCriteria = {
+          '$or': [{
+            'boostsV2.booster': {
+              $in: myFollowedUserIds
+            }
+          }, {
+            type: 'community',
+            community: {
+              $in: myCommunities
+            }
+          }]
+        };
+      }
+
       var query = Post.aggregate(
         [{
-          //find all posts that have ever been boosted by the user/users (remember the initial "implicit" boost)
-          '$match': {
-            'boostsV2.booster': {
-              $in: whosePostsWeWant
-            }
-          }
+          '$match': postCriteria
         }, {
-          //get a seperate document for each boost that has occured for our retrieved posts
+          //get a separate document for each boost that has occured for our retrieved posts
           '$unwind': {
             'path': '$boostsV2'
           }
         }, {
           //find all the specific stored instances of boosting by this user/users - should only be one per post
-          //unless the database has been incorrectly modified. we only store/care about the most recent time anyone boosted anything
-          '$match': {
-            '$or': [{
-              'boostsV2.booster': {
-                $in: whosePostsWeWant
-              }
-            }, {
-              type: 'community',
-              community: {
-                $in: myCommunities
-              }
-            }]
-          }
+          //unless the database has been incorrectly modified. we only store/care about the most recent time
+          //anyone boosted everything. community posts should only have one boost anyway (the implicit one).
+          '$match': postCriteria
         }, {
           //sort all of these instances of these posts by the timestamp of the time they were boosted/implicitly boosted
           //by the user/users whose posts we're looking for.
@@ -763,9 +767,9 @@ module.exports = function (app) {
             'boostsV2.timestamp': -1
           }
         }, {
-          '$skip': 10
+          '$skip': postsPerPage * page
         }, {
-          '$limit': 10
+          '$limit': postsPerPage
         }, {
           //these three stages get us back the full post document with all the boosts intact, since we eliminated all but the 
           //ones that we're sorting by with the second $match above
@@ -818,7 +822,7 @@ module.exports = function (app) {
       if (!posts.length) {
         res.status(404)
           .send('Not found');
-        return;
+        return "no posts";
       } else {
         //now we build the array of the posts we can display. some that we just retrieved might still not make the cut
         displayedPosts = [];
@@ -1008,31 +1012,29 @@ module.exports = function (app) {
           displayedPosts.push(displayedPost);
         }
       }
-    }).then(() => {
-
-
-      metadata = {};
-      if (req.params.context == "single") {
-        metadata = {
-          title: "sweet",
-          description: displayedPosts[0].rawContent.split('.')[0],
-          image: "https://sweet.sh/images/uploads/" + displayedPosts[0].image
+    }).then((result) => {
+      if (result != "no posts") {
+        metadata = {};
+        if (req.params.context == "single") {
+          metadata = {
+            title: "sweet",
+            description: displayedPosts[0].rawContent.split('.')[0],
+            image: "https://sweet.sh/images/uploads/" + displayedPosts[0].image
+          }
         }
+        res.render('partials/posts', {
+          layout: false,
+          loggedIn: req.isAuthenticated(),
+          isMuted: isMuted,
+          loggedInUserData: loggedInUserData,
+          posts: displayedPosts,
+          flaggedUsers: flagged,
+          context: req.params.context,
+          metadata: metadata
+        });
       }
-      res.render('partials/posts', {
-        layout: false,
-        loggedIn: isLoggedIn,
-        isMuted: isMuted,
-        loggedInUserData: loggedInUserData,
-        posts: displayedPosts,
-        flaggedUsers: flagged,
-        context: req.params.context,
-        metadata: metadata
-      });
     })
-
   })
-
 
 
   //API method that responds to requests for posts tagged a certain way.

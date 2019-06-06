@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Create 'boostsV2' field",
-            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsProperly.js"
+            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
         },
         {
             "type": "node",
