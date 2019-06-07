@@ -1,5 +1,6 @@
 User = require('../app/models/user');
 Post = require('../app/models/post');
+ObjectId     = require('mongoose').Types.ObjectId;
 var shortid = require('shortid');
 var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
@@ -52,7 +53,8 @@ async function createPosts() {
         //and 6 random boosts
         var boostTime = new Date()
         for (var i = 0; i < 6; i++) {
-            var newpost = {
+            var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
+            var newpost = new Post({
                 type: 'boost',
                 authorEmail: poster.email,
                 author: poster.id,
@@ -61,8 +63,13 @@ async function createPosts() {
                 timestamp: boostTime,
                 lastUpdated: boostTime,
                 //add field back to schema so this works
-                boostTarget: originalPosts[Math.floor(Math.random() * originalPosts.length)]
-            }
+                boostTarget: target
+            })
+            await newpost.save();
+            await Post.findById(target).then(post=>{
+                post.boostsV2.push({booster:poster.id, timestamp: boostTime, boost: newpost._id});
+                post.save();
+            })
         }
     }
 
@@ -76,7 +83,7 @@ async function createPosts() {
             rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
             parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
         };
-        Post.find({id:originalPosts[Math.floor(Math.random() * originalPosts.length)]}).then(post=>{
+        Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post=>{
             post.comments.push(comment);
             post.lastUpdated = commentTimestamp;
             post.save();
