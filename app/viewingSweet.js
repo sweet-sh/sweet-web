@@ -936,8 +936,7 @@ module.exports = function (app) {
               })
             } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) {
               //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
-              boostsForHeader.push('you');
-              youBoosted = true;
+              boostsForHeader.push(post.author.username);
             }
           } else {
             //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
