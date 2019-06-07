@@ -1068,12 +1068,16 @@ module.exports = function (app) {
                 privacy: 1,
                 unsubscribedUsers: 1,
                 author: 1,
-                url:1
+                url:1,
+                timestamp:1
             })
             .then((boostedPost) => {
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
+                if(boostedPost.author.equals(req.user._id)){
+                    boostedPost.boostsV2.unshift({booster: boostedPost.author, timestamp: boostedPost.timestamp});
+                }
                 boostedPost.save().then(() => {
                     relocatePost(req.params.postid);
                     res.redirect("back");

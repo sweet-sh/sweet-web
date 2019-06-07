@@ -646,7 +646,7 @@ module.exports = function (app) {
 
     if (req.params.context == "community") {
       var postDisplayCriteria = {
-        type: community,
+        type: 'community',
         community: req.params.identifier
       };
       //this defaults to fluid mode for logged out users
@@ -910,37 +910,40 @@ module.exports = function (app) {
 
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated()) {
-            var followedBoosters = [];
+            var boostsForHeader = [];
             var otherBoosters = [];
+            var notFollowingBoosters = [];
             var isYourPost = post.author._id.equals(req.user._id);
             var youBoosted = false;
             if (post.boostsV2.length > 1) {
               post.boostsV2.forEach((v, i, a) => {
                 if (!(v.timestamp.getTime() == post.timestamp.getTime())) { //do not include implicit boost
                   if (v.booster._id.equals(req.user._id)) {
-                    followedBoosters.push('you');
+                    boostsForHeader.push('you');
                     youBoosted = true;
                   } else {
-                    if (followedBoosters.length < 3 && myFollowedUserIds.some(following => {
-                        return following.equals(v.booster._id)
-                      })) {
-                      followedBoosters.push(v.booster.username);
-                    } else if (isYourPost || followedBoosters.length == 3) {
-                      otherBoosters.push(v.booster.username);
+                    if (myFollowedUserIds.some(following => {return following.equals(v.booster._id)})) {
+                      if (boostsForHeader.length < 3) {
+                        boostsForHeader.push(v.booster.username);
+                      } else {
+                        otherBoosters.push(v.booster.username);
+                      }
+                    } else {
+                      notFollowingBoosters.push(v.booster.username);
                     }
                   }
                 }
               })
             } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) {
               //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
-              followedBoosters.push('you');
+              boostsForHeader.push('you');
               youBoosted = true;
             }
           } else {
             //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
             if (req.params.context == "user") {
               if (post.author._id.toString() != req.params.identifier) {
-                followedBoosters = [(await (User.findById(req.params.identifier))).username];
+                boostsForHeader = [(await (User.findById(req.params.identifier))).username];
               }
             }
           }
@@ -972,7 +975,7 @@ module.exports = function (app) {
             images: imageUrlsArray,
             imageDescriptions: post.imageDescriptions,
             community: post.community,
-            followedBoosters: followedBoosters,
+            followedBoosters: boostsForHeader,
             recentlyCommented: recentlyCommented,
             lastCommentAuthor: lastCommentAuthor,
             subscribedUsers: post.subscribedUsers,
@@ -982,7 +985,7 @@ module.exports = function (app) {
 
           //these are only a thing for logged in users
           if (req.isAuthenticated()) {
-            displayedPost.otherBoosters = otherBoosters;
+            displayedPost.otherBoosters = notFollowingBoosters;
             displayedPost.isYourPost = isYourPost;
             displayedPost.youBoosted = youBoosted
           }
