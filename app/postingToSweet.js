@@ -809,7 +809,7 @@ module.exports = function (app) {
                                 }
 
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
-                                if (post.boostsV2.length > 1) {
+                                if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
                                     post.boostsV2.populate('booster', (err, boosts) => {
                                         if (err) {
@@ -1032,15 +1032,27 @@ module.exports = function (app) {
                     res.status(400).send("post is not public and therefore may not be boosted");
                     return;
                 }
+                var boost = new Post({
+                    type: 'boost',
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: shortid.generate(),
+                    privacy: 'public',
+                    timestamp: boostedTimestamp,
+                    lastUpdated: boostedTimestamp,
+                    //add field back to schema so this works
+                    boostTarget: boostedPost._id
+                })
+                boost.save().then(savedBoost=>{
                 const boost = {
                     booster: req.user._id,
-                    timestamp: boostedTimestamp
+                    timestamp: boostedTimestamp,
+                    boost: savedBoost._id
                 }
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
                 boostedPost.boostsV2.push(boost);
-                boostedPost.lastUpdated = boostedTimestamp;
 
                 // don't think so
                 //boostedPost.subscribedUsers.push(req.user._id.toString());
@@ -1053,6 +1065,7 @@ module.exports = function (app) {
                     res.redirect("back");
                 })
             })
+        })
     })
 
 //Responds to a post request that boosts a post.
@@ -1064,7 +1077,6 @@ module.exports = function (app) {
                 '_id': req.params.postid
             }, {
                 boostsV2: 1,
-                lastUpdated: 1,
                 privacy: 1,
                 unsubscribedUsers: 1,
                 author: 1,
@@ -1072,14 +1084,12 @@ module.exports = function (app) {
                 timestamp:1
             })
             .then((boostedPost) => {
+                boost = boostedPost.boostsV2.find(b=>{return b.booster.equals(req.user._id)});
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
-                if(boostedPost.author.equals(req.user._id)){
-                    boostedPost.boostsV2.unshift({booster: boostedPost.author, timestamp: boostedPost.timestamp});
-                }
+                Post.deleteOne({_id: boost.boost},function(){console.log('delete')});
                 boostedPost.save().then(() => {
-                    relocatePost(req.params.postid);
                     res.redirect("back");
                 })
             })

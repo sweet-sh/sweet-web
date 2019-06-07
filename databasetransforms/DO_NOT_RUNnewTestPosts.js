@@ -1,6 +1,6 @@
 User = require('../app/models/user');
 Post = require('../app/models/post');
-ObjectId     = require('mongoose').Types.ObjectId;
+ObjectId = require('mongoose').Types.ObjectId;
 var shortid = require('shortid');
 var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
@@ -31,18 +31,19 @@ async function createPosts() {
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 20 regular posts
-        var postTime = new Date()
+        //distribute randomly over the past 48 hours
+        var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
         for (var i = 0; i < 20; i++) {
             var newpost = new Post({
-                type: 'orginal',
+                type: 'original',
                 authorEmail: poster.email,
                 author: poster.id,
                 url: shortid.generate(),
                 privacy: 'public',
                 timestamp: postTime,
                 lastUpdated: postTime,
-                rawContent: '<p>assdfasdfkjl;adsjfkl;adsj</p>',
-                parsedContent: '<p>assdfasdfkjl;adsjfkl;adsj</p>',
+                rawContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                parsedContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
             })
             await newpost.save();
             originalPosts.push(newpost._id);
@@ -54,36 +55,44 @@ async function createPosts() {
         var boostTime = new Date()
         for (var i = 0; i < 6; i++) {
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
-            var newpost = new Post({
-                type: 'boost',
-                authorEmail: poster.email,
-                author: poster.id,
-                url: shortid.generate(),
-                privacy: 'public',
-                timestamp: boostTime,
-                lastUpdated: boostTime,
-                //add field back to schema so this works
-                boostTarget: target
-            })
-            await newpost.save();
-            await Post.findById(target).then(post=>{
-                post.boostsV2.push({booster:poster.id, timestamp: boostTime, boost: newpost._id});
-                post.save();
-            })
+            var targetPostDoc = awaitPost.findById(target);
+            //keep anyone from boosting a post for the second time
+            if (!targetPostDoc.boostsV2.some(b => {
+                    return b.booster.equals(poster.id)
+                })) {
+                var newpost = new Post({
+                    type: 'boost',
+                    authorEmail: poster.email,
+                    author: poster.id,
+                    url: shortid.generate(),
+                    privacy: 'public',
+                    timestamp: boostTime,
+                    lastUpdated: boostTime,
+                    //add field back to schema so this works
+                    boostTarget: target
+                })
+                await newpost.save();
+                targetPostDoc.boostsV2.push({
+                    booster: poster.id,
+                    timestamp: boostTime,
+                    boost: newpost._id
+                });
+                targetPostDoc.save();
+            }
         }
     }
 
-    for (var i=0;i<20;i++){
+    for (var i = 0; i < 20; i++) {
         //and then add 20 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
-            authorEmail: posters[Math.floor(Math.random()*4)].email,
-            author: posters[Math.floor(Math.random()*4)].id,
+            authorEmail: posters[Math.floor(Math.random() * 4)].email,
+            author: posters[Math.floor(Math.random() * 4)].id,
             timestamp: commentTimestamp,
             rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
             parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
         };
-        Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post=>{
+        Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post => {
             post.comments.push(comment);
             post.lastUpdated = commentTimestamp;
             post.save();
@@ -91,4 +100,64 @@ async function createPosts() {
     }
 }
 
-createPosts();
+async function createBoostsV2Posts() {
+    var originalPosts = [];
+    for (const poster of posters) {
+        //each poster will have 20 regular posts
+        //distribute randomly over the past 48 hours
+        var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
+        for (var i = 0; i < 20; i++) {
+            var newpost = new Post({
+                type: 'original',
+                authorEmail: poster.email,
+                author: poster.id,
+                url: shortid.generate(),
+                privacy: 'public',
+                timestamp: postTime,
+                lastUpdated: postTime,
+                rawContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                parsedContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                numberOfComments: 0
+            })
+            await newpost.save();
+            originalPosts.push(newpost._id);
+        }
+    }
+
+    for (const poster of posters) {
+        //and 6 random boosts
+        var boostTime = new Date()
+        for (var i = 0; i < 6; i++) {
+            var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
+            await Post.findById(target).then(post => {
+                post.boostsV2.push({
+                    booster: poster.id,
+                    timestamp: boostTime
+                });
+                post.lastUpdated = boostTime
+                post.save();
+            })
+        }
+    }
+
+    for (var i = 0; i < 20; i++) {
+        //and then add 20 random comments just for fun
+        var commentTimestamp = new Date();
+        const comment = {
+            authorEmail: posters[Math.floor(Math.random() * 4)].email,
+            author: posters[Math.floor(Math.random() * 4)].id,
+            timestamp: commentTimestamp,
+            rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
+            parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
+        };
+        Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post => {
+            post.comments.push(comment);
+            post.lastUpdated = commentTimestamp;
+            post.numberOfComments++;
+            post.save();
+        })
+    }
+}
+
+
+createPosts()

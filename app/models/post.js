@@ -26,7 +26,8 @@ var commentSchema = new mongoose.Schema({
 
 var boostSchema = new mongoose.Schema({
   booster: {type: Schema.Types.ObjectId, ref: 'User', required: true},
-  timestamp: {type: Date, required: true}
+  timestamp: {type: Date, required: true},
+  boost: {type: Schema.Types.ObjectId, ref: 'Post'}
 })
 
 var postSchema = new mongoose.Schema({
