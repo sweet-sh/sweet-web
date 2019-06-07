@@ -1052,32 +1052,39 @@ module.exports = function (app) {
             image: metadataImage,
             url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
           }
+
+          var post = displayedPosts[0]; //hopefully there's only one...
+          if (post.community && post.community.members.some(m => {
+              return m.equals(req.user._id)
+            })) {
+            var isMember = true;
+          } else {
+            var isMember = false;
+          }
+          res.render('singlepost', {
+            canDisplay: true,
+            loggedIn: req.isAuthenticated(),
+            loggedInUserData: loggedInUserData,
+            post: post,
+            flaggedUsers: flagged,
+            metadata: metadata,
+            isMuted: isMuted,
+            isMember: isMember,
+            activePage: 'singlepost'
+          })
+        } else {
+          res.render('partials/posts', {
+            layout: false,
+            loggedIn: req.isAuthenticated(),
+            isMuted: isMuted,
+            loggedInUserData: loggedInUserData,
+            posts: displayedPosts,
+            flaggedUsers: flagged,
+            context: req.params.context,
+            metadata: metadata
+          });
         }
-        res.render('singlepost', {
-          canDisplay: true,
-          loggedIn: req.isAuthenticated(),
-          loggedInUserData: loggedInUserData,
-          post: displayedPosts[0],
-          flaggedUsers: flagged,
-          metadata: metadata,
-          isMuted: isMuted,
-          isMember: true,
-          activePage: 'singlepost'
-        })
-
-      } else {
-        res.render('partials/posts', {
-          layout: false,
-          loggedIn: req.isAuthenticated(),
-          isMuted: isMuted,
-          loggedInUserData: loggedInUserData,
-          posts: displayedPosts,
-          flaggedUsers: flagged,
-          context: req.params.context,
-          metadata: metadata
-        });
       }
-
     })
   })
 
