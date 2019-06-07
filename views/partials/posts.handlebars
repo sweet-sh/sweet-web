@@ -115,7 +115,14 @@
               {{#if ../loggedIn}}
                 <form class="d-inline" action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post">
                   <button type="submit" class="btn btn-link btn-sm boostPost  post-action-button">
+                    {{#if youBoosted}}
+                    <span class="fa-stack">
+                      <i class="fas fa-stack-1x fa-retweet"></i>
+                      <i class="fa-stack-1x fa-sm fas fa-slash fa-flip-horizontal fa-transform"></i>
+                    </span>
+                    {{else}}
                     <i class="fas fa-retweet"></i>
+                    {{/if}}
                   </button>
                 </form>
               {{/if}}
