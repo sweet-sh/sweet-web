@@ -84,6 +84,7 @@ async function validateStuff(n){
         console.log("not as many boostV2 documents added as should have been")
         areWeGood = false;
     }
+    User.findOneAndUpdate({username:'bigpredatorymollusk'},{username:'giantpredatorymollusk'},()=>{;});
     await Post.find({$or:[{type:'original'},{type:'community'}]},{author:1,timestamp:1,lastUpdated:1,comments:1,boosts:1,boostsV2:1}).then(async posts => {
         await asyncForEach(posts, async function (post) {
             if(post.boostsV2.length < 1){
@@ -159,4 +160,4 @@ function deleteOldBoostPosts(){
     });
 }
 
-createBoostsField();
+createBoostsField().then(function(){process.exit()});
