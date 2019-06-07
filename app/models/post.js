@@ -67,14 +67,11 @@ var postSchema = new mongoose.Schema({
   tags: [String],
   boosts: [String], //deprecated
   boostsV2: [{type:boostSchema, required: true}],
-  boosters: [{type: Schema.Types.ObjectId, ref: 'User' }], //deprecated
   contentWarnings: String,
   commentsDisabled: Boolean,
   imageVersion: Number,
   images: [String],
-  imageTags: [String],
   imageDescriptions: [String],
-  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }],
   subscribedUsers: [String],
   unsubscribedUsers: [String],
   linkPreview: {
