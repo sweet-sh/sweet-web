@@ -489,1310 +489,374 @@ module.exports = function (app) {
   //of the logged in user in that case. (??????????????????) Page means page.
   //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
   app.get('/showposts/:context/:identifier/:page', async function (req, res) {
-    var loggedInUserData = {};
-    if (req.isAuthenticated()) {
-      loggedInUserData = req.user;
-    } else {
-      //logged out users can't get any posts from pages of non-completely-public users and communities
-      if (req.params.context == "user" && (await Post.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
-        res.sendStatus(404);
-        return;
-      } else if (req.params.context == "community" && (await Community.findById(req.params.identifier)).settings.visibility != "public") {
-        res.sendStatus(404);
-        return;
-      }
-    }
-
-    let postsPerPage = 10;
-    let page = req.params.page - 1;
-
-    //build some user lists. only a thing if the user is logged in.
-
-    if (req.isAuthenticated()) {
-      var myFollowedUserEmails = () => {
-        myFollowedUserEmails = []
-        myFollowedUserIds = [req.user._id]
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "follow"
-          })
-          .then((follows) => {
-            for (var key in follows) {
-              var follow = follows[key];
-              myFollowedUserEmails.push(follow.to);
-              myFollowedUserIds.push(follow.toUser)
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
+      var loggedInUserData = {};
+      if (req.isAuthenticated()) {
+        loggedInUserData = req.user;
+      } else {
+        //logged out users can't get any posts from pages of non-completely-public users and communities
+        if (req.params.context == "user" && (await Post.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
+          res.sendStatus(404);
+          return;
+        } else if (req.params.context == "community" && (await Community.findById(req.params.identifier)).settings.visibility != "public") {
+          res.sendStatus(404);
+          return;
+        }
       }
 
-      var myFlaggedUserEmails = () => {
-        myFlaggedUserEmails = []
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "flag"
-          })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
+      let postsPerPage = 10;
+      let page = req.params.page - 1;
 
-      var usersFlaggedByMyTrustedUsers = () => {
-        myTrustedUserEmails = []
-        usersFlaggedByMyTrustedUsers = []
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "trust"
-          })
-          .then((trusts) => {
-            for (var key in trusts) {
-              var trust = trusts[key];
-              myTrustedUserEmails.push(trust.to);
-            }
-            return Relationship.find({
-                value: "flag",
-                from: {
-                  $in: myTrustedUserEmails
-                }
-              })
-              .then((users) => {
-                usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
+      //build some user lists. only a thing if the user is logged in.
 
-      var usersWhoTrustMe = () => {
-        usersWhoTrustMeEmails = []
-        return Relationship.find({
-            to: loggedInUserData.email,
-            value: "trust"
-          })
-          .then((trusts) => {
-            for (var key in trusts) {
-              var trust = trusts[key];
-              usersWhoTrustMeEmails.push(trust.from);
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var myCommunitites = () => {
-        myCommunities = [];
-        myMutedUsers = [];
-        return Community.find({
-            members: loggedInUserData._id
-          })
-          .then((communities) => {
-            for (var key in communities) {
-              var community = communities[key];
-              myCommunities.push(community._id);
-              myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var isMuted = () => {
-        isMuted = false;
-        if (req.params.context == "community" && req.isAuthenticated()) {
-          return Community.findOne({
-              _id: req.params.identifier
+      if (req.isAuthenticated()) {
+        var myFollowedUserEmails = () => {
+          myFollowedUserEmails = []
+          myFollowedUserIds = [req.user._id]
+          return Relationship.find({
+              from: loggedInUserData.email,
+              value: "follow"
             })
-            .then(community => {
-              mutedMemberIds = community.mutedMembers.map(a => a.toString());
-              if (mutedMemberIds.includes(loggedInUserData._id.toString()))
-                isMuted = true;
-              console.log(isMuted)
+            .then((follows) => {
+              for (var key in follows) {
+                var follow = follows[key];
+                myFollowedUserEmails.push(follow.to);
+                myFollowedUserIds.push(follow.toUser)
+              }
             })
             .catch((err) => {
               console.log("Error in profileData.")
               console.log(err);
             });
         }
-      }
 
-      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
-
-      myFollowedUserEmails.push(loggedInUserData.email)
-      usersWhoTrustMeEmails.push(loggedInUserData.email)
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
-    }
-
-    const today = moment().clone().startOf('day');
-    const thisyear = moment().clone().startOf('year');
-
-    //construct the query that will retrieve the posts we want. if we are looking at a community page, we can do it with Post.find. otherwise,
-    //we have to do some juggling to factor boosts into the sort order of our posts, so we use a more complex Post.aggregate call.
-
-    if (req.params.context == "community") {
-      var postDisplayCriteria = {
-        type: 'community',
-        community: req.params.identifier
-      };
-      //this defaults to fluid mode for logged out users
-      var sortMethod = req.isAuthenticated() && req.user.settings.communityTimelineSorting == "chronological" ? "-timestamp" : "-lastUpdated";
-      var query = Post.find(
-          postDisplayCriteria
-        ).sort(sortMethod)
-        .skip(postsPerPage * page)
-        .limit(postsPerPage)
-        //these populate commands retrieve the complete data for these things that are referenced in the post documents we retrieve
-        .populate('author', '-password')
-        .populate('community')
-    } else {
-      if (req.params.context == "home") {
-        //on the home page, we're concerned about boosts by users we follow for sorting, and overall we're looking for posts
-        //that were boosted (implicitly or explicitly) by users we follow OR are from a community we're in.
-        var matchBoosts = {
-          'boostsV2.booster': {
-            $in: myFollowedUserIds
-          }
-        }
-        var matchPosts = {
-          '$or': [matchBoosts,
-            {
-              type: 'community',
-              community: {
-                $in: myCommunities
+        var myFlaggedUserEmails = () => {
+          myFlaggedUserEmails = []
+          return Relationship.find({
+              from: loggedInUserData.email,
+              value: "flag"
+            })
+            .then((flags) => {
+              for (var key in flags) {
+                var flag = flags[key];
+                myFlaggedUserEmails.push(flag.to);
               }
-            }
-          ]
-        };
-        var sortingType = req.user.settings.homeTagTimelineSorting;
-      } else if (req.params.context == "user") {
-        //on a user profile page, we're just concerned about boosts by that user, for sorting or for finding the posts in the first place.
-        var matchBoosts = {
-          'boostsV2.booster': new ObjectId(req.params.identifier)
-        };
-        var matchPosts = matchBoosts;
-        var sortingType = req.user.settings.userTimelineSorting;
+            })
+            .catch((err) => {
+              console.log("Error in profileData.")
+              console.log(err);
+            });
+        }
+
+        var usersFlaggedByMyTrustedUsers = () => {
+          myTrustedUserEmails = []
+          usersFlaggedByMyTrustedUsers = []
+          return Relationship.find({
+              from: loggedInUserData.email,
+              value: "trust"
+            })
+            .then((trusts) => {
+              for (var key in trusts) {
+                var trust = trusts[key];
+                myTrustedUserEmails.push(trust.to);
+              }
+              return Relationship.find({
+                  value: "flag",
+                  from: {
+                    $in: myTrustedUserEmails
+                  }
+                })
+                .then((users) => {
+                  usersFlaggedByMyTrustedUsers = users.map(a => a.to);
+                })
+            })
+            .catch((err) => {
+              console.log("Error in profileData.")
+              console.log(err);
+            });
+        }
+
+        var usersWhoTrustMe = () => {
+          usersWhoTrustMeEmails = []
+          return Relationship.find({
+              to: loggedInUserData.email,
+              value: "trust"
+            })
+            .then((trusts) => {
+              for (var key in trusts) {
+                var trust = trusts[key];
+                usersWhoTrustMeEmails.push(trust.from);
+              }
+            })
+            .catch((err) => {
+              console.log("Error in profileData.")
+              console.log(err);
+            });
+        }
+
+        var myCommunitites = () => {
+          myCommunities = [];
+          myMutedUsers = [];
+          return Community.find({
+              members: loggedInUserData._id
+            })
+            .then((communities) => {
+              for (var key in communities) {
+                var community = communities[key];
+                myCommunities.push(community._id);
+                myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
+              }
+            })
+            .catch((err) => {
+              console.log("Error in profileData.")
+              console.log(err);
+            });
+        }
+
+        var isMuted = () => {
+          isMuted = false;
+          if (req.params.context == "community" && req.isAuthenticated()) {
+            return Community.findOne({
+                _id: req.params.identifier
+              })
+              .then(community => {
+                mutedMemberIds = community.mutedMembers.map(a => a.toString());
+                if (mutedMemberIds.includes(loggedInUserData._id.toString()))
+                  isMuted = true;
+                console.log(isMuted)
+              })
+              .catch((err) => {
+                console.log("Error in profileData.")
+                console.log(err);
+              });
+          }
+        }
+
+        await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
+
+        myFollowedUserEmails.push(loggedInUserData.email)
+        usersWhoTrustMeEmails.push(loggedInUserData.email)
+        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
       }
 
-      var aggregateQuery = [{
-        '$match': matchPosts
-      }, {
-        //get a separate document for each boost that has occured for our retrieved posts
-        '$unwind': {
-          'path': '$boostsV2'
-        }
-      }, {
-        //keep the documents for boosts we care about
-        '$match': matchPosts
-      }]
+      const today = moment().clone().startOf('day');
+      const thisyear = moment().clone().startOf('year');
 
-      if (sortingType == "fluid") {
-        //for fluid sorting, we have to count comments in, so we add some aggregation stages to combine the boosts and comments
-        //and find the most recent timestamp between them.
-        aggregateQuery = aggregateQuery.concat([{
-          '$group': {
-            '_id': '$_id',
-            'boostsV2': {
-              '$addToSet': '$boostsV2'
-            },
-            'comments': {
-              '$last': '$comments'
-            }
-          }
-        }, {
-          '$project': {
-            'activity': {
-              '$concatArrays': [
-                '$boostsV2', '$comments'
-              ]
-            }
-          }
-        }, {
-          '$project': {
-            'sortByTimestamp': {
-              '$max': '$activity.timestamp'
-            }
-          }
-        }])
+      //construct the query that will retrieve the posts we want. if we are looking at a community page, we can do it with Post.find. otherwise,
+      //we have to do some juggling to factor boosts into the sort order of our posts, so we use a more complex Post.aggregate call.
+
+      if (req.params.context == "community") {
+        var postDisplayCriteria = {
+          type: 'community',
+          community: req.params.identifier
+        };
+        //this defaults to fluid mode for logged out users
+        var sortMethod = req.isAuthenticated() && req.user.settings.communityTimelineSorting == "chronological" ? "-timestamp" : "-lastUpdated";
+        var query = Post.find(
+            postDisplayCriteria
+          ).sort(sortMethod)
+          .skip(postsPerPage * page)
+          .limit(postsPerPage)
+          //these populate commands retrieve the complete data for these things that are referenced in the post documents we retrieve
+          .populate('author', '-password')
+          .populate('community')
+      } else if (req.params.context == "single") {
+        var query = Post.find({
+            url: req.params.identifier
+          })
+          .populate('author', '-password')
+          .populate('community');
       } else {
-        //if order is chronological, we just use the most recent timestamp of the relevant boosts, ignoring comments.
         if (req.params.context == "home") {
-          //if we're home, there might be more than one relevant boost, so we group them before finding the max.
+          //on the home page, we're concerned about boosts by users we follow for sorting, and overall we're looking for posts
+          //that were boosted (implicitly or explicitly) by users we follow OR are from a community we're in.
+          var matchBoosts = {
+            'boostsV2.booster': {
+              $in: myFollowedUserIds
+            }
+          }
+          var matchPosts = {
+            '$or': [matchBoosts,
+              {
+                type: 'community',
+                community: {
+                  $in: myCommunities
+                }
+              }
+            ]
+          };
+          var sortingType = req.user.settings.homeTagTimelineSorting;
+        } else if (req.params.context == "user") {
+          //on a user profile page, we're just concerned about boosts by that user, for sorting or for finding the posts in the first place.
+          var matchBoosts = {
+            'boostsV2.booster': new ObjectId(req.params.identifier)
+          };
+          var matchPosts = matchBoosts;
+          var sortingType = req.user.settings.userTimelineSorting;
+        }
+
+        var aggregateQuery = [{
+          '$match': matchPosts
+        }, {
+          //get a separate document for each boost that has occured for our retrieved posts
+          '$unwind': {
+            'path': '$boostsV2'
+          }
+        }, {
+          //keep the documents for boosts we care about
+          '$match': matchPosts
+        }]
+
+        if (sortingType == "fluid") {
+          //for fluid sorting, we have to count comments in, so we add some aggregation stages to combine the boosts and comments
+          //and find the most recent timestamp between them.
           aggregateQuery = aggregateQuery.concat([{
             '$group': {
               '_id': '$_id',
               'boostsV2': {
                 '$addToSet': '$boostsV2'
+              },
+              'comments': {
+                '$last': '$comments'
               }
             }
-          }]);
-        }
-        aggregateQuery = aggregateQuery.concat([{
-          '$project': {
-            'sortByTimestamp': {
-              '$max': '$boostsV2.timestamp'
+          }, {
+            '$project': {
+              'activity': {
+                '$concatArrays': [
+                  '$boostsV2', '$comments'
+                ]
+              }
             }
+          }, {
+            '$project': {
+              'sortByTimestamp': {
+                '$max': '$activity.timestamp'
+              }
+            }
+          }])
+        } else {
+          //if order is chronological, we just use the most recent timestamp of the relevant boosts, ignoring comments.
+          if (req.params.context == "home") {
+            //if we're home, there might be more than one relevant boost, so we group them before finding the max.
+            aggregateQuery = aggregateQuery.concat([{
+              '$group': {
+                '_id': '$_id',
+                'boostsV2': {
+                  '$addToSet': '$boostsV2'
+                }
+              }
+            }]);
+          }
+          aggregateQuery = aggregateQuery.concat([{
+            '$project': {
+              'sortByTimestamp': {
+                '$max': '$boostsV2.timestamp'
+              }
+            }
+          }])
+        }
+
+        aggregateQuery = aggregateQuery.concat([{
+          //now we do some really boring stuff
+          '$sort': {
+            'sortByTimestamp': -1
+          }
+        }, {
+          '$skip': postsPerPage * page
+        }, {
+          '$limit': postsPerPage
+        }, {
+          //these three stages get us back the full post document with all the boosts and various fields intact, since we eliminated all but the 
+          //ones that we're sorting by with the second $match and potentially the $group and i guess definitely the project above
+          '$lookup': {
+            'from': 'posts',
+            'localField': '_id',
+            'foreignField': '_id',
+            'as': 'fullDocument'
+          }
+        }, {
+          '$unwind': {
+            'path': '$fullDocument'
+          }
+        }, {
+          '$replaceRoot': {
+            'newRoot': '$fullDocument'
+          }
+        }, {
+          //find the full document that the author field references
+          '$lookup': {
+            'from': 'users',
+            'localField': 'author',
+            'foreignField': '_id',
+            'as': 'author'
+          }
+        }, {
+          //it's returned as an array for no reason so we have to unwind
+          '$unwind': {
+            'path': '$author'
+          }
+        }, {
+          //do the same thing for communities
+          '$lookup': {
+            'from': 'communities',
+            'localField': 'community',
+            'foreignField': '_id',
+            'as': 'community'
+          }
+        }, {
+          '$unwind': {
+            'path': '$community',
+            //extremely necessary for non-community posts:
+            'preserveNullAndEmptyArrays': true
           }
         }])
+        var query = Post.aggregate(aggregateQuery);
       }
 
-      aggregateQuery = aggregateQuery.concat([{
-        //now we do some really boring stuff
-        '$sort': {
-          'sortByTimestamp': -1
-        }
-      }, {
-        '$skip': postsPerPage * page
-      }, {
-        '$limit': postsPerPage
-      }, {
-        //these three stages get us back the full post document with all the boosts and various fields intact, since we eliminated all but the 
-        //ones that we're sorting by with the second $match and potentially the $group and i guess definitely the project above
-        '$lookup': {
-          'from': 'posts',
-          'localField': '_id',
-          'foreignField': '_id',
-          'as': 'fullDocument'
-        }
-      }, {
-        '$unwind': {
-          'path': '$fullDocument'
-        }
-      }, {
-        '$replaceRoot': {
-          'newRoot': '$fullDocument'
-        }
-      }, {
-        //find the full document that the author field references
-        '$lookup': {
-          'from': 'users',
-          'localField': 'author',
-          'foreignField': '_id',
-          'as': 'author'
-        }
-      }, {
-        //it's returned as an array for no reason so we have to unwind
-        '$unwind': {
-          'path': '$author'
-        }
-      }, {
-        //do the same thing for communities
-        '$lookup': {
-          'from': 'communities',
-          'localField': 'community',
-          'foreignField': '_id',
-          'as': 'community'
-        }
-      }, {
-        '$unwind': {
-          'path': '$community',
-          //extremely necessary for non-community posts:
-          'preserveNullAndEmptyArrays': true
-        }
-      }])
-      var query = Post.aggregate(aggregateQuery);
-    }
+      //so this will be called when the query retrieves the posts we want
+      query.then(async posts => {
+        if (!posts.length) {
+          res.status(404)
+            .send('Not found');
+          return "no posts";
+        } else {
+          //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
+          displayedPosts = [];
 
-    //so this will be called when the query retrieves the posts we want
-    query.then(async posts => {
-      if (!posts.length) {
-        res.status(404)
-          .send('Not found');
-        return "no posts";
-      } else {
-        //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
-        displayedPosts = [];
+          for (const post of posts) {
 
-        for (const post of posts) {
+            //get the full documents that these fields reference. you could do this with mongoose's populate() when using the find() query but
+            //not with the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
+            //boostsV2.booster) it would take a lookup, an unwind, an addFields, and a group that listed every field in the post document.
+            //might be faster though, since it's done by the mongodb program. also maybe there's a better way to write it that i can't figure out
 
-          //get the full documents that these fields reference. you could do this with mongoose's populate() when using the find() query but
-          //not with the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
-          //boostsV2.booster) it would take a lookup, an unwind, an addFields, and a group that listed every field in the post document.
-          //might be faster though, since it's done by the mongodb program. also maybe there's a better way to write it that i can't figure out
-
-          for (const comment of post.comments) {
-            comment.author = await User.findById(comment.author);
-          }
-
-          for (const boost of post.boostsV2) {
-            boost.booster = await User.findById(boost.booster);
-          }
-
-          var canDisplay = false;
-          if (req.isAuthenticated()) {
-            //logged in users can't see private posts by users who don't trust them or community posts by muted members
-            if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-              canDisplay = true;
+            for (const comment of post.comments) {
+              comment.author = await User.findById(comment.author);
             }
-            if (post.type == "community") {
-              // Hide muted community members
-              let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-              if (mutedMemberIds.includes(post.author._id.toString())) {
-                canDisplay = false;
-              }
-            }
-          } else {
-            //for logged out users, we already eliminated private posts by specifying privacy: 'public' in the query,
-            //so we just have to hide posts boosted from non-publicly-visible accounts and posts from private communities that
-            //the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
-            //community pages are hidden from logged-out users by a return at the very, very beginning of this function)
-            if (post.author.settings.profileVisibility == "profileAndPosts") {
-              // User has allowed non-logged-in users to see their posts
-              if (post.community) {
-                if (post.community.settings.visibility == "public") {
-                  // Public community, can display post
-                  let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-                  if (mutedMemberIds.includes(post.author._id.toString())) {
-                    canDisplay = false;
-                  } else {
-                    canDisplay = true;
-                  }
-                }
 
-              } else {
-                // Not a community post, can display
+            for (const boost of post.boostsV2) {
+              boost.booster = await User.findById(boost.booster);
+            }
+
+            var canDisplay = false;
+            if (req.isAuthenticated()) {
+              //logged in users can't see private posts by users who don't trust them or community posts by muted members
+              if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
                 canDisplay = true;
               }
-            }
-          }
-
-          if (!canDisplay) {
-            //if we can't display the post, move on to the next one in the loop
-            continue;
-          }
-
-          //some fun logic that creates a "recently commented on by" label for recently commented on posts
-          if (moment(post.timestamp).isSame(today, 'd')) {
-            parsedTimestamp = moment(post.timestamp).fromNow();
-          } else if (moment(post.timestamp).isSame(thisyear, 'y')) {
-            parsedTimestamp = moment(post.timestamp).format('D MMM');
-          } else {
-            parsedTimestamp = moment(post.timestamp).format('D MMM YYYY');
-          }
-          if (post.comments != "") {
-            if (moment(post.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
-              recentlyCommented = true;
-              lastCommentAuthor = post.comments.slice(-1)[0].author
-            } else {
-              recentlyCommented = false;
-              lastCommentAuthor = "";
-            }
-          } else {
-            recentlyCommented = false;
-            lastCommentAuthor = "";
-          }
-
-          //get the full url for all images in the post
-          imageUrlsArray = []
-          if (post.imageVersion === 2) {
-            post.images.forEach(image => {
-              imageUrlsArray.push('/api/image/display/' + image)
-            })
-          } else {
-            post.images.forEach(image => {
-              imageUrlsArray.push('/images/uploads/' + image)
-            })
-          }
-
-          //generate some arrays containing usernames that will be put in "boosted by" labels
-          if (req.isAuthenticated()) {
-            var boostsForHeader = [];
-            var otherBoosters = [];
-            var notFollowingBoosters = [];
-            var isYourPost = post.author._id.equals(req.user._id);
-            var youBoosted = false;
-            if (post.boostsV2.length > 1) {
-              post.boostsV2.forEach((v, i, a) => {
-                if (!(v.timestamp.getTime() == post.timestamp.getTime())) { //do not include implicit boost
-                  if (v.booster._id.equals(req.user._id)) {
-                    boostsForHeader.push('you');
-                    youBoosted = true;
-                  } else {
-                    if (myFollowedUserIds.some(following => {return following.equals(v.booster._id)})) {
-                      if (boostsForHeader.length < 3) {
-                        boostsForHeader.push(v.booster.username);
-                      } else {
-                        otherBoosters.push(v.booster.username);
-                      }
-                    } else {
-                      notFollowingBoosters.push(v.booster.username);
-                    }
-                  }
-                }
-              })
-            } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) {
-              //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
-              boostsForHeader.push(post.author.username);
-            }
-          } else {
-            //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
-            if (req.params.context == "user") {
-              if (post.author._id.toString() != req.params.identifier) {
-                boostsForHeader = [(await (User.findById(req.params.identifier))).username];
-              }
-            }
-          }
-
-          displayedPost = {
-            canDisplay: canDisplay,
-            _id: post._id,
-            deleteid: post._id,
-            type: post.type,
-            owner: post.author.username,
-            author: {
-              email: post.author.email,
-              _id: post.author._id,
-              username: post.author.username,
-              displayName: post.author.displayName,
-              imageEnabled: post.author.imageEnabled,
-              image: post.author.image,
-            },
-            url: post.url,
-            privacy: post.privacy,
-            parsedTimestamp: parsedTimestamp,
-            lastUpdated: post.lastUpdated,
-            rawContent: post.rawContent,
-            parsedContent: post.parsedContent,
-            commentsDisabled: post.commentsDisabled,
-            comments: post.comments,
-            numberOfComments: post.numberOfComments,
-            contentWarnings: post.contentWarnings,
-            images: imageUrlsArray,
-            imageDescriptions: post.imageDescriptions,
-            community: post.community,
-            followedBoosters: boostsForHeader,
-            recentlyCommented: recentlyCommented,
-            lastCommentAuthor: lastCommentAuthor,
-            subscribedUsers: post.subscribedUsers,
-            unsubscribedUsers: post.unsubscribedUsers,
-            // linkPreview: post.linkPreview
-          }
-
-          //these are only a thing for logged in users
-          if (req.isAuthenticated()) {
-            displayedPost.otherBoosters = notFollowingBoosters;
-            displayedPost.isYourPost = isYourPost;
-            displayedPost.youBoosted = youBoosted
-          }
-
-          //get timestamps and full image urls for each comment
-          displayedPost.comments.forEach(function (comment) {
-            comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-            for (var i = 0; i < comment.images.length; i++) {
-              comment.images[i] = '/api/image/display/' + comment.images[i];
-            }
-            // If the comment's author is logged in, or the post's author is logged in
-            if ((comment.author._id.equals(loggedInUserData._id)) || (post.author._id.equals(loggedInUserData._id))) {
-              comment.canDelete = true;
-            }
-          });
-
-          //wow, finally.
-          displayedPosts.push(displayedPost);
-        }
-      }
-    }).then((result) => {
-      if (result != "no posts") {
-        metadata = {};
-        if (req.params.context == "single") {
-          metadata = {
-            title: "sweet",
-            description: displayedPosts[0].rawContent.split('.')[0],
-            image: "https://sweet.sh/images/uploads/" + displayedPosts[0].image
-          }
-        }
-        res.render('partials/posts', {
-          layout: false,
-          loggedIn: req.isAuthenticated(),
-          isMuted: isMuted,
-          loggedInUserData: loggedInUserData,
-          posts: displayedPosts,
-          flaggedUsers: flagged,
-          context: req.params.context,
-          metadata: metadata
-        });
-      }
-    })
-  })
-
-
-  //API method that responds to requests for posts tagged a certain way.
-  //Input: name is the name of the tag, page is the page number of posts we're viewing.
-  //Output: isLoggedInOrRedirect might redirect you. Otherwise, you get 404 if no showable posts are found or
-  //the rendered posts results.
-  app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
-    let postsPerPage = 10;
-    let page = req.params.page - 1;
-
-    let myFlaggedUserEmails = () => {
-      myFlaggedUserEmails = []
-      return Relationship.find({
-          from: req.user.email,
-          value: "flag"
-        })
-        .then((flags) => {
-          for (var key in flags) {
-            var flag = flags[key];
-            myFlaggedUserEmails.push(flag.to);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersFlaggedByMyTrustedUsers = () => {
-      myTrustedUserEmails = []
-      usersFlaggedByMyTrustedUsers = []
-      return Relationship.find({
-          from: req.user.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            myTrustedUserEmails.push(trust.to);
-          }
-          return Relationship.find({
-              value: "flag",
-              from: {
-                $in: myTrustedUserEmails
-              }
-            })
-            .then((users) => {
-              usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersWhoTrustMe = () => {
-      usersWhoTrustMeEmails = []
-      return Relationship.find({
-          to: req.user.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            usersWhoTrustMeEmails.push(trust.from);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
-
-      const today = moment().clone().startOf('day');
-      const thisyear = moment().clone().startOf('year');
-
-      usersWhoTrustMeEmails.push(req.user.email);
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
-      Tag.findOne({
-          name: req.params.name
-        })
-        .then((tag) => {
-          if (req.user.settings.homeTagTimelineSorting == "fluid") {
-            sortMethod = '-lastUpdated';
-          } else {
-            sortMethod = '-timestamp';
-          }
-          Post.find({
-              _id: {
-                $in: tag.posts
-              }
-            })
-            .sort(sortMethod)
-            .skip(postsPerPage * page)
-            .limit(postsPerPage)
-            .populate('author', '-password')
-            .populate('comments.author', '-password')
-            .populate({
-              path: 'boostTarget',
-              populate: {
-                path: 'author comments.author'
-              }
-            })
-            .then((posts) => {
-              if (!posts.length) {
-                res.status(404)
-                  .send('Not found');
-              } else {
-                displayedPosts = [];
-                posts.forEach(function (post, i) {
-                  if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-                    let canDisplay = true;
-                    if (post.type == "boost") {
-                      displayContext = post.boostTarget;
-                    } else {
-                      displayContext = post;
-                    }
-                    if (moment(displayContext.timestamp).isSame(today, 'd')) {
-                      parsedTimestamp = moment(displayContext.timestamp).fromNow();
-                    } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-                      parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-                    } else {
-                      parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-                    }
-
-                    imageUrlsArray = []
-                    if (displayContext.imageVersion === 2) {
-                      displayContext.images.forEach(image => {
-                        imageUrlsArray.push('/api/image/display/' + image)
-                      })
-                    } else {
-                      displayContext.images.forEach(image => {
-                        imageUrlsArray.push('/images/uploads/' + image)
-                      })
-                    }
-
-                    displayedPost = {
-                      canDisplay: canDisplay,
-                      _id: displayContext._id,
-                      deleteid: post._id,
-                      type: post.type,
-                      owner: post.author.username,
-                      author: {
-                        email: displayContext.author.email,
-                        _id: displayContext.author._id,
-                        username: displayContext.author.username,
-                        displayName: displayContext.author.displayName,
-                        imageEnabled: displayContext.author.imageEnabled,
-                        image: displayContext.author.image,
-                      },
-                      url: displayContext.url,
-                      privacy: displayContext.privacy,
-                      parsedTimestamp: parsedTimestamp,
-                      lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-                      rawContent: displayContext.rawContent,
-                      parsedContent: displayContext.parsedContent,
-                      commentsDisabled: displayContext.commentsDisabled,
-                      comments: displayContext.comments,
-                      numberOfComments: displayContext.numberOfComments,
-                      contentWarnings: displayContext.contentWarnings,
-                      images: imageUrlsArray,
-                      imageTags: displayContext.imageTags,
-                      imageDescriptions: displayContext.imageDescriptions,
-                      community: displayContext.community,
-                      boosts: displayContext.boosts,
-                      boostTarget: post.boostTarget,
-                      recentlyCommented: recentlyCommented,
-                      lastCommentAuthor: lastCommentAuthor,
-                      subscribedUsers: displayContext.subscribedUsers,
-                      unsubscribedUsers: displayContext.unsubscribedUsers,
-                      // linkPreview: displayContext.linkPreview
-                    }
-                    displayedPost.comments.forEach(function (comment) {
-                      comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                      for (var i = 0; i < comment.images.length; i++) {
-                        comment.images[i] = '/api/image/display/' + comment.images[i];
-                      }
-                    });
-                    displayedPosts.push(displayedPost);
-                  }
-                })
-                res.render('partials/posts', {
-                  layout: false,
-                  loggedIn: true,
-                  loggedInUserData: req.user,
-                  posts: displayedPosts,
-                  flaggedUsers: flagged,
-                  context: req.params.context
-                });
-              }
-            })
-        })
-    })
-  })
-
-  //Responds to get requests for a user's profile page.
-  //Inputs: username is the user's username.
-  //Outputs: a 404 if the user isn't found
-  app.get('/:username', function (req, res) {
-    if (req.isAuthenticated()) {
-      isLoggedIn = true;
-    } else {
-      isLoggedIn = false;
-    }
-
-    let results = {};
-
-    let profileData = () => {
-      return User.findOne({
-          username: req.params.username
-        })
-        .then((user) => {
-          if (!user) {
-            console.log("no such user!");
-            res.status(404).redirect('/404');
-          } else {
-            results.profileData = user
-            return user;
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let communitiesData = (user) => {
-      return Community.find({
-          members: results.profileData._id
-        })
-        .then((communities) => {
-          results.communitiesData = communities
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let flagsOnUser = (user) => {
-      if (req.isAuthenticated()) {
-        return Relationship.find({
-            to: user.email,
-            value: "flag"
-          })
-          .then((flags) => {
-            results.flagsOnUser = flags
-            return flags;
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-    }
-
-    let myTrustedUsers = () => {
-      if (req.isAuthenticated()) {
-        myTrustedUserEmails = []
-        myTrustedUserData = []
-        return Relationship.find({
-            from: req.user.email,
-            value: "trust"
-          })
-          .then((trusts) => {
-            for (var key in trusts) {
-              var trust = trusts[key];
-              myTrustedUserEmails.push(trust.to);
-            }
-            return User.find({
-                email: {
-                  $in: myTrustedUserEmails
-                }
-              })
-              .then((users) => {
-                results.myTrustedUserData = users
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-    }
-
-    let theirTrustedUsers = () => {
-      theirTrustedUserEmails = []
-      theirTrustedUserData = []
-      return Relationship.find({
-          from: results.profileData.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            theirTrustedUserEmails.push(trust.to);
-          }
-          return User.find({
-              email: {
-                $in: theirTrustedUserEmails
-              }
-            })
-            .then((users) => {
-              results.theirTrustedUserData = users
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let myFlaggedUsers = () => {
-      if (req.isAuthenticated()) {
-        myFlaggedUserEmails = []
-        myFlaggedUserData = []
-        return Relationship.find({
-            from: req.user.email,
-            value: "flag"
-          })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
-            }
-            return User.find({
-                email: {
-                  $in: myFlaggedUserEmails
-                }
-              })
-              .then((users) => {
-                results.myFlaggedUserData = users
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-    }
-
-    let myBlockedUsers = () => {
-      if (req.isAuthenticated()) {
-        myBlockedUserEmails = []
-        return Relationship.find({
-            from: req.user.email,
-            value: "block"
-          })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
-            }
-            return User.find({
-                email: {
-                  $in: myFlaggedUserEmails
-                }
-              })
-              .then((users) => {
-                results.myFlaggedUserData = users
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-    }
-
-    let myFollowedUsers = () => {
-      if (req.isAuthenticated()) {
-        myFollowedUserEmails = []
-        myFollowedUserData = []
-        return Relationship.find({
-            from: req.user.email,
-            value: "follow"
-          })
-          .then((follows) => {
-            for (var key in follows) {
-              var follow = follows[key];
-              myFollowedUserEmails.push(follow.to);
-            }
-            return User.find({
-                email: {
-                  $in: myFollowedUserEmails
-                }
-              })
-              .then((users) => {
-                results.myFollowedUserData = users
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-    }
-
-    let followers = () => {
-      followersArray = [];
-      return Relationship.find({
-          to: results.profileData.email,
-          value: "follow"
-        }, {
-          'from': 1
-        })
-        .then((followers) => {
-          let followersArray = followers.map(({
-            from
-          }) => from)
-          return User.find({
-              email: {
-                $in: followersArray
-              }
-            })
-            .then((users) => {
-              results.followers = users
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let theirFollowedUsers = () => {
-      theirFollowedUserEmails = []
-      theirFollowedUserData = []
-      return Relationship.find({
-          from: results.profileData.email,
-          value: "follow"
-        })
-        .then((follows) => {
-          for (var key in follows) {
-            var follow = follows[key];
-            theirFollowedUserEmails.push(follow.to);
-          }
-          return User.find({
-              email: {
-                $in: theirFollowedUserEmails
-              }
-            })
-            .then((users) => {
-              results.theirFollowedUserData = users
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersWhoTrustThem = () => {
-      usersWhoTrustThemArray = [];
-      return Relationship.find({
-          to: results.profileData.email,
-          value: "trust"
-        }, {
-          'from': 1
-        })
-        .then((usersWhoTrustThem) => {
-          let usersWhoTrustThemArray = usersWhoTrustThem.map(({
-            from
-          }) => from)
-          return User.find({
-              email: {
-                $in: usersWhoTrustThemArray
-              }
-            })
-            .then((users) => {
-              results.usersWhoTrustThem = users
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
-      var userTrustsYou = false;
-      var userFollowsYou = false;
-      if (req.isAuthenticated()) {
-        // Is this the logged in user's own profile?
-        if (results.profileData.email == req.user.email) {
-          isOwnProfile = true;
-          trustedUserData = results.myTrustedUserData
-          followedUserData = results.myFollowedUserData
-        } else {
-          isOwnProfile = false;
-          trustedUserData = results.theirTrustedUserData
-          followedUserData = results.theirFollowedUserData
-          // Check if profile user trusts logged in user
-          if (theirTrustedUserEmails.includes(req.user.email)) {
-            userTrustsYou = true;
-          }
-          // Check if profile user follows logged in user
-          if (theirFollowedUserEmails.includes(req.user.email)) {
-            userFollowsYou = true;
-          }
-        }
-        flagsFromTrustedUsers = [];
-        var trusted = false;
-        myTrustedUserEmails.forEach(function (email) {
-          // Check if logged in user trusts profile user
-          if (email == results.profileData.email) {
-            trusted = true;
-          }
-        })
-        var followed = false;
-        myFollowedUserEmails.forEach(function (email) {
-          // Check if logged in user follows profile user
-          if (email == results.profileData.email) {
-            followed = true;
-          }
-        })
-        for (var key in results.flagsOnUser) {
-          var flag = results.flagsOnUser[key];
-          // Check if logged in user has flagged profile user
-          if (flag.from == req.user.email) {
-            var flagged = true;
-          }
-          // Check if any of the logged in user's trusted users have flagged profile user
-          if (myTrustedUserEmails.includes(flag.from)) {
-            flagsFromTrustedUsers.push(flag.from)
-          }
-        }
-        numberOfFlagsFromTrustedUsers = flagsFromTrustedUsers.length;
-      } else {
-        isOwnProfile = false;
-        trustedUserData = results.theirTrustedUserData
-        followedUserData = results.theirFollowedUserData
-        flagsFromTrustedUsers = [];
-        var trusted = false;
-        var followed = false;
-        var flagged = false;
-        numberOfFlagsFromTrustedUsers = 0;
-      }
-
-      res.render('user', {
-        loggedIn: isLoggedIn,
-        isOwnProfile: isOwnProfile,
-        loggedInUserData: req.user,
-        profileData: results.profileData,
-        trusted: trusted,
-        flagged: flagged,
-        followed: followed,
-        followersData: results.followers,
-        usersWhoTrustThemData: results.usersWhoTrustThem,
-        userFollowsYou: userFollowsYou,
-        userTrustsYou: userTrustsYou,
-        trustedUserData: trustedUserData,
-        followedUserData: followedUserData,
-        communitiesData: results.communitiesData,
-        flaggedUserData: results.myFlaggedUserData,
-        numberOfFlagsFromTrustedUsers: numberOfFlagsFromTrustedUsers,
-        activePage: results.profileData.username,
-        visibleSidebarArray: ['profileOnly', 'profileAndPosts']
-      });
-    }).catch((err) => {
-      console.log("Error in chain.")
-      console.log(err)
-    })
-  });
-
-  //Responds to a get response for a specific post.
-  //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
-  //Outputs: a rendering of the post (based on singlepost.handlebars) or an error might happen i guess. if the post is private singleposts contains and will render an error message
-  app.get('/:username/:posturl', function (req, res) {
-    var loggedInUserData = {};
-    var isLoggedIn = false;
-    if (req.isAuthenticated()) {
-      isLoggedIn = true;
-      loggedInUserData = req.user;
-    }
-
-    let myFollowedUserEmails = () => {
-      myFollowedUserEmails = []
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "follow"
-        })
-        .then((follows) => {
-          for (var key in follows) {
-            var follow = follows[key];
-            myFollowedUserEmails.push(follow.to);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let myFlaggedUserEmails = () => {
-      myFlaggedUserEmails = []
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "flag"
-        })
-        .then((flags) => {
-          for (var key in flags) {
-            var flag = flags[key];
-            myFlaggedUserEmails.push(flag.to);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersFlaggedByMyTrustedUsers = () => {
-      myTrustedUserEmails = []
-      usersFlaggedByMyTrustedUsers = []
-      return Relationship.find({
-          from: loggedInUserData.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            myTrustedUserEmails.push(trust.to);
-          }
-          return Relationship.find({
-              value: "flag",
-              from: {
-                $in: myTrustedUserEmails
-              }
-            })
-            .then((users) => {
-              usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersWhoTrustMe = () => {
-      usersWhoTrustMeEmails = []
-      return Relationship.find({
-          to: loggedInUserData.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            usersWhoTrustMeEmails.push(trust.from);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let myCommunitites = () => {
-      myCommunities = [];
-      myMutedUsers = [];
-      return Community.find({
-          members: loggedInUserData._id
-        })
-        .then((communities) => {
-          for (var key in communities) {
-            var community = communities[key];
-            myCommunities.push(community._id);
-            myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let isMuted = () => {
-      isMuted = false;
-      isMember = false;
-      if (isLoggedIn) {
-        return Post.findOne({
-            url: req.params.posturl
-          })
-          .then(post => {
-            if (post) {
               if (post.type == "community") {
-                return Community.findOne({
-                    _id: post.community
-                  })
-                  .then(community => {
-                    mutedMemberIds = community.mutedMembers.map(a => a.toString());
-                    if (mutedMemberIds.includes(loggedInUserData._id.toString()))
-                      isMuted = true;
-                    communityMemberIds = community.members.map(a => a.toString());
-                    if (communityMemberIds.includes(loggedInUserData._id.toString()))
-                      isMember = true;
-                  })
-                  .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                  });
-              }
-            }
-          })
-      }
-    }
-
-
-    myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted).then(() => {
-
-      const today = moment().clone().startOf('day');
-      const thisyear = moment().clone().startOf('year');
-      if (req.isAuthenticated()) {
-        myFollowedUserEmails.push(loggedInUserData.email)
-        usersWhoTrustMeEmails.push(loggedInUserData.email)
-        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
-      }
-      Post.findOne({
-          url: req.params.posturl
-        })
-        .populate('author', '-password')
-        .populate('community')
-        .populate('comments.author', '-password')
-        .populate({
-          path: 'boostTarget',
-          populate: {
-            path: 'author comments.author'
-          }
-        })
-        .then((post) => {
-          if (!post) {
-            res.render('singlepost', {
-              canDisplay: false,
-              loggedIn: isLoggedIn,
-              loggedInUserData: loggedInUserData,
-              activePage: 'singlepost'
-            })
-          } else {
-            displayedPost = [];
-            metadata = {};
-            let canDisplay = false;
-            if (req.isAuthenticated()) {
-              if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-                if (post.community) {
-                  isInCommunity = (loggedInUserData.communities.indexOf(post.community._id.toString()) > -1);
-                  if (isInCommunity) {
-                    let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-                    if (mutedMemberIds.includes(post.author._id.toString())) {
-                      canDisplay = false;
-                    } else {
-                      canDisplay = true;
-                    }
-                  } else if (post.community.settings.visibility == "public") {
-                    canDisplay = true;
-                  }
-                } else {
-                  canDisplay = true;
+                // Hide muted community members
+                let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+                if (mutedMemberIds.includes(post.author._id.toString())) {
+                  canDisplay = false;
                 }
               }
             } else {
-              if (post.privacy == "public" && post.author.settings.profileVisibility == "profileAndPosts") {
+              //for logged out users, we already eliminated private posts by specifying privacy: 'public' in the query,
+              //so we just have to hide posts boosted from non-publicly-visible accounts and posts from private communities that
+              //the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
+              //community pages are hidden from logged-out users by a return at the very, very beginning of this function)
+              if (post.author.settings.profileVisibility == "profileAndPosts") {
                 // User has allowed non-logged-in users to see their posts
                 if (post.community) {
                   if (post.community.settings.visibility == "public") {
@@ -1804,29 +868,31 @@ module.exports = function (app) {
                       canDisplay = true;
                     }
                   }
+
                 } else {
                   // Not a community post, can display
                   canDisplay = true;
                 }
               }
             }
-            if (post.type == "boost") {
-              console.log("It's a boosted post!")
-              displayContext = post.boostTarget;
-            } else {
-              displayContext = post;
+
+            if (!canDisplay) {
+              //if we can't display the post, move on to the next one in the loop
+              continue;
             }
-            if (moment(displayContext.timestamp).isSame(today, 'd')) {
-              parsedTimestamp = moment(displayContext.timestamp).fromNow();
-            } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-              parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
+
+            //some fun logic that creates a "recently commented on by" label for recently commented on posts
+            if (moment(post.timestamp).isSame(today, 'd')) {
+              parsedTimestamp = moment(post.timestamp).fromNow();
+            } else if (moment(post.timestamp).isSame(thisyear, 'y')) {
+              parsedTimestamp = moment(post.timestamp).format('D MMM');
             } else {
-              parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
+              parsedTimestamp = moment(post.timestamp).format('D MMM YYYY');
             }
-            if (displayContext.comments != "") {
-              if (moment(displayContext.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+            if (post.comments != "") {
+              if (moment(post.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
                 recentlyCommented = true;
-                lastCommentAuthor = displayContext.comments.slice(-1)[0].author
+                lastCommentAuthor = post.comments.slice(-1)[0].author
               } else {
                 recentlyCommented = false;
                 lastCommentAuthor = "";
@@ -1836,77 +902,136 @@ module.exports = function (app) {
               lastCommentAuthor = "";
             }
 
+            //get the full url for all images in the post
             imageUrlsArray = []
-            if (displayContext.imageVersion === 2) {
-              displayContext.images.forEach(image => {
+            if (post.imageVersion === 2) {
+              post.images.forEach(image => {
                 imageUrlsArray.push('/api/image/display/' + image)
               })
             } else {
-              displayContext.images.forEach(image => {
+              post.images.forEach(image => {
                 imageUrlsArray.push('/images/uploads/' + image)
               })
             }
 
+            //generate some arrays containing usernames that will be put in "boosted by" labels
+            if (req.isAuthenticated() && (req.params.context == "home" || req.params.context == "single")) {
+              var boostsForHeader = [];
+              var otherBoosters = [];
+              var notFollowingBoosters = [];
+              var isYourPost = post.author._id.equals(req.user._id);
+              var youBoosted = false;
+              if (post.boostsV2.length > 1) {
+                post.boostsV2.forEach((v, i, a) => {
+                  if (!(v.timestamp.getTime() == post.timestamp.getTime())) { //do not include implicit boost
+                    if (v.booster._id.equals(req.user._id)) {
+                      boostsForHeader.push('you');
+                      youBoosted = true;
+                    } else {
+                      if (myFollowedUserIds.some(following => {
+                          return following.equals(v.booster._id)
+                        })) {
+                        if (boostsForHeader.length < 3) {
+                          boostsForHeader.push(v.booster.username);
+                        } else {
+                          otherBoosters.push(v.booster.username);
+                        }
+                      } else {
+                        notFollowingBoosters.push(v.booster.username);
+                      }
+                    }
+                  }
+                })
+              } else if (post.boostsV2[0].timestamp.getTime() != post.timestamp.getTime()) {
+                //if there's only one boost, and it's not the implicit one, the post's author re-boosted it
+                boostsForHeader.push(post.author.username);
+              }
+            } else {
+              //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
+              if (!req.isAuthenticated() && req.params.context == "user") {
+                if (post.author._id.toString() != req.params.identifier) {
+                  boostsForHeader = [(await (User.findById(req.params.identifier))).username];
+                }
+              } else if (req.isAuthenticated() && req.params.context == "user") {
+                if (post.author._id.toString() != req.params.identifier) {
+                  boostsForHeader = [(await (User.findById(req.params.identifier))).username];
+                }
+              }
+            }
+
             displayedPost = {
               canDisplay: canDisplay,
-              _id: displayContext._id,
+              _id: post._id,
               deleteid: post._id,
               type: post.type,
               owner: post.author.username,
               author: {
-                email: displayContext.author.email,
-                _id: displayContext.author._id,
-                username: displayContext.author.username,
-                displayName: displayContext.author.displayName,
-                imageEnabled: displayContext.author.imageEnabled,
-                image: displayContext.author.image,
+                email: post.author.email,
+                _id: post.author._id,
+                username: post.author.username,
+                displayName: post.author.displayName,
+                imageEnabled: post.author.imageEnabled,
+                image: post.author.image,
               },
-              url: displayContext.url,
-              privacy: displayContext.privacy,
+              url: post.url,
+              privacy: post.privacy,
               parsedTimestamp: parsedTimestamp,
-              lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-              rawContent: displayContext.rawContent,
-              parsedContent: displayContext.parsedContent,
-              commentsDisabled: displayContext.commentsDisabled,
-              comments: displayContext.comments,
-              numberOfComments: displayContext.numberOfComments,
-              contentWarnings: displayContext.contentWarnings,
+              lastUpdated: post.lastUpdated,
+              rawContent: post.rawContent,
+              parsedContent: post.parsedContent,
+              commentsDisabled: post.commentsDisabled,
+              comments: post.comments,
+              numberOfComments: post.numberOfComments,
+              contentWarnings: post.contentWarnings,
               images: imageUrlsArray,
-              imageTags: displayContext.imageTags,
-              imageDescriptions: displayContext.imageDescriptions,
-              community: displayContext.community,
+              imageDescriptions: post.imageDescriptions,
+              community: post.community,
+              followedBoosters: boostsForHeader,
               recentlyCommented: recentlyCommented,
               lastCommentAuthor: lastCommentAuthor,
-              subscribedUsers: displayContext.subscribedUsers,
-              unsubscribedUsers: displayContext.unsubscribedUsers,
-              // linkPreview: displayContext.linkPreview
+              subscribedUsers: post.subscribedUsers,
+              unsubscribedUsers: post.unsubscribedUsers,
+              // linkPreview: post.linkPreview
             }
+
+            //these are only a thing for logged in users
+            if (req.isAuthenticated()) {
+              displayedPost.otherBoosters = notFollowingBoosters;
+              displayedPost.isYourPost = isYourPost;
+              displayedPost.youBoosted = youBoosted
+            }
+
+            //get timestamps and full image urls for each comment
             displayedPost.comments.forEach(function (comment) {
               comment.parsedTimestamp = moment(comment.timestamp).fromNow();
               for (var i = 0; i < comment.images.length; i++) {
                 comment.images[i] = '/api/image/display/' + comment.images[i];
               }
               // If the comment's author is logged in, or the post's author is logged in
-              if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
+              if ((comment.author._id.equals(loggedInUserData._id)) || (post.author._id.equals(loggedInUserData._id))) {
                 comment.canDelete = true;
               }
             });
-            if (canDisplay) {
-              // Mark associated notifications read if post is visible
-              if (req.isAuthenticated())
-                notifier.markRead(loggedInUserData._id, displayContext._id);
 
+            //wow, finally.
+            displayedPosts.push(displayedPost);
+          }
+        }
+      }).then((result) => {
+          if (result != "no posts") {
+            metadata = {};
+            if (req.params.context == "single") {
               // Show metadata
               if (displayedPost.images != "") {
                 console.log("Post has an image!")
-                metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+                var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
               } else {
                 if (displayedPost.author.imageEnabled) {
                   console.log("Post has no image, but author has an image!")
-                  metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
+                  var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
                 } else {
                   console.log("Neither post nor author have an image!")
-                  metadataImage = "https://sweet.sh/images/cake.svg";
+                  var metadataImage = "https://sweet.sh/images/cake.svg";
                 }
               }
               metadata = {
@@ -1917,79 +1042,992 @@ module.exports = function (app) {
               }
             }
             res.render('singlepost', {
-              canDisplay: canDisplay,
-              loggedIn: isLoggedIn,
+              canDisplay: true,
+              loggedIn: req.isAuthenticated(),
               loggedInUserData: loggedInUserData,
-              post: displayedPost,
+              post: displayedPosts[0],
               flaggedUsers: flagged,
               metadata: metadata,
               isMuted: isMuted,
-              isMember: isMember,
+              isMember: true,
               activePage: 'singlepost'
             })
+
+          } else {
+            res.render('partials/posts', {
+              layout: false,
+              loggedIn: req.isAuthenticated(),
+              isMuted: isMuted,
+              loggedInUserData: loggedInUserData,
+              posts: displayedPosts,
+              flaggedUsers: flagged,
+              context: req.params.context,
+              metadata: metadata
+            });
           }
-        })
-    })
-  })
-
-
-  //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
-  //to seen=true
-  //Input:
-  app.post("/api/notification/update/:id", isLoggedInOrRedirect, function (req, res) {
-    User.findOneAndUpdate({
-        "_id": req.user._id,
-        "notifications._id": req.params.id
-      }, {
-        "$set": {
-          "notifications.$.seen": true
-        }
-      },
-      function (err, doc) {
-        res.sendStatus(200)
-      }
-    );
-  })
-
-  app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, function (req, res) {
-    User.findOne({
-        _id: req.user._id
+        
       })
-      .then(user => {
-        user.notifications.forEach(notification => {
-          if (notification.subjectId == req.params.subjectid) {
-            notification.seen = true;
-          }
-        })
-        user.save()
-          .then(response => {
-            res.sendStatus(200);
+  })
+
+
+//API method that responds to requests for posts tagged a certain way.
+//Input: name is the name of the tag, page is the page number of posts we're viewing.
+//Output: isLoggedInOrRedirect might redirect you. Otherwise, you get 404 if no showable posts are found or
+//the rendered posts results.
+app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
+  let postsPerPage = 10;
+  let page = req.params.page - 1;
+
+  let myFlaggedUserEmails = () => {
+    myFlaggedUserEmails = []
+    return Relationship.find({
+        from: req.user.email,
+        value: "flag"
+      })
+      .then((flags) => {
+        for (var key in flags) {
+          var flag = flags[key];
+          myFlaggedUserEmails.push(flag.to);
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let usersFlaggedByMyTrustedUsers = () => {
+    myTrustedUserEmails = []
+    usersFlaggedByMyTrustedUsers = []
+    return Relationship.find({
+        from: req.user.email,
+        value: "trust"
+      })
+      .then((trusts) => {
+        for (var key in trusts) {
+          var trust = trusts[key];
+          myTrustedUserEmails.push(trust.to);
+        }
+        return Relationship.find({
+            value: "flag",
+            from: {
+              $in: myTrustedUserEmails
+            }
+          })
+          .then((users) => {
+            usersFlaggedByMyTrustedUsers = users.map(a => a.to);
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let usersWhoTrustMe = () => {
+    usersWhoTrustMeEmails = []
+    return Relationship.find({
+        to: req.user.email,
+        value: "trust"
+      })
+      .then((trusts) => {
+        for (var key in trusts) {
+          var trust = trusts[key];
+          usersWhoTrustMeEmails.push(trust.from);
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
+
+    const today = moment().clone().startOf('day');
+    const thisyear = moment().clone().startOf('year');
+
+    usersWhoTrustMeEmails.push(req.user.email);
+    var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
+    Tag.findOne({
+        name: req.params.name
+      })
+      .then((tag) => {
+        if (req.user.settings.homeTagTimelineSorting == "fluid") {
+          sortMethod = '-lastUpdated';
+        } else {
+          sortMethod = '-timestamp';
+        }
+        Post.find({
+            _id: {
+              $in: tag.posts
+            }
+          })
+          .sort(sortMethod)
+          .skip(postsPerPage * page)
+          .limit(postsPerPage)
+          .populate('author', '-password')
+          .populate('comments.author', '-password')
+          .populate({
+            path: 'boostTarget',
+            populate: {
+              path: 'author comments.author'
+            }
+          })
+          .then((posts) => {
+            if (!posts.length) {
+              res.status(404)
+                .send('Not found');
+            } else {
+              displayedPosts = [];
+              posts.forEach(function (post, i) {
+                if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
+                  let canDisplay = true;
+                  if (post.type == "boost") {
+                    displayContext = post.boostTarget;
+                  } else {
+                    displayContext = post;
+                  }
+                  if (moment(displayContext.timestamp).isSame(today, 'd')) {
+                    parsedTimestamp = moment(displayContext.timestamp).fromNow();
+                  } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
+                    parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
+                  } else {
+                    parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
+                  }
+
+                  imageUrlsArray = []
+                  if (displayContext.imageVersion === 2) {
+                    displayContext.images.forEach(image => {
+                      imageUrlsArray.push('/api/image/display/' + image)
+                    })
+                  } else {
+                    displayContext.images.forEach(image => {
+                      imageUrlsArray.push('/images/uploads/' + image)
+                    })
+                  }
+
+                  displayedPost = {
+                    canDisplay: canDisplay,
+                    _id: displayContext._id,
+                    deleteid: post._id,
+                    type: post.type,
+                    owner: post.author.username,
+                    author: {
+                      email: displayContext.author.email,
+                      _id: displayContext.author._id,
+                      username: displayContext.author.username,
+                      displayName: displayContext.author.displayName,
+                      imageEnabled: displayContext.author.imageEnabled,
+                      image: displayContext.author.image,
+                    },
+                    url: displayContext.url,
+                    privacy: displayContext.privacy,
+                    parsedTimestamp: parsedTimestamp,
+                    lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
+                    rawContent: displayContext.rawContent,
+                    parsedContent: displayContext.parsedContent,
+                    commentsDisabled: displayContext.commentsDisabled,
+                    comments: displayContext.comments,
+                    numberOfComments: displayContext.numberOfComments,
+                    contentWarnings: displayContext.contentWarnings,
+                    images: imageUrlsArray,
+                    imageDescriptions: displayContext.imageDescriptions,
+                    community: displayContext.community,
+                    boosts: displayContext.boosts,
+                    boostTarget: post.boostTarget,
+                    recentlyCommented: recentlyCommented,
+                    lastCommentAuthor: lastCommentAuthor,
+                    subscribedUsers: displayContext.subscribedUsers,
+                    unsubscribedUsers: displayContext.unsubscribedUsers,
+                    // linkPreview: displayContext.linkPreview
+                  }
+                  displayedPost.comments.forEach(function (comment) {
+                    comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                    for (var i = 0; i < comment.images.length; i++) {
+                      comment.images[i] = '/api/image/display/' + comment.images[i];
+                    }
+                  });
+                  displayedPosts.push(displayedPost);
+                }
+              })
+              res.render('partials/posts', {
+                layout: false,
+                loggedIn: true,
+                loggedInUserData: req.user,
+                posts: displayedPosts,
+                flaggedUsers: flagged,
+                context: req.params.context
+              });
+            }
           })
       })
   })
+})
 
+//Responds to get requests for a user's profile page.
+//Inputs: username is the user's username.
+//Outputs: a 404 if the user isn't found
+app.get('/:username', function (req, res) {
+  if (req.isAuthenticated()) {
+    isLoggedIn = true;
+  } else {
+    isLoggedIn = false;
+  }
 
-  app.get('/api/notification/display', function (req, res) {
-    if (req.isAuthenticated()) {
-      User.findOne({
-          _id: req.user._id
-        }, 'notifications')
-        .then(user => {
-          user.notifications.reverse();
-          res.render('partials/notifications', {
-            layout: false,
-            loggedIn: true,
-            loggedInUserData: req.user,
-            notifications: user.notifications
-          });
-        })
-    } else {
-      res.render('partials/notifications', {
-        layout: false,
-        loggedIn: false
+  let results = {};
+
+  let profileData = () => {
+    return User.findOne({
+        username: req.params.username
+      })
+      .then((user) => {
+        if (!user) {
+          console.log("no such user!");
+          res.status(404).redirect('/404');
+        } else {
+          results.profileData = user
+          return user;
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
       });
+  }
+
+  let communitiesData = (user) => {
+    return Community.find({
+        members: results.profileData._id
+      })
+      .then((communities) => {
+        results.communitiesData = communities
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let flagsOnUser = (user) => {
+    if (req.isAuthenticated()) {
+      return Relationship.find({
+          to: user.email,
+          value: "flag"
+        })
+        .then((flags) => {
+          results.flagsOnUser = flags
+          return flags;
+        })
+        .catch((err) => {
+          console.log("Error in profileData.")
+          console.log(err);
+        });
     }
+  }
+
+  let myTrustedUsers = () => {
+    if (req.isAuthenticated()) {
+      myTrustedUserEmails = []
+      myTrustedUserData = []
+      return Relationship.find({
+          from: req.user.email,
+          value: "trust"
+        })
+        .then((trusts) => {
+          for (var key in trusts) {
+            var trust = trusts[key];
+            myTrustedUserEmails.push(trust.to);
+          }
+          return User.find({
+              email: {
+                $in: myTrustedUserEmails
+              }
+            })
+            .then((users) => {
+              results.myTrustedUserData = users
+            })
+        })
+        .catch((err) => {
+          console.log("Error in profileData.")
+          console.log(err);
+        });
+    }
+  }
+
+  let theirTrustedUsers = () => {
+    theirTrustedUserEmails = []
+    theirTrustedUserData = []
+    return Relationship.find({
+        from: results.profileData.email,
+        value: "trust"
+      })
+      .then((trusts) => {
+        for (var key in trusts) {
+          var trust = trusts[key];
+          theirTrustedUserEmails.push(trust.to);
+        }
+        return User.find({
+            email: {
+              $in: theirTrustedUserEmails
+            }
+          })
+          .then((users) => {
+            results.theirTrustedUserData = users
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let myFlaggedUsers = () => {
+    if (req.isAuthenticated()) {
+      myFlaggedUserEmails = []
+      myFlaggedUserData = []
+      return Relationship.find({
+          from: req.user.email,
+          value: "flag"
+        })
+        .then((flags) => {
+          for (var key in flags) {
+            var flag = flags[key];
+            myFlaggedUserEmails.push(flag.to);
+          }
+          return User.find({
+              email: {
+                $in: myFlaggedUserEmails
+              }
+            })
+            .then((users) => {
+              results.myFlaggedUserData = users
+            })
+        })
+        .catch((err) => {
+          console.log("Error in profileData.")
+          console.log(err);
+        });
+    }
+  }
+
+  let myBlockedUsers = () => {
+    if (req.isAuthenticated()) {
+      myBlockedUserEmails = []
+      return Relationship.find({
+          from: req.user.email,
+          value: "block"
+        })
+        .then((flags) => {
+          for (var key in flags) {
+            var flag = flags[key];
+            myFlaggedUserEmails.push(flag.to);
+          }
+          return User.find({
+              email: {
+                $in: myFlaggedUserEmails
+              }
+            })
+            .then((users) => {
+              results.myFlaggedUserData = users
+            })
+        })
+        .catch((err) => {
+          console.log("Error in profileData.")
+          console.log(err);
+        });
+    }
+  }
+
+  let myFollowedUsers = () => {
+    if (req.isAuthenticated()) {
+      myFollowedUserEmails = []
+      myFollowedUserData = []
+      return Relationship.find({
+          from: req.user.email,
+          value: "follow"
+        })
+        .then((follows) => {
+          for (var key in follows) {
+            var follow = follows[key];
+            myFollowedUserEmails.push(follow.to);
+          }
+          return User.find({
+              email: {
+                $in: myFollowedUserEmails
+              }
+            })
+            .then((users) => {
+              results.myFollowedUserData = users
+            })
+        })
+        .catch((err) => {
+          console.log("Error in profileData.")
+          console.log(err);
+        });
+    }
+  }
+
+  let followers = () => {
+    followersArray = [];
+    return Relationship.find({
+        to: results.profileData.email,
+        value: "follow"
+      }, {
+        'from': 1
+      })
+      .then((followers) => {
+        let followersArray = followers.map(({
+          from
+        }) => from)
+        return User.find({
+            email: {
+              $in: followersArray
+            }
+          })
+          .then((users) => {
+            results.followers = users
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let theirFollowedUsers = () => {
+    theirFollowedUserEmails = []
+    theirFollowedUserData = []
+    return Relationship.find({
+        from: results.profileData.email,
+        value: "follow"
+      })
+      .then((follows) => {
+        for (var key in follows) {
+          var follow = follows[key];
+          theirFollowedUserEmails.push(follow.to);
+        }
+        return User.find({
+            email: {
+              $in: theirFollowedUserEmails
+            }
+          })
+          .then((users) => {
+            results.theirFollowedUserData = users
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let usersWhoTrustThem = () => {
+    usersWhoTrustThemArray = [];
+    return Relationship.find({
+        to: results.profileData.email,
+        value: "trust"
+      }, {
+        'from': 1
+      })
+      .then((usersWhoTrustThem) => {
+        let usersWhoTrustThemArray = usersWhoTrustThem.map(({
+          from
+        }) => from)
+        return User.find({
+            email: {
+              $in: usersWhoTrustThemArray
+            }
+          })
+          .then((users) => {
+            results.usersWhoTrustThem = users
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
+    var userTrustsYou = false;
+    var userFollowsYou = false;
+    if (req.isAuthenticated()) {
+      // Is this the logged in user's own profile?
+      if (results.profileData.email == req.user.email) {
+        isOwnProfile = true;
+        trustedUserData = results.myTrustedUserData
+        followedUserData = results.myFollowedUserData
+      } else {
+        isOwnProfile = false;
+        trustedUserData = results.theirTrustedUserData
+        followedUserData = results.theirFollowedUserData
+        // Check if profile user trusts logged in user
+        if (theirTrustedUserEmails.includes(req.user.email)) {
+          userTrustsYou = true;
+        }
+        // Check if profile user follows logged in user
+        if (theirFollowedUserEmails.includes(req.user.email)) {
+          userFollowsYou = true;
+        }
+      }
+      flagsFromTrustedUsers = [];
+      var trusted = false;
+      myTrustedUserEmails.forEach(function (email) {
+        // Check if logged in user trusts profile user
+        if (email == results.profileData.email) {
+          trusted = true;
+        }
+      })
+      var followed = false;
+      myFollowedUserEmails.forEach(function (email) {
+        // Check if logged in user follows profile user
+        if (email == results.profileData.email) {
+          followed = true;
+        }
+      })
+      for (var key in results.flagsOnUser) {
+        var flag = results.flagsOnUser[key];
+        // Check if logged in user has flagged profile user
+        if (flag.from == req.user.email) {
+          var flagged = true;
+        }
+        // Check if any of the logged in user's trusted users have flagged profile user
+        if (myTrustedUserEmails.includes(flag.from)) {
+          flagsFromTrustedUsers.push(flag.from)
+        }
+      }
+      numberOfFlagsFromTrustedUsers = flagsFromTrustedUsers.length;
+    } else {
+      isOwnProfile = false;
+      trustedUserData = results.theirTrustedUserData
+      followedUserData = results.theirFollowedUserData
+      flagsFromTrustedUsers = [];
+      var trusted = false;
+      var followed = false;
+      var flagged = false;
+      numberOfFlagsFromTrustedUsers = 0;
+    }
+
+    res.render('user', {
+      loggedIn: isLoggedIn,
+      isOwnProfile: isOwnProfile,
+      loggedInUserData: req.user,
+      profileData: results.profileData,
+      trusted: trusted,
+      flagged: flagged,
+      followed: followed,
+      followersData: results.followers,
+      usersWhoTrustThemData: results.usersWhoTrustThem,
+      userFollowsYou: userFollowsYou,
+      userTrustsYou: userTrustsYou,
+      trustedUserData: trustedUserData,
+      followedUserData: followedUserData,
+      communitiesData: results.communitiesData,
+      flaggedUserData: results.myFlaggedUserData,
+      numberOfFlagsFromTrustedUsers: numberOfFlagsFromTrustedUsers,
+      activePage: results.profileData.username,
+      visibleSidebarArray: ['profileOnly', 'profileAndPosts']
+    });
+  }).catch((err) => {
+    console.log("Error in chain.")
+    console.log(err)
   })
+});
+
+//Responds to a get response for a specific post.
+//Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
+//Outputs: a rendering of the post (based on singlepost.handlebars) or an error might happen i guess. if the post is private singleposts contains and will render an error message
+app.get('/:username/:posturl', function (req, res) {
+  var loggedInUserData = {};
+  var isLoggedIn = false;
+  if (req.isAuthenticated()) {
+    isLoggedIn = true;
+    loggedInUserData = req.user;
+  }
+
+  let myFollowedUserEmails = () => {
+    myFollowedUserEmails = []
+    return Relationship.find({
+        from: loggedInUserData.email,
+        value: "follow"
+      })
+      .then((follows) => {
+        for (var key in follows) {
+          var follow = follows[key];
+          myFollowedUserEmails.push(follow.to);
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let myFlaggedUserEmails = () => {
+    myFlaggedUserEmails = []
+    return Relationship.find({
+        from: loggedInUserData.email,
+        value: "flag"
+      })
+      .then((flags) => {
+        for (var key in flags) {
+          var flag = flags[key];
+          myFlaggedUserEmails.push(flag.to);
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let usersFlaggedByMyTrustedUsers = () => {
+    myTrustedUserEmails = []
+    usersFlaggedByMyTrustedUsers = []
+    return Relationship.find({
+        from: loggedInUserData.email,
+        value: "trust"
+      })
+      .then((trusts) => {
+        for (var key in trusts) {
+          var trust = trusts[key];
+          myTrustedUserEmails.push(trust.to);
+        }
+        return Relationship.find({
+            value: "flag",
+            from: {
+              $in: myTrustedUserEmails
+            }
+          })
+          .then((users) => {
+            usersFlaggedByMyTrustedUsers = users.map(a => a.to);
+          })
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let usersWhoTrustMe = () => {
+    usersWhoTrustMeEmails = []
+    return Relationship.find({
+        to: loggedInUserData.email,
+        value: "trust"
+      })
+      .then((trusts) => {
+        for (var key in trusts) {
+          var trust = trusts[key];
+          usersWhoTrustMeEmails.push(trust.from);
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let myCommunitites = () => {
+    myCommunities = [];
+    myMutedUsers = [];
+    return Community.find({
+        members: loggedInUserData._id
+      })
+      .then((communities) => {
+        for (var key in communities) {
+          var community = communities[key];
+          myCommunities.push(community._id);
+          myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
+        }
+      })
+      .catch((err) => {
+        console.log("Error in profileData.")
+        console.log(err);
+      });
+  }
+
+  let isMuted = () => {
+    isMuted = false;
+    isMember = false;
+    if (isLoggedIn) {
+      return Post.findOne({
+          url: req.params.posturl
+        })
+        .then(post => {
+          if (post) {
+            if (post.type == "community") {
+              return Community.findOne({
+                  _id: post.community
+                })
+                .then(community => {
+                  mutedMemberIds = community.mutedMembers.map(a => a.toString());
+                  if (mutedMemberIds.includes(loggedInUserData._id.toString()))
+                    isMuted = true;
+                  communityMemberIds = community.members.map(a => a.toString());
+                  if (communityMemberIds.includes(loggedInUserData._id.toString()))
+                    isMember = true;
+                })
+                .catch((err) => {
+                  console.log("Error in profileData.")
+                  console.log(err);
+                });
+            }
+          }
+        })
+    }
+  }
+
+
+  myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted).then(() => {
+
+    const today = moment().clone().startOf('day');
+    const thisyear = moment().clone().startOf('year');
+    if (req.isAuthenticated()) {
+      myFollowedUserEmails.push(loggedInUserData.email)
+      usersWhoTrustMeEmails.push(loggedInUserData.email)
+      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
+    }
+    Post.findOne({
+        url: req.params.posturl
+      })
+      .populate('author', '-password')
+      .populate('community')
+      .populate('comments.author', '-password')
+      .populate({
+        path: 'boostTarget',
+        populate: {
+          path: 'author comments.author'
+        }
+      })
+      .then((post) => {
+        if (!post) {
+          res.render('singlepost', {
+            canDisplay: false,
+            loggedIn: isLoggedIn,
+            loggedInUserData: loggedInUserData,
+            activePage: 'singlepost'
+          })
+        } else {
+          displayedPost = [];
+          metadata = {};
+          let canDisplay = false;
+          if (req.isAuthenticated()) {
+            if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
+              if (post.community) {
+                isInCommunity = (loggedInUserData.communities.indexOf(post.community._id.toString()) > -1);
+                if (isInCommunity) {
+                  let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+                  if (mutedMemberIds.includes(post.author._id.toString())) {
+                    canDisplay = false;
+                  } else {
+                    canDisplay = true;
+                  }
+                } else if (post.community.settings.visibility == "public") {
+                  canDisplay = true;
+                }
+              } else {
+                canDisplay = true;
+              }
+            }
+          } else {
+            if (post.privacy == "public" && post.author.settings.profileVisibility == "profileAndPosts") {
+              // User has allowed non-logged-in users to see their posts
+              if (post.community) {
+                if (post.community.settings.visibility == "public") {
+                  // Public community, can display post
+                  let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+                  if (mutedMemberIds.includes(post.author._id.toString())) {
+                    canDisplay = false;
+                  } else {
+                    canDisplay = true;
+                  }
+                }
+              } else {
+                // Not a community post, can display
+                canDisplay = true;
+              }
+            }
+          }
+          if (post.type == "boost") {
+            console.log("It's a boosted post!")
+            displayContext = post.boostTarget;
+          } else {
+            displayContext = post;
+          }
+          if (moment(displayContext.timestamp).isSame(today, 'd')) {
+            parsedTimestamp = moment(displayContext.timestamp).fromNow();
+          } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
+            parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
+          } else {
+            parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
+          }
+          if (displayContext.comments != "") {
+            if (moment(displayContext.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+              recentlyCommented = true;
+              lastCommentAuthor = displayContext.comments.slice(-1)[0].author
+            } else {
+              recentlyCommented = false;
+              lastCommentAuthor = "";
+            }
+          } else {
+            recentlyCommented = false;
+            lastCommentAuthor = "";
+          }
+
+          imageUrlsArray = []
+          if (displayContext.imageVersion === 2) {
+            displayContext.images.forEach(image => {
+              imageUrlsArray.push('/api/image/display/' + image)
+            })
+          } else {
+            displayContext.images.forEach(image => {
+              imageUrlsArray.push('/images/uploads/' + image)
+            })
+          }
+
+          displayedPost = {
+            canDisplay: canDisplay,
+            _id: displayContext._id,
+            deleteid: post._id,
+            type: post.type,
+            owner: post.author.username,
+            author: {
+              email: displayContext.author.email,
+              _id: displayContext.author._id,
+              username: displayContext.author.username,
+              displayName: displayContext.author.displayName,
+              imageEnabled: displayContext.author.imageEnabled,
+              image: displayContext.author.image,
+            },
+            url: displayContext.url,
+            privacy: displayContext.privacy,
+            parsedTimestamp: parsedTimestamp,
+            lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
+            rawContent: displayContext.rawContent,
+            parsedContent: displayContext.parsedContent,
+            commentsDisabled: displayContext.commentsDisabled,
+            comments: displayContext.comments,
+            numberOfComments: displayContext.numberOfComments,
+            contentWarnings: displayContext.contentWarnings,
+            images: imageUrlsArray,
+            imageDescriptions: displayContext.imageDescriptions,
+            community: displayContext.community,
+            recentlyCommented: recentlyCommented,
+            lastCommentAuthor: lastCommentAuthor,
+            subscribedUsers: displayContext.subscribedUsers,
+            unsubscribedUsers: displayContext.unsubscribedUsers,
+            // linkPreview: displayContext.linkPreview
+          }
+          displayedPost.comments.forEach(function (comment) {
+            comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+            for (var i = 0; i < comment.images.length; i++) {
+              comment.images[i] = '/api/image/display/' + comment.images[i];
+            }
+            // If the comment's author is logged in, or the post's author is logged in
+            if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
+              comment.canDelete = true;
+            }
+          });
+          if (canDisplay) {
+            // Mark associated notifications read if post is visible
+            if (req.isAuthenticated())
+              notifier.markRead(loggedInUserData._id, displayContext._id);
+
+            // Show metadata
+            if (displayedPost.images != "") {
+              console.log("Post has an image!")
+              metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+            } else {
+              if (displayedPost.author.imageEnabled) {
+                console.log("Post has no image, but author has an image!")
+                metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
+              } else {
+                console.log("Neither post nor author have an image!")
+                metadataImage = "https://sweet.sh/images/cake.svg";
+              }
+            }
+            metadata = {
+              title: "@" + displayedPost.author.username + " on sweet",
+              description: displayedPost.rawContent.split('\n')[0],
+              image: metadataImage,
+              url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
+            }
+          }
+          res.render('singlepost', {
+            canDisplay: canDisplay,
+            loggedIn: isLoggedIn,
+            loggedInUserData: loggedInUserData,
+            post: displayedPost,
+            flaggedUsers: flagged,
+            metadata: metadata,
+            isMuted: isMuted,
+            isMember: isMember,
+            activePage: 'singlepost'
+          })
+        }
+      })
+  })
+})
+
+
+//Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
+//to seen=true
+//Input:
+app.post("/api/notification/update/:id", isLoggedInOrRedirect, function (req, res) {
+  User.findOneAndUpdate({
+      "_id": req.user._id,
+      "notifications._id": req.params.id
+    }, {
+      "$set": {
+        "notifications.$.seen": true
+      }
+    },
+    function (err, doc) {
+      res.sendStatus(200)
+    }
+  );
+})
+
+app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, function (req, res) {
+  User.findOne({
+      _id: req.user._id
+    })
+    .then(user => {
+      user.notifications.forEach(notification => {
+        if (notification.subjectId == req.params.subjectid) {
+          notification.seen = true;
+        }
+      })
+      user.save()
+        .then(response => {
+          res.sendStatus(200);
+        })
+    })
+})
+
+
+app.get('/api/notification/display', function (req, res) {
+  if (req.isAuthenticated()) {
+    User.findOne({
+        _id: req.user._id
+      }, 'notifications')
+      .then(user => {
+        user.notifications.reverse();
+        res.render('partials/notifications', {
+          layout: false,
+          loggedIn: true,
+          loggedInUserData: req.user,
+          notifications: user.notifications
+        });
+      })
+  } else {
+    res.render('partials/notifications', {
+      layout: false,
+      loggedIn: false
+    });
+  }
+})
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
