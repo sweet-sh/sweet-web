@@ -24,10 +24,10 @@ var posters = [{
 }, {
     id: new ObjectId("5cd6201bcb0d5f23e465cb87"),
     email: "fakeemail4@email.email"
-},{
+}, {
     id: new ObjectId("5cd6201bcb0d5f23e465cb88"),
     email: "fakeemail5@email.email"
-},{
+}, {
     id: new ObjectId("5ce5a5099d17930594ef7bb5"),
     email: "mitchjacov@gmail.com"
 }];
@@ -38,8 +38,8 @@ async function createPosts() {
     for (const poster of posters) {
         //each poster will have 200 regular posts
         //distributed randomly over the past 48 hours
-        for (var i = 0; i < 200; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
+        for (var i = 0; i < 20000; i++) {
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 480));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -58,7 +58,7 @@ async function createPosts() {
 
     for (const poster of posters) {
         //and 50 random boosts
-        for (var i = 0; i < 50; i++) {
+        for (var i = 0; i < 5000; i++) {
             var boostTime = new Date();
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             var targetPostDoc = await Post.findById(target);
@@ -88,12 +88,12 @@ async function createPosts() {
         }
     }
 
-    for (var i = 0; i < 200; i++) {
+    for (var i = 0; i < 20000; i++) {
         //and then add 200 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
-            authorEmail: posters[Math.floor(Math.random() * 4)].email,
-            author: posters[Math.floor(Math.random() * 4)].id,
+            authorEmail: posters[Math.floor(Math.random() * 6)].email,
+            author: posters[Math.floor(Math.random() * 6)].id,
             timestamp: commentTimestamp,
             rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
             parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
@@ -111,8 +111,8 @@ async function createBoostsV2Posts() {
     for (const poster of posters) {
         //each poster will have 20 regular posts
         //distribute randomly over the past 48 hours
-        for (var i = 0; i < 200; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
+        for (var i = 0; i < 20000; i++) {
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 480));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -123,7 +123,11 @@ async function createBoostsV2Posts() {
                 lastUpdated: postTime,
                 rawContent: '<p>afdasfasdadsdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
                 parsedContent: '<p>afdasfasdadsdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
-                numberOfComments: 0
+                numberOfComments: 0,
+                boostsV2: [{
+                    booster: poster.id,
+                    timestamp: postTime
+                }]
             })
             await newpost.save();
             originalPosts.push(newpost._id);
@@ -132,26 +136,36 @@ async function createBoostsV2Posts() {
 
     for (const poster of posters) {
         //and 50 random boosts
-        for (var i = 0; i < 50; i++) {
-            var boostTime = new Date()
-            var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
+        for (var i = 0; i < 5000; i++) {
+            var boostTime = new Date();
+            var targetIndex = Math.floor(Math.random() * originalPosts.length);
+            var target = originalPosts[targetIndex];
             await Post.findById(target).then(post => {
-                post.boostsV2.push({
-                    booster: poster.id,
-                    timestamp: boostTime
-                });
-                post.lastUpdated = boostTime
-                post.save();
+                if (post) {
+                    post.boostsV2.push({
+                        booster: poster.id,
+                        timestamp: boostTime
+                    });
+                    post.lastUpdated = boostTime;
+                    post.save();
+                } else {
+                    console.log("post not found");
+                    console.log("id: " + target);
+                    console.log("index: "+targetIndex);
+                }
+            }).catch(err=>{
+                console.log("boost no. "+i+" not created:");
+                console.log(err);
             })
         }
     }
 
-    for (var i = 0; i < 200; i++) {
+    for (var i = 0; i < 20000; i++) {
         //and then add 200 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
-            authorEmail: posters[Math.floor(Math.random() * 4)].email,
-            author: posters[Math.floor(Math.random() * 4)].id,
+            authorEmail: posters[Math.floor(Math.random() * 6)].email,
+            author: posters[Math.floor(Math.random() * 6)].id,
             timestamp: commentTimestamp,
             rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
             parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
@@ -165,4 +179,4 @@ async function createBoostsV2Posts() {
     }
 }
 
-createV2Posts()
+createBoostsV2Posts()
