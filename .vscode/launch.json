@@ -7,6 +7,12 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "nuke database, create generic array of test posts",
+            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Create 'boostsV2' field",
             "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
         },

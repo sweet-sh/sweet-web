@@ -20,10 +20,16 @@ var posters = [{
     email: "fakeemail2@email.email"
 }, {
     id: new ObjectId("5cd6201acb0d5f23e465cb86"),
-    email: "fakeemail2@email.email"
+    email: "fakeemail3@email.email"
 }, {
     id: new ObjectId("5cd6201bcb0d5f23e465cb87"),
-    email: "fakeemail2@email.email"
+    email: "fakeemail4@email.email"
+},{
+    id: new ObjectId("5cd6201bcb0d5f23e465cb88"),
+    email: "fakeemail5@email.email"
+},{
+    id: new ObjectId("5ce5a5099d17930594ef7bb5"),
+    email: "mitchjacov@gmail.com"
 }];
 
 
@@ -42,8 +48,8 @@ async function createPosts() {
                 privacy: 'public',
                 timestamp: postTime,
                 lastUpdated: postTime,
-                rawContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
-                parsedContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                rawContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                parsedContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
             })
             await newpost.save();
             originalPosts.push(newpost._id);
@@ -115,8 +121,8 @@ async function createBoostsV2Posts() {
                 privacy: 'public',
                 timestamp: postTime,
                 lastUpdated: postTime,
-                rawContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
-                parsedContent: '<p>assdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                rawContent: '<p>afdasfasdadsdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                parsedContent: '<p>afdasfasdadsdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
                 numberOfComments: 0
             })
             await newpost.save();
@@ -125,7 +131,7 @@ async function createBoostsV2Posts() {
     }
 
     for (const poster of posters) {
-        //and 5 random boosts
+        //and 50 random boosts
         for (var i = 0; i < 50; i++) {
             var boostTime = new Date()
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
@@ -141,7 +147,7 @@ async function createBoostsV2Posts() {
     }
 
     for (var i = 0; i < 200; i++) {
-        //and then add 20 random comments just for fun
+        //and then add 200 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
             authorEmail: posters[Math.floor(Math.random() * 4)].email,
