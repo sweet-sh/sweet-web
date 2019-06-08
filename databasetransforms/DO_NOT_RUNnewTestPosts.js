@@ -8,10 +8,6 @@ mongoose.connect(configDatabase.url, {
     useNewUrlParser: true
 }); // connect to our database
 
-Post.deleteMany().then((ok) => {
-    console.log('deleted ' + ok.n + ' old post documents');
-});
-
 var posters = [{
     id: new ObjectId("5cd6201acb0d5f23e465cb84"),
     email: "fakeemail1@email.email"
@@ -34,12 +30,16 @@ var posters = [{
 
 
 async function createPosts() {
+    await Post.deleteMany().then((ok) => {
+        console.log('deleted ' + ok.n + ' old post documents');
+    });
+
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 200 regular posts
         //distributed randomly over the past 48 hours
         for (var i = 0; i < 20000; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 480));
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 4800));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -60,13 +60,15 @@ async function createPosts() {
     for (const poster of posters) {
         //and 50 random boosts
         for (var i = 0; i < 5000; i++) {
-            var boostTime = new Date();
+            var currentTime = new Date().getTime();
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             var targetPostDoc = await Post.findById(target);
             //keep anyone from boosting a post for the second time
             if (!targetPostDoc.boostsV2.some(b => {
                     return b.booster.equals(poster.id)
                 })) {
+                var postTime = post.timestamp.getTime() + 10;
+                var boostTime = Math.random() * (currentTime - postTime) + postTime;
                 var newpost = new Post({
                     type: 'boost',
                     authorEmail: poster.email,
@@ -108,12 +110,16 @@ async function createPosts() {
 }
 
 async function createBoostsV2Posts() {
+    await Post.deleteMany().then((ok) => {
+        console.log('deleted ' + ok.n + ' old post documents');
+    });
+
     var originalPosts = [];
     for (const poster of posters) {
-        //each poster will have 20 regular posts
+        //each poster will have 20000 regular posts
         //distribute randomly over the past 48 hours
         for (var i = 0; i < 20000; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 480));
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 4800));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -139,17 +145,23 @@ async function createBoostsV2Posts() {
     for (const poster of posters) {
         //and 50 random boosts
         for (var i = 0; i < 5000; i++) {
-            var boostTime = new Date();
+            var currentTime = new Date().getTime();
             var targetIndex = Math.floor(Math.random() * originalPosts.length);
             var target = originalPosts[targetIndex];
-            await Post.findById(target).then(post => {
-                if (post) {
-                    post.boostsV2.push({
-                        booster: poster.id,
-                        timestamp: boostTime
-                    });
-                    post.lastUpdated = boostTime;
-                    post.save();
+            Post.findById(target).then(post => {
+                if (!post.boostsV2.some(b => {
+                        return b.booster.equals(poster.id)
+                    })) {
+                    if (post) {
+                        var postTime = post.timestamp.getTime() + 10;
+                        var boostTime = Math.random() * (currentTime - postTime) + postTime;
+                        post.boostsV2.push({
+                            booster: poster.id,
+                            timestamp: boostTime
+                        });
+                        post.lastUpdated = boostTime;
+                        post.save();
+                    }
                 } else {
                     console.log("post not found");
                     console.log("id: " + target);
