@@ -51,8 +51,9 @@ async function createPosts() {
                 rawContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
                 parsedContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
             })
-            await newpost.save();
-            originalPosts.push(newpost._id);
+            await newpost.save().then(insertedPost => {
+                originalPosts.push(insertedPost._id);
+            });
         }
     }
 
@@ -129,8 +130,9 @@ async function createBoostsV2Posts() {
                     timestamp: postTime
                 }]
             })
-            await newpost.save();
-            originalPosts.push(newpost._id);
+            await newpost.save().then(insertedPost => {
+                originalPosts.push(insertedPost._id);
+            });
         }
     }
 
@@ -151,10 +153,10 @@ async function createBoostsV2Posts() {
                 } else {
                     console.log("post not found");
                     console.log("id: " + target);
-                    console.log("index: "+targetIndex);
+                    console.log("index: " + targetIndex);
                 }
-            }).catch(err=>{
-                console.log("boost no. "+i+" not created:");
+            }).catch(err => {
+                console.log("boost no. " + i + " not created:");
                 console.log(err);
             })
         }
