@@ -50,6 +50,7 @@ async function createPosts() {
                 lastUpdated: postTime,
                 rawContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
                 parsedContent: '<p>asdfasdfkjl;adsjfkl;adsj' + originalPosts.length + '</p>',
+                numberOfComments: 0
             })
             await newpost.save().then(insertedPost => {
                 originalPosts.push(insertedPost._id);
@@ -93,16 +94,20 @@ async function createPosts() {
 
     for (var i = 0; i < 20000; i++) {
         //and then add 200 random comments just for fun
-        var commentTimestamp = new Date();
-        const comment = {
-            authorEmail: posters[Math.floor(Math.random() * 6)].email,
-            author: posters[Math.floor(Math.random() * 6)].id,
-            timestamp: commentTimestamp,
-            rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
-            parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
-        };
+        var currentTime = new Date().getTime();
+        var commentAuthor = posters[Math.floor(Math.random() * 6)];
         Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post => {
+            var postTime = post.timestamp.getTime();
+            var commentTimestamp = new Date(Math.random() * (currentTime - postTime) + postTime);
+            const comment = {
+                authorEmail: commentAuthor.email,
+                author: commentAuthor.id,
+                timestamp: commentTimestamp,
+                rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
+                parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
+            };
             post.comments.push(comment);
+            post.numberOfComments = post.comments.length;
             post.lastUpdated = commentTimestamp;
             post.save();
         })
@@ -118,7 +123,7 @@ async function createBoostsV2Posts() {
     for (const poster of posters) {
         //each poster will have 20000 regular posts
         //distribute randomly over the past 48 hours
-        for (var i = 0; i < 20000; i++) {
+        for (var i = 0; i < 2000; i++) {
             var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 4800));
             var newpost = new Post({
                 type: 'original',
@@ -144,17 +149,19 @@ async function createBoostsV2Posts() {
 
     for (const poster of posters) {
         //and 50 random boosts
-        for (var i = 0; i < 5000; i++) {
+        for (var k = 0; k < 500; k++) {
             var currentTime = new Date().getTime();
             var targetIndex = Math.floor(Math.random() * originalPosts.length);
             var target = originalPosts[targetIndex];
-            Post.findById(target).then(post => {
-                if (!post.boostsV2.some(b => {
-                        return b.booster.equals(poster.id)
-                    })) {
-                    if (post) {
+            Post.findOne({
+                _id: target
+            }).then(post => {
+                if (post) {
+                    if (!post.boostsV2.some(b => {
+                            return b.booster.equals(poster.id)
+                        })) {
                         var postTime = post.timestamp.getTime() + 10;
-                        var boostTime = Math.random() * (currentTime - postTime) + postTime;
+                        var boostTime = new Date(Math.random() * (currentTime - postTime) + postTime);
                         post.boostsV2.push({
                             booster: poster.id,
                             timestamp: boostTime
@@ -174,20 +181,25 @@ async function createBoostsV2Posts() {
         }
     }
 
-    for (var i = 0; i < 20000; i++) {
+    for (var j = 0; j < 1000; j++) {
         //and then add 200 random comments just for fun
-        var commentTimestamp = new Date();
-        const comment = {
-            authorEmail: posters[Math.floor(Math.random() * 6)].email,
-            author: posters[Math.floor(Math.random() * 6)].id,
-            timestamp: commentTimestamp,
-            rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
-            parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj</p>",
-        };
-        Post.findById(originalPosts[Math.floor(Math.random() * originalPosts.length)]).then(post => {
+        var currentTime = new Date().getTime();
+        var commentAuthor = posters[Math.floor(Math.random() * 6)];
+        var targetIndex = Math.floor(Math.random() * originalPosts.length);
+        var target = originalPosts[targetIndex];
+        Post.findById(target).then(post => {
+            var postTime = post.timestamp.getTime() + 10;
+            var commentTimestamp = new Date(Math.random() * (currentTime - postTime) + postTime);
+            const comment = {
+                authorEmail: commentAuthor.email,
+                author: commentAuthor.id,
+                timestamp: commentTimestamp,
+                rawContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfkj" + j + "</p>",
+                parsedContent: "<p>adfjadskl;fjlk;adsjf;lksdj;alfk" + j + "</p>",
+            };
             post.comments.push(comment);
             post.lastUpdated = commentTimestamp;
-            post.numberOfComments++;
+            post.numberOfComments = post.comments.length;
             post.save();
         })
     }
