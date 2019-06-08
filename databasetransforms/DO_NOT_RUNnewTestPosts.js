@@ -30,10 +30,10 @@ var posters = [{
 async function createPosts() {
     var originalPosts = [];
     for (const poster of posters) {
-        //each poster will have 20 regular posts
-        //distribute randomly over the past 48 hours
-        var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
-        for (var i = 0; i < 20; i++) {
+        //each poster will have 200 regular posts
+        //distributed randomly over the past 48 hours
+        for (var i = 0; i < 200; i++) {
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -51,11 +51,11 @@ async function createPosts() {
     }
 
     for (const poster of posters) {
-        //and 6 random boosts
-        var boostTime = new Date()
-        for (var i = 0; i < 6; i++) {
+        //and 50 random boosts
+        for (var i = 0; i < 50; i++) {
+            var boostTime = new Date();
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
-            var targetPostDoc = awaitPost.findById(target);
+            var targetPostDoc = await Post.findById(target);
             //keep anyone from boosting a post for the second time
             if (!targetPostDoc.boostsV2.some(b => {
                     return b.booster.equals(poster.id)
@@ -82,8 +82,8 @@ async function createPosts() {
         }
     }
 
-    for (var i = 0; i < 20; i++) {
-        //and then add 20 random comments just for fun
+    for (var i = 0; i < 200; i++) {
+        //and then add 200 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
             authorEmail: posters[Math.floor(Math.random() * 4)].email,
@@ -105,8 +105,8 @@ async function createBoostsV2Posts() {
     for (const poster of posters) {
         //each poster will have 20 regular posts
         //distribute randomly over the past 48 hours
-        var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 200; i++) {
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -125,9 +125,9 @@ async function createBoostsV2Posts() {
     }
 
     for (const poster of posters) {
-        //and 6 random boosts
-        var boostTime = new Date()
-        for (var i = 0; i < 6; i++) {
+        //and 5 random boosts
+        for (var i = 0; i < 50; i++) {
+            var boostTime = new Date()
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             await Post.findById(target).then(post => {
                 post.boostsV2.push({
@@ -140,7 +140,7 @@ async function createBoostsV2Posts() {
         }
     }
 
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 200; i++) {
         //and then add 20 random comments just for fun
         var commentTimestamp = new Date();
         const comment = {
