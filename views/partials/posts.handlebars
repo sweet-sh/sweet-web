@@ -101,12 +101,12 @@
             {{#unless this.commentsDisabled}}
               {{#if ../loggedIn}}
                 <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                  <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                  <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                 </button>
               {{else}}
                 {{#if this.numberOfComments}}
                   <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                    <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                    <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                   </button>
                 {{/if}}
               {{/if}}
@@ -286,19 +286,19 @@
                 {{#if ../loggedIn}}
                   {{#unless ../isMuted}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{else}}
                     {{#if this.numberOfComments}}
                       <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                        <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                       </button>
                     {{/if}}
                   {{/unless}}
                 {{else}}
                   {{#if this.numberOfComments}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{/if}}
                 {{/if}}
@@ -456,7 +456,7 @@
                 {{#unless this.commentsDisabled}}
                   {{#if this.numberOfComments}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}<span class="comments-number">{{this.numberOfComments}}</span>{{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{/if}}
                 {{/unless}}

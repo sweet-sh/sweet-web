@@ -53,7 +53,7 @@ $(function() {
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
       let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
-      if (latestPost != currentlyDisplayedPost){
+      if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
         $("#newPostsAvailable").show();
       }
       else {
