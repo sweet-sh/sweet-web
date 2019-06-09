@@ -1162,8 +1162,8 @@ hr {
   padding: 0 5px;
 }
 .post-header .user-flag {
-  position: relative;
-  top: 3px;
+  width: 1.5rem;
+  align-self: center;
 }
 
 .show-more-content {
