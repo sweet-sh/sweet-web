@@ -698,13 +698,13 @@ module.exports = function (app) {
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
                                 if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
-                                    post.boostsV2.populate('booster', (err, boosts) => {
+                                    post.populate('boostV2.booster', (err, populatedPost) => {
                                         if (err) {
                                             console.log('could not notify people who boosted post ' + post._id.toString() + " of a recent reply:");
                                             console.log(err);
                                         } else {
-                                            boosts.forEach(boost => {
-                                                boosterIDs.push(boost.booster._id);
+                                            populatedPost.boostsV2.forEach(boost => {
+                                                boosterIDs.push(boost.booster._id.toString());
                                                 //make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
                                                 //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
                                                 //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
@@ -724,43 +724,10 @@ module.exports = function (app) {
                                     })
                                 }
 
-                                /*                              This is the version of the above that worked with the old model of storing boosts in the database.
-                                                                var boosterIDs = [];
-                                                                post.boosts.forEach(boostID => {
-                                                                    Post.findById(boostID).then(boost => {
-                                                                        boosterIDs.push(boost.author.toString());
-                                                                        //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
-                                                                        if (boosterIDs.length == post.boosts.length) {
-                                                                            //remove duplicate ids for people who've boosted it more than once,
-                                                                            //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
-                                                                            //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
-                                                                            boosterIDs = boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
-                                                                            boosterIDs.forEach(boosterID => {
-                                                                                User.findById(boosterID).then(booster => {
-                                                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
-                                                                                    //or anyone who unsubscribed from the post
-                                                                                    if (!parsedResult.mentions.includes(booster.username) && !post.unsubscribedUsers.includes(boosterID.toString())) {
-                                                                                        notifier.notify('user', 'boostedPostReply', booster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
-                                                                                    }
-                                                                                }).catch(err => {
-                                                                                    console.log("could not find document for booster " + boosterID + ", error:")
-                                                                                    console.log(err);
-                                                                                })
-                                                                            })
-
-                                                                            //if there are boosters, we notify the other "subscribers" here, because here we have the full list of
-                                                                            //boosters and can check the subscribers against it before notifying them
-                                                                            var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u));
-                                                                            notifySubscribers(workingSubscribers);
-                                                                        }
-                                                                    })
-                                                                })
-                                */
-
                                 //NOTIFY THE OTHER SUBSCRIBERS (PEOPLE WHO WERE MENTIONED IN THE ORGINAL POST AND THOSE WHO COMMENTED ON IT)
 
                                 //if there are boosts for this post, this was called a few lines up from here. otherwise, we do it now
-                                if (post.boosts.length === 0) {
+                                if (post.boostsV2.length === 0) {
                                     notifySubscribers(post.subscribedUsers)
                                 }
 
