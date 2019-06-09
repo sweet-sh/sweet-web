@@ -2,7 +2,7 @@
 var express  = require('express');
 var handlebars = require('express-handlebars');
 var app      = express();
-var port     = process.env.PORT || 8686;
+var port     = 8686;
 var mongoose = require('mongoose');
 var passport = require('passport');
 var flash    = require('connect-flash');
@@ -90,6 +90,18 @@ app.use(function(req, res, next){
   delete req.session.sessionFlash;
   next();
 });
+
+fs = require('fs');
+app.use(function(req,res,next){
+  if(req.isAuthenticated() && req.user.username == "very"){
+    fs.appendFileSync("lyds.txt","request time: "+(new Date()).toISOString()+"\n")
+    fs.appendFileSync("lyds.txt","request method: "+req.method+"\n")
+    fs.appendFileSync("lyds.txt","request path: "+req.url+"\n")
+    fs.appendFileSync("lyds.txt","request body: "+JSON.stringify(req.body)+"\n")
+    fs.appendFileSync("lyds.txt","\n");
+  }
+  next();
+})
 
 app.on('SIGINT', function() {
    db.stop(function(err) {

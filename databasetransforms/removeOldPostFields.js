@@ -5,8 +5,13 @@ mongoose.connect(configDatabase.url, {
     useNewUrlParser: true
 }); // connect to our database
 
-
-Post.updateMany({},{$unset:{imageTags:""}}).then(ok=>{console.log("imageTags field removed:"); console.log(ok)});
-Post.updateMany({},{$unset:{images_v3:""}}).then(ok=>{console.log("images_v3 field removed:"); console.log(ok)});
-Post.updateMany({},{$unset:{boosts:""}}).then(ok=>{console.log("boosts field removed:"); console.log(ok)});
-Post.updateMany({},{$unset:{boosters:""}}).then(ok=>{console.log("boosters field removed:"); console.log(ok)});
+Post.find().then(posts=>{
+    for (const post of posts){
+        post.set('imageTags', undefined, { strict: false });
+        post.set('images_v3', undefined, { strict: false });
+        post.set('boosters', undefined, { strict: false });
+        post.save();
+    }
+}).then(()=>{
+    process.exit();
+})
