@@ -506,7 +506,7 @@ module.exports = function (app) {
       loggedInUserData = req.user;
     } else {
       //logged out users can't get any posts from pages of non-completely-public users and communities
-      if (req.params.context == "user" && (await Post.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
+      if (req.params.context == "user" && (await User.findById(req.params.identifier)).settings.profileVisibility != "profileAndPosts") {
         res.sendStatus(404);
         return;
       } else if (req.params.context == "community" && (await Community.findById(req.params.identifier)).settings.visibility != "public") {
@@ -676,12 +676,16 @@ module.exports = function (app) {
       var matchPosts = {
         author: req.params.identifier
       }
-      var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      if(req.isAuthenticated()){
+        var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      }
     } else if (req.params.context == "community") {
       var matchPosts = {
         community: req.params.identifier
       }
-      var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      if(req.isAuthenticated()){
+        var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      }
     } else if (req.params.context == "single") {
       var matchPosts = {
         url: req.params.identifier
@@ -691,6 +695,7 @@ module.exports = function (app) {
 
     if (!req.isAuthenticated()) {
       matchPosts.privacy = "public";
+      var sortMethod = "-lastUpdated";
     }
 
     var query = Post.find(
@@ -978,7 +983,7 @@ module.exports = function (app) {
               }
 
               var post = displayedPosts[0]; //hopefully there's only one...
-              if (post.community && post.community.members.some(m => {
+              if (post.community && req.isAuthenticated() && post.community.members.some(m => {
                   return m.equals(req.user._id)
                 })) {
                 var isMember = true;
