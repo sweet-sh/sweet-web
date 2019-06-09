@@ -66,7 +66,6 @@ var postSchema = new mongoose.Schema({
   },
   mentions: [String],
   tags: [String],
-  boosts: [String], //deprecated
   boostsV2: [{type:boostSchema, required: true}],
   contentWarnings: String,
   commentsDisabled: Boolean,
@@ -84,8 +83,13 @@ var postSchema = new mongoose.Schema({
   }
 });
 
+//used to select posts to display in feeds
+postSchema.index({author:1});
+postSchema.index({community:1});
+
+//used to sort posts in feeds
 postSchema.index({lastUpdated:-1});
-postSchema.index({"boostsV2.booster":1});
+postSchema.index({timestamp:-1});
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

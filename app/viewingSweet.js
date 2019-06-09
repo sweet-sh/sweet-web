@@ -659,13 +659,12 @@ module.exports = function (app) {
     if (req.params.context == "home") {
       //on the home page, we're concerned about boosts by users we follow for sorting, and overall we're looking for posts
       //that were boosted (implicitly or explicitly) by users we follow OR are from a community we're in.
-      var matchBoosts = {
-        'author': {
-          $in: myFollowedUserIds
-        }
-      }
       var matchPosts = {
-        '$or': [matchBoosts,
+        '$or': [{
+            'author': {
+              $in: myFollowedUserIds
+            }
+          },
           {
             type: 'community',
             community: {
@@ -675,6 +674,25 @@ module.exports = function (app) {
         ]
       };
       var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+    } else if (req.params.context == "user") {
+      var matchPosts = {
+        author: req.params.identifier
+      }
+      var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+    } else if (req.params.context == "community") {
+      var matchPosts = {
+        community: req.params.identifier
+      }
+      var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+    } else if (req.params.context == "single") {
+      var matchPosts = {
+        url: req.params.identifier
+      }
+      var sortMethod = "-lastUpdated" //this shouldn't matter oh well
+    }
+
+    if (!req.isAuthenticated()) {
+      matchPosts.privacy = "public";
     }
 
     var query = Post.find(
@@ -682,9 +700,12 @@ module.exports = function (app) {
       ).sort(sortMethod)
       .skip(postsPerPage * page)
       .limit(postsPerPage)
-      //these populate commands retrieve the complete data for these things that are referenced in the post documents we retrieve
+      //these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
       .populate('community')
+      .populate('comments.author')
+      .populate('boostTarget')
+      .populate('boostsV2.booster')
 
     //so this will be called when the query retrieves the posts we want
     query.then(async posts => {
@@ -693,22 +714,46 @@ module.exports = function (app) {
           .send('Not found');
         return "no posts";
       } else {
+
         //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
         displayedPosts = [];
 
         for (const post of posts) {
 
-          //get the full documents that these fields reference. you could do this with mongoose's populate() when using the find() query but
-          //not with the aggregate one. you can also do it with aggregation stages but for each of the subarray elements (comments.author,
-          //boostsV2.booster) it would take a lookup, an unwind, an addFields, and a group that listed every field in the post document.
-          //might be faster though, since it's done by the mongodb program. also maybe there's a better way to write it that i can't figure out
+          //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
+          //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
+          //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
+          //to see if there is a more recent boost.
+          if (req.params.context != "community" && req.params.context != "single") {
+            var isThereNewerInstance = false;
+            var whosePostsCount = req.params.context == "user" ? [new ObjectId(req.params.identifier)] : myFollowedUserIds;
+            if (post.type == 'original') {
+              for (boost of post.boostsV2) {
+                if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => {
+                    return boost.booster.equals(f)
+                  })) {
+                  isThereNewerInstance = true;
+                }
+              }
+            } else if (post.type == 'boost') {
+              if (sortMethod == "-lastUpdated") {
+                if (post.boostTarget.lastUpdated.getTime() > post.timestamp.getTime()) {
+                  isThereNewerInstance = true;
+                }
+              }
+              for (boost of post.boostTarget.boostsV2) {
+                if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => {
+                    return boost.booster.equals(f)
+                  })) {
+                  isThereNewerInstance = true;
+                }
+              }
+            }
 
-          for (const comment of post.comments) {
-            comment.author = await User.findById(comment.author);
-          }
-
-          for (const boost of post.boostsV2) {
-            boost.booster = await User.findById(boost.booster);
+            if (isThereNewerInstance) {
+              canDisplay = false;
+              continue;
+            }
           }
 
           var canDisplay = false;
@@ -724,42 +769,8 @@ module.exports = function (app) {
                 canDisplay = false;
               }
             }
-
-            //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
-            //the viewer's followed users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
-            //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
-            //to see if there is a more recent boost.
-            var isThereNewerInstance = false;
-            if (post.type == 'original') {
-              for (boost of post.boostsV2) {
-                if (boost.timestamp.getTime() > post.lastUpdated.getTime() && myFollowedUserIds.some(f => {
-                    return boost.booster.equals(f)
-                  })) {
-                  isThereNewerInstance = true;
-                }
-              }
-            } else if (post.type == 'boost') {
-              var origPost = await Post.findById(post.boostTarget)
-              if (sortMethod == "-lastUpdated") {
-                if (origPost.lastUpdated.getTime() > post.timestamp.getTime()) {
-                  isThereNewerInstance = true;
-                }
-              }
-              for (boost of origPost.boostsV2) {
-                if (boost.timestamp.getTime() > post.lastUpdated.getTime() && myFollowedUserIds.some(f => {
-                    return boost.booster.equals(f)
-                  })) {
-                  isThereNewerInstance = true;
-                }
-              }
-            }
-
-            if (isThereNewerInstance) {
-              canDisplay = false;
-              continue;
-            }
           } else {
-            //for logged out users, we already eliminated private posts by specifying privacy: 'public' in the query,
+            //for logged out users, we already eliminated private posts by specifying query.privacy =  'public',
             //so we just have to hide posts boosted from non-publicly-visible accounts and posts from private communities that
             //the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
             //community pages are hidden from logged-out users by a return at the very, very beginning of this function)
@@ -775,7 +786,6 @@ module.exports = function (app) {
                     canDisplay = true;
                   }
                 }
-
               } else {
                 // Not a community post, can display
                 canDisplay = true;
@@ -784,12 +794,12 @@ module.exports = function (app) {
           }
 
           if (!canDisplay) {
-            //if we can't display the post, move on to the next one in the loop
             continue;
           }
+
           var displayContext = post;
           if (post.type == "boost") {
-            displayContext = await Post.findById(post.boostTarget);
+            displayContext = post.boostTarget;
             displayContext.author = await User.findById(displayContext.author);
             for (const comment of displayContext.comments) {
               comment.author = await User.findById(comment.author);
@@ -833,9 +843,8 @@ module.exports = function (app) {
           }
 
           //generate some arrays containing usernames that will be put in "boosted by" labels
-          if (req.isAuthenticated() && (req.params.context == "home" || req.params.context == "single")) {
-            var boostsForHeader = [];
-            var otherBoosters = [];
+          if (req.isAuthenticated() && (req.params.context != "community")) {
+            var followedBoosters = [];
             var notFollowingBoosters = [];
             var isYourPost = displayContext.author._id.equals(req.user._id);
             var youBoosted = false;
@@ -843,17 +852,13 @@ module.exports = function (app) {
               displayContext.boostsV2.forEach((v, i, a) => {
                 if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //do not include implicit boost
                   if (v.booster._id.equals(req.user._id)) {
-                    boostsForHeader.push('you');
+                    followedBoosters.push('you');
                     youBoosted = true;
                   } else {
                     if (myFollowedUserIds.some(following => {
                         return following.equals(v.booster._id)
                       })) {
-                      if (boostsForHeader.length < 3) {
-                        boostsForHeader.push(v.booster.username);
-                      } else {
-                        otherBoosters.push(v.booster.username);
-                      }
+                        followedBoosters.push(v.booster.username);
                     } else {
                       notFollowingBoosters.push(v.booster.username);
                     }
@@ -861,8 +866,13 @@ module.exports = function (app) {
                 }
               })
             }
+            if (req.params.context == "user" && !displayContext.author._id.equals(post.author._id)) {
+              var boostsForHeader = [post.author.username]
+            } else {
+              var boostsForHeader = followedBoosters.slice(0, 3);
+            }
           } else {
-            //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the displayContext. should be obvious anyway but, whatevs
+            //logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
             if (!req.isAuthenticated() && req.params.context == "user") {
               if (displayContext.author._id.toString() != req.params.identifier) {
                 boostsForHeader = [(await (User.findById(req.params.identifier))).username];
@@ -901,7 +911,7 @@ module.exports = function (app) {
             images: imageUrlsArray,
             imageDescriptions: displayContext.imageDescriptions,
             community: displayContext.community,
-            followedBoosters: boostsForHeader,
+            headerBoosters: boostsForHeader,
             recentlyCommented: recentlyCommented,
             lastCommentAuthor: lastCommentAuthor,
             subscribedUsers: displayContext.subscribedUsers,
@@ -911,6 +921,7 @@ module.exports = function (app) {
 
           //these are only a thing for logged in users
           if (req.isAuthenticated()) {
+            displayedPost.followedBoosters = followedBoosters;
             displayedPost.otherBoosters = notFollowingBoosters;
             displayedPost.isYourPost = isYourPost;
             displayedPost.youBoosted = youBoosted
@@ -936,7 +947,7 @@ module.exports = function (app) {
       if (result != "no posts") {
         metadata = {};
         if (req.params.context == "single") {
-          // Show metadata
+          // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
           if (displayedPost.images != "") {
             console.log("Post has an image!")
             var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]

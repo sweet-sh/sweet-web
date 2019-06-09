@@ -7,6 +7,12 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch Server",
+            "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Create 'boostsV2' field",
             "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
         },
@@ -19,13 +25,6 @@
             "restart": true,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-        },
-
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Server",
-            "program": "${workspaceFolder}\\server.js"
         },
         {
             "type": "node",
