@@ -1576,3 +1576,7 @@ background-size: 5.66px 5.66px;
     top: -1px;
     position: relative;
 }
+
+.form-control {
+    font-family: 'Ubuntu', sans-serif;
+}
