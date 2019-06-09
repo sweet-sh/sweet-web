@@ -18,7 +18,7 @@
           {{else}}
           {{#if otherBoosters}}
           <p class="text-secondary">
-            <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
+            <i class="fas fa-retweet"></i> Boosted by some {{plural otherBoosters 'people/person'}}... <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
           </p>
           {{/if}}
           {{/if}}

@@ -395,7 +395,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.7em;
     padding: 1px 5px;
     font-weight: 300;
-    text-transform: uppercase;
+    text-transform: lowercase;
     height: 100%;
     background: #aaa;
     border: #aaa;

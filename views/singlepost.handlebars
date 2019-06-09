@@ -12,16 +12,16 @@
                   </p>
                 {{/isnt}}
               {{/if}}
-              {{#if headerBoosters}}
-                <p class="text-secondary">
-                  <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
-                </p>
-                {{else}}
-                {{#if otherBoosters}}
-                <p class="text-secondary">
-                  <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
-                </p>
-                {{/if}}
+              {{#if post.headerBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by {{#each post.headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../post.otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../post.otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if post.otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt post.followedBoosters.length 3}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+              </p>
+              {{else}}
+              {{#if post.otherBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by some {{plural post.otherBoosters 'people/person'}}... <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+              </p>
+              {{/if}}
               {{/if}}
               {{#if post.community}}
                 <div class="text-secondary d-flex align-items-center mb-3">
