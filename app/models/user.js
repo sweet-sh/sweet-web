@@ -44,6 +44,7 @@ var userSchema = new mongoose.Schema({
     type: Boolean
   },
   displayName: String,
+  pronouns: String,
   aboutRaw: String,
   aboutParsed: String,
   websiteRaw: String,
