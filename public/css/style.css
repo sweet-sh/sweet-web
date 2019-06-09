@@ -194,17 +194,17 @@ hr {
 .comment-button:hover,
 .comment-button:active {
   /* color: #0069d9; */
-  color: #cb5e4c !important;
+  color: #cb5e4c;
 }
 .btn-link:hover,
 .btn-link:active {
-  color: #cb5e4c !important;
+  color: #cb5e4c;
 }
 .btn-primary:hover,
 .btn-primary:active {
-  color: #fff !important;
-  background-color: #cb5e4c !important;
-  border-color: #b06357 !important;
+  color: #fff;
+  background-color: #cb5e4c;
+  border-color: #b06357;
 }
 .image-preview {
   background-color: #fff;
@@ -271,6 +271,16 @@ hr {
     background: #fff;
     border: 1px solid #dee2e6;
 }
+.recently-commented-alert {
+    color: #5ea85c !important;
+}
+
+.recently-commented-alert a {
+    color: #5ea85c !important;
+}
+.recently-commented-alert a:hover {
+    color: #5ea85c !important;
+}
 
 p{
   margin-bottom: 0.5em;
@@ -334,6 +344,9 @@ h1, h2, h3, h4, h5, h6 {
   text-align: left;
   padding-left: 1px;
   font-size: 1rem;
+}
+.post-action-button:hover {
+    text-decoration: none;
 }
 
 #authorTools > button {
@@ -1550,4 +1563,10 @@ background-size: 5.66px 5.66px;
 }
 .pane {
     padding: 15px;
+}
+
+.comments-marker {
+    position: relative;
+    top: -5px;
+    left: 1px;
 }

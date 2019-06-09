@@ -6,7 +6,7 @@ User = require('../app/models/user');
 var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
-/*
+
 
 var newUser = new User();
 // set the user's local credentials
@@ -51,15 +51,15 @@ newUser4.isVerified = true;
 newUser4.displayName = 'The World Is Quiet Here'
 
 newUser4.save();
-*/
+
 var newUser5 = new User();
 // set the user's local credentials
-newUser5.email    = 'lyds@lyds.lyds';
-newUser5.password = newUser5.generateHash('lyds');
-newUser5.username = 'very';
+newUser5.email    = 'fakeemail5@email.email';
+newUser5.password = newUser5.generateHash('fakepassword5');
+newUser5.username = 'smeep-smeepum';
 newUser5.joined = new Date();
 newUser5.isVerified = true;
-newUser5.displayName = 'Lyds'
+newUser5.displayName = 'Smeep Smeepum'
 
 newUser5.save().then(() => {
     process.exit();

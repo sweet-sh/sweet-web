@@ -202,6 +202,7 @@ $(function() {
           postContentWarnings: $('#postContentWarnings').val(),
           postImageDescription: JSON.stringify(imagedescs),
           postImageURL: JSON.stringify(sortedurls),
+          imageTags: ""
         }
       }).done(function (data) {
         window.location.reload(true);

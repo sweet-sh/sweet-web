@@ -7,7 +7,7 @@
             <div class="col commentContent">
               {{#if post.recentlyCommented}}
                 {{#isnt post.lastCommentAuthor.username loggedInUserData.username}}
-                  <p class="text-secondary">
+                  <p class="text-secondary recently-commented-alert">
                     <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{post.lastCommentAuthor.username}}" class="text-secondary">@{{post.lastCommentAuthor.username}}</a></strong>
                   </p>
                 {{/isnt}}
@@ -72,7 +72,7 @@
                 <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}} {{#eq post.images.length 1}} one-image{{/eq}}{{#eq post.images.length 2}} two-images{{/eq}}{{#eq post.images.length 3}} three-images{{/eq}}{{#eq post.images.length 4}} four-images{{/eq}}" {{#gt post.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                   {{#each post.images}}
                     {{#gt ../post.images.length 1}}<a href="{{this}}">{{/gt}}
-                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../post.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../post.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../post.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../post.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
                     {{#gt ../post.images.length 1}}</a>{{/gt}}
                   {{/each}}
                 </div>
@@ -182,7 +182,7 @@
                       <div class="post-images {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}" {{#gt this.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                         {{#each this.images}}
                           {{#gt ../this.images.length 1}}<a href="{{this}}">{{/gt}}
-                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
                           {{#gt ../this.images.length 1}}</a>{{/gt}}
                         {{/each}}
                       </div>

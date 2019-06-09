@@ -1,4 +1,5 @@
 <div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
+
   <div class="form-row">
     <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
   </div>
@@ -6,6 +7,8 @@
     <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
   </div>
   <div class="form-row mb-2" id="imagePreviewContainer">
+    <input type="hidden" id="postImageUrl" name="postImageUrl" /><!-- unused? p sure. -->
+    <input type="hidden" id="postImageTags" name="postImageTags" /><!-- unused? p sure. -->
     </label>
   </div>
   <div class="form-row my-2 card p-1" id="emojiWindow" style="display:none">
