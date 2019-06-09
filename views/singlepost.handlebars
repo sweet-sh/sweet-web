@@ -12,16 +12,16 @@
                   </p>
                 {{/isnt}}
               {{/if}}
-              {{#if followedBoosters}}
-              <p class="text-secondary">
-                <i class="fas fa-retweet"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}
-              </p>
-              {{else}}
-              {{#if otherBoosters}}
-              <p class="text-secondary">
-                <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
-              </p>
-              {{/if}}
+              {{#if headerBoosters}}
+                <p class="text-secondary">
+                  <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+                </p>
+                {{else}}
+                {{#if otherBoosters}}
+                <p class="text-secondary">
+                  <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
+                </p>
+                {{/if}}
               {{/if}}
               {{#if post.community}}
                 <div class="text-secondary d-flex align-items-center mb-3">
@@ -182,7 +182,7 @@
                       <div class="post-images {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}" {{#gt this.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                         {{#each this.images}}
                           {{#gt ../this.images.length 1}}<a href="{{this}}">{{/gt}}
-                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
                           {{#gt ../this.images.length 1}}</a>{{/gt}}
                         {{/each}}
                       </div>
