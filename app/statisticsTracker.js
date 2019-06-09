@@ -4,7 +4,7 @@ module.exports = function (app, mongoose) {
 
     //Fun stats tracker. Non-interactive.
     var cameOnlineAt = new Date();
-    app.get('/admin/sweet-stats', function (req, res) {
+    app.get('/admin/stats', function (req, res) {
         var currentTime = new Date();
         var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
         Post.countDocuments({}).then(numberOfPosts => {
@@ -29,17 +29,17 @@ module.exports = function (app, mongoose) {
                             daysReplies += post.comments.length;
                         });
                         var funstats = [
-                            "uptime " + uptime,
-                            "logged in users " + numberOfActiveSessions,
-
-                            "totals... " +
-                            " posts " + numberOfPosts +
-                            ", images " + numberOfImages,
-
-                            "last 24 hours... " +
-                            " posts " + posts.length +
-                            ", images " + daysImages +
-                            ", comments " + daysReplies
+                            "<strong>Uptime</strong> " + uptime,
+                            "<strong>Logged in users</strong> " + numberOfActiveSessions,
+                            "<hr>",
+                            "<h5>Total</h5>",
+                            "<strong>Posts</strong> " + numberOfPosts,
+                            "<strong>Images</strong> " + numberOfImages,
+                            "<hr>",
+                            "<h5>Last 24 hours</h5>" +
+                            "<strong>Posts</strong> " + posts.length,
+                            "<strong>Images</strong> " + daysImages,
+                            "<strong>Comments</strong> " + daysReplies
                         ];
                         if (req.isAuthenticated()) {
                             var loggedInUserData = req.user;
@@ -174,7 +174,7 @@ function tableNotUpToDate(tableFilename) {
 //last line in the existing file (startDate). This function figures out the date range that our posts are in and then saves the number of posts that
 //were created as of that day into the postCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildPostTable(startDate) {
-    //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file. 
+    //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(postTableFileName) && !startDate) {
         fs.unlinkSync(postTableFileName);
     }
@@ -230,7 +230,7 @@ async function rebuildPostTable(startDate) {
 //last line in the existing file (startDate). This function figures out the date range that our users are in and then saves the number of users that
 //were created as of that day into the userCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildUserTable(startDate) {
-    //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file. 
+    //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(userTableFileName) && !startDate) {
         fs.unlinkSync(userTableFileName);
     }
