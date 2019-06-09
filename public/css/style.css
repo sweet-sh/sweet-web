@@ -1573,5 +1573,6 @@ background-size: 5.66px 5.66px;
 
 .comments-number {
     font-size: smaller;
-    top: -2px;
+    top: -1px;
+    position: relative;
 }
