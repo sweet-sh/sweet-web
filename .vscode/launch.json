@@ -7,13 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-<<<<<<< HEAD
-            "name": "nuke database, create generic array of test posts",
-            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
-=======
             "name": "Launch Server",
             "program": "${workspaceFolder}\\server.js"
->>>>>>> profiling
         },
         {
             "type": "node",
