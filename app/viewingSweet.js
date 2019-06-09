@@ -710,8 +710,14 @@ module.exports = function (app) {
     //so this will be called when the query retrieves the posts we want
     query.then(async posts => {
       if (!posts.length) {
-        res.status(404)
-          .send('Not found');
+        res.render('singlepost',{
+          canDisplay: false,
+          loggedIn: req.isAuthenticated(),
+          loggedInUserData: loggedInUserData,
+          post: null,
+          metadata: {},
+          activePage: 'singlepost'
+        })
         return "no posts";
       } else {
 

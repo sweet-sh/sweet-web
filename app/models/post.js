@@ -60,12 +60,13 @@ var postSchema = new mongoose.Schema({
     type: String
   },
   comments: [commentSchema],
-  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' }, //deprecated
+  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' },
   numberOfComments: {
     type: Number
   },
   mentions: [String],
   tags: [String],
+  boosts: [String],
   boostsV2: [{type:boostSchema, required: true}],
   contentWarnings: String,
   commentsDisabled: Boolean,
