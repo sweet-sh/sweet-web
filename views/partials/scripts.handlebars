@@ -111,7 +111,7 @@ $(function() {
         var modal = $(this)
         modal.find('#boosters-list').empty()
         if (users.followedBoosters.includes("you")){
-            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">You</li>');
+            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">you</li>');
         }
         users.followedBoosters.forEach(function(user) {
             if (user === "you") {

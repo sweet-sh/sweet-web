@@ -653,12 +653,10 @@ module.exports = function (app) {
     const today = moment().clone().startOf('day');
     const thisyear = moment().clone().startOf('year');
 
-    //construct the query that will retrieve the posts we want. if we are looking at a community page, we can do it with Post.find. otherwise,
-    //we have to do some juggling to factor boosts into the sort order of our posts, so we use a more complex Post.aggregate call.
+    //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find
 
     if (req.params.context == "home") {
-      //on the home page, we're concerned about boosts by users we follow for sorting, and overall we're looking for posts
-      //that were boosted (implicitly or explicitly) by users we follow OR are from a community we're in.
+      //on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
       var matchPosts = {
         '$or': [{
             'author': {
