@@ -194,17 +194,17 @@ hr {
 .comment-button:hover,
 .comment-button:active {
   /* color: #0069d9; */
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-link:hover,
 .btn-link:active {
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-primary:hover,
 .btn-primary:active {
-  color: #fff;
-  background-color: #cb5e4c;
-  border-color: #b06357;
+  color: #fff !important;
+  background-color: #cb5e4c !important;
+  border-color: #b06357 !important;
 }
 .image-preview {
   background-color: #fff;
