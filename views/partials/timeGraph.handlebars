@@ -1,6 +1,6 @@
 <script>
     function chartMake(){
-      var ctx = document.getElementById('myChart');
+      var ctx = document.getElementById('{{chartName}}');
       var myChart = new Chart(ctx, {
           type: 'line',
           data: {
@@ -34,7 +34,7 @@
       });
     }
     //have to use this instead of a <script> tag to load this script bc this content is going to be added into an already-loaded
-    //html page by jquery and all seperate script tags will be executed in the order that they load, and bc the chart.js script
+    //html page by jquery and all separate script tags will be executed in the order that they load, and bc the chart.js script
     //is from an external source it will load after the above script, which needs it to already be in place. so, we make the execution
     //order explicit by making chartMake a callback function.
     $.ajax({
@@ -44,4 +44,4 @@
         async: true
     })
 </script>
-<canvas id="myChart" width="400" height="200"></canvas>
+<canvas id="{{chartName}}" width="400" height="200"></canvas>
