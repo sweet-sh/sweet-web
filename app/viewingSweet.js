@@ -957,7 +957,8 @@ module.exports = function (app) {
           // We can only get the post metadata if the post array is filled (and it'll only be filled
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
-          if (result) {
+          if (typeof displayedPost !== 'undefined') {
+              console.log(displayedPost)
               var canDisplay = true;
               if (displayedPost.images != "") {
                 console.log("Post has an image!")
