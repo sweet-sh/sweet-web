@@ -32,10 +32,6 @@ var communities = [new ObjectId("5cd621612f6283211433c7e3"),new ObjectId("5cd74d
 
 
 async function createPosts() {
-    await Post.deleteMany().then((ok) => {
-        console.log('deleted ' + ok.n + ' old post documents');
-    });
-
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 20 regular posts
@@ -114,6 +110,9 @@ async function createPosts() {
 }
 
 async function createBoostsV2Posts() {
+    await Post.deleteMany().then((ok) => {
+        console.log('deleted ' + ok.n + ' old post documents');
+    });
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 20 regular posts
@@ -143,12 +142,14 @@ async function createBoostsV2Posts() {
             var boostTime = new Date()
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             await Post.findById(target).then(async post => {
-                post.boostsV2.push({
-                    booster: poster.id,
-                    timestamp: boostTime
-                });
-                post.lastUpdated = boostTime
-                await post.save();
+                if(!post.boostsV2.some(b=>{return b.booster.equals(poster.id)})){
+                    post.boostsV2.push({
+                        booster: poster.id,
+                        timestamp: boostTime
+                    });
+                    post.lastUpdated = boostTime
+                    await post.save();
+                }
             })
         }
     }
@@ -173,6 +174,7 @@ async function createBoostsV2Posts() {
     }
 }
 
-createBoostsV2Posts().then(()=>{
+createBoostsV2Posts().then(async () => {
+    console.log("created "+await Post.countDocuments({})+" new post documents")
     process.exit();
 })

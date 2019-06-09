@@ -9,15 +9,9 @@ mongoose.connect(configDatabase.url, {
 
 var numOfPushes = 0;
 
-//populates the new post field boostsV2, which is an embedded array of boost documents that works similarly to the embedded array of comments.
+//populates the new post field boostsV2, which is an embedded array of boost documents
 async function createBoostsField() {
-    await Post.find({
-        $or: [{
-            type: 'original'
-        }, {
-            type: 'community'
-        }]
-    }).then(async posts => {
+    await Post.find({$or: [{type: 'original'}, {type: 'community'}]}).then(async posts => {
         for (const post of posts) {
             if (post.boosts.length != 0) {
                 for (const boostId of post.boosts) {
@@ -29,29 +23,31 @@ async function createBoostsField() {
                     }).then(async boost => {
                         if (!boost) {
                             post.boosts = post.boosts.filter(b => {
-                                return !b.equals(boostId)
+                                return b!=boostId
                             });
                             await post.save();
                             return;
                         }
-                        //only one boost per booster needs to exist, so we only keep the most recent one. 
+                        //only one boost per booster needs to exist, so we only keep the most recent one.
                         //each successive boost should be more recent than the last, but, doesn't hurt that much to check.
                         //find if there is one from this booster already:
                         var boostV2WithThisAuthor = post.boostsV2.find(boostsV2 => {
                             return boostsV2.booster.equals(boost.author)
                         });
-                        //if there is an older one, filter it out and delete the boost document it points to
+                        //if it is an older one, remove it and delete the boost document it points to
                         if (boostV2WithThisAuthor) {
                             if (boost.timestamp > boostV2WithThisAuthor.timestamp) {
-                                Post.deleteOne({
-                                    _id: boostId
+                                await Post.deleteOne({
+                                    _id: boostV2WithThisAuthor.boost
                                 });
+                                post.boosts = post.boosts.filter(bidstring=>{return bidstring!=boostV2WithThisAuthor._id.toString()})
                                 post.boostsV2 = post.boostsV2.filter(boostV2 => {
-                                    return !boostV2.booster.equals(boost.author);
+                                    return !boostV2._id.equals(boostV2WithThisAuthor._id);
                                 })
                                 numOfPushes--;
-                                //if there already exists a boostsV2 entry with the same time, assume this entry has already been accurately created.
+                                //if there already exists a boostsV2 entry with the same time
                             } else if (boostV2WithThisAuthor.timestamp.getTime() == boost.timestamp.getTime()) {
+                                boostV2WithThisAuthor.boost = boostId;
                                 return;
                             }
                         }
@@ -72,9 +68,9 @@ async function createBoostsField() {
                         })
                         await post.save();
                     } else {
-                        //if this boostsV2 entry doesn't already have a full boost document to point to
+                        //if this boostsV2 entry isn't already pointing to a full boost document
                         if (!boost.boost) {
-                            //if one already somehow exists with this time stamp, point this boost entry to it
+                            //if one already somehow exists for this entry, point this boost entry to it
                             var existingDocForThisBoost = await Post.findOne({
                                 type: 'boost',
                                 timestamp: boost.timestamp,
@@ -122,15 +118,15 @@ async function createBoostsField() {
     });
     console.log("boostV2s added to post documents: " + numOfPushes);
     if (await validateStuff()) {
-        console.log("stuff validated!")
-        deleteOldBoostFields();
+        console.log("results validated!")
+        //deleteOldBoostFields();
     } else {
-        console.log("errors detected in post documents vis-a-vis boosts, boostsV2 is populated but old boost information will not be auto-deleted for safety's sake");
+        console.log("boostsV2 is populated but the above errors are detected in post documents vis-a-vis boosts");
         console.log("evaluate the errors, fix if possible, decide for yourself if things are alright and if you want to delete the old boost fields");
     }
 }
 
-//redundantly double-checks to make sure the above function makes things happen correctly i guess
+//redundantly double-checks to make sure the above function made things happen correctly i guess
 async function validateStuff() {
     var areWeGood = true;
     await Post.find({
@@ -156,17 +152,35 @@ async function validateStuff() {
                     console.log("more than one boost per booster stored in post document " + post._id.toString())
                     areWeGood = false;
                 }
+                if ((post.boostsV2.filter(b => {
+                    return b.boost.equals(boost.boost)
+                    })).length > 1) {
+                    console.log("more than one boost per boost document stored in post document " + post._id.toString())
+                    areWeGood = false;
+                }
+                if ((post.boostsV2.filter(b => {
+                    return b.timestamp == boost.timestamp
+                    })).length > 1) {
+                    console.log("boosts with duplicate timestamps stored in post document " + post._id.toString())
+                    areWeGood = false;
+                }
+            }
+        }
+    })
+    await Post.find({type:'boost'}).then(async boostPosts=>{
+        for (bp of boostPosts){
+            if(!(await Post.findById(bp.boostTarget))) {
+                console.log("post of type boost "+bp._id.toString()+" has a target post "+bp.boostTarget.toString()+" that does not currently exist")
+                areWeGood = false;
+            }else if(!(await Post.findOne({'boostsV2.boost':bp._id}))){
+                console.log("post of type boost "+bp._id.toString()+" is not recorded in a boostsV2 form");
+                console.log("its target is "+bp.boostTarget);
+                areWeGood = false;
             }
         }
     })
     //don't question this
-    User.findOneAndUpdate({
-        username: 'bigpredatorymollusk'
-    }, {
-        username: 'giantpredatorymollusk'
-    }, () => {
-        ;
-    });
+    User.findOneAndUpdate({username: 'bigpredatorymollusk'}, {username: 'giantpredatorymollusk'}, () => {;});
     return areWeGood;
 }
 
