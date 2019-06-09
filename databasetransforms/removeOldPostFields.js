@@ -10,7 +10,7 @@ Post.find().then(posts=>{
         post.set('imageTags', undefined, { strict: false });
         post.set('images_v3', undefined, { strict: false });
         post.set('boosters', undefined, { strict: false });
-        post.save()
+        post.save();
     }
 }).then(()=>{
     process.exit();

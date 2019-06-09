@@ -7,8 +7,13 @@
         {
             "type": "node",
             "request": "launch",
+<<<<<<< HEAD
             "name": "nuke database, create generic array of test posts",
             "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
+=======
+            "name": "Launch Server",
+            "program": "${workspaceFolder}\\server.js"
+>>>>>>> profiling
         },
         {
             "type": "node",
@@ -25,13 +30,6 @@
             "restart": true,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-        },
-
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Server",
-            "program": "${workspaceFolder}\\server.js"
         },
         {
             "type": "node",
@@ -56,6 +54,12 @@
             "request": "launch",
             "name": "Remove old image fields",
             "program": "${workspaceFolder}\\databasetransforms\\removeOldPostFields.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Nuke posts",
+            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
         }
     ]
 }

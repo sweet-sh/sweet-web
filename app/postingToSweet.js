@@ -50,96 +50,7 @@ var imaggaOptions = {
 };
 
 module.exports = function (app) {
-    //Old image uploading function. Didn't distinguish between public and private images. No longer used
-    app.post("/api/image", isLoggedInOrRedirect, function (req, res) {
-        if (req.files.image) {
-            if (req.files.image.size <= 10485760) {
-                let imageFormat = fileType(req.files.image.data);
-                let imageUrl = shortid.generate();
-                if (imageFormat.mime == "image/gif") {
-                    if (req.files.image.size <= 5242880) {
-                        var imageData = req.files.image.data;
-                        console.log(imageUrl + '.gif');
-                        fs.writeFile('./public/images/uploads/' + imageUrl + '.gif', imageData, 'base64', function (err) {
-                            if (err) {
-                                return console.log(err);
-                            }
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                    } else {
-                        res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({
-                            error: "filesize"
-                        }));
-                    }
-                } else if (imageFormat.mime == "image/jpeg" || imageFormat.mime == "image/png") {
-                    sharp(req.files.image.data)
-                        .resize({
-                            width: 1200,
-                            withoutEnlargement: true
-                        })
-                        .jpeg({
-                            quality: 70
-                        })
-                        .toFile('./public/images/uploads/' + imageUrl + '.jpg')
-                        .then(image => {
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            } else {
-                res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filesize"
-                }));
-            }
-        }
-    })
-
+    
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
@@ -189,29 +100,10 @@ module.exports = function (app) {
                             if (err) {
                                 return console.log(err);
                             }
-                            //WHAT IS THIS
-                            // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                            // .then((tags) => {
-                            //   if (tags.auto){
-                            //     imageTags = tags.auto.join(", ");
-                            //   }
-                            //   else {
-                            //     imageTags = ""
-                            //   }
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.gif',
-                                tags: imageTags
                             }));
-                            //WHAT IS THIS
-                            // })
-                            // .catch(err => {
-                            //   console.error(err);
-                            //   imageTags = ""
-                            //   res.setHeader('content-type', 'text/plain');
-                            //   res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
-                            // })
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
@@ -243,11 +135,9 @@ module.exports = function (app) {
                     }
                     sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
                         .then(image => {
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.' + imageFormat,
-                                tags: imageTags
                             }));
                         })
                         .catch(err => {
@@ -297,7 +187,6 @@ module.exports = function (app) {
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
-        var postImageTags = [""]; //what
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
 
@@ -338,7 +227,6 @@ module.exports = function (app) {
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
@@ -462,7 +350,6 @@ module.exports = function (app) {
                     contentWarnings: sanitize(req.body.postContentWarnings),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
@@ -809,7 +696,7 @@ module.exports = function (app) {
                                 }
 
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
-                                if (post.boostsV2.length > 1) {
+                                if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
                                     post.boostsV2.populate('booster', (err, boosts) => {
                                         if (err) {
@@ -1032,15 +919,27 @@ module.exports = function (app) {
                     res.status(400).send("post is not public and therefore may not be boosted");
                     return;
                 }
+                var boost = new Post({
+                    type: 'boost',
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: shortid.generate(),
+                    privacy: 'public',
+                    timestamp: boostedTimestamp,
+                    lastUpdated: boostedTimestamp,
+                    //add field back to schema so this works
+                    boostTarget: boostedPost._id
+                })
+                boost.save().then(savedBoost=>{
                 const boost = {
                     booster: req.user._id,
-                    timestamp: boostedTimestamp
+                    timestamp: boostedTimestamp,
+                    boost: savedBoost._id
                 }
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
                 boostedPost.boostsV2.push(boost);
-                boostedPost.lastUpdated = boostedTimestamp;
 
                 // don't think so
                 //boostedPost.subscribedUsers.push(req.user._id.toString());
@@ -1053,9 +952,10 @@ module.exports = function (app) {
                     res.redirect("back");
                 })
             })
+        })
     })
 
-//Responds to a post request that boosts a post.
+    //Responds to a post request that boosts a post.
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
@@ -1064,22 +964,18 @@ module.exports = function (app) {
                 '_id': req.params.postid
             }, {
                 boostsV2: 1,
-                lastUpdated: 1,
                 privacy: 1,
-                unsubscribedUsers: 1,
                 author: 1,
-                url:1,
-                timestamp:1
+                url: 1,
+                timestamp: 1
             })
             .then((boostedPost) => {
+                var boost = boostedPost.boostsV2.find(b=>{return b.booster.equals(req.user._id)});
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
-                if(boostedPost.author.equals(req.user._id)){
-                    boostedPost.boostsV2.unshift({booster: boostedPost.author, timestamp: boostedPost.timestamp});
-                }
+                Post.deleteOne({_id: boost.boost},function(){console.log('delete')});
                 boostedPost.save().then(() => {
-                    relocatePost(req.params.postid);
                     res.redirect("back");
                 })
             })
