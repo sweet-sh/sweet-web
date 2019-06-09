@@ -111,7 +111,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
       notifiedUser.notifications.push(notification);
       notifiedUser.save()
       .then((sliceUser) => {
-          notificationsSlice = (sliceUser.notifications.length > 14 ? sliceUser.notifications.length-14 : 0);
+          notificationsSlice = (sliceUser.notifications.length > 60 ? sliceUser.notifications.length-60 : 0);
           sliceUser.notifications = sliceUser.notifications.slice(notificationsSlice)
           sliceUser.save()
           .then(response => {

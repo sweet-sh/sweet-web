@@ -710,7 +710,7 @@ module.exports = function (app) {
     //so this will be called when the query retrieves the posts we want
     query.then(async posts => {
       if (!posts.length) {
-        res.render('singlepost',{
+          res.status(404).render('singlepost',{
           canDisplay: false,
           loggedIn: req.isAuthenticated(),
           loggedInUserData: loggedInUserData,
@@ -954,35 +954,51 @@ module.exports = function (app) {
         metadata = {};
         if (req.params.context == "single") {
           // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
-          if (displayedPost.images != "") {
-            console.log("Post has an image!")
-            var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
-          } else {
-            if (displayedPost.author.imageEnabled) {
-              console.log("Post has no image, but author has an image!")
-              var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
-            } else {
-              console.log("Neither post nor author have an image!")
-              var metadataImage = "https://sweet.sh/images/cake.svg";
-            }
-          }
-          metadata = {
-            title: "@" + displayedPost.author.username + " on sweet",
-            description: displayedPost.rawContent.split('\n')[0],
-            image: metadataImage,
-            url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
-          }
+          // We can only get the post metadata if the post array is filled (and it'll only be filled
+          // if the post was able to be displayed, so this checks to see if we should display
+          // our vague error message on the frontend)
+          if (result) {
+              var canDisplay = true;
+              if (displayedPost.images != "") {
+                console.log("Post has an image!")
+                var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+              } else {
+                if (displayedPost.author.imageEnabled) {
+                  console.log("Post has no image, but author has an image!")
+                  var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
+                } else {
+                  console.log("Neither post nor author have an image!")
+                  var metadataImage = "https://sweet.sh/images/cake.svg";
+                }
+              }
+              metadata = {
+                title: "@" + displayedPost.author.username + " on sweet",
+                description: displayedPost.rawContent.split('\n')[0],
+                image: metadataImage,
+                url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
+              }
 
-          var post = displayedPosts[0]; //hopefully there's only one...
-          if (post.community && post.community.members.some(m => {
-              return m.equals(req.user._id)
-            })) {
-            var isMember = true;
-          } else {
-            var isMember = false;
+              var post = displayedPosts[0]; //hopefully there's only one...
+              if (post.community && post.community.members.some(m => {
+                  return m.equals(req.user._id)
+                })) {
+                var isMember = true;
+              } else {
+                var isMember = false;
+              }
+          }
+          else {
+              var canDisplay = false;
+              // We add some dummy metadata for posts which error
+              metadata = {
+                title: "sweet • a social network",
+                description: "",
+                image: "https://sweet.sh/images/cake.svg",
+                url: "https://sweet.sh/"
+              }
           }
           res.render('singlepost', {
-            canDisplay: true,
+            canDisplay: canDisplay,
             loggedIn: req.isAuthenticated(),
             loggedInUserData: loggedInUserData,
             post: post,
