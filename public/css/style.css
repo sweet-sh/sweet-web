@@ -1570,3 +1570,8 @@ background-size: 5.66px 5.66px;
     top: -5px;
     left: 1px;
 }
+
+.comments-number {
+    font-size: smaller;
+    top: -2px;
+}
