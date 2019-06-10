@@ -9,7 +9,12 @@ var imageSchema = new mongoose.Schema({
   user: String,
   community: String,
   tags: String,
-  description: String
+  description: String,
+  height: Number,
+  width: Number,
+  quality: String,
 });
+
+imageSchema.index({filename:1});
 
 module.exports = mongoose.model('Image', imageSchema);

@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Server",
+            "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Create 'boostsV2' field",
+            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "nodemon Launch Server",
+            "runtimeExecutable": "nodemon",
+            "program": "${workspaceFolder}/server.js",
+            "restart": true,
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Add fake users",
+            "program": "${workspaceFolder}\\databasetransforms\\createFakeTestUsers.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Smol DB Check",
+            "program": "${workspaceFolder}\\databasetransforms\\databaseIntegrity.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Add width and height to images",
+            "program": "${workspaceFolder}\\databasetransforms\\addImageSizesToDB.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Remove old image fields",
+            "program": "${workspaceFolder}\\databasetransforms\\removeOldPostFields.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Nuke posts",
+            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
+        }
+    ]
+}

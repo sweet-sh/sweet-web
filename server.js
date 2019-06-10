@@ -43,7 +43,7 @@ require('./config/passport')(passport); // pass passport for configuration
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
-
+ 
 // View engine (Handlebars)
 var hbs = handlebars.create({
   defaultLayout: 'main',
@@ -69,14 +69,18 @@ app.set('view engine', 'handlebars');
 // Static files
 app.use(express.static('public'));
 
+//persist sessions across restarts via their storage in mongodb
+const MongoStore = require('connect-mongo')(session);
+
 // Required for passport
 var passportAuth = require('./config/auth.js');
 app.use(session({
   secret: passportAuth.secret,
-  cookie:{ _expires: (12 * 60 * 60 * 1000) }, // 12 hours
+  cookie:{ maxAge: (48 * 60 * 60 * 1000) }, // 48 hours
   rolling: true,
   resave: true,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: new MongoStore({mongooseConnection: mongoose.connection, secret:passportAuth.secret})
 }));
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
@@ -98,10 +102,13 @@ global.appRoot = path.resolve(__dirname);
 
 
 // routes ======================================================================
-helper = require('./app/helperFunctions.js');
+helper = require('./app/utilityFunctionsMostlyText.js');
+require('./app/statisticsTracker.js')(app, mongoose);
+require('./app/personalAccountActions.js')(app, passport);
 require('./app/notifier.js')
-require('./app/communityRoutes.js')(app, passport);
-require('./app/routes.js')(app, passport);
+require('./app/inhabitingCommunities.js')(app, passport);
+require('./app/viewingSweet.js')(app);
+require('./app/postingToSweet.js')(app);
 
 // launch ======================================================================
 app.listen(port);
