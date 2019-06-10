@@ -4,17 +4,23 @@
     <article class="comment commentContainer" data-post-id="{{this._id}}">
       <div class="row">
         <div class="col commentContent">
-          {{#eq this.type "boost"}}
-            <p class="text-secondary">
-              <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-            </p>
-          {{/eq}}
           {{#if this.recentlyCommented}}
             {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
               <p class="text-secondary">
                 <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{this.lastCommentAuthor.username}}" class="text-secondary">@{{this.lastCommentAuthor.username}}</a></strong>
               </p>
             {{/isnt}}
+          {{/if}}
+          {{#if headerBoosters}}
+          <p class="text-secondary">
+            <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+          </p>
+          {{else}}
+          {{#if otherBoosters}}
+          <p class="text-secondary">
+            <i class="fas fa-retweet"></i> Boosted by some {{plural otherBoosters 'people/person'}}... <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+          </p>
+          {{/if}}
           {{/if}}
           {{#eq ../context "community"}}
           {{else}}
@@ -59,9 +65,29 @@
               <a class="content-warning-show-more" data-state="contracted">Show post</a>
               <div class="abbreviated-content content-warning-content" style="height:0">
                 {{{this.parsedContent}}}
+                {{#if this.linkPreview.url}}
+                    <a class="link-preview-container" target="_blank" rel="noopener noreferrer" href="{{this.linkPreview.url}}">
+                        <img class="link-preview-image" src="{{this.linkPreview.image}}" />
+                        <div class="link-preview-text-container">
+                            <span class="link-preview-title">{{this.linkPreview.title}}</span>
+                            <span class="link-preview-description">{{this.linkPreview.description}}</span>
+                            <span class="link-preview-domain">{{this.linkPreview.domain}}</span>
+                        </div>
+                    </a>
+                {{/if}}
               </div>
             {{else}}
               {{{this.parsedContent}}}
+              {{#if this.linkPreview.url}}
+                  <a class="link-preview-container" target="_blank" rel="noopener noreferrer" href="{{this.linkPreview.url}}">
+                      <img class="link-preview-image" src="{{this.linkPreview.image}}" />
+                      <div class="link-preview-text-container">
+                          <span class="link-preview-title">{{this.linkPreview.title}}</span>
+                          <span class="link-preview-description">{{truncate (sanitize this.linkPreview.description) 120}}</span>
+                          <span class="link-preview-domain">{{this.linkPreview.domain}}</span>
+                      </div>
+                  </a>
+              {{/if}}
             {{/if}}
           </div>
           {{#if this.images}}
@@ -75,21 +101,28 @@
             {{#unless this.commentsDisabled}}
               {{#if ../loggedIn}}
                 <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                  <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                  <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                 </button>
               {{else}}
                 {{#if this.numberOfComments}}
                   <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                    <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                    <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                   </button>
                 {{/if}}
               {{/if}}
             {{/unless}}
             {{#eq this.privacy "public"}}
               {{#if ../loggedIn}}
-                <form class="d-inline" action="/createboost/{{this._id}}" method="post">
+                <form class="d-inline" action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post">
                   <button type="submit" class="btn btn-link btn-sm boostPost  post-action-button">
-                    <i class="fas fa-retweet"></i>
+                    {{#if youBoosted}}
+                        <span class="fa-layers fa-fw">
+                            <i class="fas fa-retweet"></i>
+                            <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+                        </span>
+                    {{else}}
+                        <i class="fas fa-retweet"></i>
+                    {{/if}}
                   </button>
                 </form>
               {{/if}}
@@ -109,11 +142,11 @@
                 <i class="far fa-bell-slash"></i>
               </button>
             {{/contains}}
-            {{#eq ../loggedInUserData.username this.owner}}
+            {{#if isYourPost}}
               <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                 <i class="far fa-trash-alt"></i>
               </button>
-            {{/eq}}
+            {{/if}}
           </div>
         </div>
       </div>
@@ -178,17 +211,23 @@
       <article class="comment commentContainer" data-post-id="{{this._id}}">
         <div class="row">
           <div class="col commentContent">
-            {{#eq this.type "boost"}}
-              <p class="text-secondary">
-                <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-              </p>
-            {{/eq}}
             {{#if this.recentlyCommented}}
               {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
                 <p class="text-secondary">
                   <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{this.lastCommentAuthor.username}}" class="text-secondary">@{{this.lastCommentAuthor.username}}</a></strong>
                 </p>
               {{/isnt}}
+            {{/if}}
+            {{#if followedBoosters}}
+            <p class="text-secondary">
+              <i class="fas fa-retweet"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}
+            </p>
+            {{else}}
+            {{#if otherBoosters}}
+            <p class="text-secondary">
+              <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
+            </p>
+            {{/if}}
             {{/if}}
             {{#isnt ../context "community"}}
               <div class="text-secondary d-flex align-items-center mb-3">
@@ -247,19 +286,19 @@
                 {{#if ../loggedIn}}
                   {{#unless ../isMuted}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{else}}
                     {{#if this.numberOfComments}}
                       <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                        <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                       </button>
                     {{/if}}
                   {{/unless}}
                 {{else}}
                   {{#if this.numberOfComments}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{/if}}
                 {{/if}}
@@ -279,11 +318,11 @@
                   <i class="far fa-bell-slash"></i>
                 </button>
               {{/contains}}
-              {{#eq ../loggedInUserData.username this.owner}}
+              {{#if isYourPost}}
                 <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                   <i class="far fa-trash-alt"></i>
                 </button>
-              {{/eq}}
+              {{/if}}
             </div>
           </div>
         </div>
@@ -351,17 +390,23 @@
         <article class="comment commentContainer" data-post-id="{{this._id}}">
           <div class="row">
             <div class="col commentContent">
-              {{#eq this.type "boost"}}
-                <p class="text-secondary">
-                  <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{this.owner}}" class="text-secondary">@{{this.owner}}</a></strong>
-                </p>
-              {{/eq}}
               {{#if this.recentlyCommented}}
                 {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
                   <p class="text-secondary">
                     <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{this.lastCommentAuthor.username}}" class="text-secondary">@{{this.lastCommentAuthor.username}}</a></strong>
                   </p>
                 {{/isnt}}
+              {{/if}}
+              {{#if followedBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by {{#each followedBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}
+              </p>
+              {{else}}
+              {{#if otherBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by {{otherBoosters.length}} {{plural otherBoosters 'people/person'}} <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>
+              </p>
+              {{/if}}
               {{/if}}
               <div class="mb-3 d-flex">
                 <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
@@ -411,7 +456,7 @@
                 {{#unless this.commentsDisabled}}
                   {{#if this.numberOfComments}}
                     <button type="button" class="btn btn-link btn-sm openReplyBox  post-action-button">
-                      <i class="far fa-comment"></i> {{#if this.numberOfComments}}({{this.numberOfComments}}){{/if}}
+                      <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                   {{/if}}
                 {{/unless}}
@@ -430,11 +475,11 @@
                     <i class="far fa-bell-slash"></i>
                   </button>
                 {{/contains}}
-                {{#eq ../loggedInUserData.username this.owner}}
+                {{#if isYourPost}}
                   <button type="submit" class="btn btn-link btn-sm deletePost  post-action-button" id="{{this.deleteid}}">
                     <i class="far fa-trash-alt"></i>
                   </button>
-                {{/eq}}
+                {{/if}}
               </div>
             </div>
           </div>

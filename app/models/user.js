@@ -44,6 +44,7 @@ var userSchema = new mongoose.Schema({
     type: Boolean
   },
   displayName: String,
+  pronouns: String,
   aboutRaw: String,
   aboutParsed: String,
   websiteRaw: String,
@@ -52,6 +53,10 @@ var userSchema = new mongoose.Schema({
   settings: {
     profileVisibility: { type: String, default: "invisible" },
     newPostPrivacy: { type: String, default: "public" },
+    imageQuality: { type: String, default: "standard" },
+    homeTagTimelineSorting: { type: String, default: "fluid" },
+    userTimelineSorting: { type: String, default: "chronological" },
+    communityTimelineSorting: { type: String, default: "fluid" },
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
@@ -69,6 +74,8 @@ userSchema.methods.generateHash = function(password) {
 userSchema.methods.validPassword = function(password) {
     return bcrypt.compareSync(password, this.password);
 };
+
+userSchema.index({username:1});
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('User', userSchema);

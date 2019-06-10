@@ -106,16 +106,21 @@ $(function() {
 
           var serverResponse = JSON.parse(data);
           //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
-          if (serverResponse.error && serverResponse.error == "filesize") {
-            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+          if (serverResponse.error) {
+            if(serverResponse.error == "filesize"){
+              bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+            }else if(serverResponse.error == "filetype"){
+              bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
+            }
             jqXHR.previewContainer.uploadsCancelled++;
-            thisImagesWindow.remove();
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {
               let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
               submitbutton.html('Send <i class="fas fa-chevron-right"></i>').prop('disabled', false);
             }
+            thisImagesWindow.remove();
           } else {
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
+            thisImagesWindow.find('.image-preview').css('background-image','url("/api/image/display/temp/'+serverResponse.url+'")');
             thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {
               let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
@@ -197,7 +202,6 @@ $(function() {
           postContentWarnings: $('#postContentWarnings').val(),
           postImageDescription: JSON.stringify(imagedescs),
           postImageURL: JSON.stringify(sortedurls),
-          imageTags: ""
         }
       }).done(function (data) {
         window.location.reload(true);
@@ -251,7 +255,8 @@ $(function() {
     imagecont.addClass("onthemove");
 
     selectedImage.css("border", "dashed")
-
+    selectedImage.attr('urlpos','');
+    selectedImage.attr('uploadNumber','');
     selectedImage.empty();
 
     return imagecont;
@@ -271,10 +276,10 @@ $(function() {
     //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
     var spacertop = spacer.position().top;
     var sHeight = imagecont.outerHeight(true);
-    if (Math.abs((imageconttop + 0.5 * sHeight) - spacertop) > Number.EPSILON) { //floating point imprecision fix :/ still acting up a tiny bit though if you go very slowly
-      var deltaImageIndex = Math.floor(imageconttop + 0.5 * sHeight > spacertop ? (imageconttop + 0.5 * sHeight - spacertop) / sHeight : (imageconttop - 0.5 * sHeight - spacertop) / sHeight)
-    } else {
-      var deltaImageIndex = 0;
+    var movementOfMiddleLine = imageconttop + 0.5 * sHeight > spacertop ? (imageconttop + 0.5 * sHeight - spacertop) : (imageconttop - 0.5 * sHeight - spacertop);
+    var deltaImageIndex = Math.floor(movementOfMiddleLine/sHeight);
+    if((movementOfMiddleLine % sHeight > sHeight-5 || movementOfMiddleLine % sHeight < 5) && deltaImageIndex != 0){ //10 pixels deadzone on either side of the imaginary line
+      deltaImageIndex -= deltaImageIndex > 0 ? 1 : -1;
     }
 
     //Move the spacer (in other words, set the future destination of the image) according to deltaImageIndex

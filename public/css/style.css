@@ -179,6 +179,9 @@ hr {
 .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
+.comment-content .abbreviated-content:not(.content-warning-content)::after {
+  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
+}
 .show-more,
 .content-warning-show-more,
 .community-tags .badge {
@@ -191,17 +194,17 @@ hr {
 .comment-button:hover,
 .comment-button:active {
   /* color: #0069d9; */
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-link:hover,
 .btn-link:active {
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-primary:hover,
 .btn-primary:active {
-  color: #fff;
-  background-color: #cb5e4c;
-  border-color: #b06357;
+  color: #fff !important;
+  background-color: #cb5e4c !important;
+  border-color: #b06357 !important;
 }
 .image-preview {
   background-color: #fff;
@@ -263,6 +266,10 @@ hr {
 #replyForm {
   background-color: #ffffffaa;
   box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
+}
+.pane {
+    background: #fff;
+    border: 1px solid #dee2e6;
 }
 
 p{
@@ -329,9 +336,70 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1rem;
 }
 
+.post-action-button:hover {
+    text-decoration: none;
+}
+
 #authorTools > button {
   text-align: right;
   padding-right: 0px;
+}
+
+/* .fullBoostList {
+  margin:3px;
+  text-decoration:underline;
+  cursor: pointer;
+  position:relative;
+}
+
+.fullBoostList::after{
+  transition : all .2s linear;
+  background : rgba(0,0,0,0);
+  color      : rgba(0,0,0,0);
+  content: attr(data-content);
+  white-space: pre-line;
+  position: absolute;
+  left: 0;
+  top: 24px;
+  min-width: 200px;
+  border: 1px rgba(0,0,0,0) solid;
+  border-radius: 3px;
+  padding: 6px;
+  z-index: 1;
+}
+
+.fullBoostListClicked {
+  margin:3px;
+  text-decoration:underline;
+  cursor: pointer;
+  position:relative;
+}
+
+.fullBoostListClicked::after{
+  transition : all .2s linear;
+  content: attr(data-content);
+  white-space: pre-line;
+  position: absolute;
+  left: 0;
+  top: 24px;
+  min-width: 200px;
+  border: 1px #aaaaaa solid;
+  border-radius: 3px;
+  background-color: #ebebeb;
+  padding: 6px;
+  color: #000000;
+  z-index: 1;
+} */
+
+.fullBoostList {
+    font-size: 0.7em;
+    padding: 1px 5px;
+    font-weight: 300;
+    text-transform: lowercase;
+    height: 100%;
+    background: #aaa;
+    border: #aaa;
+    margin-left: 2px;
 }
 
 hr {
@@ -688,8 +756,13 @@ hr {
   padding-top: 20px;
 }
 
+.post-content {
+  position: relative;
+}
+
 .comment-content {
   margin: 0.5rem 0 1rem 0;
+  position: relative;
 }
 
 .user-list {
@@ -836,11 +909,14 @@ hr {
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
+  flex-shrink: 0; /* Fixing images squishing on Android Chrome, hopefully? */
 }
 
 @media (min-width: 576px) {
   #notificationsContainer {
       min-width: 360px;
+      max-height: 500px;
+      overflow-x: scroll;
   }
 }
 #notificationsList,
@@ -995,11 +1071,11 @@ hr {
   content: "";
   position: absolute;
   z-index: 1;
-  bottom: 3rem;
+  bottom: 1.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;
-  height: 1rem;
+  height: 3rem;
 }
 
 .show-more,
@@ -1015,11 +1091,11 @@ hr {
 }
 
 .show-more {
-  margin: 1rem auto;
+  margin: 0.5rem auto;
 }
 
 .content-warning-show-more {
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 0.5rem auto;
 }
 /*
 .post-meta {
@@ -1090,8 +1166,8 @@ hr {
   padding: 0 5px;
 }
 .post-header .user-flag {
-  position: relative;
-  top: 3px;
+  width: 1.5rem;
+  align-self: center;
 }
 
 .show-more-content {
@@ -1429,4 +1505,71 @@ background-size: 5.66px 5.66px;
 .community-tags .badge {
   font-weight: 400;
   font-size: 90%;
+}
+
+.link-preview-container {
+    display: flex;
+    height: 100px;
+    padding: 10px;
+    color: #1a1717;
+    font-weight: 500;
+    border: 1px solid #dfdfdf;
+    border-radius: 4px;
+    margin: 0.5em 0;
+}
+
+.link-preview-container:hover {
+    text-decoration: none;
+    background: #fcfcfc;
+}
+
+.link-preview-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.link-preview-text-container>span {
+    margin: 0;
+    padding: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.link-preview-image {
+    flex: 0;
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+.link-preview-description {
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.link-preview-domain {
+    font-weight: 300;
+    font-size: 0.9em;
+    font-variant: small-caps;
+}
+.pane {
+    padding: 15px;
+}
+
+.comments-marker {
+    position: relative;
+    top: -5px;
+    left: 1px;
+}
+
+.comments-number {
+    font-size: smaller;
+    top: -1px;
+    position: relative;
+}
+
+.form-control {
+    font-family: 'Ubuntu', sans-serif;
 }

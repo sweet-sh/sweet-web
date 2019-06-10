@@ -22,5 +22,8 @@ var relationshipSchema = new mongoose.Schema({
   }
 });
 
+relationshipSchema.index({fromUser:1,toUser:1})
+relationshipSchema.index({value:1});
+
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Relationship', relationshipSchema);

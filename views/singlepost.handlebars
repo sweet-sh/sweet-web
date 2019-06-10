@@ -5,17 +5,23 @@
         <article class="comment commentContainer" data-post-id="{{post._id}}">
           <div class="row">
             <div class="col commentContent">
-              {{#eq post.type "boost"}}
-                <p class="text-secondary">
-                  <i class="fas fa-retweet"></i> Boosted by <strong><a href="/{{post.owner}}" class="text-secondary">@{{post.owner}}</a></strong>
-                </p>
-              {{/eq}}
               {{#if post.recentlyCommented}}
                 {{#isnt post.lastCommentAuthor.username loggedInUserData.username}}
                   <p class="text-secondary">
                     <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{post.lastCommentAuthor.username}}" class="text-secondary">@{{post.lastCommentAuthor.username}}</a></strong>
                   </p>
                 {{/isnt}}
+              {{/if}}
+              {{#if post.headerBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by {{#each post.headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../post.otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../post.otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this 'you'}}{{../loggedInUserData.username}}{{else}}{{this}}{{/eq}}" class="text-secondary">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if post.otherBoosters}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt post.followedBoosters.length 3}} and others <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+              </p>
+              {{else}}
+              {{#if post.otherBoosters}}
+              <p class="text-secondary">
+                <i class="fas fa-retweet"></i> Boosted by some {{plural post.otherBoosters 'people/person'}}... <button type="button" class="fullBoostList btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each post.followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each post.otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+              </p>
+              {{/if}}
               {{/if}}
               {{#if post.community}}
                 <div class="text-secondary d-flex align-items-center mb-3">
@@ -66,7 +72,7 @@
                 <div class="post-images {{#if post.contentWarnings}}content-warning-images{{/if}} {{#eq post.images.length 1}} one-image{{/eq}}{{#eq post.images.length 2}} two-images{{/eq}}{{#eq post.images.length 3}} three-images{{/eq}}{{#eq post.images.length 4}} four-images{{/eq}}" {{#gt post.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                   {{#each post.images}}
                     {{#gt ../post.images.length 1}}<a href="{{this}}">{{/gt}}
-                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../post.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{#if ../post.imageTags}}, which may contain: {{../post.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../post.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                    <img alt="{{#if ../post.imageDescriptions}}{{lookup ../post.imageDescriptions @index}} (posted by {{../post.author.username}}){{else}}Image posted by {{../post.author.username}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../post.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
                     {{#gt ../post.images.length 1}}</a>{{/gt}}
                   {{/each}}
                 </div>
@@ -176,7 +182,7 @@
                       <div class="post-images {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}" {{#gt this.images.length 1}}data-featherlight-gallery data-featherlight-filter="a"{{/gt}}>
                         {{#each this.images}}
                           {{#gt ../this.images.length 1}}<a href="{{this}}">{{/gt}}
-                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{#if ../this.imageTags}}, which may contain: {{../this.imageTags}}{{/if}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
+                          <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}" class="post-single-image" src="{{this}}" {{#eq ../this.images.length 1}}data-featherlight="{{this}}"{{/eq}}/>
                           {{#gt ../this.images.length 1}}</a>{{/gt}}
                         {{/each}}
                       </div>
