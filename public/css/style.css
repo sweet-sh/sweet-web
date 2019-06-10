@@ -685,6 +685,10 @@ hr {
   align-items: center;
 }
 
+#replyControlsRow button:first-child {
+    margin-right: 5px;
+}
+
 #resultsContainer,
 #directoryResults,
 .commentsList {
@@ -1572,4 +1576,12 @@ background-size: 5.66px 5.66px;
 
 .form-control {
     font-family: 'Ubuntu', sans-serif;
+}
+
+
+.childReplyForm {
+    padding-left: 32px;
+    margin-bottom: 1em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1em;
 }

@@ -120,7 +120,7 @@ $(function() {
         }
         return toolbar;
     }
-    var editor = new MediumEditor('.editable-text', {
+    editor = new MediumEditor('.editable-text', {
         buttonLabels: 'fontawesome',
         imageDragging: false,
         toolbar: createToolbar(is_touch_device()),
@@ -151,4 +151,8 @@ $(function() {
         }
     });
 });
+function reapplyEditor () {
+    editor.addElements('.editable-text');
+    tribute.attach($(".editable-comment-content"));
+}
 </script>

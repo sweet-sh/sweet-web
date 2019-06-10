@@ -558,8 +558,9 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function (req, res) {
+    app.post("/createcomment/:type/:postid/:commentid", isLoggedInOrErrorResponse, function (req, res) {
         console.log(req.body)
+        let commentType = req.params.type;
         let parsedResult = helper.parseText(req.body.commentContent);
         commentTimestamp = new Date();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
@@ -584,9 +585,18 @@ module.exports = function (app) {
             })
             .populate('author')
             .then((post) => {
+                if (commentType == "primary") {
+                    var target = post.comments;
+                }
+                else if (commentType == "child") {
+                    parentComment = post.comments.findIndex(comment => comment._id.equals(req.params.commentid));
+                    var target = post.comments[parentComment].replies;
+                }
                 postPrivacy = post.privacy;
-                post.comments.push(comment);
+                target.push(comment);
                 post.numberOfComments = post.comments.length;
+                console.log(post.comments.length)
+                console.log(Object.keys(post.comments).length);
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
                 if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to

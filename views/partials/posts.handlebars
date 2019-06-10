@@ -155,7 +155,7 @@
           <div class="repliesContainer">
           {{#if this.comments}}
             {{#each this.comments}}
-            <div class="individualReplyContainer">
+            <div class="individualReplyContainer" data-comment-id="{{this._id}}">
               <div class="mb-1 d-flex">
                 <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
                 <div class="comment-header">
@@ -195,6 +195,49 @@
                   {{> imagegallery }}
                 {{/if}}
               </div>
+              {{#each this.replies}}
+              <div class="individualReplyContainer" data-comment-id="{{this._id}}">
+                <div class="mb-1 d-flex">
+                  <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+                  <div class="comment-header">
+                    <div class="comment-header-row-1">
+                      {{#if this.author.displayName}}
+                        <div class="author-display-name">
+                          <strong><a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a></strong>
+                        </div>
+                        <div class="author-username">
+                          <span class="text-muted">@{{this.author.username}}</span>
+                        </div>
+                      {{else}}
+                        <div class="author-username">
+                          <strong><a class="authorLink" href="/{{this.author.username}}">@{{this.author.username}}</a></strong>
+                        </div>
+                      {{/if}} {{#contains ../../flaggedUsers this.author.email}}<i class="fas fa-exclamation-triangle text-danger user-flag"></i>{{/contains}}
+                      <div class="comment-header-divider">
+                        &middot;
+                      </div>
+                      <div class="commentTimestamp">
+                        <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
+                      </div>
+                      <button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="{{this.author.username}}">
+                        <i class="fas fa-reply"></i>
+                      </button>
+                      {{#if this.canDelete }}
+                        <button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="{{this._id}}" data-post-id="{{../_id}}" data-comment-id="{{this._id}}">
+                          &times;
+                        </button>
+                      {{/if}}
+                    </div>
+                  </div>
+                </div>
+                <div class="comment-content">
+                  {{{this.parsedContent}}}
+                  {{#if this.images}}
+                    {{> imagegallery }}
+                  {{/if}}
+                </div>
+              </div>
+              {{/each}}
             </div>
             {{/each}}
             {{/if}}
@@ -331,7 +374,7 @@
             <div class="repliesContainer">
             {{#if this.comments}}
               {{#each this.comments}}
-              <div class="individualReplyContainer">
+              <div class="individualReplyContainer" data-comment-id="{{this._id}}">
                 <div class="mb-1 d-flex">
                   <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
                   <div class="comment-header">
@@ -488,7 +531,7 @@
               <div class="repliesContainer">
               {{#if this.comments}}
                 {{#each this.comments}}
-                <div class="individualReplyContainer">
+                <div class="individualReplyContainer" data-comment-id="{{this._id}}">
                   <div class="mb-1 d-flex">
                     <img alt="Profile image of @{{this.author.username}}" class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
                     <div class="comment-header">

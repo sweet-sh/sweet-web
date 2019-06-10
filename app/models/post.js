@@ -21,7 +21,8 @@ var commentSchema = new mongoose.Schema({
   mentions: [String],
   tags: [String],
   images: [String],
-  imageDescriptions: [String]
+  imageDescriptions: [String],
+  replies: [this]
 });
 
 var boostSchema = new mongoose.Schema({
