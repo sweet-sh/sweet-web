@@ -23,7 +23,7 @@ async function addImageSizes() {
         filename: 1
     }).then(async images => {
         await asyncForEach(images, async function (image) {
-            await sharp('./cdn/images/' + image.filename).metadata().then(async metadata => {
+            await sharp('../cdn/images/' + image.filename).metadata().then(async metadata => {
                 await Image.findOneAndUpdate({
                     filename: image.filename
                 }, {
