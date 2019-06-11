@@ -39,7 +39,8 @@ module.exports = function (app, mongoose) {
                                 "<h5>Last 24 hours</h5>" +
                                 "<strong>Posts</strong> " + posts.length + "<br>" +
                                 "<strong>Images</strong> " + daysImages + "<br>" +
-                                "<strong>Comments</strong> " + daysReplies; "<br>" +
+                                "<strong>Comments</strong> " + daysReplies;
+                            "<br>" +
                             res.status(200).send(funstats);
                         })
                     })
@@ -116,7 +117,7 @@ module.exports = function (app, mongoose) {
     //this function just checks if the file with the post totals by day exists and is up to date and then builds the graph from it if it does and is
     //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justpostgraph", async function (req, res) {
-        if(userTablePromise){
+        if (userTablePromise) {
             await userTablePromise;
         }
         var mostRecentDate;
@@ -137,7 +138,7 @@ module.exports = function (app, mongoose) {
         res.render('partials/timeGraph', {
             layout: false,
             label: "cumulative sweet posts",
-            chartName:"postGraph",
+            chartName: "postGraph",
             datapoint: datapoints
         })
     })
@@ -147,7 +148,7 @@ module.exports = function (app, mongoose) {
     //this function just checks if the file with the user totals by day exists and is up to date and then builds the graph from it if it does and is
     //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justusergraph", async function (req, res) {
-        if(postTablePromise){
+        if (postTablePromise) {
             await postTablePromise;
         }
         var mostRecentDate;
@@ -168,7 +169,7 @@ module.exports = function (app, mongoose) {
         res.render('partials/timeGraph', {
             layout: false,
             label: "cumulative sweet users",
-            chartName:"userGraph",
+            chartName: "userGraph",
             datapoint: datapoints
         })
     })
@@ -213,7 +214,11 @@ async function rebuildPostTable(startDate) {
     //before will store the end of day time upon which we'll base our first end-of-day total.
     var before;
     if (!startDate) {
-        await Post.find({}).sort('timestamp').then(async posts => {
+        await Post.find({
+            timestamp: {
+                $exists: true
+            }
+        }).sort('timestamp').then(async posts => {
             before = new Date(posts[0].timestamp.getFullYear(), posts[0].timestamp.getMonth(), posts[0].timestamp.getDate(), 23, 59, 59, 999);
         })
     } else {
@@ -229,9 +234,13 @@ async function rebuildPostTable(startDate) {
     for (var i = 0; i < totalDays; i++) {
         var sequentialDate = new Date(before);
         await Post.find({
-            timestamp: {
-                $lte: sequentialDate
-            }
+            $or: [{
+                timestamp: {
+                    $lte: sequentialDate
+                }
+            }, {
+                timestamp: undefined
+            }]
         }).then(posts => {
             sequentialDate.postCount = posts.length;
             postCountByDay.push(sequentialDate);
@@ -269,7 +278,11 @@ async function rebuildUserTable(startDate) {
     //before will store the end of day time upon which we'll base our first end-of-day total.
     var before;
     if (!startDate) {
-        await User.find({}).sort('joined').then(async users => {
+        await User.find({
+            joined: {
+                $exists: true
+            }
+        }).sort('joined').then(async users => {
             before = new Date(users[0].joined.getFullYear(), users[0].joined.getMonth(), users[0].joined.getDate(), 23, 59, 59, 999);
         })
     } else {
@@ -284,10 +297,13 @@ async function rebuildUserTable(startDate) {
     //populate userCountByDay with date objects that also have a property indicating what the user count was at the end of that day
     for (var i = 0; i < totalDays; i++) {
         var sequentialDate = new Date(before);
-        await User.find({
+        await User.find({$or: [{
             joined: {
                 $lte: sequentialDate
             }
+        }, {
+            joined: undefined
+        }]
         }).then(users => {
             sequentialDate.userCount = users.length;
             userCountByDay.push(sequentialDate);
@@ -313,7 +329,7 @@ async function rebuildUserTable(startDate) {
 async function parseTableForGraph(filename, collection) {
     var jsonVersion = [];
     //reads in file values
-    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')){
+    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
         if (line && line !== "\n") {
             var lineComps = line.split(",");
             jsonVersion.push({
