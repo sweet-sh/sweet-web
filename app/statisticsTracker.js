@@ -1,4 +1,6 @@
 const fs = require('fs');
+const path = require('path')
+const bcrypt = require('bcrypt-nodejs')
 
 module.exports = function (app, mongoose) {
 
@@ -173,6 +175,21 @@ module.exports = function (app, mongoose) {
             datapoint: datapoints
         })
     })
+
+    app.get("/admin/resetgraphs/:password", function (req, res) {
+        var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq"
+        if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
+            if (!postTablePromise && fs.existsSync(postTableFileName)) {
+                fs.unlinkSync(path.resolve(global.appRoot, postTableFileName));
+            }
+            if (!userTablePromise && fs.existsSync(userTableFileName)) {
+                fs.unlinkSync(path.resolve(global.appRoot, userTableFileName));
+            }
+            res.status(200).send("thy will be done");
+        } else {
+            res.status(200).send("no dice")
+        }
+    })
 };
 
 var postTableFileName = "postTimeline.csv";
@@ -297,13 +314,14 @@ async function rebuildUserTable(startDate) {
     //populate userCountByDay with date objects that also have a property indicating what the user count was at the end of that day
     for (var i = 0; i < totalDays; i++) {
         var sequentialDate = new Date(before);
-        await User.find({$or: [{
-            joined: {
-                $lte: sequentialDate
-            }
-        }, {
-            joined: undefined
-        }]
+        await User.find({
+            $or: [{
+                joined: {
+                    $lte: sequentialDate
+                }
+            }, {
+                joined: undefined
+            }]
         }).then(users => {
             sequentialDate.userCount = users.length;
             userCountByDay.push(sequentialDate);

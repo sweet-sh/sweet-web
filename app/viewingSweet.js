@@ -948,7 +948,8 @@ module.exports = function (app) {
             }
           });
 
-          if (req.isAuthenticated()){
+          if (req.isAuthenticated() && req.params.context=="single"){
+            // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
 
