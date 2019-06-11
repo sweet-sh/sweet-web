@@ -53,7 +53,7 @@ $(function() {
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
       let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
-      if (latestPost != currentlyDisplayedPost){
+      if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
         $("#newPostsAvailable").show();
       }
       else {
@@ -67,22 +67,32 @@ $(function() {
     commentsContainer = $(this).closest(".comment").find(".replyContainer");
     commentsContainer.slideToggle("fast", function(){
       if (commentsContainer.is(':visible')){
+        if(commentsContainer.height() > $(window).height()){
+          var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
+          $("html, body").animate({ scrollTop: scroll+"px" },200);
+        }
         var post = $(this).closest('.commentContainer');
         $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
           $("#notificationsContainer").load( "/api/notification/display" );
         })
       }
     })
+
   })
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:"100%"},200);
-      $(this).attr("data-state","expanded").css("margin-top", "0.25rem");
+      var h = $(this).prev(".abbreviated-content").css('height','100%').height();
+      $(this).prev(".abbreviated-content").css('height','7rem');
+      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:h},200);
+      $(this).attr("data-state","expanded");
     }
     else {
-      $(this).prev(".post-content").addClass("abbreviated-content").removeClass("post-content").animate({height:"7rem"},200);
-      $(this).attr("data-state","contracted").css("margin-top", "1rem");
+      var pC = $(this).prev(".post-content");
+      pC.addClass("abbreviated-content").removeClass("post-content").animate({height:"7rem"},200);
+      var scroll = pC.offset().top;
+      $("html, body").animate({ scrollTop: (scroll-200)+"px" },200); //-200 to roughly account for the navbar covering up the very top of the screen
+      $(this).attr("data-state","contracted");
     }
     var text = $(this).text();
     $(this).text(
@@ -94,23 +104,49 @@ $(function() {
   $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
     pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
-  $('body').on('click', '.fullBoostList', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    $(this).addClass('fullBoostListClicked');
-    $('body').on('click',e=>{
-      $(this).removeClass('fullBoostListClicked');
+
+    $('#boostersModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget)
+        var users = button.data('users')
+        var modal = $(this)
+        modal.find('#boosters-list').empty()
+        if (users.followedBoosters.includes("you")){
+            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">you</li>');
+        }
+        users.followedBoosters.forEach(function(user) {
+            if (user === "you") {
+                return;
+            }
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="badge badge-secondary float-right">Following</span></li>')
+        })
+        users.otherBoosters.forEach(function(user) {
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'</li>')
+        })
     })
-  })
+
+  // $('body').on('click', '.fullBoostList', function(e) {
+  //   var thisList = $(this);
+  //   thisList.removeClass('fullBoostList');
+  //   thisList.addClass('fullBoostListClicked');
+  //   function removeBoostListPopUp(e){
+  //     thisList.removeClass('fullBoostListClicked');
+  //     thisList.addClass('fullBoostList');
+  //     $('body').off('click', removeBoostListPopUp);
+  //   }
+  //   $('body').on('click', removeBoostListPopUp);
+  // })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
+    var abbContent = $(this).closest(".post-content").find(".abbreviated-content");
     if (state == "contracted") {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"100%"},200);
+      var h = abbContent.css('height','100%').height();
+      abbContent.css('height','0');
+      abbContent.animate({height:h},200);
       $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","expanded");
     }
     else {
-      $(this).closest(".post-content").find(".abbreviated-content").animate({height:"0"},200);
+      abbContent.animate({height:"0"},200);
       $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","contracted");
     }
@@ -144,13 +180,12 @@ $(function() {
             divToDelete.remove();
           });
         });
-        let counterToChange = element.closest(".commentContainer").find(".openReplyBox")[0];
-        let regex = /\s|[(-)]/gi;
-        let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))-1;
+        let counterToChange = element.closest(".commentContainer").find(".openReplyBox").find(".comments-number")[0];
+        let newCommentCount = parseInt(counterToChange.textContent)-1;
         if(newCommentCount!=0){
-          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount+1) + ")", "(" + (newCommentCount) + ")");
+          counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount+1), newCommentCount);
         }else{
-          counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount+1) + ")","");
+          counterToChange.innerHTML = counterToChange.innerHTML.replace( (newCommentCount+1),"");
         }
       }
     });
@@ -203,13 +238,12 @@ $(function() {
           html+='</div></div>';
           $(html).hide().appendTo(commentsContainer).fadeIn();
           commentButton.prop('disabled', false);
-          let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox")[0];
-          let regex = /\s|[(-)]/gi;
-          if(counterToChange.textContent.replace(regex,"") === ""){
-            counterToChange.innerHTML = counterToChange.innerHTML + " (1)";
+          let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox").find('.comments-number')[0];
+          if(counterToChange.textContent === ""){
+            counterToChange.innerHTML = "1";
           }else{
-            let newCommentCount = parseInt(counterToChange.textContent.replace(regex,""))+1;
-            counterToChange.innerHTML = counterToChange.innerHTML.replace("(" + (newCommentCount-1) + ")", "(" + (newCommentCount) + ")");
+            let newCommentCount = parseInt(counterToChange.textContent)+1;
+            counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
           }
           emojiWindow.hide();
           $(pc).children('.newimagecont').remove(); //removes all image preview windows

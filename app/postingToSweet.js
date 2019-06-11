@@ -3,14 +3,6 @@ var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
 
 const url = require('url');
-const metascraper = require('metascraper')([
-  require('metascraper-image')(),
-  require('metascraper-title')(),
-  require('metascraper-url')(),
-  require('metascraper-description')()
-])
-
-const got = require('got');
 
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -58,95 +50,6 @@ var imaggaOptions = {
 };
 
 module.exports = function (app) {
-    //Old image uploading function. Didn't distinguish between public and private images. No longer used
-    app.post("/api/image", isLoggedInOrRedirect, function (req, res) {
-        if (req.files.image) {
-            if (req.files.image.size <= 10485760) {
-                let imageFormat = fileType(req.files.image.data);
-                let imageUrl = shortid.generate();
-                if (imageFormat.mime == "image/gif") {
-                    if (req.files.image.size <= 5242880) {
-                        var imageData = req.files.image.data;
-                        console.log(imageUrl + '.gif');
-                        fs.writeFile('./public/images/uploads/' + imageUrl + '.gif', imageData, 'base64', function (err) {
-                            if (err) {
-                                return console.log(err);
-                            }
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                    } else {
-                        res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({
-                            error: "filesize"
-                        }));
-                    }
-                } else if (imageFormat.mime == "image/jpeg" || imageFormat.mime == "image/png") {
-                    sharp(req.files.image.data)
-                        .resize({
-                            width: 1200,
-                            withoutEnlargement: true
-                        })
-                        .jpeg({
-                            quality: 70
-                        })
-                        .toFile('./public/images/uploads/' + imageUrl + '.jpg')
-                        .then(image => {
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            } else {
-                res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filesize"
-                }));
-            }
-        }
-    })
 
     //New image upload reciever.
     //Inputs: image data.
@@ -197,29 +100,10 @@ module.exports = function (app) {
                             if (err) {
                                 return console.log(err);
                             }
-                            //WHAT IS THIS
-                            // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                            // .then((tags) => {
-                            //   if (tags.auto){
-                            //     imageTags = tags.auto.join(", ");
-                            //   }
-                            //   else {
-                            //     imageTags = ""
-                            //   }
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.gif',
-                                tags: imageTags
                             }));
-                            //WHAT IS THIS
-                            // })
-                            // .catch(err => {
-                            //   console.error(err);
-                            //   imageTags = ""
-                            //   res.setHeader('content-type', 'text/plain');
-                            //   res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
-                            // })
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
@@ -251,11 +135,9 @@ module.exports = function (app) {
                     }
                     sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
                         .then(image => {
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.' + imageFormat,
-                                tags: imageTags
                             }));
                         })
                         .catch(err => {
@@ -305,7 +187,6 @@ module.exports = function (app) {
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
-        var postImageTags = [""]; //what
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
 
@@ -317,17 +198,17 @@ module.exports = function (app) {
         }
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
-            if (linkPreviewEnabled) {
-                linkPreview = {
-                    url: linkPreviewMetadata.url,
-                    domain: url.parse(linkPreviewMetadata.url).hostname,
-                    title: linkPreviewMetadata.title,
-                    description: linkPreviewMetadata.description,
-                    image: linkPreviewMetadata.image,
-                }
-            } else {
-                linkPreview = {};
-            }
+            // if (linkPreviewEnabled) {
+            //     linkPreview = {
+            //         url: linkPreviewMetadata.url,
+            //         domain: url.parse(linkPreviewMetadata.url).hostname,
+            //         title: linkPreviewMetadata.title,
+            //         description: linkPreviewMetadata.description,
+            //         image: linkPreviewMetadata.image,
+            //     }
+            // } else {
+            //     linkPreview = {};
+            // }
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -346,14 +227,13 @@ module.exports = function (app) {
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
-                    }],
-                    linkPreview: linkPreview
+                    }]
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -460,8 +340,8 @@ module.exports = function (app) {
                     author: req.user._id,
                     url: newPostUrl,
                     privacy: 'public',
-                    timestamp: new Date(),
-                    lastUpdated: new Date(),
+                    timestamp: postCreationTime,
+                    lastUpdated: postCreationTime,
                     rawContent: sanitize(req.body.postContent),
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
@@ -470,14 +350,13 @@ module.exports = function (app) {
                     contentWarnings: sanitize(req.body.postContentWarnings),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -553,19 +432,20 @@ module.exports = function (app) {
         }
 
         //get link preview for first link in content
-        contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
-        if (contentURLMatch) {
-            contentURL = contentURLMatch[2]
-            got(contentURL)
-            .then(({ body: html, url }) => {
-                metascraper({ html, url })
-                    .then(metadata => {
-                        savePost(true, metadata);
-                })
-            })
-        } else {
-            savePost(false);
-        }
+        // contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
+        // if (contentURLMatch) {
+        //     contentURL = contentURLMatch[2]
+        //     got(contentURL)
+        //     .then(({ body: html, url }) => {
+        //         metascraper({ html, url })
+        //             .then(metadata => {
+        //                 savePost(true, metadata);
+        //         })
+        //     })
+        // } else {
+        //     savePost(false);
+        // }
+        savePost();
     });
 
     //Responds to requests that delete posts.
@@ -816,15 +696,15 @@ module.exports = function (app) {
                                 }
 
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
-                                if (post.boostsV2.length > 1) {
+                                if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
-                                    post.boostsV2.populate('booster', (err, boosts) => {
+                                    post.populate('boostV2.booster', (err, populatedPost) => {
                                         if (err) {
                                             console.log('could not notify people who boosted post ' + post._id.toString() + " of a recent reply:");
                                             console.log(err);
                                         } else {
-                                            boosts.forEach(boost => {
-                                                boosterIDs.push(boost.booster._id);
+                                            populatedPost.boostsV2.forEach(boost => {
+                                                boosterIDs.push(boost.booster._id.toString());
                                                 //make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
                                                 //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
                                                 //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
@@ -844,43 +724,10 @@ module.exports = function (app) {
                                     })
                                 }
 
-/*                              This is the version of the above that worked with the old model of storing boosts in the database.
-                                var boosterIDs = [];
-                                post.boosts.forEach(boostID => {
-                                    Post.findById(boostID).then(boost => {
-                                        boosterIDs.push(boost.author.toString());
-                                        //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
-                                        if (boosterIDs.length == post.boosts.length) {
-                                            //remove duplicate ids for people who've boosted it more than once,
-                                            //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
-                                            //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
-                                            boosterIDs = boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
-                                            boosterIDs.forEach(boosterID => {
-                                                User.findById(boosterID).then(booster => {
-                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
-                                                    //or anyone who unsubscribed from the post
-                                                    if (!parsedResult.mentions.includes(booster.username) && !post.unsubscribedUsers.includes(boosterID.toString())) {
-                                                        notifier.notify('user', 'boostedPostReply', booster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
-                                                    }
-                                                }).catch(err => {
-                                                    console.log("could not find document for booster " + boosterID + ", error:")
-                                                    console.log(err);
-                                                })
-                                            })
-
-                                            //if there are boosters, we notify the other "subscribers" here, because here we have the full list of
-                                            //boosters and can check the subscribers against it before notifying them
-                                            var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u));
-                                            notifySubscribers(workingSubscribers);
-                                        }
-                                    })
-                                })
-*/
-
                                 //NOTIFY THE OTHER SUBSCRIBERS (PEOPLE WHO WERE MENTIONED IN THE ORGINAL POST AND THOSE WHO COMMENTED ON IT)
 
                                 //if there are boosts for this post, this was called a few lines up from here. otherwise, we do it now
-                                if (post.boosts.length === 0) {
+                                if (post.boostsV2.length === 0) {
                                     notifySubscribers(post.subscribedUsers)
                                 }
 
@@ -977,7 +824,7 @@ module.exports = function (app) {
             .then((post) => {
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (!post.comments.id(req.params.commentid).author._id.equals(req.user._id)) {
+                if (!post.comments.id(req.params.commentid).author.equals(req.user._id) && post.author.toString() != req.user._id.toString()) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }
@@ -1032,31 +879,76 @@ module.exports = function (app) {
                 privacy: 1,
                 unsubscribedUsers: 1,
                 author: 1,
-                url:1
+                url: 1
             }).populate('author')
             .then((boostedPost) => {
                 if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
                     res.status(400).send("post is not public and therefore may not be boosted");
                     return;
                 }
-                const boost = {
-                    booster: req.user._id,
-                    timestamp: boostedTimestamp
-                }
+                var boost = new Post({
+                    type: 'boost',
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: shortid.generate(),
+                    privacy: 'public',
+                    timestamp: boostedTimestamp,
+                    lastUpdated: boostedTimestamp,
+                    //add field back to schema so this works
+                    boostTarget: boostedPost._id
+                })
+                boost.save().then(savedBoost => {
+                    const boost = {
+                        booster: req.user._id,
+                        timestamp: boostedTimestamp,
+                        boost: savedBoost._id
+                    }
+                    boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                        return !boost.booster.equals(req.user._id)
+                    })
+                    boostedPost.boostsV2.push(boost);
+
+                    // don't think so
+                    //boostedPost.subscribedUsers.push(req.user._id.toString());
+
+                    boostedPost.save().then(() => {
+                        //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
+                        if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
+                            notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, null, '/' + boostedPost.author.username + '/' + boostedPost.url, 'post')
+                        }
+                        res.redirect("back");
+                    })
+                })
+            })
+    })
+
+    //Responds to a post request that boosts a post.
+    //Inputs: id of the post to be boosted
+    //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
+    //user whose post was boosted.
+    app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
+        Post.findOne({
+                '_id': req.params.postid
+            }, {
+                boostsV2: 1,
+                privacy: 1,
+                author: 1,
+                url: 1,
+                timestamp: 1
+            })
+            .then((boostedPost) => {
+                var boost = boostedPost.boostsV2.find(b => {
+                    return b.booster.equals(req.user._id)
+                });
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
-                boostedPost.boostsV2.push(boost);
-                boostedPost.lastUpdated = boostedTimestamp;
-
-                // don't think so
-                //boostedPost.subscribedUsers.push(req.user._id.toString());
-
+                Post.deleteOne({
+                    _id: boost.boost
+                }, function () {
+                    console.log('delete')
+                });
                 boostedPost.save().then(() => {
-                    //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
-                    if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
-                        notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, null, '/' + boostedPost.author.username + '/' + boostedPost.url, 'post')
-                    }
                     res.redirect("back");
                 })
             })
@@ -1155,57 +1047,29 @@ function getTags(url) {
 //input: post id
 //output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
 function relocatePost(postid) {
-    Post.aggregate([{
-                "$match": {
-                    "_id": postid
+    Post.findById(postid).then(post => {
+        if (post.comments.length) {
+            Post.findOneAndUpdate({
+                _id: postid
+            }, {
+                $set: {
+                    lastUpdated: post.comments[post.comments.length - 1].timestamp
                 }
-            },
-            {
-                "$unwind": "$comments"
-            },
-            {
-                "$sort": {
-                    "comments.timestamp": -1
+            }).catch(err => {
+                console.log('could not relocate post:')
+                console.log(err)
+            })
+        } else {
+            Post.findOneAndUpdate({
+                _id: postid
+            }, {
+                $set: {
+                    lastUpdated: post.timestamp
                 }
-            },
-            {
-                "$group": {
-                    "_id": "$_id",
-                    "latest_timestamp": {
-                        "$first": "$comments"
-                    }
-                }
-            }
-        ])
-        .then(result => {
-            if (result.length) {
-                Post.findOneAndUpdate({
-                        _id: postid
-                    }, {
-                        $set: {
-                            lastUpdated: result[0].latest_timestamp.timestamp
-                        }
-                    }, {
-                        returnNewDocument: true
-                    })
-                    .then(updatedPost => {
-                        console.log(updatedPost)
-                    })
-            } else {
-                Post.findById(postid).then(post => {
-                    Post.findOneAndUpdate({
-                        _id: postid
-                    }, {
-                        $set: {
-                            lastUpdated: post.timestamp
-                        }
-                    }, {
-                        returnNewDocument: true
-                    })
-                })
-            }
-        })
-        .catch(error => {
-            console.error(error);
-        })
+            }).catch(err => {
+                console.log('could not relocate post:')
+                console.log(err)
+            })
+        }
+    })
 }

@@ -7,6 +7,18 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch Server",
+            "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Create 'boostsV2' field",
+            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "nodemon Launch Server",
             "runtimeExecutable": "nodemon",
             "program": "${workspaceFolder}/server.js",
@@ -51,6 +63,18 @@
             "request": "launch",
             "name": "Add width and height to images",
             "program": "${workspaceFolder}\\databasetransforms\\addImageSizesToDB.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Remove old image fields",
+            "program": "${workspaceFolder}\\databasetransforms\\removeOldPostFields.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Nuke posts",
+            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
         }
     ]
 }
