@@ -676,14 +676,14 @@ module.exports = function (app) {
       var matchPosts = {
         author: req.params.identifier
       }
-      if(req.isAuthenticated()){
+      if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
       }
     } else if (req.params.context == "community") {
       var matchPosts = {
         community: req.params.identifier
       }
-      if(req.isAuthenticated()){
+      if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
       }
     } else if (req.params.context == "single") {
@@ -713,7 +713,7 @@ module.exports = function (app) {
     //so this will be called when the query retrieves the posts we want
     query.then(async posts => {
       if (!posts.length) {
-          res.status(404).render('singlepost',{
+        res.status(404).render('singlepost', {
           canDisplay: false,
           loggedIn: req.isAuthenticated(),
           loggedInUserData: loggedInUserData,
@@ -867,7 +867,7 @@ module.exports = function (app) {
                     if (myFollowedUserIds.some(following => {
                         return following.equals(v.booster._id)
                       })) {
-                        followedBoosters.push(v.booster.username);
+                      followedBoosters.push(v.booster.username);
                     } else {
                       notFollowingBoosters.push(v.booster.username);
                     }
@@ -948,6 +948,10 @@ module.exports = function (app) {
             }
           });
 
+          if (req.isAuthenticated()){
+            notifier.markRead(loggedInUserData._id, displayContext._id)
+          }
+
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
@@ -961,45 +965,44 @@ module.exports = function (app) {
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
           if (typeof displayedPost !== 'undefined') {
-              console.log(displayedPost)
-              var canDisplay = true;
-              if (displayedPost.images != "") {
-                console.log("Post has an image!")
-                var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+            console.log(displayedPost)
+            var canDisplay = true;
+            if (displayedPost.images != "") {
+              console.log("Post has an image!")
+              var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+            } else {
+              if (displayedPost.author.imageEnabled) {
+                console.log("Post has no image, but author has an image!")
+                var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
               } else {
-                if (displayedPost.author.imageEnabled) {
-                  console.log("Post has no image, but author has an image!")
-                  var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
-                } else {
-                  console.log("Neither post nor author have an image!")
-                  var metadataImage = "https://sweet.sh/images/cake.svg";
-                }
+                console.log("Neither post nor author have an image!")
+                var metadataImage = "https://sweet.sh/images/cake.svg";
               }
-              metadata = {
-                title: "@" + displayedPost.author.username + " on sweet",
-                description: displayedPost.rawContent.split('\n')[0],
-                image: metadataImage,
-                url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
-              }
+            }
+            metadata = {
+              title: "@" + displayedPost.author.username + " on sweet",
+              description: displayedPost.rawContent.split('\n')[0],
+              image: metadataImage,
+              url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
+            }
 
-              var post = displayedPosts[0]; //hopefully there's only one...
-              if (post.community && req.isAuthenticated() && post.community.members.some(m => {
-                  return m.equals(req.user._id)
-                })) {
-                var isMember = true;
-              } else {
-                var isMember = false;
-              }
-          }
-          else {
-              var canDisplay = false;
-              // We add some dummy metadata for posts which error
-              metadata = {
-                title: "sweet • a social network",
-                description: "",
-                image: "https://sweet.sh/images/cake.svg",
-                url: "https://sweet.sh/"
-              }
+            var post = displayedPosts[0]; //hopefully there's only one...
+            if (post.community && req.isAuthenticated() && post.community.members.some(m => {
+                return m.equals(req.user._id)
+              })) {
+              var isMember = true;
+            } else {
+              var isMember = false;
+            }
+          } else {
+            var canDisplay = false;
+            // We add some dummy metadata for posts which error
+            metadata = {
+              title: "sweet • a social network",
+              description: "",
+              image: "https://sweet.sh/images/cake.svg",
+              url: "https://sweet.sh/"
+            }
           }
           res.render('singlepost', {
             canDisplay: canDisplay,
