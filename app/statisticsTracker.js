@@ -219,7 +219,7 @@ function tableNotUpToDate(tableFilename) {
 async function rebuildPostTable(startDate) {
     //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(postTableFileName) && !startDate) {
-        fs.unlinkSync(postTableFileName);
+        fs.unlinkSync(path.resolve(global.appRoot, postTableFileName));
     }
 
     var today = new Date(new Date().setDate(new Date().getDate() - 1));
@@ -283,7 +283,7 @@ async function rebuildPostTable(startDate) {
 async function rebuildUserTable(startDate) {
     //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(userTableFileName) && !startDate) {
-        fs.unlinkSync(userTableFileName);
+        fs.unlinkSync(path.resolve(global.appRoot, userTableFileName));
     }
 
     var today = new Date(new Date().setDate(new Date().getDate() - 1));
