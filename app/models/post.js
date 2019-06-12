@@ -92,5 +92,8 @@ postSchema.index({community:1});
 postSchema.index({lastUpdated:-1});
 postSchema.index({timestamp:-1});
 
+//honestly only used by the active users graph but what the hell
+postSchema.index({'comments.timestamp':-1});
+
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

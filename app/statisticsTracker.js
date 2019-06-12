@@ -148,8 +148,10 @@ module.exports = function (app, mongoose) {
         postTablePromise = null;
         var datapoints = await parseTableForGraph(postTableFileName, Post);
         datapoints.label = "cumulative sweet posts";
+        datapoints.color = "rgb(75, 192, 192)";
         var dxdatapoints = getPerDayRate(datapoints);
         dxdatapoints.label = "sweet posts added per day";
+        dxdatapoints.color = "rgb(192,75,192)";
         res.render('partials/timeGraph', {
             layout: false,
             chartName: "postGraph",
@@ -181,13 +183,24 @@ module.exports = function (app, mongoose) {
         userTablePromise = null;
         var datapoints = await parseTableForGraph(userTableFileName, User);
         datapoints.label = "cumulative sweet users";
+        datapoints.color = "rgb(75, 192, 192)";
         var dxdatapoints = getPerDayRate(datapoints);
         dxdatapoints.label = "sweet users added per day";
+        dxdatapoints.color = "rgb(192,75,192)";
         res.render('partials/timeGraph', {
             layout: false,
             chartName: "userGraph",
-            datapoint: [datapoints,dxdatapoints]
+            datapoint: [datapoints, dxdatapoints]
         })
+    })
+
+    var mostRecentlyUsedInterval = 3;
+    app.get("/admin/justactiveusersgraph", function (req, res) {
+        rebuildActiveUsersTable();
+    })
+
+    app.get("/admin/justactiveusersgraph/:interval", function (req, res) {
+        rebuildActiveUsersTable(req.params.interval);
     })
 
     app.get("/admin/resetgraphs/:password", function (req, res) {
@@ -199,6 +212,12 @@ module.exports = function (app, mongoose) {
             if (!userTablePromise && fs.existsSync(userTableFileName)) {
                 fs.unlinkSync(path.resolve(global.appRoot, userTableFileName));
             }
+            //
+            //
+            //todo: add active users graph file
+            //
+            //
+            //
             res.status(200).send("thy will be done");
         } else {
             res.status(200).send("no dice")
@@ -208,18 +227,19 @@ module.exports = function (app, mongoose) {
 
 var postTableFileName = "postTimeline.csv";
 var userTableFileName = "userTimeline.csv";
+var activeUserTableFileName = "activeUsersTimeline.csv";
 
 //Checks if the last line of the table file describes yesterday.
-function tableNotUpToDate(tableFilename) {
+function tableNotUpToDate(tableFilename, dateInterval = 1) {
     var lastLine = "";
     fs.readFileSync(tableFilename, 'utf-8').split('\n').forEach(function (line) {
         if (line && line != "\n") {
             lastLine = line;
         }
     });
-    var yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (lastLine.split(",")[0] == yesterday.toDateString()) {
+    var shouldBeInThere = new Date()
+    shouldBeInThere.setDate(shouldBeInThere.getDate() - dateInterval);
+    if (new Date(lastLine.split(",")[0]).getTime() < shouldBeInThere.getTime()) {
         return false;
     } else {
         //return the last line so the calling function knows what the most recent date saved is and thus what dates to update with
@@ -353,6 +373,135 @@ async function rebuildUserTable(startDate) {
 
     //make way for next update/rebuild
     userCountByDay = [];
+}
+
+//Creates a file that contains dates and the number of users that made a post or comment during the [interval] day period ending at that date. Starts from the earliest post or the
+//last line in the existing file (startDate). This function figures out how many users were active during each [interval] day interval starting at the end of the day that
+//the first post was posted on and finishing on the most recent date that's the start date plus a multiple of [interval].
+async function rebuildActiveUsersTable(startDate, interval=3) {
+    //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
+    if (fs.existsSync(activeUserTableFileName) && !startDate) {
+        fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName));
+    }
+
+    var today = new Date(new Date().setDate(new Date().getDate() - 1));
+    today.setHours(23)
+    today.setMinutes(59);
+    today.setSeconds(59);
+    today.setMilliseconds(999); //this actually sets today to the last millisecond that counts as yesterday. that's the most recent time we could possibly be interested in
+
+    //before will store the time value for the end of the first day upon which we have a post (the time before that end of the day is not used here)
+    var before;
+    if (!startDate) {
+        await Post.find({
+            timestamp: {
+                $exists: true
+            }
+        }).sort('timestamp').then(async posts => {
+            before = new Date(posts[0].timestamp.getFullYear(), posts[0].timestamp.getMonth(), posts[0].timestamp.getDate(), 23, 59, 59, 999);
+        })
+    } else {
+        //if we have it, startDate is passed in as the components of the last line (describing the most recent saved date) from the existing file.
+        before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999); //start with the day after the most recently saved one (hence the plus one)
+    }
+
+    var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000);
+
+    var activeUsersByInterval = [];
+
+    //populate activeUsersByInterval with date objects that also have a property indicating how many active users there were in the three days previous
+    for (var i = 0; i < totalDays; i += interval) {
+        var intervalStart = new Date(before);
+        var intervalEnd = new Date(before).setDate(before.getDate() + interval);
+        intervalEnd.activeUserCount = await getActiveUsersForInterval(intervalStart,intervalEnd);
+        userCountByDay.push(sequentialDate);
+        before.setDate(before.getDate() + 3);
+    }
+
+    //Write each line in CSV format (so it can be opened in excel or openoffice calc or gnumeric.)
+    //Note that the file always ends with a \n, and this needs to be true for this code to work when appending new lines to the file
+    activeUsersByInterval.forEach((date) => {
+        fs.appendFileSync(activeUserTableFileName, date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
+        fs.appendFileSync(activeUserTableFileName, "," + date.postCount);
+        fs.appendFileSync(activeUserTableFileName, "\n");
+    })
+
+    //make way for next update/rebuild
+    activeUsersByInterval = [];
+}
+
+//this is a helper function that gets the number of active users during a time interval. it's called by the above function and also passed to 
+//parseTableForGraph so that that function can figure out how many users were active right up until the present moment.
+async function getActiveUsersForInterval(intervalStart, intervalEnd) {
+    return (await Post.aggregate([{
+        //find posts that either themselves were made during this time interval or have comments that were
+        '$match': {
+            '$or': [{
+                    'timestamp': {
+                        '$gt': intervalStart
+                    }
+                }, {
+                    'timestamp': {
+                        '$lt': intervalEnd
+                    }
+                },
+                {
+                    'comments.timestamp': {
+                        '$gt': intervalStart
+                    }
+                }, {
+                    'comments.timestamp': {
+                        '$lt': intervalEnd
+                    }
+                }
+            ]
+        }
+    }, {
+        //these two stages create an "authors" array consisting of the author of the post and all of the comments, including the timestamp of their acts of authorship
+        '$addFields': {
+            'ac': [{
+                'author': '$author',
+                'timestamp': '$timestamp'
+            }]
+        }
+    }, {
+        '$project': {
+            '_id': '$_id',
+            'authors': {
+                '$concatArrays': [
+                    '$ac', '$comments'
+                ]
+            }
+        }
+    }, {
+        //make a new document for each act of authorship
+        '$unwind': {
+            'path': '$authors'
+        }
+    }, {
+        '$match': {
+            //match only the specific acts of authorship that fall within our time interval
+            'authors.timestamp': {
+                intervalStart
+            },
+            'authors.timestamp': {
+                '$lt': intervalEnd
+            }
+        }
+    }, {
+        //group the matched acts of authorship into one document per author
+        '$group': {
+            '_id': '$authors.author'
+        }
+    }, {
+        //count how many documents we end up with and put it in the "numberOfAuthors" property of the result
+        '$group': {
+            '_id': null,
+            'numberOfAuthors': {
+                '$sum': 1
+            }
+        }
+    }])).howManyAuthors;
 }
 
 //this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
