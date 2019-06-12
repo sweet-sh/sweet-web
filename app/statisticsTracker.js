@@ -12,7 +12,16 @@ module.exports = function (app, mongoose) {
         Post.countDocuments({}).then(numberOfPosts => {
             Image.countDocuments({}).then(numberOfImages => {
                 mongoose.connection.db.collection('sessions', (err, collection) => {
-                    collection.countDocuments().then(numberOfActiveSessions => {
+                    collection.find().toArray(function(err, activeSessions) {
+                        var numberOfActiveSessions = activeSessions.length;
+                        var activeusers = [];
+                        for (sesh of activeSessions){
+                            var activeuser = JSON.parse(sesh.session).passport.user;
+                            if(!activeusers.includes(activeuser)){
+                                activeusers.push(activeuser);
+                            }
+                        }
+                        var uniqueActiveSessions = activeusers.length;
                         Post.find({
                             timestamp: {
                                 $gte: new Date(new Date().setDate(new Date().getDate() - 1))
@@ -32,7 +41,8 @@ module.exports = function (app, mongoose) {
                             });
                             var funstats =
                                 "<strong>Uptime</strong> " + uptime + "<br>" +
-                                "<strong>Logged in users</strong> " + numberOfActiveSessions +
+                                "<strong>Active sessions</strong> " + numberOfActiveSessions + "<br>" +
+                                "<strong>Unique active users</strong> " + uniqueActiveSessions +
                                 "<hr>" +
                                 "<h5>Total</h5>" +
                                 "<strong>Posts</strong> " + numberOfPosts + "<br>" +
