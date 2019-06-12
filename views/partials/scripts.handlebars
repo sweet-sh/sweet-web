@@ -51,8 +51,8 @@ $(function() {
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
-      let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
-      let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
+      let latestPost = $("#checkNewPosts").find(".post").attr("data-post-id");
+      let currentlyDisplayedPost = $("#postsContainer").find(".post").attr("data-post-id");
       if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
         $("#newPostsAvailable").show();
       }
@@ -63,7 +63,7 @@ $(function() {
     {{/eq}}
   }, 60000);
 
-  $('body').on('click', '.openReplyBox', function() {
+  $('body').on('click', '.open-reply-box', function() {
     commentsContainer = $(this).closest(".comment").find(".replyContainer");
     commentsContainer.slideToggle("fast", function(){
       if (commentsContainer.is(':visible')){
@@ -71,7 +71,7 @@ $(function() {
           var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
           $("html, body").animate({ scrollTop: scroll+"px" },200);
         }
-        var post = $(this).closest('.commentContainer');
+        var post = $(this).closest('.post');
         $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
           $("#notificationsContainer").load( "/api/notification/display" );
         })
@@ -111,7 +111,7 @@ $(function() {
         var modal = $(this)
         modal.find('#boosters-list').empty()
         if (users.followedBoosters.includes("you")){
-            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">you</li>');
+            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">You (@{{loggedInUserData.username}})</li>');
         }
         users.followedBoosters.forEach(function(user) {
             if (user === "you") {
@@ -137,17 +137,18 @@ $(function() {
   // })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
-    var abbContent = $(this).closest(".post-content").find(".abbreviated-content");
+    var abbrContent = $(this).closest(".post").find(".abbreviated-content");
+    console.log(abbrContent)
     if (state == "contracted") {
-      var h = abbContent.css('height','100%').height();
-      abbContent.css('height','0');
-      abbContent.animate({height:h},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
+      var h = abbrContent.css('height','100%').height();
+      abbrContent.css('height','0');
+      abbrContent.animate({height:h},200);
+      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","expanded");
     }
     else {
-      abbContent.animate({height:"0"},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
+      abbrContent.animate({height:"0"},200);
+      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","contracted");
     }
     var text = $(this).text();
@@ -157,16 +158,16 @@ $(function() {
   $('body').on('click', '.replyToComment', function() {
     // pasteHtmlAtCaret($(this).closest(".replyContainer").children("#replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
     var commentContainer = $(this).closest('.individualReplyContainer');
-    var postID = commentContainer.closest('.commentContainer').attr("data-post-id");
+    var postID = commentContainer.closest('.post').attr("data-post-id");
     var commentID = commentContainer.attr("data-comment-id");
     commentContainer.append('<div class="childReplyForm contentForm"><div class="form-row"><textarea class="form-control form-control-sm comment-textarea editable-text editable-comment-content" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a reply." maxlength="9000"></textarea></div><div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none"><button type="button" class="add-emoji">🍬</button><button type="button" class="add-emoji">🍭</button><button type="button" class="add-emoji">🍡</button><button type="button" class="add-emoji">🍩</button><button type="button" class="add-emoji">🍪</button><button type="button" class="add-emoji">🍫</button><button type="button" class="add-emoji">🎂</button<button type="button" class="add-emoji">🍯</button><button type="button" class="add-emoji">🍎</button><button type="button" class="add-emoji">🍑</button><button type="button" class="add-emoji">🍌</button><button type="button" class="add-emoji">🍓</button><button type="button" class="add-emoji">🍇</button><button type="button" class="add-emoji">🍉</button><button type="button" class="add-emoji">🐝</button><button type="button" class="add-emoji">😊</button><button type="button" class="add-emoji">🙃</button><button type="button" class="add-emoji">😍</button><button type="button" class="add-emoji">😂</button><button type="button" class="add-emoji">😭</button><button type="button" class="add-emoji">😬</button><button type="button" class="add-emoji">😆</button><button type="button" class="add-emoji">😩</button><button type="button" class="add-emoji">😩</button><button type="button" class="add-emoji">😱</button><button type="button" class="add-emoji">😒</button><button type="button" class="add-emoji">🖖</button><button type="button" class="add-emoji">🙌</button><button type="button" class="add-emoji">👏</button><button type="button" class="add-emoji">👌</button><button type="button" class="add-emoji">💪</button><button type="button" class="add-emoji">🤦</button><button type="button" class="add-emoji">🌱</button><button type="button" class="add-emoji">🌞</button><button type="button" class="add-emoji">🌝</button><button type="button" class="add-emoji">❤️</button><button type="button" class="add-emoji">💕</button><button type="button" class="add-emoji">💖</button><button type="button" class="add-emoji">🔥</button><button type="button" class="add-emoji">🎉</button><button type="button" class="add-emoji">💯</button><button type="button" class="add-emoji">🏳️‍🌈</button></div><div id="image-preview-holder" class="form-row post-controls image-preview-holder"><input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose File" name="postImage" multiple></div><div id="replyControlsRow" class="form-row mt-2 post-controls"><div class="leftSideControls"><button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button><button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button></div><div class="rightSideControls"><button type="submit" class="btn btn-primary btn-fade postReply childReply" data-comment-id="' + commentID + '" data-post-id="' + postID + '">Reply <i class="fas fa-chevron-right"></i></button></div></div></div>');
     reapplyEditor();
   })
-  $('body').on('click', '.deletePost', function() {
+  $('body').on('click', '.delete-post', function() {
     var element = $(this);
     bootbox.confirm("Are you sure you want to delete this post?", function(result){
       if (result == true) {
-        let divToDelete = element.closest(".commentContainer");
+        let divToDelete = element.closest(".post");
         $.post("/deletepost/"+element.attr("id"), function(data) {
           divToDelete.fadeOut(function() {
             divToDelete.remove();
@@ -185,7 +186,7 @@ $(function() {
             divToDelete.remove();
           });
         });
-        let counterToChange = element.closest(".commentContainer").find(".openReplyBox").find(".comments-number")[0];
+        let counterToChange = element.closest(".post").find(".open-reply-box").find(".comments-number")[0];
         let newCommentCount = parseInt(counterToChange.textContent)-1;
         if(newCommentCount!=0){
           counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount+1), newCommentCount);
@@ -249,7 +250,7 @@ $(function() {
           html+='</div></div>';
           $(html).hide().appendTo(commentsContainer).fadeIn();
           commentButton.prop('disabled', false);
-          let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox").find('.comments-number')[0];
+          let counterToChange = commentButton.closest(".post").find(".open-reply-box").find('.comments-number')[0];
           if(counterToChange.textContent === ""){
             counterToChange.innerHTML = "1";
           } else {
@@ -279,22 +280,22 @@ $(function() {
       window.location.href = link;
     });
   })
-  $('body').on('click', '.mutePost', function(e) {
+  $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You are currently receiving notifications when someone comments on this post. Would you like to mute this post to stop receiving these notifications? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('mutePost').addClass('unmutePost').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
         })
       }
     })
   })
-  $('body').on('click', '.unmutePost', function(e) {
+  $('body').on('click', '.subscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You have muted this post. Would you like to unmute it and start receiving notifications when someone comments?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('unmutePost').addClass('mutePost').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
         })
       }
     })

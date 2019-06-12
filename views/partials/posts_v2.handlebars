@@ -3,29 +3,28 @@
 <article class="post" data-post-id="{{this._id}}">
     <aside class="notifications">
         {{#if this.recentlyCommented}}
-            {{#isnt this.lastCommentAuthor.username loggedInUserData.username}}
+            {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
                 <div class="recently-commented-notification">
-                    <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{this.lastCommentAuthor.username}}">@{{this.lastCommentAuthor.username}}</a></strong>
+                    <i class="far fa-comment"></i> Recently commented on by <a href="/{{this.lastCommentAuthor.username}}">@{{this.lastCommentAuthor.username}}</a>
                 </div>
             {{/isnt}}
         {{/if}}
         {{#if headerBoosters}}
             <div class="boosters-notification">
-                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this "you"}}{{../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<a href="/{{#eq this "you"}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a>{{/each}}{{#if otherBoosters}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/gt}}
             </div>
         {{else}}
             {{#if otherBoosters}}
                 <div class="boosters-notification">
-                    <i class="fas fa-retweet"></i> Boosted by some {{plural otherBoosters 'people/person'}}... <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+                    <i class="fas fa-retweet"></i> Boosted by {{plural otherBoosters 'some people/someone'}} you don't follow <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
                 </div>
             {{/if}}
         {{/if}}
         {{#isnt context "community"}}
-            {{#contains loggedInUserData.communities this.community._id}}
+            {{#contains ../loggedInUserData.communities this.community._id}}
                 <div class="community-notification">
                     <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
-                    <span>Posted in <strong><a href="/community/{{this.community.slug}}">{{this.community.name}}</a></strong>
-                    </span>
+                    <span>Posted in <a href="/community/{{this.community.slug}}">{{this.community.name}}</a></span>
                 </div>
             {{/contains}}
         {{/isnt}}
@@ -40,11 +39,11 @@
             <h2 class="author-name">
                 {{#if this.author.displayName}}
                     <span class="author-display-name">
-                        <a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a>
+                        <a href="/{{this.author.username}}">{{this.author.displayName}}</a>
                     </span>
                 {{/if}}
                 <span class="author-username">
-                    {{#unless this.author.displayName}}<strong>{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</strong>{{/unless}}
+                    {{#unless this.author.displayName}}<span style="font-weight:500">{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</span>{{/unless}}
                 </span>
                 {{#contains ../flaggedUsers this.author.email}}
                     <i class="fas fa-exclamation-triangle user-flag"></i>
@@ -61,15 +60,86 @@
             </aside>
         </div>
     </header>
-    <section class="content">
-
+    <section class="content{{#if this.contentWarnings}} content-warning-post{{/if}}">
+        {{#if this.contentWarnings}}
+            <aside class="content-warning">
+                {{this.contentWarnings}}
+            </aside>
+            <div class="abbreviated-content content-warning-content" style="height:0">
+        {{/if}}
+        {{{this.parsedContent}}}
+        {{#if this.contentWarnings}}
+            </div>
+            <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
+        {{/if}}
+        </div>
+        {{#if this.images}}
+            {{> imagegallery }}
+        {{/if}}
     </section>
     <footer class="toolbar">
-
+        <div class="general-tools">
+            {{#unless this.commentsDisabled}}
+                {{#if ../loggedIn}}
+                    <button type="button" class="button post-toolbar-button open-reply-box">
+                    <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                    </button>
+                {{else}}
+                    {{#if this.numberOfComments}}
+                        <button type="button" class="button post-toolbar-button open-reply-box">
+                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                        </button>
+                    {{/if}}
+                {{/if}}
+            {{/unless}}
+            {{#eq this.privacy "public"}}
+                {{#if ../loggedIn}}
+                    <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
+                        <button type="submit" class="button post-toolbar-button boost-post">
+                            {{#if youBoosted}}
+                                <span class="fa-layers fa-fw">
+                                    <i class="fas fa-retweet"></i>
+                                    <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+                                </span>
+                            {{else}}
+                                <i class="fas fa-retweet"></i>
+                            {{/if}}
+                        </button>
+                    </form>
+                {{/if}}
+            {{/eq}}
+            <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
+              <i class="fas fa-link"></i>
+            </a>
+        </div>
+        <div id="authorTools">
+            {{#contains this.subscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
+                    <i class="far fa-bell"></i>
+                </button>
+            {{/contains}}
+            {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
+                    <i class="far fa-bell-slash"></i>
+                </button>
+            {{/contains}}
+            {{#if isYourPost}}
+                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            {{/if}}
+        </div>
+    </div>
     </footer>
-    <section class="comments">
-
-    </section>
+    {{#unless this.commentsDisabled}}
+        <section class="comments">
+            {{#if this.comments}}
+            WHOO
+                {{> comments }}
+            {{/if}}
+            {{> newreplyform }}
+        </section>
+    {{/unless}}
 </article>
 {{/if}}
 {{/each}}

@@ -32,7 +32,7 @@ module.exports = {
     if (!cwsEnabled){
       let contentWordCount = wordCount(parsedContent);
       if (contentWordCount > 160){
-        parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><a class="show-more" data-state="contracted">Show more</a>';
+        parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>';
       }
     }
 

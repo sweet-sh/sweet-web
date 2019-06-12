@@ -1,0 +1,8 @@
+<li>
+    {{{this.parsedContent}}}
+    {{#if this.replies}}
+        {{#each this.replies}}
+            {{> comment}}
+        {{/each}}
+    {{/if}}
+</li>

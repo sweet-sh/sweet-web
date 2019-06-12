@@ -745,17 +745,23 @@ module.exports = function (app) {
                 }
               }
             } else if (post.type == 'boost') {
-              if (sortMethod == "-lastUpdated") {
-                if (post.boostTarget.lastUpdated.getTime() > post.timestamp.getTime()) {
-                  isThereNewerInstance = true;
-                }
+              if (post.boostTarget != null) {
+                  if (sortMethod == "-lastUpdated") {
+                    if (post.boostTarget.lastUpdated.getTime() > post.timestamp.getTime()) {
+                      isThereNewerInstance = true;
+                    }
+                  }
+                  for (boost of post.boostTarget.boostsV2) {
+                    if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => {
+                        return boost.booster.equals(f)
+                      })) {
+                      isThereNewerInstance = true;
+                    }
+                  }
               }
-              for (boost of post.boostTarget.boostsV2) {
-                if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => {
-                    return boost.booster.equals(f)
-                  })) {
+              else {
+                  console.log("Error fetching boostTarget of boost")
                   isThereNewerInstance = true;
-                }
               }
             }
 
