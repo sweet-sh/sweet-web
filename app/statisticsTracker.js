@@ -12,12 +12,12 @@ module.exports = function (app, mongoose) {
         Post.countDocuments({}).then(numberOfPosts => {
             Image.countDocuments({}).then(numberOfImages => {
                 mongoose.connection.db.collection('sessions', (err, collection) => {
-                    collection.find().toArray(function(err, activeSessions) {
+                    collection.find().toArray(function (err, activeSessions) {
                         var numberOfActiveSessions = activeSessions.length;
                         var activeusers = [];
-                        for (sesh of activeSessions){
+                        for (sesh of activeSessions) {
                             var activeuser = JSON.parse(sesh.session).passport.user;
-                            if(!activeusers.includes(activeuser)){
+                            if (!activeusers.includes(activeuser)) {
                                 activeusers.push(activeuser);
                             }
                         }
@@ -147,11 +147,13 @@ module.exports = function (app, mongoose) {
         await postTablePromise;
         postTablePromise = null;
         var datapoints = await parseTableForGraph(postTableFileName, Post);
+        datapoints.label = "cumulative sweet posts";
+        var dxdatapoints = getPerDayRate(datapoints);
+        dxdatapoints.label = "sweet posts added per day";
         res.render('partials/timeGraph', {
             layout: false,
-            label: "cumulative sweet posts",
             chartName: "postGraph",
-            datapoint: datapoints
+            datapoint: [datapoints, dxdatapoints]
         })
     })
 
@@ -178,11 +180,13 @@ module.exports = function (app, mongoose) {
         await userTablePromise;
         userTablePromise = null;
         var datapoints = await parseTableForGraph(userTableFileName, User);
+        datapoints.label = "cumulative sweet users";
+        var dxdatapoints = getPerDayRate(datapoints);
+        dxdatapoints.label = "sweet users added per day";
         res.render('partials/timeGraph', {
             layout: false,
-            label: "cumulative sweet users",
             chartName: "userGraph",
-            datapoint: datapoints
+            datapoint: [datapoints,dxdatapoints]
         })
     })
 
@@ -387,4 +391,28 @@ async function parseTableForGraph(filename, collection) {
         });
     })
     return jsonVersion;
+}
+
+//this takes the datpoints type thing above and takes the derivative by subtracting the last date
+function getPerDayRate(datapoints) {
+    var newpoints = [];
+    var previousPoint = undefined;
+    for (const point of datapoints) {
+        var y = point.y;
+        if (previousPoint) {
+            y -= previousPoint;
+        }
+        newpoints.push({
+            label: point.label,
+            year: point.year,
+            month: point.month,
+            date: point.date,
+            hour: point.hour,
+            minute: point.minute,
+            second: point.second,
+            y: y
+        });
+        previousPoint = point.y;
+    }
+    return newpoints;
 }

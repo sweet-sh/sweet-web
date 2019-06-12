@@ -4,19 +4,21 @@
       var myChart = new Chart(ctx, {
           type: 'line',
           data: {
-            datasets: [{
+            datasets: [
+              {{#each datapoint}}
+              {
               fill:false,
               borderColor: "rgb(75, 192, 192)",
               lineTension: 0,
               label: "{{this.label}}",
               data: [
-                {{#each datapoint}}
+                {{#each this}}
                   {
                     x: new Date({{this.year}}, {{this.month}}, {{this.date}},{{this.hour}},{{this.minute}},{{this.second}}),
                     y: {{this.y}}
                   }{{#unless @ last}},{{/unless}}
                   {{/each}}
-              ]}
+              ]}{{#unless @last}},{{/unless}}{{/each}}
             ]},
             options: {
               scales: {
