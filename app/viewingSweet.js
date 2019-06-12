@@ -1013,7 +1013,7 @@ module.exports = function (app) {
             activePage: 'singlepost'
           })
         } else {
-          res.render('partials/posts', {
+          res.render('partials/posts_v2', {
             layout: false,
             loggedIn: req.isAuthenticated(),
             isMuted: isMuted,

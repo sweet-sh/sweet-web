@@ -28,6 +28,11 @@ a {
   color: #338fc2;
 }
 
+a:hover {
+    color: #ce1717;
+    text-decoration: underline;
+}
+
 blockquote {
   border-left: 2px solid #bbb;
   color: #777;
@@ -239,7 +244,7 @@ hr {
   border: 1px solid #dee2e6;
 }
 .loader-ellips__dot {
-  background: #ababab; /* change color here */
+  background: #ababab;
 }
 .page-load-status > * {
   color: #ababab;
@@ -272,7 +277,8 @@ hr {
     border: 1px solid #dee2e6;
 }
 
-p{
+
+p {
   margin-bottom: 0.5em;
 }
 
@@ -329,7 +335,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Ubuntu', serif;
 }
 
-.post-action-button {
+/* .post-action-button {
   width: 60px;
   text-align: left;
   padding-left: 1px;
@@ -343,52 +349,6 @@ h1, h2, h3, h4, h5, h6 {
 #authorTools > button {
   text-align: right;
   padding-right: 0px;
-}
-
-/* .fullBoostList {
-  margin:3px;
-  text-decoration:underline;
-  cursor: pointer;
-  position:relative;
-}
-
-.fullBoostList::after{
-  transition : all .2s linear;
-  background : rgba(0,0,0,0);
-  color      : rgba(0,0,0,0);
-  content: attr(data-content);
-  white-space: pre-line;
-  position: absolute;
-  left: 0;
-  top: 24px;
-  min-width: 200px;
-  border: 1px rgba(0,0,0,0) solid;
-  border-radius: 3px;
-  padding: 6px;
-  z-index: 1;
-}
-
-.fullBoostListClicked {
-  margin:3px;
-  text-decoration:underline;
-  cursor: pointer;
-  position:relative;
-}
-
-.fullBoostListClicked::after{
-  transition : all .2s linear;
-  content: attr(data-content);
-  white-space: pre-line;
-  position: absolute;
-  left: 0;
-  top: 24px;
-  min-width: 200px;
-  border: 1px #aaaaaa solid;
-  border-radius: 3px;
-  background-color: #ebebeb;
-  padding: 6px;
-  color: #000000;
-  z-index: 1;
 } */
 
 .fullBoostList {
@@ -618,29 +578,6 @@ hr {
   text-align: center;
 }
 
-/* .userForm .form-control {
-    width: 100%;
-    height: 2.5em;
-    border-radius: 5px;
-    border: 1px solid #cbcbcb;
-    margin-bottom: 1em;
-    padding: 5px 10px;
-    box-sizing: border-box;
-} */
-/*
-.userForm button {
-    width: 100%;
-    border: 0;
-    background: #175cf4;
-    padding: 5px;
-    height: 2.5em;
-    border-radius: 5px;
-    color: white;
-    font-weight: lighter;
-    text-transform: uppercase;
-} */
-
-
 #userHeader {
   display: flex;
   justify-content: space-between;
@@ -696,14 +633,10 @@ hr {
   padding: 0;
 }
 
-.commentContainer {
-	/* background: #fafafa; */
-	/* border-radius: 5px; */
+/* .commentContainer {
 	padding: 15px;
-	/* margin-bottom: 10px; */
-	/*border moved to colors section*/
   padding-bottom: 0px;
-}
+} */
 
 
 
@@ -724,7 +657,7 @@ hr {
   padding-bottom: 0px;
 }
 
-.commentContent {
+/* .commentContent {
     overflow: hidden;
     word-wrap: break-word;
 }
@@ -767,7 +700,7 @@ hr {
 .comment-content {
   margin: 0.5rem 0 1rem 0;
   position: relative;
-}
+} */
 
 .user-list {
     padding: 0;
@@ -907,14 +840,13 @@ hr {
     right: 8px;
 }
 
-.postAuthorImage {
+/* .postAuthorImage {
   width: 46px;
   height: 46px;
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
-  flex-shrink: 0; /* Fixing images squishing on Android Chrome, hopefully? */
-}
+} */
 
 @media (min-width: 576px) {
   #notificationsContainer {
@@ -1051,7 +983,6 @@ hr {
   background: #fff;
 }
 
-
 /* Don't let emoji become italicised or bold! */
 .emoji {
   font-style: normal !important;
@@ -1062,7 +993,7 @@ hr {
     font-weight: 400;
 }
 
-.content-warning {
+/* .content-warning {
   font-weight: 500;
 }
 
@@ -1100,27 +1031,9 @@ hr {
 
 .content-warning-show-more {
   margin: 0 auto 0.5rem auto;
-}
-/*
-.post-meta {
-  margin-left: 3px;
-  justify-content: space-between;
-  display: flex;
-  flex-direction: column;
-  overflow: none;
-  flex: 1;
-}
-
-.post-meta>p {
-  margin: 0;
-  height: 23px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 90%;
 } */
 
-.comment-header,
+/* .comment-header,
 .post-header {
   display: flex;
   flex-direction: column;
@@ -1156,8 +1069,8 @@ hr {
   padding: 0;
   flex: 1;
   text-align: right;
-}
-.author-username {
+} */
+/* .author-username {
   white-space: nowrap;
 }
 .author-display-name {
@@ -1165,10 +1078,10 @@ hr {
   overflow: hidden;
   white-space: nowrap;
   margin-right: 5px;
-}
-.user-flag {
+} */
+/* .user-flag {
   padding: 0 5px;
-}
+} */
 .post-header .user-flag {
   width: 1.5rem;
   align-self: center;
@@ -1455,10 +1368,6 @@ background-size: 5.66px 5.66px;
   padding-bottom: .25rem;
 }
 
-#commentContent {
-  font-size: 16px;
-}
-
 .booster:not(:last-of-type):after {
     content: ', ';
 }
@@ -1584,4 +1493,92 @@ background-size: 5.66px 5.66px;
     margin-bottom: 1em;
     border-bottom: 1px solid #ddd;
     padding-bottom: 1em;
+}
+
+
+/* NEW POST STYLES */
+
+article.post {
+    padding: 1rem;
+    border-bottom: 1px solid #dfdfdf;
+}
+article.post > .notifications {
+    margin-bottom: 1rem;
+}
+article.post > .notifications div {
+    color: grey;
+}
+article.post > .notifications div a,
+article.post > .notifications div a:active,
+article.post > .notifications div a:visited {
+    color: grey;
+}
+article.post > .notifications div a:hover {
+    color: #ce1717;
+}
+article.post > .notifications div.recently-commented-notification {
+    color: green;
+}
+article.post > .notifications div.community-notification {
+    display: flex;
+    align-items: center;
+}
+article.post > .notifications div.community-notification img {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+article.post > header {
+    display: flex;
+}
+article.post > header img.author-image {
+    width: 46px;
+    height: 46px;
+    border-radius: 5px;
+}
+article.post > header .post-header-left {
+    height: 46px;
+    width: 46px;
+    margin-right: 5px;
+}
+article.post > header .post-header-right {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+}
+article.post > header .post-header-right > * {
+    height: 23px;
+}
+article.post > header h2.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+}
+article.post > header .author-display-name {
+    font-weight: 500;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-right: 5px;
+}
+article.post > header .author-username {
+    color: grey;
+}
+article.post > header .author-username:first-child {
+    color: black;
+    font-weight: 500;
+}
+article.post > header .metadata {
+    color: grey;
+    font-size: 0.85rem;
+}
+
+.user-flag {
+    color: red;
+    margin-left: 5px;
 }

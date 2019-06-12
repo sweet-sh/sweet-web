@@ -1,0 +1,75 @@
+{{#each posts}}
+{{#if canDisplay}}
+<article class="post" data-post-id="{{this._id}}">
+    <aside class="notifications">
+        {{#if this.recentlyCommented}}
+            {{#isnt this.lastCommentAuthor.username loggedInUserData.username}}
+                <div class="recently-commented-notification">
+                    <i class="far fa-comment"></i> Recently commented on by <strong><a href="/{{this.lastCommentAuthor.username}}">@{{this.lastCommentAuthor.username}}</a></strong>
+                </div>
+            {{/isnt}}
+        {{/if}}
+        {{#if headerBoosters}}
+            <div class="boosters-notification">
+                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<strong><a href="/{{#eq this "you"}}{{../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a></strong>{{/each}}{{#if otherBoosters}} and others <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>Show all</button>{{/gt}}
+            </div>
+        {{else}}
+            {{#if otherBoosters}}
+                <div class="boosters-notification">
+                    <i class="fas fa-retweet"></i> Boosted by some {{plural otherBoosters 'people/person'}}... <button type="button" class="show-boosters-list btn btn-secondary btn-sm" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+                </div>
+            {{/if}}
+        {{/if}}
+        {{#isnt context "community"}}
+            {{#contains loggedInUserData.communities this.community._id}}
+                <div class="community-notification">
+                    <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
+                    <span>Posted in <strong><a href="/community/{{this.community.slug}}">{{this.community.name}}</a></strong>
+                    </span>
+                </div>
+            {{/contains}}
+        {{/isnt}}
+    </aside>
+    <header>
+        <div class="post-header-left">
+            <a href="/{{this.author.username}}">
+                <img class="author-image" alt="Profile image of @{{this.author.username}}" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+            </a>
+        </div>
+        <div class="post-header-right">
+            <h2 class="author-name">
+                {{#if this.author.displayName}}
+                    <span class="author-display-name">
+                        <a class="authorLink" href="/{{this.author.username}}">{{this.author.displayName}}</a>
+                    </span>
+                {{/if}}
+                <span class="author-username">
+                    {{#unless this.author.displayName}}<strong>{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</strong>{{/unless}}
+                </span>
+                {{#contains ../flaggedUsers this.author.email}}
+                    <i class="fas fa-exclamation-triangle user-flag"></i>
+                {{/contains}}
+            </h2>
+            <aside class="metadata">
+                <span class="post-timestamp">
+                    {{this.parsedTimestamp}}
+                </span>
+                &nbsp;&middot;&nbsp;
+                <span class="post-visibility">
+                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i>
+                </span>
+            </aside>
+        </div>
+    </header>
+    <section class="content">
+
+    </section>
+    <footer class="toolbar">
+
+    </footer>
+    <section class="comments">
+
+    </section>
+</article>
+{{/if}}
+{{/each}}
