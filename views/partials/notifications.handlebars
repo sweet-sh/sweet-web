@@ -18,11 +18,11 @@
 
   <script type="text/javascript">
     if (notificationsCount > 0) {
-      $(".notifications-count").html("&bull;");
+      $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
       document.title = '(⚐) sweet';
     }
     else {
-      $(".notifications-count").text('');
+      $(".notifications-count").html('');
       document.title = 'sweet';
     }
   </script>
