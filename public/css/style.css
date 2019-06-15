@@ -1609,6 +1609,23 @@ article.comment {
 article.comment:last-child {
     margin-bottom: 1rem;
 }
+article.comment.recent-comment-content {
+    border-radius: 6px;
+    transition: background 0.5s;
+}
+
+article.comment.recent-comment-content.flash {
+    animation: flash 2s ease-out;
+    animation-iteration-count: 1;
+}
+
+@keyframes flash {
+    0% { background-color: transparent; }
+    50% { background-color: #fcfaea; }
+    100% { background-color: transparent; }
+}
+
+
 article.comment > header {
     display: flex;
 }

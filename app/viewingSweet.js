@@ -960,6 +960,8 @@ module.exports = function (app) {
           latestTimestamp = 0;
           lastCommentAuthor = "";
           recentlyCommented = false;
+          sixHoursAgo = moment(new Date()).subtract(6, 'hours');
+          threeHoursAgo = moment(new Date()).subtract(3, 'hours');
             function parseComments(element, level) {
                 if (!level) level = 1;
                 element.forEach(async function (comment) {
@@ -973,16 +975,20 @@ module.exports = function (app) {
                         }
                         comment.author = await getUser(comment.author)
                     }
-                    if (moment(comment.timestamp).isSame(today, 'd')) {
-                        comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                    } else if (moment(comment.timestamp).isSame(thisyear, 'y')) {
-                        comment.parsedTimestamp = moment(comment.timestamp).format('D MMM');
+                    momentifiedTimestamp = moment(comment.timestamp);
+                    if (momentifiedTimestamp.isSame(today, 'd')) {
+                        comment.parsedTimestamp = momentifiedTimestamp.fromNow();
+                    } else if (momentifiedTimestamp.isSame(thisyear, 'y')) {
+                        comment.parsedTimestamp = momentifiedTimestamp.format('D MMM');
                     } else {
-                        comment.parsedTimestamp = moment(comment.timestamp).format('D MMM YYYY');
+                        comment.parsedTimestamp = momentifiedTimestamp.format('D MMM YYYY');
                     }
                     if (comment.timestamp > latestTimestamp) {
                         latestTimestamp = comment.timestamp;
                         displayedPost.lastCommentAuthor = comment.author;
+                    }
+                    if (momentifiedTimestamp.isAfter(threeHoursAgo)) {
+                        comment.isRecent = true;
                     }
                     for (var i = 0; i < comment.images.length; i++) {
                         comment.images[i] = '/api/image/display/' + comment.images[i];
@@ -999,7 +1005,7 @@ module.exports = function (app) {
                         var runOnReplies = parseComments(comment.replies, level+1)
                     }
                 });
-                if (moment(latestTimestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+                if (moment(latestTimestamp).isAfter(sixHoursAgo)) {
                     displayedPost.recentlyCommented = true;
                 } else {
                     displayedPost.recentlyCommented = false;
