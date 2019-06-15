@@ -1,6 +1,8 @@
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
+var mongoose = require('mongoose');
+
 
 sanitizeHtmlOptions = {
   allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -611,7 +613,7 @@ module.exports = function (app) {
           });
       }
 
-      var myCommunitites = () => {
+      var myCommunities = () => {
         myCommunities = [];
         myMutedUsers = [];
         return Community.find({
@@ -649,7 +651,7 @@ module.exports = function (app) {
         }
       }
 
-      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunitites).then(isMuted);
+      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
 
       myFollowedUserEmails.push(loggedInUserData.email)
       usersWhoTrustMeEmails.push(loggedInUserData.email)
@@ -691,6 +693,10 @@ module.exports = function (app) {
       }
       if(req.isAuthenticated()){
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      //   console.log(myCommunities)
+      //   var isInCommunity = myCommunities.includes(mongoose.Types.ObjectId(req.params.identifier))
+      // } else {
+      //   var isInCommunity = false;
       }
     } else if (req.params.context == "tag") {
         function getTag() {
@@ -728,6 +734,7 @@ module.exports = function (app) {
       //these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
       .populate('community')
+      // If there's a better way to populate a nested tree lmk because this is... dumb
       .populate('comments.author')
       .populate('comments.replies.author')
       .populate('comments.replies.replies.author')
@@ -739,7 +746,7 @@ module.exports = function (app) {
     //so this will be called when the query retrieves the posts we want
     query.then(async posts => {
       if (!posts.length) {
-          res.status(404).render('singlepost',{
+          res.status(404).render('singlepost',{ // The 404 is required so InfiniteScroll.js stops loading the feed
           canDisplay: false,
           loggedIn: req.isAuthenticated(),
           loggedInUserData: loggedInUserData,
@@ -749,6 +756,8 @@ module.exports = function (app) {
         })
         return "no posts";
       } else {
+
+          console.log(posts)
 
         //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
         displayedPosts = [];
@@ -882,12 +891,12 @@ module.exports = function (app) {
               imageUrlsArray.push('/images/uploads/' + image)
             })
           }
-
+          // Used to check if you can delete a post
+          var isYourPost = displayContext.author._id.equals(req.user._id);
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
             var followedBoosters = [];
             var notFollowingBoosters = [];
-            var isYourPost = displayContext.author._id.equals(req.user._id);
             var youBoosted = false;
             if (displayContext.boostsV2.length > 0) {
               displayContext.boostsV2.forEach((v, i, a) => {
@@ -1017,6 +1026,33 @@ module.exports = function (app) {
         }
       }
     }).then((result) => {
+        function canReply() {
+            if (req.isAuthenticated()) {
+                // These contexts already hide posts from communites you're not a member of
+                if (req.params.context == "home" || req.params.context == "tag" || req.params.context == "user") {
+                    return true;
+                }
+                if (req.params.context == "community") {
+                    if (myCommunities.some(m => {
+                        return m.equals(req.params.identifier)
+                      })) {
+                      return true;
+                    }
+                } else {
+                    if (req.params.context == "single") {
+                        console.log(displayedPosts[0].type)
+                        if (displayedPosts[0].type == "community" && !isMember) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+                }
+            }
+            else {
+                return false;
+            }
+        }
       if (result != "no posts") {
         metadata = {};
         if (req.params.context == "single") {
@@ -1044,7 +1080,6 @@ module.exports = function (app) {
                 image: metadataImage,
                 url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
               }
-
               var post = displayedPosts[0]; //hopefully there's only one...
               if (post.community && req.isAuthenticated() && post.community.members.some(m => {
                   return m.equals(req.user._id)
@@ -1073,6 +1108,7 @@ module.exports = function (app) {
             metadata: metadata,
             isMuted: isMuted,
             isMember: isMember,
+            canReply: canReply(),
             activePage: 'singlepost'
           })
         } else {
@@ -1084,7 +1120,8 @@ module.exports = function (app) {
             posts: displayedPosts,
             flaggedUsers: flagged,
             context: req.params.context,
-            metadata: metadata
+            metadata: metadata,
+            canReply: canReply(),
           });
         }
       }

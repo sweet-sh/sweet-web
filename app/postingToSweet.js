@@ -378,7 +378,7 @@ module.exports = function (app) {
                             })
                     });
                 }
-
+                var newPostId = post._id;
                 post.save()
                     .then(() => {
                         parsedResult.tags.forEach((tag) => {

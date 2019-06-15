@@ -20,7 +20,7 @@
                 </div>
             {{/if}}
         {{/if}}
-        {{#isnt context "community"}}
+        {{#isnt ../context "community"}}
             {{#contains ../loggedInUserData.communities this.community._id}}
                 <div class="community-notification">
                     <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
@@ -138,7 +138,9 @@
                     {{/each}}
                 {{/if}}
             </div>
-            {{> newreplyform }}
+            {{#if ../canReply}}
+                {{> newreplyform }}
+            {{/if}}
         </section>
     {{/unless}}
 </article>

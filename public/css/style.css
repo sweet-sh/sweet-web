@@ -1598,7 +1598,10 @@ article.post > .toolbar > div:last-child * {
 
 section.comments {
     font-size: 0.9rem;
-    /* display: none; */
+    display: none;
+}
+section.comments:last-child {
+    padding-bottom: 0.25rem; /* This looks like a CSS bug */
 }
 article.comment {
     margin-top: 1rem;

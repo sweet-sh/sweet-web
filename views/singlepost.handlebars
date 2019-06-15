@@ -26,7 +26,7 @@
 
 <script>
 $(function() {
-  $(".replyContainer").show();
+  $(".comments").show();
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
     tribute = new Tribute({

@@ -37,9 +37,11 @@
     </section>
     <footer class="toolbar">
         {{#if this.canReply }}
-            <button type="button" class="button comment-toolbar-button reply-to-comment">
-                Reply
-            </button>
+            {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}
+                <button type="button" class="button comment-toolbar-button reply-to-comment">
+                    Reply
+                </button>
+            {{/if}}
         {{/if}}
         {{#if this.canDelete }}
             <button type="button" class="button comment-toolbar-button delete-comment" id="{{this._id}}" data-comment-id="{{this._id}}">
