@@ -996,7 +996,6 @@ module.exports = function (app) {
                         comment.parsedTimestamp = moment(comment.timestamp).format('D MMM YYYY');
                     }
                     if (comment.timestamp > latestTimestamp) {
-                        console.log(comment.timestamp, "is newer than", latestTimestamp)
                         latestTimestamp = comment.timestamp;
                         displayedPost.lastCommentAuthor = comment.author;
                     }
