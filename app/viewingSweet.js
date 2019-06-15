@@ -707,6 +707,10 @@ module.exports = function (app) {
       .populate('author', '-password')
       .populate('community')
       .populate('comments.author')
+      .populate('comments.replies.author')
+      .populate('comments.replies.replies.author')
+      .populate('comments.replies.replies.replies.author')
+      .populate('comments.replies.replies.replies.replies.author')
       .populate('boostTarget')
       .populate('boostsV2.booster')
 
@@ -942,17 +946,49 @@ module.exports = function (app) {
             displayedPost.youBoosted = youBoosted
           }
 
+          function findNested(array, id) {
+              var foundElement = false;
+              array.forEach((element) => {
+                  if (element._id && element._id.equals(id)){
+                      element.replies.push(comment);
+                      foundElement = true;
+                  }
+                  else {
+                      console.log("Not ",element._id)
+                      if (element.replies) {
+                          var found = findNested(element.replies, id)
+                          if (found) {
+                              foundElement = true;
+                              return found;
+                          }
+                      }
+                  }
+              })
+              return foundElement;
+          }
+
           //get timestamps and full image urls for each comment
-          displayedPost.comments.forEach(function (comment) {
-            comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-            for (var i = 0; i < comment.images.length; i++) {
-              comment.images[i] = '/api/image/display/' + comment.images[i];
-            }
-            // If the comment's author is logged in, or the displayContext's author is logged in
-            if ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) {
-              comment.canDelete = true;
-            }
-          });
+          function parseComments(element, level) {
+              if (!level) level = 1;
+              element.forEach(function (comment) {
+                comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                for (var i = 0; i < comment.images.length; i++) {
+                  comment.images[i] = '/api/image/display/' + comment.images[i];
+                }
+                // If the comment's author is logged in, or the displayContext's author is logged in
+                if (((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) && !comment.deleted) {
+                  comment.canDelete = true;
+                }
+                if (level < globals.maximumCommentDepth) {
+                    comment.canReply = true;
+                }
+                comment.level = level;
+                if (comment.replies) {
+                    var runOnReplies = parseComments(comment.replies, level+1)
+                }
+              });
+          }
+          parseComments(displayedPost.comments);
 
           //wow, finally.
           displayedPosts.push(displayedPost);
@@ -967,7 +1003,6 @@ module.exports = function (app) {
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
           if (typeof displayedPost !== 'undefined') {
-              console.log(displayedPost)
               var canDisplay = true;
               if (displayedPost.images != "") {
                 console.log("Post has an image!")
@@ -1011,7 +1046,7 @@ module.exports = function (app) {
             canDisplay: canDisplay,
             loggedIn: req.isAuthenticated(),
             loggedInUserData: loggedInUserData,
-            post: post,
+            posts: [post], // This is so it loads properly inside the posts_v2 partial
             flaggedUsers: flagged,
             metadata: metadata,
             isMuted: isMuted,

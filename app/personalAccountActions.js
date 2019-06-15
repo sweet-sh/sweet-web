@@ -353,6 +353,23 @@ module.exports = function (app, passport) {
             })
     })
 
+    app.post('/api/notifications/clearall', isLoggedInOrRedirect, function (req, res) {
+        User.findOne({
+            _id: req.user._id
+          }, 'notifications')
+          .then(user => {
+            user.notifications.forEach(notification => {
+               notification.seen = true;
+            })
+            user.save()
+            .then(result => {
+                if (result) {
+                    res.sendStatus(200);
+                }
+            })
+          })
+      })
+
     //Responds to get requests for email verification that don't have the verification token included. Deprecated? When would this happen
     //Input: none
     //Output: redirect to /login with a 301 code and "No token provided" in the flash message.

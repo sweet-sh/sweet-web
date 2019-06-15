@@ -2,28 +2,19 @@ var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 var commentSchema = new mongoose.Schema({
-  authorEmail: {
-    type: String,
-    required: true
-  },
+  authorEmail: String,
   author: { type: Schema.Types.ObjectId, ref: 'User' },
-  timestamp: {
-		type: Date,
-		required: true
-	},
-  rawContent: {
-    type: String,
-    required: false
-  },
-  parsedContent: {
-    type: String
-  },
+  timestamp: Date,
+  rawContent: String,
+  parsedContent: String,
   mentions: [String],
   tags: [String],
   images: [String],
   imageDescriptions: [String],
-  replies: [this]
+  deleted: { type: Boolean, default: false },
 });
+
+commentSchema.add({ replies: [commentSchema] });
 
 var boostSchema = new mongoose.Schema({
   booster: {type: Schema.Types.ObjectId, ref: 'User', required: true},

@@ -130,16 +130,12 @@ hr {
 .content-box:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-.commentContainer:hover {
-    /* background: #f8f8f8; */
+article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-.replyContainer {
+section.comments {
   background: #f5f5f5;
-}
-.repliesContainer {
   border-top: 1px solid #eaeaea;
-  /* box-shadow: inset 0 2px 2px rgba(0,0,0,0.09); */
 }
 .user-list li{
   border: 1px solid #dfdfdf;
@@ -261,9 +257,18 @@ hr {
   color: #6f6f6f;
 }
 
-#replyForm {
+.new-comment-form {
   background-color: #ffffffaa;
   box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
+  padding: 1rem 1.25rem;
+}
+.comment .new-comment-form {
+  background-color: transparent;
+  box-shadow: none;
+  padding-left: 10%;
+  padding-right: 0.5rem;
+  padding-bottom: 0;
+  padding-top: 0.5rem;
 }
 .pane {
     background: #fff;
@@ -615,11 +620,6 @@ hr {
   padding: 0;
 }
 
-/* .commentContainer {
-	padding: 15px;
-  padding-bottom: 0px;
-} */
-
 
 
 @media (max-width: 768px) {
@@ -655,31 +655,19 @@ hr {
     /* padding-top: 0px; */
 }
 
-#replyForm {
-  padding: 20px 15px 20px 15px;
-  /* border-radius: 5px; */
-}
-
-.repliesContainer {
-	font-size: 0.9em;
-  /*border moved to colors section*/
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-.individualReplyContainer {
+/* .individualReplyContainer {
     word-wrap: break-word;
 }
 
 .repliesContainer>.individualReplyContainer:first-of-type {
   padding-top: 20px;
-}
+} */
 
 .post-content {
   position: relative;
 }
 
-.comment-content {
+/* .comment-content {
   margin: 0.5rem 0 1rem 0;
   position: relative;
 } */
@@ -1450,7 +1438,7 @@ background-size: 5.66px 5.66px;
 
 
 .childReplyForm {
-    padding-left: 32px;
+    padding-left: 64px;
     margin-bottom: 1em;
     border-bottom: 1px solid #ddd;
     padding-bottom: 1em;
@@ -1460,9 +1448,17 @@ background-size: 5.66px 5.66px;
 /* NEW POST STYLES */
 
 article.post {
-    padding: 1rem;
+    padding-top: 1rem;
     border-bottom: 1px solid #dfdfdf;
 }
+article.post > .notifications,
+article.post > header,
+article.post > .content,
+article.post > .toolbar,
+article.post .comments-container {
+    padding: 0 1rem;
+}
+
 article.post > .notifications > div:last-child {
     margin-bottom: 1em;
 }
@@ -1537,23 +1533,32 @@ article.post > header h2.author-name {
     overflow: hidden;
     margin-bottom: 4px;
 }
-article.post > header .author-display-name {
+article.post > header .author-display-name,
+article.comment > header .author-display-name {
     font-weight: 500;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
     margin-right: 5px;
 }
-article.post > header .author-display-name a {
+article.post > header .author-display-name a,
+article.comment > header .author-display-name a,
+article.post > header .author-username a,
+article.comment > header .author-username a {
     color: #1a1717;
 }
-article.post > header .author-display-name a:hover {
+article.post > header .author-display-name a:hover,
+article.comment > header .author-display-name a:hover,
+article.post > header .author-username a:hover,
+article.comment > header .author-username a:hover {
     color: #ce1717;
 }
-article.post > header .author-username {
+article.post > header .author-username,
+article.comment > header .author-username {
     color: #959595;
 }
-article.post > header .author-username:first-child {
+article.post > header .author-username:first-child,
+article.comment > header .author-username:first-child {
     color: #1a1717;
     font-weight: 500;
 }
@@ -1571,6 +1576,8 @@ article.post > .content .content-warning {
 article.post > .toolbar {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-left: 0.65rem;
 }
 article.post > .toolbar > div {
     display: flex;
@@ -1587,6 +1594,79 @@ article.post > .toolbar > div:first-child  * {
 }
 article.post > .toolbar > div:last-child * {
     justify-content: flex-end;
+}
+
+section.comments {
+    font-size: 0.9rem;
+    /* display: none; */
+}
+article.comment {
+    margin-top: 1rem;
+}
+article.comment:last-child {
+    margin-bottom: 1rem;
+}
+article.comment > header {
+    display: flex;
+}
+
+article.comment > header .comment-header-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+article.comment > header .comment-header-divider {
+    padding: 0 5px 0 1px;
+    color: #959595;
+}
+article.comment > header > .author-image {
+    width: 25px;
+    height: 25px;
+    border-radius: 3px;
+    margin-right: 3px;
+}
+article.comment > header h3.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding-right: 5px;
+}
+
+article.comment > header .author-username {
+    font-weight: 400;
+}
+
+
+article.comment > header .timestamp {
+    font-size: 0.75rem;
+    color: #959595;
+    white-space: nowrap;
+    position: relative;
+    top: 1px;
+}
+article.comment > header .toolbar {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+}
+article.comment > .content {
+    margin-top: 0.5rem;
+}
+article.comment > .content.comment-deleted-content {
+    margin-top: 0;
+}
+article.comment > .content p:last-child {
+    margin-bottom: 0rem;
+}
+
+
+article.comment article.comment {
+    padding-left: 10%;
 }
 
 .user-flag {
@@ -1685,6 +1765,18 @@ a.show-more:hover { /* Shim for old show more button element */
     background: #fff;
     color: #ce1717;
 }
+.button.comment-toolbar-button {
+    background: none;
+    color: #aaa;
+    padding: 0;
+    font-size: 0.7rem;
+}
+.button.comment-toolbar-button:not(:first-child) {
+    margin-left: 1rem;
+}
+.button.comment-toolbar-button:hover {
+    color: #ce1717;
+}
 
 .post-toolbar-form {
     min-width: 40px;
@@ -1700,6 +1792,10 @@ a.show-more:hover { /* Shim for old show more button element */
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
 }
 
+.comment-deleted-message {
+    font-style: italic;
+    font-weight: 300;
+}
 
 .content-warning {
   font-weight: 500;

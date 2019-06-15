@@ -39,13 +39,15 @@ ObjectId     = require('mongoose').Types.ObjectId;
 
 require('./config/passport')(passport); // pass passport for configuration
 
+globals = require('./config/globals');
+
 // Set up our Express application
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 
 // View engine (Handlebars)
-var hbs = handlebars.create({
+hbs = handlebars.create({
     defaultLayout: 'main',
     helpers: {
         plural: function (number, text) {
@@ -60,6 +62,16 @@ var hbs = handlebars.create({
             return singular && match[1] // Singular case
             || match[2] // Plural case: 'bagel/bagels' --> bagels
             || match[1] + ( match[3] || 's' ); // Plural case: 'bagel(s)' or 'bagel' --> bagels
+        },
+        buildComment(comment, depth) {
+            if (!depth) depth = 1;
+            var tree = [];
+            tree.push({comment: comment, depth: depth})
+            comment.replies.forEach((r) => {
+                depth = depth+1
+                tree.comment.replies.depth = depth;
+            });
+            return tree;
         }
     }
 });

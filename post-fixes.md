@@ -9,6 +9,7 @@ boostPost > boost-post
 mutePost > unsubscribe-post
 unmutePost > subscribe-post
 deletePost > delete-post
+<div id="replyForm" class="contentForm"> > <div class="new-comment-form">
 
 # Types of comment
 

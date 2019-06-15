@@ -72,7 +72,6 @@
             </div>
             <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
         {{/if}}
-        </div>
         {{#if this.images}}
             {{> imagegallery }}
         {{/if}}
@@ -81,13 +80,13 @@
         <div class="general-tools">
             {{#unless this.commentsDisabled}}
                 {{#if ../loggedIn}}
-                    <button type="button" class="button post-toolbar-button open-reply-box">
-                    <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                    <button type="button" class="button post-toolbar-button show-comments">
+                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
                 {{else}}
                     {{#if this.numberOfComments}}
-                        <button type="button" class="button post-toolbar-button open-reply-box">
-                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                        <button type="button" class="button post-toolbar-button show-comments">
+                            <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                         </button>
                     {{/if}}
                 {{/if}}
@@ -129,14 +128,16 @@
                 </button>
             {{/if}}
         </div>
-    </div>
     </footer>
     {{#unless this.commentsDisabled}}
         <section class="comments">
-            {{#if this.comments}}
-            WHOO
-                {{> comments }}
-            {{/if}}
+            <div class="comments-container">
+                {{#if this.comments}}
+                    {{#each this.comments}}
+                        {{> comment}}
+                    {{/each}}
+                {{/if}}
+            </div>
             {{> newreplyform }}
         </section>
     {{/unless}}
