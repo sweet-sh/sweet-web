@@ -810,13 +810,13 @@ hr {
     right: 8px;
 }
 
-/* .postAuthorImage {
+.postAuthorImage {
   width: 46px;
   height: 46px;
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
-} */
+}
 
 .dropdown-menu.show {
     display: flex;

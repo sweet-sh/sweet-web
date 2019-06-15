@@ -307,7 +307,7 @@ $('#postsContainer').infiniteScroll({
     var pageNumber = ( this.loadCount + 1 );
     return '/showposts/community/{{communityData._id}}/' + pageNumber;
   },
-  append: '.commentContainer',
+  append: '.post',
   prefill: true,
   history: false,
   status: '.page-load-status'
