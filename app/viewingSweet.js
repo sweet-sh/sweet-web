@@ -693,10 +693,6 @@ module.exports = function (app) {
       }
       if(req.isAuthenticated()){
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
-      //   console.log(myCommunities)
-      //   var isInCommunity = myCommunities.includes(mongoose.Types.ObjectId(req.params.identifier))
-      // } else {
-      //   var isInCommunity = false;
       }
     } else if (req.params.context == "tag") {
         function getTag() {
@@ -756,8 +752,6 @@ module.exports = function (app) {
         })
         return "no posts";
       } else {
-
-          console.log(posts)
 
         //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
         displayedPosts = [];
@@ -859,25 +853,12 @@ module.exports = function (app) {
             }
           }
 
-          //some fun logic that creates a "recently commented on by" label for recently commented on posts
           if (moment(displayContext.timestamp).isSame(today, 'd')) {
             parsedTimestamp = moment(displayContext.timestamp).fromNow();
           } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
             parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
           } else {
             parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-          }
-          if (displayContext.comments != "") {
-            if (moment(displayContext.comments.slice(-1)[0].timestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
-              recentlyCommented = true;
-              lastCommentAuthor = displayContext.comments.slice(-1)[0].author
-            } else {
-              recentlyCommented = false;
-              lastCommentAuthor = "";
-            }
-          } else {
-            recentlyCommented = false;
-            lastCommentAuthor = "";
           }
 
           //get the full url for all images in the displayContext
@@ -891,8 +872,10 @@ module.exports = function (app) {
               imageUrlsArray.push('/images/uploads/' + image)
             })
           }
-          // Used to check if you can delete a post
-          var isYourPost = displayContext.author._id.equals(req.user._id);
+          if (req.isAuthenticated()) {
+              // Used to check if you can delete a post
+              var isYourPost = displayContext.author._id.equals(req.user._id);
+          }
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
             var followedBoosters = [];
@@ -962,8 +945,8 @@ module.exports = function (app) {
             imageDescriptions: displayContext.imageDescriptions,
             community: displayContext.community,
             headerBoosters: boostsForHeader,
-            recentlyCommented: recentlyCommented,
-            lastCommentAuthor: lastCommentAuthor,
+            recentlyCommented: false, // This gets set below
+            lastCommentAuthor: "", // As does this
             subscribedUsers: displayContext.subscribedUsers,
             unsubscribedUsers: displayContext.unsubscribedUsers,
             // linkPreview: displayContext.linkPreview
@@ -999,26 +982,45 @@ module.exports = function (app) {
           }
 
           //get timestamps and full image urls for each comment
-          function parseComments(element, level) {
-              if (!level) level = 1;
-              element.forEach(function (comment) {
-                comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                for (var i = 0; i < comment.images.length; i++) {
-                  comment.images[i] = '/api/image/display/' + comment.images[i];
+          latestTimestamp = 0;
+          lastCommentAuthor = "";
+          recentlyCommented = false;
+            function parseComments(element, level) {
+                if (!level) level = 1;
+                element.forEach(function (comment) {
+                    if (moment(comment.timestamp).isSame(today, 'd')) {
+                        comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                    } else if (moment(comment.timestamp).isSame(thisyear, 'y')) {
+                        comment.parsedTimestamp = moment(comment.timestamp).format('D MMM');
+                    } else {
+                        comment.parsedTimestamp = moment(comment.timestamp).format('D MMM YYYY');
+                    }
+                    if (comment.timestamp > latestTimestamp) {
+                        console.log(comment.timestamp, "is newer than", latestTimestamp)
+                        latestTimestamp = comment.timestamp;
+                        displayedPost.lastCommentAuthor = comment.author;
+                    }
+                    for (var i = 0; i < comment.images.length; i++) {
+                        comment.images[i] = '/api/image/display/' + comment.images[i];
+                    }
+                    // If the comment's author is logged in, or the displayContext's author is logged in
+                    if (((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) && !comment.deleted) {
+                        comment.canDelete = true;
+                    }
+                    if (level < globals.maximumCommentDepth) {
+                        comment.canReply = true;
+                    }
+                    comment.level = level;
+                    if (comment.replies) {
+                        var runOnReplies = parseComments(comment.replies, level+1)
+                    }
+                });
+                if (moment(latestTimestamp).isAfter(moment(new Date()).subtract(6, 'hours'))) {
+                    displayedPost.recentlyCommented = true;
+                } else {
+                    displayedPost.recentlyCommented = false;
                 }
-                // If the comment's author is logged in, or the displayContext's author is logged in
-                if (((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) && !comment.deleted) {
-                  comment.canDelete = true;
-                }
-                if (level < globals.maximumCommentDepth) {
-                    comment.canReply = true;
-                }
-                comment.level = level;
-                if (comment.replies) {
-                    var runOnReplies = parseComments(comment.replies, level+1)
-                }
-              });
-          }
+            }
           parseComments(displayedPost.comments);
 
           //wow, finally.

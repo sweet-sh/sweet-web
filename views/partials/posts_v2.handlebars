@@ -2,8 +2,8 @@
 {{#if canDisplay}}
 <article class="post" data-post-id="{{this._id}}">
     <aside class="notifications">
-        {{#if this.recentlyCommented}}
-            {{#isnt this.lastCommentAuthor.username ../loggedInUserData.username}}
+        {{#if recentlyCommented}}
+            {{#isnt lastCommentAuthor.username ../loggedInUserData.username}}
                 <div class="recently-commented-notification">
                     <i class="far fa-comment"></i> Recently commented on by <a href="/{{this.lastCommentAuthor.username}}">@{{this.lastCommentAuthor.username}}</a>
                 </div>
@@ -43,7 +43,7 @@
                     </span>
                 {{/if}}
                 <span class="author-username">
-                    {{#unless this.author.displayName}}<span style="font-weight:500">{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</span>{{/unless}}
+                    {{#unless this.author.displayName}}<span style="font-weight:500"><a href="/{{this.author.username}}">{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</a></span>{{/unless}}
                 </span>
                 {{#contains ../flaggedUsers this.author.email}}
                     <i class="fas fa-exclamation-triangle user-flag"></i>
