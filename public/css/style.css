@@ -1751,8 +1751,6 @@ a.show-more:hover { /* Shim for old show more button element */
 .button.show-boosters-list {
     font-size: 0.7rem;
     margin-left: 2px;
-    top: -2px;
-    position: relative;
 }
 
 .button.post-toolbar-button {

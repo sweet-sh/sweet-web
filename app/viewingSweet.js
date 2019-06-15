@@ -799,8 +799,7 @@ module.exports = function (app) {
               continue;
             }
           }
-
-          var canDisplay = false;
+          if (!canDisplay) var canDisplay = false;
           if (req.isAuthenticated()) {
             //logged in users can't see private posts by users who don't trust them or community posts by muted members
             if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
@@ -845,9 +844,6 @@ module.exports = function (app) {
           if (post.type == "boost") {
             displayContext = post.boostTarget;
             displayContext.author = await User.findById(displayContext.author);
-            for (const comment of displayContext.comments) {
-              comment.author = await User.findById(comment.author);
-            }
             for (const boost of displayContext.boostsV2) {
               boost.booster = await User.findById(boost.booster);
             }
@@ -960,34 +956,23 @@ module.exports = function (app) {
             displayedPost.youBoosted = youBoosted
           }
 
-          function findNested(array, id) {
-              var foundElement = false;
-              array.forEach((element) => {
-                  if (element._id && element._id.equals(id)){
-                      element.replies.push(comment);
-                      foundElement = true;
-                  }
-                  else {
-                      console.log("Not ",element._id)
-                      if (element.replies) {
-                          var found = findNested(element.replies, id)
-                          if (found) {
-                              foundElement = true;
-                              return found;
-                          }
-                      }
-                  }
-              })
-              return foundElement;
-          }
-
           //get timestamps and full image urls for each comment
           latestTimestamp = 0;
           lastCommentAuthor = "";
           recentlyCommented = false;
             function parseComments(element, level) {
                 if (!level) level = 1;
-                element.forEach(function (comment) {
+                element.forEach(async function (comment) {
+                    // I'm not sure why, but boosts in the home feed don't display
+                    // comment authors below the top level - this fixes it, but
+                    // it's kind of a hack - I can't work out what's going on
+                    if (!comment.author.username) {
+                        console.log("Comment did not have author information!")
+                        function getUser(user) {
+                            return User.findById(user);
+                        }
+                        comment.author = await getUser(comment.author)
+                    }
                     if (moment(comment.timestamp).isSame(today, 'd')) {
                         comment.parsedTimestamp = moment(comment.timestamp).fromNow();
                     } else if (moment(comment.timestamp).isSame(thisyear, 'y')) {
@@ -1021,7 +1006,9 @@ module.exports = function (app) {
                 }
             }
           parseComments(displayedPost.comments);
-
+          // if (displayedPost._id.equals('5d04d2b0da26de82313546f3')){
+          //     console.log(displayedPost.comments)
+          // }
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
