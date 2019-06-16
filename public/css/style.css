@@ -1873,3 +1873,11 @@ a.show-more:hover { /* Shim for old show more button element */
     height: 20px;
     width: 20px;
 }
+
+.page-load-status {
+    display: block;
+}
+.infinite-scroll-last,
+.infinite-scroll-error {
+    display: none;
+}
