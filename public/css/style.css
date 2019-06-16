@@ -153,10 +153,12 @@ section.comments {
 	color: #555;
 }
 .notificationLink {
-  background: #eeecec;
+  background: #f9f9fa;
+  color: #707070 !important;
 }
 .notification-active {
-  background: #fff;
+  background: #eaeaea;
+  color: rgb(73, 80, 87) !important;
 }
 .authorLink {
   color: #1a1717;
@@ -821,7 +823,9 @@ hr {
 .dropdown-menu.show {
     display: flex;
     flex-direction: column;
-    box-shadow: 4px 4px 7px rgba(0,0,0,0.07);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+    border: 1px solid #b6b6b6;
+    top: 50px;
 }
 
 @media (min-width: 576px) {
@@ -848,7 +852,7 @@ hr {
 .list-group-item-action:hover {
     color: #495057;
     text-decoration: none;
-    background-color: #f8f3f3;
+    background-color: #f9f3f3;
 }
 .button.clear-all-notifications {
     border-radius: 0;

@@ -987,7 +987,8 @@ module.exports = function (app) {
                         latestTimestamp = comment.timestamp;
                         displayedPost.lastCommentAuthor = comment.author;
                     }
-                    if (momentifiedTimestamp.isAfter(threeHoursAgo)) {
+                    // Only pulse comments from people who aren't you
+                    if (momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
                         comment.isRecent = true;
                     }
                     for (var i = 0; i < comment.images.length; i++) {

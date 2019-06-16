@@ -589,7 +589,9 @@ module.exports = function (app) {
                     // Count total comments
                     function countComments(array) {
                         array.forEach((element) => {
-                            numberOfComments++;
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
                             if (element.replies) {
                                 var replies = countComments(element.replies)
                                 if (replies) {
@@ -607,18 +609,18 @@ module.exports = function (app) {
                     function findNested(array, id) {
                         var foundElement = false;
                         array.forEach((element) => {
-                            numberOfComments++;
                             if (element._id && element._id.equals(id)){
                                 element.replies.push(comment);
                                 foundElement = element;
                             }
-                            else {
-                                if (element.replies) {
-                                    var found = findNested(element.replies, id)
-                                    if (found) {
-                                        foundElement = element;
-                                        return found;
-                                    }
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
+                            if (element.replies) {
+                                var found = findNested(element.replies, id)
+                                if (found) {
+                                    foundElement = element;
+                                    return found;
                                 }
                             }
                         })
@@ -883,8 +885,9 @@ module.exports = function (app) {
                 commentsByUser = 0;
                 latestTimestamp = 0;
                 numberOfComments = 0;
-                function findNested(array, id) {
+                function findNested(array, id, parent) {
                     var foundElement;
+                    var parentElement = (parent ? parent : post)
                     array.forEach((element) => {
                         if (!element.deleted) {
                             numberOfComments++;
@@ -895,17 +898,18 @@ module.exports = function (app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
+                        element.numberOfSiblings = (parent ? parentElement.replies.length-1 : post.comments.length-1);
+                        element.parent = parentElement;
                         if (element._id && element._id.equals(id)){
                             foundElement = element;
                             commentsByUser--;
                             numberOfComments--;
+                            console.log('numberOfComments',numberOfComments)
                         }
-                        else {
-                            if (element.replies) {
-                                var found = findNested(element.replies, id)
-                                if (found) {
-                                    foundElement = found;
-                                }
+                        if (element.replies) {
+                            var found = findNested(element.replies, id, element)
+                            if (found) {
+                                foundElement = found;
                             }
                         }
                     })
@@ -931,9 +935,24 @@ module.exports = function (app) {
                         "filename": image
                     })
                 })
-                target.parsedContent = "";
-                target.rawContent = "";
-                target.deleted = true;
+
+                // Check if target has children
+                if (target.replies && target.replies.length) {
+                    // We feel sorry for the children - just wipe the target's memory
+                    target.parsedContent = "";
+                    target.rawContent = "";
+                    target.deleted = true;
+                }
+                else {
+                    // There are no children, the target can be destroyed
+                    target.remove();
+                    if (target.numberOfSiblings == 0 && target.parent.deleted) {
+                        // There are also no siblings, and the element's parent
+                        // has been deleted, so we can even destroy that!
+                        target.parent.remove();
+                    }
+                }
+
                 post.save()
                     .then((comment) => {
                         // relocatePost(ObjectId(req.params.postid));
