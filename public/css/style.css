@@ -134,7 +134,7 @@ article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
 section.comments {
-  background: #f5f5f5;
+  background: #f6f6f6;
   border-top: 1px solid #eaeaea;
 }
 .user-list li{
@@ -1534,7 +1534,8 @@ article.post > header h2.author-name {
     margin-bottom: 4px;
 }
 article.post > header .author-display-name,
-article.comment > header .author-display-name {
+article.comment > header .author-display-name,
+#welcome-message-container > footer .author-display-name {
     font-weight: 500;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -1543,22 +1544,28 @@ article.comment > header .author-display-name {
 }
 article.post > header .author-display-name a,
 article.comment > header .author-display-name a,
+#welcome-message-container > footer .author-display-name a,
 article.post > header .author-username a,
-article.comment > header .author-username a {
+article.comment > header .author-username a,
+#welcome-message-container > footer .author-username a {
     color: #1a1717;
 }
 article.post > header .author-display-name a:hover,
 article.comment > header .author-display-name a:hover,
+#welcome-message-container > footer .author-display-name a:hover,
 article.post > header .author-username a:hover,
-article.comment > header .author-username a:hover {
+article.comment > header .author-username a:hover,
+#welcome-message-container > footer .author-username a:hover {
     color: #ce1717;
 }
 article.post > header .author-username,
-article.comment > header .author-username {
+article.comment > header .author-username,
+#welcome-message-container > footer .author-username {
     color: #959595;
 }
 article.post > header .author-username:first-child,
-article.comment > header .author-username:first-child {
+article.comment > header .author-username:first-child,
+#welcome-message-container > footer .author-username:first-child {
     color: #1a1717;
     font-weight: 500;
 }
@@ -1625,11 +1632,11 @@ article.comment.recent-comment-content.flash {
     100% { background-color: transparent; }
 }
 
-
+#welcome-message-container > footer,
 article.comment > header {
     display: flex;
 }
-
+#welcome-message-container > footer  .welcome-message-container,
 article.comment > header .comment-header-container {
     display: flex;
     align-items: center;
@@ -1639,12 +1646,14 @@ article.comment > header .comment-header-divider {
     padding: 0 5px 0 1px;
     color: #959595;
 }
+#welcome-message-container > footer  .author-image,
 article.comment > header > .author-image {
     width: 25px;
     height: 25px;
     border-radius: 3px;
     margin-right: 3px;
 }
+#welcome-message-container > footer  h3.author-name,
 article.comment > header h3.author-name {
     font-size: 1em;
     font-family: 'Ubuntu', sans-serif;
@@ -1656,12 +1665,10 @@ article.comment > header h3.author-name {
     align-items: center;
     padding-right: 5px;
 }
-
+#welcome-message-container > footer  .author-username,
 article.comment > header .author-username {
     font-weight: 400;
 }
-
-
 article.comment > header .timestamp {
     font-size: 0.75rem;
     color: #959595;
@@ -1669,11 +1676,7 @@ article.comment > header .timestamp {
     position: relative;
     top: 1px;
 }
-article.comment > header .toolbar {
-    display: flex;
-    flex: 1;
-    justify-content: space-between;
-}
+
 article.comment > .content {
     margin-top: 0.5rem;
 }
@@ -1847,4 +1850,22 @@ a.show-more:hover { /* Shim for old show more button element */
     display: block;
     font-size: 0.8rem;
     margin: 0 auto 0.5rem auto;
+}
+
+#welcome-message-container footer {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(173, 134, 219, 0.2);
+    padding: 1rem 0 0 0;
+    font-weight: 300 !important;
+    font-size: 0.75rem !important;
+}
+
+#welcome-message-container .updated-by-text {
+    white-space: nowrap;
+    margin-right: 5px;
+    align-self: center;
+}
+#welcome-message-container > footer .author-image {
+    height: 20px;
+    width: 20px;
 }

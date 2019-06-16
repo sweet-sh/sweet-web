@@ -35,6 +35,24 @@
           {{#if communityData.welcomeMessageParsed}}
             <div class="container commentsList" id="welcome-message-container">
               {{{ communityData.welcomeMessageParsed }}}
+              <footer>
+                  <div class="updated-by-text">
+                      Updated by
+                  </div>
+                  <img alt="Profile image of @{{communityData.welcomeMessageAuthor.username}}" class="author-image" src="/images/{{#if communityData.welcomeMessageAuthor.imageEnabled}}{{communityData.welcomeMessageAuthor.image}}{{else}}cake.svg{{/if}}" />
+                  <div class="welcome-message-container">
+                      <h3 class="author-name">
+                          {{#if communityData.welcomeMessageAuthor.displayName}}
+                              <span class="author-display-name">
+                                  <a href="/{{communityData.welcomeMessageAuthor.username}}">{{communityData.welcomeMessageAuthor.displayName}}</a>
+                              </span>
+                          {{/if}}
+                          <span class="author-username">
+                              {{#unless communityData.welcomeMessageAuthor.displayName}}<span style="font-weight:500"><a href="/{{communityData.welcomeMessageAuthor.username}}">{{/unless}}@{{communityData.welcomeMessageAuthor.username}}{{#unless communityData.welcomeMessageAuthor.displayName}}</a></span>{{/unless}}
+                          </span>
+                      </h3>
+                  </div>
+              </footer>
             </div>
           {{/if}}
           {{#gt votes.length 0 }}
@@ -126,16 +144,19 @@
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-welcomeMessageEditor" role="tabpanel" aria-labelledby="nav-welcomeMessageEditor-tab">
-                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                <form action="/api/community/welcomemessage/update/{{communityData._id}}" method="post">
                   <input type="hidden" name="reference" value="welcomeMessage" />
                   <div class="form-group">
                     <label for="communityWelcomeMessage">Welcome message</label>
                     <p class="small">
                       This message will appear above the posts in the community's main view. You can use it to welcome new members or remind members of news or important announcements.
                     </p>
-                    <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="proposedValue" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
+                    <p class="small">
+                      Unlike other community settings, the welcome message is changed immediately, with no vote.
+                    </p>
+                    <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="communityWelcomeMessage" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="btn btn-primary updateWelcomeMessage">Update</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
@@ -430,7 +451,6 @@ $(".deleteVoteButton").click(function() {
     }
   })
 });
-
 
 
 $(".community-panel-link").click(function() {

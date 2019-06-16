@@ -332,6 +332,7 @@ module.exports = function (app, passport) {
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
     app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
         let updatedSettings = req.body;
+        console.log(updatedSettings)
         User.update({
                 _id: req.user._id
             }, {
@@ -341,7 +342,8 @@ module.exports = function (app, passport) {
                     'settings.imageQuality': updatedSettings.imageQuality,
                     'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
                     'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
-                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting
+                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
+                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false)
                 }
             })
             .then(user => {

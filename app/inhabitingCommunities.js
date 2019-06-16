@@ -108,6 +108,7 @@ module.exports = function (app, passport) {
       .populate('membershipRequests')
       .populate('bannedMembers')
       .populate('mutedMembers')
+      .populate('welcomeMessageAuthor')
       .then(community => {
         if (community) {
           if (isLoggedIn) {
@@ -669,7 +670,6 @@ module.exports = function (app, passport) {
       name: "name",
       description: "description",
       rules: "rules",
-      welcomeMessage: "welcome message",
       image: "display image",
       visibility: "post visibility",
       joinType: "joining method",
@@ -692,7 +692,7 @@ module.exports = function (app, passport) {
       30: '30 days'
     }
     let parsedReference = parsedReferences[req.body.reference]
-    if (req.body.reference == "description" || req.body.reference == "rules" || req.body.reference == "welcomeMessage") {
+    if (req.body.reference == "description" || req.body.reference == "rules") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
     } else if (req.body.reference == "joinType") {
@@ -805,7 +805,7 @@ module.exports = function (app, passport) {
                     })
                   } else if (vote.reference == "joinType" || vote.reference == "voteLength") {
                     community.settings[vote.reference] = vote.proposedValue;
-                  } else if (vote.reference == "description" || vote.reference == "rules" || vote.reference == "welcomeMessage") {
+                  } else if (vote.reference == "description" || vote.reference == "rules") {
                     community[vote.reference + "Raw"] = vote.proposedValue;
                     community[vote.reference + "Parsed"] = vote.parsedProposedValue;
                   } else if (vote.reference == "image") {
@@ -933,6 +933,37 @@ module.exports = function (app, passport) {
           })
       })
   });
+
+  app.post('/api/community/welcomemessage/update/:communityid', isLoggedIn, function(req, res) {
+
+      function isCommunityMember(communityId) {
+          return Community.findOne({
+              _id: communityId
+          })
+          .then(community => {
+              return community.members.some(member => {
+                  return req.user._id.equals(member);
+              });
+          })
+      }
+
+      Community.findOne({
+          _id: req.params.communityid
+      })
+      .then(async function(community) {
+          if (await isCommunityMember(community)) {
+              community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
+              community.welcomeMessageParsed = helper.parseText(req.body.communityWelcomeMessage).text
+              community.welcomeMessageAuthor = req.user._id
+              community.save()
+              .then(result => {
+                  res.redirect('back')
+              })
+          } else {
+              res.redirect('back')
+          }
+      })
+  })
 
   app.post('/api/community/vote/withdraw/:communityid/:voteid', isLoggedIn, function (req, res) {
     Vote.findOne({
