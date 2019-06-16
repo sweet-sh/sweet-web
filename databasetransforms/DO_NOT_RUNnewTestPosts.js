@@ -32,12 +32,15 @@ var communities = [new ObjectId("5cd621612f6283211433c7e3"),new ObjectId("5cd74d
 
 
 async function createPosts() {
+    await Post.deleteMany().then((ok) => {
+        console.log('deleted ' + ok.n + ' old post documents');
+    });
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 20 regular posts
-        //distributed randomly over the past 48 hours
+        //distributed randomly over the past 480 hours
         for (var i = 0; i < 20; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
+            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * Math.pow(2,posters.indexOf(poster)+1)));
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -62,7 +65,8 @@ async function createPosts() {
     for (const poster of posters) {
         //and 50 random boosts
         for (var i = 0; i < 5; i++) {
-            var boostTime = new Date();
+            //slighty sus as it can let boosts be created dated earlier than their target posts
+            var boostTime = (new Date()).setHours(new Date().getHours() - (Math.random() * Math.pow(2,posters.indexOf(poster)+1)));
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             var targetPostDoc = await Post.findById(target);
             //keep anyone from boosting a post for the second time
@@ -90,6 +94,7 @@ async function createPosts() {
         }
     }
 
+    /*
     for (var i = 0; i < 20; i++) {
         //and then add 20 random comments just for fun
         var commentTimestamp = new Date();
@@ -107,6 +112,7 @@ async function createPosts() {
             await post.save();
         })
     }
+    */
 }
 
 async function createBoostsV2Posts() {
@@ -174,7 +180,7 @@ async function createBoostsV2Posts() {
     }
 }
 
-createBoostsV2Posts().then(async () => {
+createPosts().then(async () => {
     console.log("created "+await Post.countDocuments({})+" new post documents")
     process.exit();
 })

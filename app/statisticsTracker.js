@@ -195,12 +195,45 @@ module.exports = function (app, mongoose) {
     })
 
     var mostRecentlyUsedInterval = 3;
-    app.get("/admin/justactiveusersgraph", function (req, res) {
-        rebuildActiveUsersTable();
+    var activeUsersTablePromise = undefined;
+    app.get("/admin/justactiveusersgraph", async function (req, res) {
+        var mostRecentDate;
+        if (!fs.existsSync(activeUserTableFileName)) {
+            if (!activeUsersTablePromise) {
+                activeUsersTablePromise = rebuildActiveUsersTable();
+            }
+            //note that this is an assignment statement, not a comparison. tableNotUpToDate will give us false if it is up to date or the last line
+            //of the file (in split/array form) otherwise, which we save in mostRecentDate to pass to rebuildUserTable so it knows where to start building from
+        } else if (mostRecentDate = tableNotUpToDate(activeUserTableFileName, 3)) {
+            if (!activeUsersTablePromise) {
+                activeUsersTablePromise = rebuildActiveUsersTable(mostRecentDate);
+            }
+        }
+        await activeUsersTablePromise;
+        activeUsersTablePromise = undefined;
+        var datapoints = await parseTableForGraph(activeUserTableFileName, null, getActiveUsersSinceLastSave);
+        datapoints.label = "active sweet users during 3-day intervals";
+        datapoints.color = "rgb(75, 192, 192)";
+        res.render('partials/timeGraph', {
+            layout: false,
+            chartName: "activeUsersGraph",
+            datapoint: [datapoints]
+        })
     })
 
-    app.get("/admin/justactiveusersgraph/:interval", function (req, res) {
-        rebuildActiveUsersTable(req.params.interval);
+    app.get("/admin/activeusersgraph", function (req, res) {
+        if (req.isAuthenticated()) {
+            res.render('asyncPage', {
+                getUrl: ["/admin/justactiveusersgraph"],
+                loggedIn: true,
+                loggedInUserData: req.user
+            });
+        } else {
+            res.render('asyncPage', {
+                getUrl: ["/admin/justactiveusersgraph"],
+                loggedIn: false
+            });
+        }
     })
 
     app.get("/admin/resetgraphs/:password", function (req, res) {
@@ -378,7 +411,7 @@ async function rebuildUserTable(startDate) {
 //Creates a file that contains dates and the number of users that made a post or comment during the [interval] day period ending at that date. Starts from the earliest post or the
 //last line in the existing file (startDate). This function figures out how many users were active during each [interval] day interval starting at the end of the day that
 //the first post was posted on and finishing on the most recent date that's the start date plus a multiple of [interval].
-async function rebuildActiveUsersTable(startDate, interval=3) {
+async function rebuildActiveUsersTable(startDate, interval = 3) {
     //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(activeUserTableFileName) && !startDate) {
         fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName));
@@ -412,9 +445,9 @@ async function rebuildActiveUsersTable(startDate, interval=3) {
     //populate activeUsersByInterval with date objects that also have a property indicating how many active users there were in the three days previous
     for (var i = 0; i < totalDays; i += interval) {
         var intervalStart = new Date(before);
-        var intervalEnd = new Date(before).setDate(before.getDate() + interval);
-        intervalEnd.activeUserCount = await getActiveUsersForInterval(intervalStart,intervalEnd);
-        userCountByDay.push(sequentialDate);
+        var intervalEnd = new Date(new Date(before).setDate(before.getDate() + interval));
+        intervalEnd.activeUserCount = await getActiveUsersForInterval(intervalStart, intervalEnd);
+        activeUsersByInterval.push(intervalEnd);
         before.setDate(before.getDate() + 3);
     }
 
@@ -422,7 +455,7 @@ async function rebuildActiveUsersTable(startDate, interval=3) {
     //Note that the file always ends with a \n, and this needs to be true for this code to work when appending new lines to the file
     activeUsersByInterval.forEach((date) => {
         fs.appendFileSync(activeUserTableFileName, date.toDateString() + "," + date.getFullYear() + "," + date.getMonth() + "," + date.getDate());
-        fs.appendFileSync(activeUserTableFileName, "," + date.postCount);
+        fs.appendFileSync(activeUserTableFileName, "," + date.activeUserCount);
         fs.appendFileSync(activeUserTableFileName, "\n");
     })
 
@@ -433,7 +466,7 @@ async function rebuildActiveUsersTable(startDate, interval=3) {
 //this is a helper function that gets the number of active users during a time interval. it's called by the above function and also passed to 
 //parseTableForGraph so that that function can figure out how many users were active right up until the present moment.
 async function getActiveUsersForInterval(intervalStart, intervalEnd) {
-    return (await Post.aggregate([{
+    var count = await Post.aggregate([{
         //find posts that either themselves were made during this time interval or have comments that were
         '$match': {
             '$or': [{
@@ -501,13 +534,26 @@ async function getActiveUsersForInterval(intervalStart, intervalEnd) {
                 '$sum': 1
             }
         }
-    }])).howManyAuthors;
+    }]);
+    return count[0].numberOfAuthors; //the fact that it's an array isn't relevant, aggregate just assumes it's meant to return an array of documents even though we only want one here
+}
+
+async function getActiveUsersSinceLastSave() {
+    var lastLine = "";
+    fs.readFileSync(activeUserTableFileName, 'utf-8').split('\n').forEach(function (line) {
+        if (line && line != "\n") {
+            lastLine = line;
+        }
+    });
+    var lastLineSplit = lastLine.split(',');
+    var lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 23, 59, 59, 999);
+    return await getActiveUsersForInterval(lastSave, new Date());
 }
 
 //this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
 //decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
-//should be current every time we build/display the graph.
-async function parseTableForGraph(filename, collection) {
+//should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
+async function parseTableForGraph(filename, collection, callbackForCurrentY) {
     var jsonVersion = [];
     //reads in file values
     for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
@@ -525,20 +571,26 @@ async function parseTableForGraph(filename, collection) {
             });
         }
     };
-    //add in a datapoint representing the current exact second
+    //add in a datapoint representing the current exact second, if we have a source to obtain it from
     var now = new Date();
-    await collection.countDocuments().then((numberOfDocs) => {
-        jsonVersion.push({
-            label: now.toLocaleString(),
-            year: now.getFullYear(),
-            month: now.getMonth(),
-            date: now.getDate(),
-            hour: now.getHours(),
-            minute: now.getMinutes(),
-            second: now.getSeconds(),
-            y: numberOfDocs
-        });
-    })
+    if (collection) {
+        var numberOfDocs = await collection.countDocuments();
+    } else if (callbackForCurrentY) {
+        var numberOfDocs = await callbackForCurrentY();
+    }
+    else{
+        return jsonVersion;
+    }
+    jsonVersion.push({
+        label: numberOfDocs == 69 ? "nice" : now.toLocaleString(),
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        date: now.getDate(),
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+        second: now.getSeconds(),
+        y: numberOfDocs
+    });
     return jsonVersion;
 }
 
