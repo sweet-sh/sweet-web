@@ -776,6 +776,10 @@ hr {
    margin-bottom:20px;
 }
 
+.page-header.community-name {
+    padding-top: 10px;
+}
+
 #profileImageContainer {
   display: flex;
   width: 150px;
@@ -786,9 +790,17 @@ hr {
   width: 150px;
   height:150px;
   border-radius: 10px;
-  /* border-radius: 50%; */
   object-fit: cover;
   object-position: top;
+}
+
+#profileImageContainer.community-image {
+    width: 100%;
+}
+
+#profileImageContainer.community-image  #profileImage {
+    width: 100%;
+    height: 100%;
 }
 
 @media (max-width: 776px) {
