@@ -591,6 +591,8 @@ module.exports = function (app) {
                         array.forEach((element) => {
                             if (!element.deleted) {
                                 numberOfComments++;
+                                console.log(element.parsedContent)
+                                console.log('numberOfComments',numberOfComments)
                             }
                             if (element.replies) {
                                 var replies = countComments(element.replies)
@@ -615,6 +617,8 @@ module.exports = function (app) {
                             }
                             if (!element.deleted) {
                                 numberOfComments++;
+                                console.log(element.parsedContent)
+                                console.log('numberOfComments',numberOfComments)
                             }
                             if (element.replies) {
                                 var found = findNested(element.replies, id)
@@ -628,7 +632,7 @@ module.exports = function (app) {
                     }
                     var target = findNested(post.comments, req.params.commentid);
                     if (target) {
-                        post.numberOfComments = numberOfComments+1;
+                        post.numberOfComments = numberOfComments;
                     }
                 }
                 postPrivacy = post.privacy;
@@ -891,6 +895,8 @@ module.exports = function (app) {
                     array.forEach((element) => {
                         if (!element.deleted) {
                             numberOfComments++;
+                            console.log(element.parsedContent)
+                            console.log('numberOfComments',numberOfComments)
                         }
                         if ((element.author.toString() == req.user._id.toString()) && !element.deleted) {
                             commentsByUser++;
