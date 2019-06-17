@@ -81,4 +81,8 @@ var sendDailyEmail = schedule.scheduleJob('0 * * * *', function(){ // Every hour
     sendUpdateEmail('daily').catch(console.error);
 });
 
+var sendWeeklyEmail = schedule.scheduleJob('0 0-23 * * 0', function(){ // Every hour on Sunday
+    sendUpdateEmail('weekly').catch(console.error);
+});
+
 module.exports.sendUpdateEmail = sendUpdateEmail;
