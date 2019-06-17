@@ -93,7 +93,13 @@ $(function() {
     commentsContainer.slideToggle("fast", function(){
       if (commentsContainer.is(':visible')){
         if(commentsContainer.height() > $(window).height()){
-          var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
+          scrollTarget = $(this).closest('.comments').find('.recent-comment-content')
+          if (scrollTarget[0]) {
+              var scroll = scrollTarget.offset().top+scrollTarget.height()-$(window).height()+200;
+          }
+          else {
+              var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
+          }
           $("html, body").animate({ scrollTop: scroll+"px" },200);
         }
         var post = $(this).closest('.post');
