@@ -112,8 +112,6 @@ app.on('SIGINT', function() {
 
 global.appRoot = path.resolve(__dirname);
 
-
-
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
 require('./app/statisticsTracker.js')(app, mongoose);
@@ -123,6 +121,19 @@ require('./app/inhabitingCommunities.js')(app, passport);
 require('./app/viewingSweet.js')(app);
 require('./app/postingToSweet.js')(app);
 
+// socket.io ==================================================================
+server = require('http').createServer(app);
+io = require('socket.io')(server);
+io.on('connection', function(socket){
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+      console.log('user disconnected');
+  });
+  socket.on('commentPosted', function(comment){
+    socket.broadcast.emit('newComment', comment);
+  });
+});
+
 // launch ======================================================================
-app.listen(port);
+server.listen(port);
 console.log('The magic happens on port ' + port);

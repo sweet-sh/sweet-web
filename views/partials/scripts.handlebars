@@ -257,6 +257,7 @@ $(function() {
     let commentType = commentForm.attr('data-comment-type');
     let postID = commentForm.attr('data-post-id');
     let commentID = commentForm.attr('data-comment-id');
+    let commentParentID = commentForm.closest('.comment').attr('data-comment-id');
     let textarea = commentForm.find("textarea.comment-textarea");
     let contentEditable = commentForm.find("div.comment-textarea");
     let commentContent = textarea.val();
@@ -295,12 +296,15 @@ $(function() {
         imageUrls: JSON.stringify(sortedurls),
         imageDescs: JSON.stringify(imagedescs),
         depth: commentDepth,
+        commentParentID: commentParentID,
       },
       function(data) {
         if (data!='nope'){
           textarea.val("");
           contentEditable.html("");
-          $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          $(data.comment).hide().appendTo(commentsContainer).fadeIn(function(){
+              socket.emit('commentPosted', data);
+          });
           let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
           if(counterToChange.textContent === ""){
             counterToChange.innerHTML = "1";
@@ -325,7 +329,7 @@ $(function() {
         } else {
           let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
           $(html).hide().appendTo(commentsContainer).fadeIn();
-          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
+          // commentButton.prop('disabled', false); // Probably don't enable the reply button if an error occurs because god knows what else has happened to the form
         }
       });
     }

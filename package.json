@@ -40,6 +40,7 @@
     "request": "^2.88.0",
     "sanitize-html": "^1.20.0",
     "sharp": "^0.22.0",
-    "shortid": "^2.2.14"
+    "shortid": "^2.2.14",
+    "socket.io": "^2.2.0"
   }
 }

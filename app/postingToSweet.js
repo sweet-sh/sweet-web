@@ -860,6 +860,9 @@ module.exports = function (app) {
                         })
                         .then(html => {
                             result = {
+                                postid: post._id.toString(),
+                                commentid: commentId.toString(),
+                                commentparentid: req.body.commentParentID,
                                 comment: html
                             }
                             res.contentType('json');

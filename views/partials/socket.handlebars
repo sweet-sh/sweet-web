@@ -1,0 +1,23 @@
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+$(function () {
+  socket = io();
+  // $('form').submit(function(e){
+  //   e.preventDefault(); // prevents page reloading
+  //   socket.emit('chat message', $('#m').val());
+  //   $('#m').val('');
+  //   return false;
+  // });
+  socket.on('newComment', function(payload){
+      console.log("New comment!")
+      parentComment = $('#postsContainer').find('.comment[data-comment-id="'+payload.commentparentid+'"]')
+      if (parentComment.length) {
+          repliesContainer = parentComment.find('.replies')[0];
+          console.log(repliesContainer)
+          console.log(payload.commentparentid)
+          commentHTML = $.parseHTML(payload.comment);
+          $(commentHTML).hide().appendTo(repliesContainer).fadeIn().find('.content').addClass('flash');
+      }
+  });
+});
+</script>
