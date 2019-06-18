@@ -112,13 +112,13 @@ module.exports = function (app, mongoose) {
     app.get("/admin/allstats", function (req, res) {
         if (req.isAuthenticated()) {
             res.render('asyncPage', {
-                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph", "/admin/justactiveusersgraph"],
                 loggedIn: true,
                 loggedInUserData: req.user
             });
         } else {
             res.render('asyncPage', {
-                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph", "/admin/justactiveusersgraph"],
                 loggedIn: false
             });
         }
