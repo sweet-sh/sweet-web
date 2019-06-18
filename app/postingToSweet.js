@@ -195,7 +195,7 @@ module.exports = function (app) {
             return;
         }
 
-        var rawContent = sanitize(req.body.content);
+        var rawContent = sanitize(req.body.postContent);
         rawContent = sanitizeHtml(rawContent, {
             allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a'],
             allowedAttributes: {
