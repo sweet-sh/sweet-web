@@ -3,6 +3,15 @@ $(function() {
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
+
+    $('html').on('show.simplelightbox', function () {
+	     $('#bodyContainer, #topNav').css('filter','blur(10px)');
+    });
+    $('html').on('close.simplelightbox', function () {
+         $('#bodyContainer, #topNav').css('filter','none');
+    });
+
+
   $("#notificationsContainer").load( "/api/notification/display" );
 
   $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){

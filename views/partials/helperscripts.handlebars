@@ -86,13 +86,10 @@ $(function() {
 
   // Attach scripts to newly loaded posts
   $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
-    console.log("Loading!")
     editor.addElements('.editable-text');
     if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded
         tribute.attach($(".editable-comment-content"));
     }
-    $.adaptiveBackground.run();
-    // $('*[data-featherlight-gallery]').featherlightGallery();
     if ($('.post-images').length > 0) {
     var $images = $('.post-images a');
     var $imagesGrouped = $images.filter('[data-group]');
@@ -123,7 +120,6 @@ $(function() {
         });
     }
 }
-console.log("Loaded!")
   });
 
   // RICH TEXT EDITOR INIT
