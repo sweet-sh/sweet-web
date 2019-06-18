@@ -947,6 +947,11 @@ module.exports = function (app) {
               comment.canDelete = true;
             }
           });
+          
+          if (req.isAuthenticated() && req.params.context=="single"){
+            // Mark associated notifications read if post is visible
+            notifier.markRead(loggedInUserData._id, displayContext._id)
+          }
 
           if (req.isAuthenticated() && req.params.context=="single"){
             // Mark associated notifications read if post is visible

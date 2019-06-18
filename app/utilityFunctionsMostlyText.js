@@ -36,8 +36,8 @@ module.exports = {
       }
     }
 
-    let mentionsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, "").match( mentionRegex )))
-    let tagsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, "").match( hashtagRegex )))
+    let mentionsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match( mentionRegex )))
+    let tagsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match( hashtagRegex )))
     let trimmedMentions = []
     let trimmedTags = []
     if (mentionsArray){
