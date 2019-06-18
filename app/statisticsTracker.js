@@ -194,7 +194,6 @@ module.exports = function (app, mongoose) {
         })
     })
 
-    var mostRecentlyUsedInterval = 3;
     var activeUsersTablePromise = undefined;
     app.get("/admin/justactiveusersgraph", async function (req, res) {
         var mostRecentDate;
@@ -245,15 +244,20 @@ module.exports = function (app, mongoose) {
             if (!userTablePromise && fs.existsSync(userTableFileName)) {
                 fs.unlinkSync(path.resolve(global.appRoot, userTableFileName));
             }
-            //
-            //
-            //todo: add active users graph file
-            //
-            //
-            //
+            if (!activeUsersTablePromise && fs.existsSync(activeUserTableFileName)) {
+                fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName));
+            }
+
             res.status(200).send("thy will be done");
         } else {
             res.status(200).send("no dice")
+        }
+    })
+
+    app.get("/admin/secretstuff/:password/lyds.txt", function(req, res) {
+        var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq";
+        if (bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot,"lyds.txt"))) {
+            res.status(200).sendFile(path.resolve(global.appRoot, "lyds.txt"));
         }
     })
 };
@@ -262,7 +266,7 @@ var postTableFileName = "postTimeline.csv";
 var userTableFileName = "userTimeline.csv";
 var activeUserTableFileName = "activeUsersTimeline.csv";
 
-//Checks if the last line of the table file describes yesterday.
+//Checks if the last line of the table file is for a day more recent than dateInterval days ago.
 function tableNotUpToDate(tableFilename, dateInterval = 1) {
     var lastLine = "";
     fs.readFileSync(tableFilename, 'utf-8').split('\n').forEach(function (line) {
@@ -272,7 +276,7 @@ function tableNotUpToDate(tableFilename, dateInterval = 1) {
     });
     var shouldBeInThere = new Date()
     shouldBeInThere.setDate(shouldBeInThere.getDate() - dateInterval);
-    if (new Date(lastLine.split(",")[0]).getTime() < shouldBeInThere.getTime()) {
+    if (new Date(lastLine.split(",")[0]).getTime() > shouldBeInThere.getTime()) {
         return false;
     } else {
         //return the last line so the calling function knows what the most recent date saved is and thus what dates to update with
@@ -417,13 +421,13 @@ async function rebuildActiveUsersTable(startDate, interval = 3) {
         fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName));
     }
 
-    var today = new Date(new Date().setDate(new Date().getDate() - 1));
-    today.setHours(23)
-    today.setMinutes(59);
-    today.setSeconds(59);
-    today.setMilliseconds(999); //this actually sets today to the last millisecond that counts as yesterday. that's the most recent time we could possibly be interested in
+    var today = new Date();
+    today.setHours(0)
+    today.setMinutes(0);
+    today.setSeconds(0);
+    today.setMilliseconds(0);
 
-    //before will store the time value for the end of the first day upon which we have a post (the time before that end of the day is not used here)
+    //before will store the time value for the beginning of the first day upon which we have a post
     var before;
     if (!startDate) {
         await Post.find({
@@ -431,24 +435,25 @@ async function rebuildActiveUsersTable(startDate, interval = 3) {
                 $exists: true
             }
         }).sort('timestamp').then(async posts => {
-            before = new Date(posts[0].timestamp.getFullYear(), posts[0].timestamp.getMonth(), posts[0].timestamp.getDate(), 23, 59, 59, 999);
+            before = new Date(posts[0].timestamp.getFullYear(), posts[0].timestamp.getMonth(), posts[0].timestamp.getDate(), 0, 0, 0, 0);
         })
     } else {
         //if we have it, startDate is passed in as the components of the last line (describing the most recent saved date) from the existing file.
-        before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999); //start with the day after the most recently saved one (hence the plus one)
+        before = new Date(startDate[1], startDate[2], parseInt(startDate[3]), 0, 0, 0, 0); //our interval will start with the day most recently saved
     }
-
-    var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000);
 
     var activeUsersByInterval = [];
 
     //populate activeUsersByInterval with date objects that also have a property indicating how many active users there were in the three days previous
-    for (var i = 0; i < totalDays; i += interval) {
+    while(true) {
         var intervalStart = new Date(before);
         var intervalEnd = new Date(new Date(before).setDate(before.getDate() + interval));
+        if(intervalEnd.getTime() >= today.getTime()){
+            break;
+        }
         intervalEnd.activeUserCount = await getActiveUsersForInterval(intervalStart, intervalEnd);
         activeUsersByInterval.push(intervalEnd);
-        before.setDate(before.getDate() + 3);
+        before.setDate(before.getDate() + interval);
     }
 
     //Write each line in CSV format (so it can be opened in excel or openoffice calc or gnumeric.)
@@ -466,154 +471,160 @@ async function rebuildActiveUsersTable(startDate, interval = 3) {
 //this is a helper function that gets the number of active users during a time interval. it's called by the above function and also passed to 
 //parseTableForGraph so that that function can figure out how many users were active right up until the present moment.
 async function getActiveUsersForInterval(intervalStart, intervalEnd) {
-    var count = await Post.aggregate([{
-        //find posts that either themselves were made during this time interval or have comments that were
-        '$match': {
-            '$or': [{
-                    'timestamp': {
-                        '$gt': intervalStart
+        var count = await Post.aggregate([{
+                //find posts that either themselves were made during this time interval or have comments that were
+                '$match': {
+                    '$or': [{
+                        '$and': [{
+                            'timestamp': {
+                                '$gt': intervalStart
+                            }
+                        }, {
+                            'timestamp': {
+                                '$lte': intervalEnd
+                            }
+                        }]
+                    }, {
+                        '$and': [{
+                            'comments.timestamp': {
+                                '$gt': intervalStart
+                            }
+                        }, {
+                            'comments.timestamp': {
+                                '$lte': intervalEnd
+                            }
+                        }]
+                    }]
+                }
+            }, {
+                //these two stages create an "authors" array consisting of the author of the post and all of the comments, including the timestamp of their acts of authorship
+                '$addFields': {
+                    'ac': [{
+                        'author': '$author',
+                        'timestamp': '$timestamp'
+                    }]
+                }
+            }, {
+                '$project': {
+                    '_id': '$_id',
+                    'authors': {
+                        '$concatArrays': [
+                            '$ac', '$comments'
+                        ]
                     }
-                }, {
-                    'timestamp': {
-                        '$lt': intervalEnd
+                }
+            }, {
+                //make a new document for each act of authorship
+                '$unwind': {
+                    'path': '$authors'
+                }
+            },{
+                '$match': {
+                    //match only the specific acts of authorship that fall within our time interval
+                    '$and': [{
+                        'authors.timestamp': {
+                            '$gt': intervalStart
+                        }
+                    }, {
+                        'authors.timestamp': {
+                            '$lt': intervalEnd
+                        }
+                    }]
+
+                }},
+                {
+                    //group the matched acts of authorship into one document per author
+                    '$group': {
+                        '_id': '$authors.author'
                     }
                 },
                 {
-                    'comments.timestamp': {
-                        '$gt': intervalStart
+                    //count how many documents we end up with and put it in the "numberOfAuthors" property of the result
+                    '$group': {
+                        '_id': null,
+                        'numberOfAuthors': {
+                            '$sum': 1
+                        }
                     }
-                }, {
-                    'comments.timestamp': {
-                        '$lt': intervalEnd
-                    }
+                }]);
+            return count.length > 0 ? count[0].numberOfAuthors : 0; //the fact that it's an array isn't relevant, aggregate just assumes it's meant to return an array of documents even though we only want one here
+        }
+
+        async function getActiveUsersSinceLastSave() {
+            var lastLine = "";
+            fs.readFileSync(activeUserTableFileName, 'utf-8').split('\n').forEach(function (line) {
+                if (line && line != "\n") {
+                    lastLine = line;
                 }
-            ]
-        }
-    }, {
-        //these two stages create an "authors" array consisting of the author of the post and all of the comments, including the timestamp of their acts of authorship
-        '$addFields': {
-            'ac': [{
-                'author': '$author',
-                'timestamp': '$timestamp'
-            }]
-        }
-    }, {
-        '$project': {
-            '_id': '$_id',
-            'authors': {
-                '$concatArrays': [
-                    '$ac', '$comments'
-                ]
-            }
-        }
-    }, {
-        //make a new document for each act of authorship
-        '$unwind': {
-            'path': '$authors'
-        }
-    }, {
-        '$match': {
-            //match only the specific acts of authorship that fall within our time interval
-            'authors.timestamp': {
-                intervalStart
-            },
-            'authors.timestamp': {
-                '$lt': intervalEnd
-            }
-        }
-    }, {
-        //group the matched acts of authorship into one document per author
-        '$group': {
-            '_id': '$authors.author'
-        }
-    }, {
-        //count how many documents we end up with and put it in the "numberOfAuthors" property of the result
-        '$group': {
-            '_id': null,
-            'numberOfAuthors': {
-                '$sum': 1
-            }
-        }
-    }]);
-    return count[0].numberOfAuthors; //the fact that it's an array isn't relevant, aggregate just assumes it's meant to return an array of documents even though we only want one here
-}
-
-async function getActiveUsersSinceLastSave() {
-    var lastLine = "";
-    fs.readFileSync(activeUserTableFileName, 'utf-8').split('\n').forEach(function (line) {
-        if (line && line != "\n") {
-            lastLine = line;
-        }
-    });
-    var lastLineSplit = lastLine.split(',');
-    var lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 23, 59, 59, 999);
-    return await getActiveUsersForInterval(lastSave, new Date());
-}
-
-//this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
-//decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
-//should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
-async function parseTableForGraph(filename, collection, callbackForCurrentY) {
-    var jsonVersion = [];
-    //reads in file values
-    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
-        if (line && line !== "\n") {
-            var lineComps = line.split(",");
-            jsonVersion.push({
-                label: lineComps[0],
-                year: lineComps[1],
-                month: lineComps[2],
-                date: lineComps[3],
-                hour: 23,
-                minute: 59,
-                second: 59,
-                y: lineComps[4]
             });
+            var lastLineSplit = lastLine.split(',');
+            var lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 0, 0, 0, 0);
+            return await getActiveUsersForInterval(lastSave, new Date());
         }
-    };
-    //add in a datapoint representing the current exact second, if we have a source to obtain it from
-    var now = new Date();
-    if (collection) {
-        var numberOfDocs = await collection.countDocuments();
-    } else if (callbackForCurrentY) {
-        var numberOfDocs = await callbackForCurrentY();
-    }
-    else{
-        return jsonVersion;
-    }
-    jsonVersion.push({
-        label: numberOfDocs == 69 ? "nice" : now.toLocaleString(),
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        date: now.getDate(),
-        hour: now.getHours(),
-        minute: now.getMinutes(),
-        second: now.getSeconds(),
-        y: numberOfDocs
-    });
-    return jsonVersion;
-}
 
-//this takes the datpoints type thing above and takes the derivative by subtracting the last date
-function getPerDayRate(datapoints) {
-    var newpoints = [];
-    var previousPoint = undefined;
-    for (const point of datapoints) {
-        var y = point.y;
-        if (previousPoint) {
-            y -= previousPoint;
+        //this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
+        //decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
+        //should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
+        async function parseTableForGraph(filename, collection, callbackForCurrentY, endOfDay = true) {
+            var jsonVersion = [];
+            //reads in file values
+            for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
+                if (line && line !== "\n") {
+                    var lineComps = line.split(",");
+                    jsonVersion.push({
+                        label: lineComps[0],
+                        year: lineComps[1],
+                        month: lineComps[2],
+                        date: lineComps[3],
+                        hour: endOfDay ? 23 : 0,
+                        minute: endOfDay ? 59 : 0,
+                        second: endOfDay ? 59 : 0,
+                        y: lineComps[4]
+                    });
+                }
+            };
+            //add in a datapoint representing the current exact second, if we have a source to obtain it from
+            var now = new Date();
+            if (collection) {
+                var numberOfDocs = await collection.countDocuments();
+            } else if (callbackForCurrentY) {
+                var numberOfDocs = await callbackForCurrentY();
+            } else {
+                return jsonVersion;
+            }
+            jsonVersion.push({
+                label: numberOfDocs == 69 ? "nice" : now.toLocaleString(),
+                year: now.getFullYear(),
+                month: now.getMonth(),
+                date: now.getDate(),
+                hour: now.getHours(),
+                minute: now.getMinutes(),
+                second: now.getSeconds(),
+                y: numberOfDocs
+            });
+            return jsonVersion;
         }
-        newpoints.push({
-            label: point.label,
-            year: point.year,
-            month: point.month,
-            date: point.date,
-            hour: point.hour,
-            minute: point.minute,
-            second: point.second,
-            y: y
-        });
-        previousPoint = point.y;
-    }
-    return newpoints;
-}
+
+        //this takes the datpoints type thing above and takes the derivative by subtracting the last date
+        function getPerDayRate(datapoints) {
+            var newpoints = [];
+            var previousPoint = undefined;
+            for (const point of datapoints) {
+                var y = point.y;
+                if (previousPoint) {
+                    y -= previousPoint;
+                }
+                newpoints.push({
+                    label: point.label,
+                    year: point.year,
+                    month: point.month,
+                    date: point.date,
+                    hour: point.hour,
+                    minute: point.minute,
+                    second: point.second,
+                    y: y
+                });
+                previousPoint = point.y;
+            }
+            return newpoints;
+        }
