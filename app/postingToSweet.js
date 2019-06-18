@@ -566,15 +566,9 @@ module.exports = function (app) {
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
     app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function (req, res) {
-        console.log(req.body)
 
         commentTimestamp = new Date();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
-
-        if (!(postImages || parsedResult)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
-            res.status(400).send('bad post op');
-            return;
-        }
 
         var rawContent = sanitize(req.body.commentContent);
         rawContent = sanitizeHtml(rawContent, {
@@ -584,6 +578,11 @@ module.exports = function (app) {
             }
         });
         var parsedResult = helper.parseText(rawContent);
+
+        if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+            res.status(400).send('bad post op');
+            return;
+        }
 
         const comment = {
             authorEmail: req.user.email,
