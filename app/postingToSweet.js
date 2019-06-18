@@ -572,7 +572,7 @@ module.exports = function (app) {
 
         var rawContent = sanitize(req.body.commentContent);
         rawContent = sanitizeHtml(rawContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a'],
+            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
             allowedAttributes: {
                 'a': ['href']
             }
