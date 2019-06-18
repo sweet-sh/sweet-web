@@ -147,7 +147,6 @@ $(function() {
     $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
         editor.addElements('.editable-text');
         tribute.attach($(".editable-comment-content"));
-        $('*[data-featherlight-gallery]').featherlightGallery();
     });
 
   // Init tribute
