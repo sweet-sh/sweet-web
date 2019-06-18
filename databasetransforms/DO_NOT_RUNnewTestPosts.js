@@ -32,12 +32,16 @@ var communities = [new ObjectId("5cd621612f6283211433c7e3"),new ObjectId("5cd74d
 
 
 async function createPosts() {
+    await Post.deleteMany().then((ok) => {
+        console.log('deleted ' + ok.n + ' old post documents');
+    });
     var originalPosts = [];
     for (const poster of posters) {
         //each poster will have 20 regular posts
-        //distributed randomly over the past 48 hours
         for (var i = 0; i < 20; i++) {
-            var postTime = (new Date()).setHours(new Date().getHours() - (Math.random() * 48));
+            var howManyDaysAgoTheyStartedPosting = posters.indexOf(poster) * 3;
+            var postTime = new Date((new Date()).setDate(new Date().getDate() - (Math.random() * howManyDaysAgoTheyStartedPosting)));
+            postTime.setHours(Math.random()*24,Math.random()*60,Math.random()*1000);
             var newpost = new Post({
                 type: 'original',
                 authorEmail: poster.email,
@@ -60,11 +64,13 @@ async function createPosts() {
     }
 
     for (const poster of posters) {
-        //and 50 random boosts
+        //and 5 random boosts
         for (var i = 0; i < 5; i++) {
-            var boostTime = new Date();
+            var howManyDaysAgoTheyStartedPosting = posters.indexOf(poster) * 3;
             var target = originalPosts[Math.floor(Math.random() * originalPosts.length)];
             var targetPostDoc = await Post.findById(target);
+            //the time of the boost is a random time between the target post's timestamp and now, with a floor of when the poster theoretically started posting
+            var boostTime = new Date(Math.max(targetPostDoc.timestamp.getTime()+(Math.random()*(new Date().getTime()-targetPostDoc.timestamp.getTime())),new Date().setDate(new Date().getDate()-howManyDaysAgoTheyStartedPosting))); //christ
             //keep anyone from boosting a post for the second time
             if (!targetPostDoc.boostsV2.some(b => {
                     return b.booster.equals(poster.id)
@@ -90,10 +96,11 @@ async function createPosts() {
         }
     }
 
+/*    
     for (var i = 0; i < 20; i++) {
         //and then add 20 random comments just for fun
-        var commentTimestamp = new Date();
-        var poster = posters[Math.floor(Math.random() * 4)]
+        var poster = posters[Math.floor(Math.random() * 4)];
+
         const comment = {
             authorEmail: poster.email,
             author: poster.id,
@@ -106,7 +113,8 @@ async function createPosts() {
             post.lastUpdated = commentTimestamp;
             await post.save();
         })
-    }
+    }*/
+    
 }
 
 async function createBoostsV2Posts() {
@@ -174,7 +182,7 @@ async function createBoostsV2Posts() {
     }
 }
 
-createBoostsV2Posts().then(async () => {
+createPosts().then(async () => {
     console.log("created "+await Post.countDocuments({})+" new post documents")
     process.exit();
 })
