@@ -3,6 +3,7 @@ const nodemailerHbs = require('nodemailer-express-handlebars');
 const path = require('path');
 const schedule = require('node-schedule');
 const moment = require('moment');
+const auth = require(global.appRoot + '/config/auth.js');
 
 // create reusable transporter object using the default SMTP transport
 transporter = nodemailer.createTransport({
@@ -10,8 +11,8 @@ transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: 'updates@sweet.sh', // generated ethereal user
-    pass: 'sab8=D8ed' // generated ethereal password
+    user: 'updates@sweet.sh',
+    pass: auth.mailServer
   }
 });
 
@@ -53,7 +54,7 @@ async function sendUpdateEmail(type){
                     // send mail with defined transport object
                     let info = await transporter.sendMail({
                       from: '"sweet 🍬" <updates@sweet.sh>', // sender address
-                      to: "mail@raphaelkabo.com",
+                      to: user.email,
                       subject: email.subject,
                       template: "update",
                       context: {
@@ -70,7 +71,7 @@ async function sendUpdateEmail(type){
                           signoff: '— sweet x'
                       }
                     });
-                    console.log("Update email sent: %s", info.messageId);
+                    console.log("Update email sent to ",user.username,":", info.messageId);
                 }
             }
         })
