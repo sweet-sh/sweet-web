@@ -39,32 +39,45 @@ ObjectId     = require('mongoose').Types.ObjectId;
 
 require('./config/passport')(passport); // pass passport for configuration
 
+globals = require('./config/globals');
+
 // Set up our Express application
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
- 
+
 // View engine (Handlebars)
-var hbs = handlebars.create({
-  defaultLayout: 'main',
-  helpers: {
-      plural: function (number, text) {
-        var singular = number === 1;
-      	// If no text parameter was given, just return a conditional s.
-      	if ( typeof text !== 'string' ) return singular ? '' : 's';
-      	// Split with regex into group1/group2 or group1(group3)
-      	var match = text.match( /^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/ );
-      	// If no match, just append a conditional s.
-      	if ( !match ) return text + ( singular ? '' : 's' );
-      	// We have a good match, so fire away
-      	return singular && match[1] // Singular case
-      		|| match[2] // Plural case: 'bagel/bagels' --> bagels
-          || match[1] + ( match[3] || 's' ); // Plural case: 'bagel(s)' or 'bagel' --> bagels
-      }
-  }
+hbs = handlebars.create({
+    defaultLayout: 'main',
+    helpers: {
+        plural: function (number, text) {
+            var singular = number === 1;
+            // If no text parameter was given, just return a conditional s.
+            if ( typeof text !== 'string' ) return singular ? '' : 's';
+            // Split with regex into group1/group2 or group1(group3)
+            var match = text.match( /^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/ );
+            // If no match, just append a conditional s.
+            if ( !match ) return text + ( singular ? '' : 's' );
+            // We have a good match, so fire away
+            return singular && match[1] // Singular case
+            || match[2] // Plural case: 'bagel/bagels' --> bagels
+            || match[1] + ( match[3] || 's' ); // Plural case: 'bagel(s)' or 'bagel' --> bagels
+        },
+        buildComment(comment, depth) {
+            if (!depth) depth = 1;
+            var tree = [];
+            tree.push({comment: comment, depth: depth})
+            comment.replies.forEach((r) => {
+                depth = depth+1
+                tree.comment.replies.depth = depth;
+            });
+            return tree;
+        }
+    }
 });
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
+// app.enable('view cache');
 
 // Static files
 app.use(express.static('public'));

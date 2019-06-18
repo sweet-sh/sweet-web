@@ -1,0 +1,150 @@
+{{#each posts}}
+{{#if canDisplay}}
+<article class="post" data-post-id="{{this._id}}">
+    <aside class="notifications">
+        {{#if recentlyCommented}}
+            {{#isnt lastCommentAuthor.username ../loggedInUserData.username}}
+                <div class="recently-commented-notification">
+                    <i class="far fa-comment"></i> Recently commented on by <a href="/{{this.lastCommentAuthor.username}}">@{{this.lastCommentAuthor.username}}</a>
+                </div>
+            {{/isnt}}
+        {{/if}}
+        {{#if headerBoosters}}
+            <div class="boosters-notification">
+                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<a href="/{{#eq this "you"}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a>{{/each}}{{#if otherBoosters}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/gt}}
+            </div>
+        {{else}}
+            {{#if otherBoosters}}
+                <div class="boosters-notification">
+                    <i class="fas fa-retweet"></i> Boosted by {{plural otherBoosters 'some people/someone'}} you don't follow <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+                </div>
+            {{/if}}
+        {{/if}}
+        {{#isnt ../context "community"}}
+            {{#contains ../loggedInUserData.communities this.community._id}}
+                <div class="community-notification">
+                    <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
+                    <span>Posted in <a href="/community/{{this.community.slug}}">{{this.community.name}}</a></span>
+                </div>
+            {{/contains}}
+        {{/isnt}}
+    </aside>
+    <header>
+        <div class="post-header-left">
+            <a href="/{{this.author.username}}">
+                <img class="author-image" alt="Profile image of @{{this.author.username}}" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+            </a>
+        </div>
+        <div class="post-header-right">
+            <h2 class="author-name">
+                {{#if this.author.displayName}}
+                    <span class="author-display-name">
+                        <a href="/{{this.author.username}}">{{this.author.displayName}}</a>
+                    </span>
+                {{/if}}
+                <span class="author-username">
+                    {{#unless this.author.displayName}}<span style="font-weight:500"><a href="/{{this.author.username}}">{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</a></span>{{/unless}}
+                </span>
+                {{#contains ../flaggedUsers this.author.email}}
+                    <i class="fas fa-exclamation-triangle user-flag"></i>
+                {{/contains}}
+            </h2>
+            <aside class="metadata">
+                <span class="post-timestamp">
+                    {{this.parsedTimestamp}}
+                </span>
+                &nbsp;&middot;&nbsp;
+                <span class="post-visibility">
+                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i>
+                </span>
+            </aside>
+        </div>
+    </header>
+    <section class="content{{#if this.contentWarnings}} content-warning-post{{/if}}">
+        {{#if this.contentWarnings}}
+            <aside class="content-warning">
+                {{this.contentWarnings}}
+            </aside>
+            <div class="abbreviated-content content-warning-content" style="height:0">
+        {{/if}}
+        {{{this.parsedContent}}}
+        {{#if this.contentWarnings}}
+            </div>
+            <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
+        {{/if}}
+        {{#if this.images}}
+            {{> imagegallery }}
+        {{/if}}
+    </section>
+    <footer class="toolbar">
+        <div class="general-tools">
+            {{#unless this.commentsDisabled}}
+                {{#if ../loggedIn}}
+                    <button type="button" class="button post-toolbar-button show-comments">
+                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                    </button>
+                {{else}}
+                    {{#if this.numberOfComments}}
+                        <button type="button" class="button post-toolbar-button show-comments">
+                            <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                        </button>
+                    {{/if}}
+                {{/if}}
+            {{/unless}}
+            {{#eq this.privacy "public"}}
+                {{#if ../loggedIn}}
+                    {{#isnt this.type "community"}}
+                        <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
+                            <button type="submit" class="button post-toolbar-button boost-post">
+                                {{#if youBoosted}}
+                                    <span class="fa-layers fa-fw">
+                                        <i class="fas fa-retweet"></i>
+                                        <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+                                    </span>
+                                {{else}}
+                                    <i class="fas fa-retweet"></i>
+                                {{/if}}
+                            </button>
+                        </form>
+                    {{/isnt}}
+                {{/if}}
+            {{/eq}}
+            <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
+              <i class="fas fa-link"></i>
+            </a>
+        </div>
+        <div id="authorTools">
+            {{#contains this.subscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
+                    <i class="far fa-bell"></i>
+                </button>
+            {{/contains}}
+            {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
+                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
+                    <i class="far fa-bell-slash"></i>
+                </button>
+            {{/contains}}
+            {{#if isYourPost}}
+                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            {{/if}}
+        </div>
+    </footer>
+    {{#unless this.commentsDisabled}}
+        <section class="comments">
+            <div class="comments-container">
+                {{#if this.comments}}
+                    {{#each this.comments}}
+                        {{> comment}}
+                    {{/each}}
+                {{/if}}
+            </div>
+            {{#if ../canReply}}
+                {{> newreplyform }}
+            {{/if}}
+        </section>
+    {{/unless}}
+</article>
+{{/if}}
+{{/each}}

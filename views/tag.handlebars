@@ -12,9 +12,9 @@
 $('#postsContainer').infiniteScroll({
   path: function() {
     var pageNumber = ( this.loadCount + 1 );
-    return '/showtag/{{name}}/' + pageNumber;
+    return '/showposts/tag/{{name}}/' + pageNumber;
   },
-  append: '.commentContainer',
+  append: '.post',
   prefill: true,
   history: true,
   status: '.page-load-status'
