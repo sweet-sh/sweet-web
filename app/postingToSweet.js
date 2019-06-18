@@ -1,16 +1,9 @@
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
+var mongoose = require('mongoose');
 
 const url = require('url');
-const metascraper = require('metascraper')([
-  require('metascraper-image')(),
-  require('metascraper-title')(),
-  require('metascraper-url')(),
-  require('metascraper-description')()
-])
-
-const got = require('got');
 
 sanitizeHtmlOptions = {
     allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -51,102 +44,7 @@ var apiConfig = require('../config/apis.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
 
-var imaggaOptions = {
-    headers: {
-        'Authorization': apiConfig.imagga
-    }
-};
-
 module.exports = function (app) {
-    //Old image uploading function. Didn't distinguish between public and private images. No longer used
-    app.post("/api/image", isLoggedInOrRedirect, function (req, res) {
-        if (req.files.image) {
-            if (req.files.image.size <= 10485760) {
-                let imageFormat = fileType(req.files.image.data);
-                let imageUrl = shortid.generate();
-                if (imageFormat.mime == "image/gif") {
-                    if (req.files.image.size <= 5242880) {
-                        var imageData = req.files.image.data;
-                        console.log(imageUrl + '.gif');
-                        fs.writeFile('./public/images/uploads/' + imageUrl + '.gif', imageData, 'base64', function (err) {
-                            if (err) {
-                                return console.log(err);
-                            }
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.gif',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                    } else {
-                        res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({
-                            error: "filesize"
-                        }));
-                    }
-                } else if (imageFormat.mime == "image/jpeg" || imageFormat.mime == "image/png") {
-                    sharp(req.files.image.data)
-                        .resize({
-                            width: 1200,
-                            withoutEnlargement: true
-                        })
-                        .jpeg({
-                            quality: 70
-                        })
-                        .toFile('./public/images/uploads/' + imageUrl + '.jpg')
-                        .then(image => {
-                            getTags('https://sweet.sh/images/uploads/' + imageUrl + '.jpg')
-                                .then((tags) => {
-                                    if (tags.auto) {
-                                        imageTags = tags.auto.join(", ");
-                                    } else {
-                                        imageTags = ""
-                                    }
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    imageTags = ""
-                                    res.setHeader('content-type', 'text/plain');
-                                    res.end(JSON.stringify({
-                                        url: imageUrl + '.jpg',
-                                        tags: imageTags
-                                    }));
-                                })
-                        })
-                        .catch(err => {
-                            console.error(err);
-                        });
-                }
-            } else {
-                res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filesize"
-                }));
-            }
-        }
-    })
 
     //New image upload reciever.
     //Inputs: image data.
@@ -197,29 +95,10 @@ module.exports = function (app) {
                             if (err) {
                                 return console.log(err);
                             }
-                            //WHAT IS THIS
-                            // getTags('https://sweet.sh/images/uploads/' + imageUrl + '.gif')
-                            // .then((tags) => {
-                            //   if (tags.auto){
-                            //     imageTags = tags.auto.join(", ");
-                            //   }
-                            //   else {
-                            //     imageTags = ""
-                            //   }
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.gif',
-                                tags: imageTags
                             }));
-                            //WHAT IS THIS
-                            // })
-                            // .catch(err => {
-                            //   console.error(err);
-                            //   imageTags = ""
-                            //   res.setHeader('content-type', 'text/plain');
-                            //   res.end(JSON.stringify({url: imageUrl + '.gif', tags: imageTags}));
-                            // })
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
@@ -251,11 +130,9 @@ module.exports = function (app) {
                     }
                     sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
                         .then(image => {
-                            imageTags = ""
                             res.setHeader('content-type', 'text/plain');
                             res.end(JSON.stringify({
                                 url: imageUrl + '.' + imageFormat,
-                                tags: imageTags
                             }));
                         })
                         .catch(err => {
@@ -305,7 +182,6 @@ module.exports = function (app) {
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
-        var postImageTags = [""]; //what
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
 
@@ -317,17 +193,17 @@ module.exports = function (app) {
         }
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
-            if (linkPreviewEnabled) {
-                linkPreview = {
-                    url: linkPreviewMetadata.url,
-                    domain: url.parse(linkPreviewMetadata.url).hostname,
-                    title: linkPreviewMetadata.title,
-                    description: linkPreviewMetadata.description,
-                    image: linkPreviewMetadata.image,
-                }
-            } else {
-                linkPreview = {};
-            }
+            // if (linkPreviewEnabled) {
+            //     linkPreview = {
+            //         url: linkPreviewMetadata.url,
+            //         domain: url.parse(linkPreviewMetadata.url).hostname,
+            //         title: linkPreviewMetadata.title,
+            //         description: linkPreviewMetadata.description,
+            //         image: linkPreviewMetadata.image,
+            //     }
+            // } else {
+            //     linkPreview = {};
+            // }
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -346,14 +222,13 @@ module.exports = function (app) {
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
-                    }],
-                    linkPreview: linkPreview
+                    }]
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -460,8 +335,8 @@ module.exports = function (app) {
                     author: req.user._id,
                     url: newPostUrl,
                     privacy: 'public',
-                    timestamp: new Date(),
-                    lastUpdated: new Date(),
+                    timestamp: postCreationTime,
+                    lastUpdated: postCreationTime,
                     rawContent: sanitize(req.body.postContent),
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
@@ -470,14 +345,13 @@ module.exports = function (app) {
                     contentWarnings: sanitize(req.body.postContentWarnings),
                     imageVersion: 2,
                     images: postImages,
-                    imageTags: postImageTags,
                     imageDescriptions: postImageDescriptions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    linkPreview: linkPreview
+                    // linkPreview: linkPreview
                 });
 
                 // Parse images
@@ -504,7 +378,7 @@ module.exports = function (app) {
                             })
                     });
                 }
-
+                var newPostId = post._id;
                 post.save()
                     .then(() => {
                         parsedResult.tags.forEach((tag) => {
@@ -553,19 +427,20 @@ module.exports = function (app) {
         }
 
         //get link preview for first link in content
-        contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
-        if (contentURLMatch) {
-            contentURL = contentURLMatch[2]
-            got(contentURL)
-            .then(({ body: html, url }) => {
-                metascraper({ html, url })
-                    .then(metadata => {
-                        savePost(true, metadata);
-                })
-            })
-        } else {
-            savePost(false);
-        }
+        // contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
+        // if (contentURLMatch) {
+        //     contentURL = contentURLMatch[2]
+        //     got(contentURL)
+        //     .then(({ body: html, url }) => {
+        //         metascraper({ html, url })
+        //             .then(metadata => {
+        //                 savePost(true, metadata);
+        //         })
+        //     })
+        // } else {
+        //     savePost(false);
+        // }
+        savePost();
     });
 
     //Responds to requests that delete posts.
@@ -678,16 +553,18 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function (req, res) {
-        console.log(req.body)
+    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, function (req, res) {
         let parsedResult = helper.parseText(req.body.commentContent);
         commentTimestamp = new Date();
+        var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
+        let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
             return;
         }
         const comment = {
+            _id: commentId,
             authorEmail: req.user.email,
             author: req.user._id,
             timestamp: commentTimestamp,
@@ -696,7 +573,7 @@ module.exports = function (app) {
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,
             images: postImages,
-            imageDescriptions: JSON.parse(req.body.imageDescs).slice(0, 4)
+            imageDescriptions: imageDescriptions
         };
 
         Post.findOne({
@@ -704,9 +581,57 @@ module.exports = function (app) {
             })
             .populate('author')
             .then((post) => {
+                numberOfComments = 0;
+                if (req.params.commentid == 'undefined') {
+                    // This is a top level comment with no parent (identified by commentid)
+                    post.comments.push(comment);
+
+                    // Count total comments
+                    function countComments(array) {
+                        array.forEach((element) => {
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
+                            if (element.replies) {
+                                var replies = countComments(element.replies)
+                                if (replies) {
+                                    return replies;
+                                }
+                            }
+                        })
+                        return numberOfComments;
+                    }
+                    post.numberOfComments = countComments(post.comments);
+                }
+                else {
+                    // This is a child level comment so we have to drill through the comments
+                    // until we find it
+                    function findNested(array, id) {
+                        var foundElement = false;
+                        array.forEach((element) => {
+                            if (element._id && element._id.equals(id)){
+                                element.replies.push(comment);
+                                foundElement = element;
+                            }
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
+                            if (element.replies) {
+                                var found = findNested(element.replies, id)
+                                if (found) {
+                                    foundElement = element;
+                                    return found;
+                                }
+                            }
+                        })
+                        return foundElement;
+                    }
+                    var target = findNested(post.comments, req.params.commentid);
+                    if (target) {
+                        post.numberOfComments = numberOfComments;
+                    }
+                }
                 postPrivacy = post.privacy;
-                post.comments.push(comment);
-                post.numberOfComments = post.comments.length;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
                 if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
@@ -714,7 +639,6 @@ module.exports = function (app) {
                 }
                 post.save()
                     .then(() => {
-
                         // Parse images
                         if (postImages) {
                             postImages.forEach(function (imageFileName) {
@@ -816,15 +740,15 @@ module.exports = function (app) {
                                 }
 
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
-                                if (post.boostsV2.length > 1) {
+                                if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
-                                    post.boostsV2.populate('booster', (err, boosts) => {
+                                    post.populate('boostV2.booster', (err, populatedPost) => {
                                         if (err) {
                                             console.log('could not notify people who boosted post ' + post._id.toString() + " of a recent reply:");
                                             console.log(err);
                                         } else {
-                                            boosts.forEach(boost => {
-                                                boosterIDs.push(boost.booster._id);
+                                            populatedPost.boostsV2.forEach(boost => {
+                                                boosterIDs.push(boost.booster._id.toString());
                                                 //make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
                                                 //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
                                                 //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
@@ -844,43 +768,10 @@ module.exports = function (app) {
                                     })
                                 }
 
-/*                              This is the version of the above that worked with the old model of storing boosts in the database.
-                                var boosterIDs = [];
-                                post.boosts.forEach(boostID => {
-                                    Post.findById(boostID).then(boost => {
-                                        boosterIDs.push(boost.author.toString());
-                                        //this is true once we've added a boost author into our array for each boost, so it only runs the last time this is called
-                                        if (boosterIDs.length == post.boosts.length) {
-                                            //remove duplicate ids for people who've boosted it more than once,
-                                            //and make sure we're not notifying the person who left the comment (this will be necessary if they left it on their own boosted post)
-                                            //and make sure we're not notifying the post's author (necessary if they boosted their own post) (they'll have gotten a notification above)
-                                            boosterIDs = boosterIDs.filter((v, i, a) => a.indexOf(v) === i && v != req.user._id.toString() && v != originalPoster._id.toString());
-                                            boosterIDs.forEach(boosterID => {
-                                                User.findById(boosterID).then(booster => {
-                                                    //and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
-                                                    //or anyone who unsubscribed from the post
-                                                    if (!parsedResult.mentions.includes(booster.username) && !post.unsubscribedUsers.includes(boosterID.toString())) {
-                                                        notifier.notify('user', 'boostedPostReply', booster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
-                                                    }
-                                                }).catch(err => {
-                                                    console.log("could not find document for booster " + boosterID + ", error:")
-                                                    console.log(err);
-                                                })
-                                            })
-
-                                            //if there are boosters, we notify the other "subscribers" here, because here we have the full list of
-                                            //boosters and can check the subscribers against it before notifying them
-                                            var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u));
-                                            notifySubscribers(workingSubscribers);
-                                        }
-                                    })
-                                })
-*/
-
                                 //NOTIFY THE OTHER SUBSCRIBERS (PEOPLE WHO WERE MENTIONED IN THE ORGINAL POST AND THOSE WHO COMMENTED ON IT)
 
                                 //if there are boosts for this post, this was called a few lines up from here. otherwise, we do it now
-                                if (post.boosts.length === 0) {
+                                if (post.boostsV2.length === 0) {
                                     notifySubscribers(post.subscribedUsers)
                                 }
 
@@ -941,23 +832,39 @@ module.exports = function (app) {
                             image = 'cake.svg'
                         }
                         if (req.user.displayName) {
-                            name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + req.user.username + '">' + req.user.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + req.user.username + '</span></div>';
+                            name = '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>';
                         } else {
-                            name = '<div class="author-username"><strong><a class="authorLink" href="/' + req.user.username + '">@' + req.user.username + '</a></strong></div>';
+                            name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        result = {
+                        classNames = ['one-image','two-images','three-images','four-images'];
+                        let commentImageGallery = function() {
+                            html = (postImages.length>0 ? '<div class="post-images '+classNames[postImages.length-1]+'"'+(postImages.length>1 ? ' data-featherlight-gallery data-featherlight-filter="a"' : '')+'>' : '');
+                            for (let i=0; i<postImages.length;i++){
+                              html += (postImages.length>1 ? '<a href="/api/image/display/'+postImages[i]+'">' : '')+'<img alt="'+imageDescriptions[i]+' (posted by '+req.user.username+')" class="post-single-image" src="/api/image/display/'+postImages[i]+'" '+(postImages.length==1 ? 'data-featherlight="/api/image/display/'+postImages[i]+'"' : '')+'>'+(postImages.length>1 ? '</a>' : '');
+                            }
+                            html += (postImages.length>0 ? '</div>' : '');
+                            html += '</div></div>';
+                            return html;
+                        }
+                        commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
                             image: image,
                             name: name,
                             username: req.user.username,
                             timestamp: moment(commentTimestamp).fromNow(),
                             content: parsedResult.text,
-                            comment_id: post.comments[post.numberOfComments - 1]._id.toString(),
-                            post_id: post._id.toString()
-                        }
-                        console.log(result);
-                        res.contentType('json');
-                        res.send(JSON.stringify(result));
+                            comment_id: commentId.toString(),
+                            post_id: post._id.toString(),
+                            image_gallery: commentImageGallery(),
+                            depth: req.body.depth,
+                        })
+                        .then(html => {
+                            result = {
+                                comment: html
+                            }
+                            res.contentType('json');
+                            res.send(JSON.stringify(result));
+                        })
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -975,14 +882,52 @@ module.exports = function (app) {
                 "_id": req.params.postid
             })
             .then((post) => {
+                commentsByUser = 0;
+                latestTimestamp = 0;
+                numberOfComments = 0;
+                function findNested(array, id, parent) {
+                    var foundElement;
+                    var parentElement = (parent ? parent : post)
+                    array.forEach((element) => {
+                        if (!element.deleted) {
+                            numberOfComments++;
+                        }
+                        if ((element.author.toString() == req.user._id.toString()) && !element.deleted) {
+                            commentsByUser++;
+                        }
+                        if (element.timestamp > latestTimestamp) {
+                            latestTimestamp = element.timestamp;
+                        }
+                        element.numberOfSiblings = (parent ? parentElement.replies.length-1 : post.comments.length-1);
+                        element.parent = parentElement;
+                        if (element._id && element._id.equals(id)){
+                            foundElement = element;
+                            commentsByUser--;
+                            numberOfComments--;
+                            console.log('numberOfComments',numberOfComments)
+                        }
+                        if (element.replies) {
+                            var found = findNested(element.replies, id, element)
+                            if (found) {
+                                foundElement = found;
+                            }
+                        }
+                    })
+                    return foundElement;
+                }
+
+                var target = findNested(post.comments, req.params.commentid);
+                if (target) {
+                    post.numberOfComments = numberOfComments;
+                }
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (!post.comments.id(req.params.commentid).author._id.equals(req.user._id)) {
+                if (!target.author.equals(req.user._id) && post.author.toString() != req.user._id.toString()) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }
 
-                post.comments.id(req.params.commentid).images.forEach((image) => {
+                target.images.forEach((image) => {
                     fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                         if (err) console.log("Image deletion error " + err)
                     })
@@ -990,16 +935,30 @@ module.exports = function (app) {
                         "filename": image
                     })
                 })
-                post.comments.id(req.params.commentid).remove();
-                post.numberOfComments = post.comments.length;
+
+                // Check if target has children
+                if (target.replies && target.replies.length) {
+                    // We feel sorry for the children - just wipe the target's memory
+                    target.parsedContent = "";
+                    target.rawContent = "";
+                    target.deleted = true;
+                }
+                else {
+                    // There are no children, the target can be destroyed
+                    target.remove();
+                    if (target.numberOfSiblings == 0 && target.parent.deleted) {
+                        // There are also no siblings, and the element's parent
+                        // has been deleted, so we can even destroy that!
+                        target.parent.remove();
+                    }
+                }
+
                 post.save()
                     .then((comment) => {
-                        relocatePost(ObjectId(req.params.postid));
+                        // relocatePost(ObjectId(req.params.postid));
+                        post.lastUpdated = latestTimestamp;
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
-
-                        if (!post.comments.some((v, i, a) => {
-                                return v.author.toString() == req.user._id.toString();
-                            })) {
+                        if (commentsByUser == 0) {
                             post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
                                 return v != req.user._id.toString();
                             })
@@ -1007,7 +966,20 @@ module.exports = function (app) {
                                 console.error(err)
                             })
                         }
-                        res.sendStatus(200);
+                        // if (!target.some((v, i, a) => {
+                        //         return v.author.toString() == req.user._id.toString();
+                        //     })) {
+                        //     post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
+                        //         return v != req.user._id.toString();
+                        //     })
+                        //     post.save().catch(err => {
+                        //         console.error(err)
+                        //     })
+                        // }
+                        result = {
+                            numberOfComments: numberOfComments
+                        }
+                        res.contentType('json').send(JSON.stringify(result));
                     })
                     .catch((error) => {
                         console.error(error)
@@ -1028,31 +1000,80 @@ module.exports = function (app) {
                 '_id': req.params.postid
             }, {
                 boostsV2: 1,
-                lastUpdated: 1
-            })
+                lastUpdated: 1,
+                privacy: 1,
+                unsubscribedUsers: 1,
+                author: 1,
+                url: 1
+            }).populate('author')
             .then((boostedPost) => {
                 if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
                     res.status(400).send("post is not public and therefore may not be boosted");
                     return;
                 }
-                const boost = {
-                    booster: req.user._id,
-                    timestamp: boostedTimestamp
-                }
+                var boost = new Post({
+                    type: 'boost',
+                    authorEmail: req.user.email,
+                    author: req.user._id,
+                    url: shortid.generate(),
+                    privacy: 'public',
+                    timestamp: boostedTimestamp,
+                    lastUpdated: boostedTimestamp,
+                    //add field back to schema so this works
+                    boostTarget: boostedPost._id
+                })
+                boost.save().then(savedBoost => {
+                    const boost = {
+                        booster: req.user._id,
+                        timestamp: boostedTimestamp,
+                        boost: savedBoost._id
+                    }
+                    boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                        return !boost.booster.equals(req.user._id)
+                    })
+                    boostedPost.boostsV2.push(boost);
+
+                    // don't think so
+                    //boostedPost.subscribedUsers.push(req.user._id.toString());
+
+                    boostedPost.save().then(() => {
+                        //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
+                        if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
+                            notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, null, '/' + boostedPost.author.username + '/' + boostedPost.url, 'post')
+                        }
+                        res.redirect("back");
+                    })
+                })
+            })
+    })
+
+    //Responds to a post request that boosts a post.
+    //Inputs: id of the post to be boosted
+    //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
+    //user whose post was boosted.
+    app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
+        Post.findOne({
+                '_id': req.params.postid
+            }, {
+                boostsV2: 1,
+                privacy: 1,
+                author: 1,
+                url: 1,
+                timestamp: 1
+            })
+            .then((boostedPost) => {
+                var boost = boostedPost.boostsV2.find(b => {
+                    return b.booster.equals(req.user._id)
+                });
                 boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
                     return !boost.booster.equals(req.user._id)
                 })
-                boostedPost.boostsV2.push(boost);
-                boostedPost.lastUpdated = boostedTimestamp;
-
-                //replace this later when comment-on-a-boost notifications use the boostsV2 array instead of the subscribed/unsubscribed users
-                boostedPost.subscribedUsers.push(req.user._id.toString());
-
+                Post.deleteOne({
+                    _id: boost.boost
+                }, function () {
+                    console.log('delete')
+                });
                 boostedPost.save().then(() => {
-                    //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
-                    if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
-                        notifier.notify('user', 'boost', boostedPost.author._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                    }
                     res.redirect("back");
                 })
             })
@@ -1151,57 +1172,29 @@ function getTags(url) {
 //input: post id
 //output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
 function relocatePost(postid) {
-    Post.aggregate([{
-                "$match": {
-                    "_id": postid
+    Post.findById(postid).then(post => {
+        if (post.comments.length) {
+            Post.findOneAndUpdate({
+                _id: postid
+            }, {
+                $set: {
+                    lastUpdated: post.comments[post.comments.length - 1].timestamp
                 }
-            },
-            {
-                "$unwind": "$comments"
-            },
-            {
-                "$sort": {
-                    "comments.timestamp": -1
+            }).catch(err => {
+                console.log('could not relocate post:')
+                console.log(err)
+            })
+        } else {
+            Post.findOneAndUpdate({
+                _id: postid
+            }, {
+                $set: {
+                    lastUpdated: post.timestamp
                 }
-            },
-            {
-                "$group": {
-                    "_id": "$_id",
-                    "latest_timestamp": {
-                        "$first": "$comments"
-                    }
-                }
-            }
-        ])
-        .then(result => {
-            if (result.length) {
-                Post.findOneAndUpdate({
-                        _id: postid
-                    }, {
-                        $set: {
-                            lastUpdated: result[0].latest_timestamp.timestamp
-                        }
-                    }, {
-                        returnNewDocument: true
-                    })
-                    .then(updatedPost => {
-                        console.log(updatedPost)
-                    })
-            } else {
-                Post.findById(postid).then(post => {
-                    Post.findOneAndUpdate({
-                        _id: postid
-                    }, {
-                        $set: {
-                            lastUpdated: post.timestamp
-                        }
-                    }, {
-                        returnNewDocument: true
-                    })
-                })
-            }
-        })
-        .catch(error => {
-            console.error(error);
-        })
+            }).catch(err => {
+                console.log('could not relocate post:')
+                console.log(err)
+            })
+        }
+    })
 }

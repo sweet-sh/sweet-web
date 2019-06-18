@@ -4,61 +4,63 @@ module.exports = function (app, mongoose) {
 
     //Fun stats tracker. Non-interactive.
     var cameOnlineAt = new Date();
-    app.get('/admin/sweet-stats', function (req, res) {
+    app.get('/admin/juststats', function (req, res) {
         var currentTime = new Date();
         var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1);
         Post.countDocuments({}).then(numberOfPosts => {
             Image.countDocuments({}).then(numberOfImages => {
-                mongoose.connection.db.collection('sessions', (err, collection) =>{
-                    collection.countDocuments().then(numberOfActiveSessions=>{
-                    Post.find({
-                        timestamp: {
-                            $gte: new Date(new Date().setDate(new Date().getDate() - 1))
-                        }
-                    }).then(posts => {
-                        var daysImages = 0;
-                        var daysReplies = 0;
-                        posts.forEach(post => {
-                            var imageCount = post.images.length;
-                            post.comments.forEach(comment => {
-                                if (comment.images) {
-                                    imageCount += comment.images.length;
-                                }
-                            })
-                            daysImages += imageCount;
-                            daysReplies += post.comments.length;
-                        });
-                        var funstats = [
-                            "uptime " + uptime,
-                            "logged in users " + numberOfActiveSessions,
-
-                            "totals... " +
-                            " posts " + numberOfPosts +
-                            ", images " + numberOfImages,
-
-                            "last 24 hours... " +
-                            " posts " + posts.length +
-                            ", images " + daysImages +
-                            ", comments " + daysReplies
-                        ];
-                        if (req.isAuthenticated()) {
-                            var loggedInUserData = req.user;
-                            res.render('systempost', {
-                                postcontent: funstats,
-                                loggedIn: true,
-                                loggedInUserData: loggedInUserData
+                mongoose.connection.db.collection('sessions', (err, collection) => {
+                    collection.countDocuments().then(numberOfActiveSessions => {
+                        Post.find({
+                            timestamp: {
+                                $gte: new Date(new Date().setDate(new Date().getDate() - 1))
+                            }
+                        }).then(posts => {
+                            var daysImages = 0;
+                            var daysReplies = 0;
+                            posts.forEach(post => {
+                                var imageCount = post.images.length;
+                                post.comments.forEach(comment => {
+                                    if (comment.images) {
+                                        imageCount += comment.images.length;
+                                    }
+                                })
+                                daysImages += imageCount;
+                                daysReplies += post.comments.length;
                             });
-                        } else {
-                            res.render('systempost', {
-                                postcontent: funstats,
-                                loggedIn: false
-                            });
-                        }
+                            var funstats =
+                                "<strong>Uptime</strong> " + uptime + "<br>" +
+                                "<strong>Logged in users</strong> " + numberOfActiveSessions +
+                                "<hr>" +
+                                "<h5>Total</h5>" +
+                                "<strong>Posts</strong> " + numberOfPosts + "<br>" +
+                                "<strong>Images</strong> " + numberOfImages + "<br>" +
+                                "<hr>" +
+                                "<h5>Last 24 hours</h5>" +
+                                "<strong>Posts</strong> " + posts.length + "<br>" +
+                                "<strong>Images</strong> " + daysImages + "<br>" +
+                                "<strong>Comments</strong> " + daysReplies; "<br>" +
+                            res.status(200).send(funstats);
+                        })
                     })
                 })
             })
-            })
         })
+    })
+
+    app.get('/admin/stats', function (req, res) {
+        if (req.isAuthenticated()) {
+            res.render('asyncPage', {
+                getUrl: ["/admin/juststats"],
+                loggedIn: true,
+                loggedInUserData: req.user
+            });
+        } else {
+            res.render('asyncPage', {
+                getUrl: ["/admin/juststats"],
+                loggedIn: false
+            });
+        }
     })
 
     //the graph may take a hot second to render, so when you navigate to the page that displays it
@@ -67,13 +69,13 @@ module.exports = function (app, mongoose) {
     app.get("/admin/postgraph", function (req, res) {
         if (req.isAuthenticated()) {
             res.render('asyncPage', {
-                getUrl: "/admin/justpostgraph",
+                getUrl: ["/admin/justpostgraph"],
                 loggedIn: true,
                 loggedInUserData: req.user
             });
         } else {
             res.render('asyncPage', {
-                getUrl: "/admin/justpostgraph",
+                getUrl: ["/admin/justpostgraph"],
                 loggedIn: false
             });
         }
@@ -82,13 +84,28 @@ module.exports = function (app, mongoose) {
     app.get("/admin/usergraph", function (req, res) {
         if (req.isAuthenticated()) {
             res.render('asyncPage', {
-                getUrl: "/admin/justusergraph",
+                getUrl: ["/admin/justusergraph"],
                 loggedIn: true,
                 loggedInUserData: req.user
             });
         } else {
             res.render('asyncPage', {
-                getUrl: "/admin/justusergraph",
+                getUrl: ["/admin/justusergraph"],
+                loggedIn: false
+            });
+        }
+    })
+
+    app.get("/admin/allstats", function (req, res) {
+        if (req.isAuthenticated()) {
+            res.render('asyncPage', {
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
+                loggedIn: true,
+                loggedInUserData: req.user
+            });
+        } else {
+            res.render('asyncPage', {
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
                 loggedIn: false
             });
         }
@@ -99,6 +116,9 @@ module.exports = function (app, mongoose) {
     //this function just checks if the file with the post totals by day exists and is up to date and then builds the graph from it if it does and is
     //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justpostgraph", async function (req, res) {
+        if(userTablePromise){
+            await userTablePromise;
+        }
         var mostRecentDate;
         if (!fs.existsSync(postTableFileName)) {
             if (!postTablePromise) {
@@ -117,6 +137,7 @@ module.exports = function (app, mongoose) {
         res.render('partials/timeGraph', {
             layout: false,
             label: "cumulative sweet posts",
+            chartName:"postGraph",
             datapoint: datapoints
         })
     })
@@ -126,6 +147,9 @@ module.exports = function (app, mongoose) {
     //this function just checks if the file with the user totals by day exists and is up to date and then builds the graph from it if it does and is
     //and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
     app.get("/admin/justusergraph", async function (req, res) {
+        if(postTablePromise){
+            await postTablePromise;
+        }
         var mostRecentDate;
         if (!fs.existsSync(userTableFileName)) {
             if (!userTablePromise) {
@@ -144,6 +168,7 @@ module.exports = function (app, mongoose) {
         res.render('partials/timeGraph', {
             layout: false,
             label: "cumulative sweet users",
+            chartName:"userGraph",
             datapoint: datapoints
         })
     })
@@ -174,7 +199,7 @@ function tableNotUpToDate(tableFilename) {
 //last line in the existing file (startDate). This function figures out the date range that our posts are in and then saves the number of posts that
 //were created as of that day into the postCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildPostTable(startDate) {
-    //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file. 
+    //if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(postTableFileName) && !startDate) {
         fs.unlinkSync(postTableFileName);
     }
@@ -230,7 +255,7 @@ async function rebuildPostTable(startDate) {
 //last line in the existing file (startDate). This function figures out the date range that our users are in and then saves the number of users that
 //were created as of that day into the userCountByDay array. Then we write all the dates into our file. Then we're done.
 async function rebuildUserTable(startDate) {
-    //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file. 
+    //if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file.
     if (fs.existsSync(userTableFileName) && !startDate) {
         fs.unlinkSync(userTableFileName);
     }
@@ -286,9 +311,9 @@ async function rebuildUserTable(startDate) {
 //decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
 //should be current every time we build/display the graph.
 async function parseTableForGraph(filename, collection) {
-    jsonVersion = [];
+    var jsonVersion = [];
     //reads in file values
-    fs.readFileSync(filename, 'utf-8').split('\n').forEach(function (line) {
+    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')){
         if (line && line !== "\n") {
             var lineComps = line.split(",");
             jsonVersion.push({
@@ -302,7 +327,7 @@ async function parseTableForGraph(filename, collection) {
                 y: lineComps[4]
             });
         }
-    });
+    };
     //add in a datapoint representing the current exact second
     var now = new Date();
     await collection.countDocuments().then((numberOfDocs) => {

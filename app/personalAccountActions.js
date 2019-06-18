@@ -231,7 +231,7 @@ module.exports = function (app, passport) {
                         height: 600
                     })
                     .jpeg({
-                        quality: 70
+                        quality: 85
                     })
                     .toFile('./public/images/' + req.user._id + '.jpg')
                     .catch(err => {
@@ -247,7 +247,7 @@ module.exports = function (app, passport) {
                 let parsedAbout = req.user.aboutParsed;
                 if (req.body.about != req.user.aboutRaw) {
                     // Parse about section
-                    let splitAbout = req.body.about.split(/\r\n|\r|\n/gi);
+                    let splitAbout = req.body.about.substring(0,500).split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
                     splitAbout.forEach(function (line) {
                         if (line != "") {
@@ -263,12 +263,13 @@ module.exports = function (app, passport) {
                     })
                     parsedAbout = parsedAboutArray.join('');
                 }
-                user.displayName = sanitize(sanitizeHtml(req.body.displayName, sanitizeHtmlOptions));
-                user.aboutRaw = sanitize(req.body.about);
+                user.displayName = sanitize(sanitizeHtml(req.body.displayName.substring(0,50), sanitizeHtmlOptions));
+                user.pronouns = sanitize(sanitizeHtml(req.body.pronouns.substring(0,50), sanitizeHtmlOptions));
+                user.aboutRaw = sanitize(req.body.about.substring(0,500));
                 user.aboutParsed = sanitize(sanitizeHtml(parsedAbout, sanitizeHtmlOptions));
-                user.location = sanitize(sanitizeHtml(req.body.location, sanitizeHtmlOptions));
-                user.websiteRaw = sanitize(req.body.website);
-                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website), sanitizeHtmlOptions));
+                user.location = sanitize(sanitizeHtml(req.body.location.substring(0,50), sanitizeHtmlOptions));
+                user.websiteRaw = sanitize(req.body.website.substring(0,50));
+                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website.substring(0,50)), sanitizeHtmlOptions));
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {
@@ -331,13 +332,18 @@ module.exports = function (app, passport) {
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
     app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
         let updatedSettings = req.body;
+        console.log(updatedSettings)
         User.update({
                 _id: req.user._id
             }, {
                 $set: {
                     'settings.profileVisibility': updatedSettings.profileVisibility,
                     'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
-                    'settings.imageQuality': updatedSettings.imageQuality
+                    'settings.imageQuality': updatedSettings.imageQuality,
+                    'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
+                    'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
+                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
+                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false)
                 }
             })
             .then(user => {
@@ -348,6 +354,23 @@ module.exports = function (app, passport) {
                 console.log(error)
             })
     })
+
+    app.post('/api/notifications/clearall', isLoggedInOrRedirect, function (req, res) {
+        User.findOne({
+            _id: req.user._id
+          }, 'notifications')
+          .then(user => {
+            user.notifications.forEach(notification => {
+               notification.seen = true;
+            })
+            user.save()
+            .then(result => {
+                if (result) {
+                    res.sendStatus(200);
+                }
+            })
+          })
+      })
 
     //Responds to get requests for email verification that don't have the verification token included. Deprecated? When would this happen
     //Input: none

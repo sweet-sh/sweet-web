@@ -35,6 +35,12 @@
     {{{profileData.aboutParsed}}}
   </p>
 {{/if}}
+{{#if profileData.pronouns}}
+  <p>
+    <i class="fas fa-fw fa-user-circle"></i> {{profileData.pronouns}}
+  </p>
+{{/if}}
+
 {{#if profileData.location}}
   <p>
     <i class="fas fa-fw fa-map-marker-alt"></i> {{profileData.location}}

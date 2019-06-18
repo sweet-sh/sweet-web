@@ -49,21 +49,25 @@
       <form id="updateProfileForm" action="/updateprofile" method="post" enctype="multipart/form-data">
 			<div class="modal-body">
         <div class="form-group">
-					<label for="displayName">Display name</label>
-					<input type="text" class="form-control" name="displayName" value="{{profileData.displayName}}">
-				</div>
+    		<label for="displayName">Display name</label>
+    		<input type="text" class="form-control" name="displayName" value="{{profileData.displayName}}" maxlength="50">
+    	</div>
         <div class="form-group">
           <label for="about">About</label>
-          <textarea class="form-control" name="about">{{profileData.aboutRaw}}</textarea>
+          <textarea class="form-control" name="about"  maxlength="500">{{profileData.aboutRaw}}</textarea>
         </div>
         <div class="form-group">
-					<label for="location">Location</label>
-					<input type="text" class="form-control" name="location" value="{{profileData.location}}">
-				</div>
+          <label for="pronouns">Pronouns</label>
+          <input type="text" class="form-control" name="pronouns" value="{{profileData.pronouns}}" maxlength="50">
+        </div>
         <div class="form-group">
-					<label for="website">Website</label>
-					<input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}">
-				</div>
+    		<label for="location">Location</label>
+    		<input type="text" class="form-control" name="location" value="{{profileData.location}}" maxlength="50">
+    	</div>
+        <div class="form-group">
+			<label for="website">Website</label>
+			<input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}" maxlength="50">
+		</div>
         <label>Profile image (maximum file size 3MB)</label>
   			<div id="image-preview">
   				<label for="image-upload" id="image-label">Choose file</label>
@@ -89,7 +93,7 @@ $('#postsContainer').infiniteScroll({
     var pageNumber = ( this.loadCount + 1 );
     return '/showposts/user/{{profileData._id}}/' + pageNumber;
   },
-  append: '.commentContainer',
+  append: '.post',
   prefill: true,
   history: false,
   status: '.page-load-status'
@@ -97,4 +101,3 @@ $('#postsContainer').infiniteScroll({
 </script>
 
 {{> profilescripts}}
-

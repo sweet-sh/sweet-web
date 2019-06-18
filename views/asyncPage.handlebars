@@ -20,9 +20,12 @@
                 </div>
               </div>
             </div>
-            <div class="post-content ">
+            {{#each getUrl}}
+            <div class="post-content async-load-{{@index}}">
               <img src="/images/loading.gif" style="display: block; margin: 0 auto;max-width:100%">
             </div>
+            {{#unless @last}}<hr style="margin:1em 0;">{{/unless}}
+            {{/each}}
           </div>
         </div>
         <div class="row commentMetadata">
@@ -47,8 +50,14 @@
   </div>
 </div>
 <script>
-  $.get("{{this.getUrl}}").then(response=>{
-    $('.post-content').html(response);
-    $('.postAuthorImage').attr('src','/images/term_small.png');
+  var completedGets = 0;
+  {{#each getUrl}}
+  $.get("{{this}}").then(response=>{
+    completedGets++;
+    $('.post-content.async-load-{{@index}}').html(response);
+    if(completedGets=={{../getUrl.length}}){
+      $('.postAuthorImage').attr('src','/images/term_small.png');
+    }
   })
+  {{/each}}
 </script>

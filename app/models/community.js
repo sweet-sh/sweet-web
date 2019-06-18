@@ -14,6 +14,7 @@ var communitySchema = new mongoose.Schema({
   rulesParsed: String,
   welcomeMessageRaw: String,
   welcomeMessageParsed: String,
+  welcomeMessageAuthor: { type: Schema.Types.ObjectId, ref: 'User' },
   image: String,
   imageEnabled: Boolean,
   settings: {

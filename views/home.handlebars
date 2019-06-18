@@ -16,7 +16,7 @@ $('#postsContainer').infiniteScroll({
     var pageNumber = ( this.loadCount + 1 );
     return '/showposts/home/{{loggedInUserData._id}}/' + pageNumber;
   },
-  append: '.commentContainer',
+  append: '.post',
   prefill: true,
   history: true,
   status: '.page-load-status'

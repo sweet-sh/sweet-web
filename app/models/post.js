@@ -2,31 +2,24 @@ var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 var commentSchema = new mongoose.Schema({
-  authorEmail: {
-    type: String,
-    required: true
-  },
+  authorEmail: String,
   author: { type: Schema.Types.ObjectId, ref: 'User' },
-  timestamp: {
-		type: Date,
-		required: true
-	},
-  rawContent: {
-    type: String,
-    required: false
-  },
-  parsedContent: {
-    type: String
-  },
+  timestamp: Date,
+  rawContent: String,
+  parsedContent: String,
   mentions: [String],
   tags: [String],
   images: [String],
-  imageDescriptions: [String]
+  imageDescriptions: [String],
+  deleted: { type: Boolean, default: false },
 });
+
+commentSchema.add({ replies: [commentSchema] });
 
 var boostSchema = new mongoose.Schema({
   booster: {type: Schema.Types.ObjectId, ref: 'User', required: true},
-  timestamp: {type: Date, required: true}
+  timestamp: {type: Date, required: true},
+  boost: {type: Schema.Types.ObjectId, ref: 'Post'}
 })
 
 var postSchema = new mongoose.Schema({
@@ -59,22 +52,19 @@ var postSchema = new mongoose.Schema({
     type: String
   },
   comments: [commentSchema],
-  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' }, //deprecated
+  boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' },
   numberOfComments: {
     type: Number
   },
   mentions: [String],
   tags: [String],
-  boosts: [String], //deprecated
+  boosts: [String],
   boostsV2: [{type:boostSchema, required: true}],
-  boosters: [{type: Schema.Types.ObjectId, ref: 'User' }], //deprecated
   contentWarnings: String,
   commentsDisabled: Boolean,
   imageVersion: Number,
   images: [String],
-  imageTags: [String],
   imageDescriptions: [String],
-  images_v3: [{ type: Schema.Types.ObjectId, ref: 'Image' }],
   subscribedUsers: [String],
   unsubscribedUsers: [String],
   linkPreview: {
@@ -86,8 +76,13 @@ var postSchema = new mongoose.Schema({
   }
 });
 
+//used to select posts to display in feeds
+postSchema.index({author:1});
+postSchema.index({community:1});
+
+//used to sort posts in feeds
 postSchema.index({lastUpdated:-1});
-postSchema.index({"boostsV2.booster":1});
+postSchema.index({timestamp:-1});
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

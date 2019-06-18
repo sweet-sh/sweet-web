@@ -28,6 +28,11 @@ a {
   color: #338fc2;
 }
 
+a:hover {
+    color: #ce1717;
+    text-decoration: underline;
+}
+
 blockquote {
   border-left: 2px solid #bbb;
   color: #777;
@@ -125,16 +130,12 @@ hr {
 .content-box:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-.commentContainer:hover {
-    /* background: #f8f8f8; */
+article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-.replyContainer {
-  background: #f5f5f5;
-}
-.repliesContainer {
+section.comments {
+  background: #f6f6f6;
   border-top: 1px solid #eaeaea;
-  /* box-shadow: inset 0 2px 2px rgba(0,0,0,0.09); */
 }
 .user-list li{
   border: 1px solid #dfdfdf;
@@ -152,10 +153,12 @@ hr {
 	color: #555;
 }
 .notificationLink {
-  background: #eeecec;
+  background: #f9f9fa;
+  color: #707070 !important;
 }
 .notification-active {
-  background: #fff;
+  background: #eaeaea;
+  color: rgb(73, 80, 87) !important;
 }
 .authorLink {
   color: #1a1717;
@@ -176,11 +179,7 @@ hr {
 .add-emoji:hover {
   border-color: #ddd;
 }
-.abbreviated-content:not(.content-warning-content)::after {
-  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
-}
-.show-more,
-.content-warning-show-more,
+
 .community-tags .badge {
   color: white !important;
   background: #aaa;
@@ -191,17 +190,17 @@ hr {
 .comment-button:hover,
 .comment-button:active {
   /* color: #0069d9; */
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-link:hover,
 .btn-link:active {
-  color: #cb5e4c;
+  color: #cb5e4c !important;
 }
 .btn-primary:hover,
 .btn-primary:active {
-  color: #fff;
-  background-color: #cb5e4c;
-  border-color: #b06357;
+  color: #fff !important;
+  background-color: #cb5e4c !important;
+  border-color: #b06357 !important;
 }
 .image-preview {
   background-color: #fff;
@@ -236,7 +235,7 @@ hr {
   border: 1px solid #dee2e6;
 }
 .loader-ellips__dot {
-  background: #ababab; /* change color here */
+  background: #ababab;
 }
 .page-load-status > * {
   color: #ababab;
@@ -260,12 +259,26 @@ hr {
   color: #6f6f6f;
 }
 
-#replyForm {
+.new-comment-form {
   background-color: #ffffffaa;
   box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
+  padding: 1rem 1.25rem;
+}
+.comment .new-comment-form {
+  background-color: transparent;
+  box-shadow: none;
+  padding-left: 10%;
+  padding-right: 0.5rem;
+  padding-bottom: 0;
+  padding-top: 0.5rem;
+}
+.pane {
+    background: #fff;
+    border: 1px solid #dee2e6;
 }
 
-p{
+
+p {
   margin-bottom: 0.5em;
 }
 
@@ -322,17 +335,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Ubuntu', serif;
 }
 
-.post-action-button {
+/* .post-action-button {
   width: 60px;
   text-align: left;
   padding-left: 1px;
   font-size: 1rem;
 }
 
+.post-action-button:hover {
+    text-decoration: none;
+}
+
 #authorTools > button {
   text-align: right;
   padding-right: 0px;
-}
+} */
 
 hr {
   height: 1px;
@@ -550,29 +567,6 @@ hr {
   text-align: center;
 }
 
-/* .userForm .form-control {
-    width: 100%;
-    height: 2.5em;
-    border-radius: 5px;
-    border: 1px solid #cbcbcb;
-    margin-bottom: 1em;
-    padding: 5px 10px;
-    box-sizing: border-box;
-} */
-/*
-.userForm button {
-    width: 100%;
-    border: 0;
-    background: #175cf4;
-    padding: 5px;
-    height: 2.5em;
-    border-radius: 5px;
-    color: white;
-    font-weight: lighter;
-    text-transform: uppercase;
-} */
-
-
 #userHeader {
   display: flex;
   justify-content: space-between;
@@ -617,20 +611,15 @@ hr {
   align-items: center;
 }
 
+#replyControlsRow button:first-child {
+    margin-right: 5px;
+}
+
 #resultsContainer,
 #directoryResults,
 .commentsList {
   /*border moved to colors section*/
   padding: 0;
-}
-
-.commentContainer {
-	/* background: #fafafa; */
-	/* border-radius: 5px; */
-	padding: 15px;
-	/* margin-bottom: 10px; */
-	/*border moved to colors section*/
-  padding-bottom: 0px;
 }
 
 
@@ -652,7 +641,7 @@ hr {
   padding-bottom: 0px;
 }
 
-.commentContent {
+/* .commentContent {
     overflow: hidden;
     word-wrap: break-word;
 }
@@ -668,29 +657,22 @@ hr {
     /* padding-top: 0px; */
 }
 
-#replyForm {
-  padding: 20px 15px 20px 15px;
-  /* border-radius: 5px; */
-}
-
-.repliesContainer {
-	font-size: 0.9em;
-  /*border moved to colors section*/
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-.individualReplyContainer {
+/* .individualReplyContainer {
     word-wrap: break-word;
 }
 
 .repliesContainer>.individualReplyContainer:first-of-type {
   padding-top: 20px;
+} */
+
+.post-content {
+  position: relative;
 }
 
-.comment-content {
+/* .comment-content {
   margin: 0.5rem 0 1rem 0;
-}
+  position: relative;
+} */
 
 .user-list {
     padding: 0;
@@ -794,6 +776,10 @@ hr {
    margin-bottom:20px;
 }
 
+.page-header.community-name {
+    padding-top: 10px;
+}
+
 #profileImageContainer {
   display: flex;
   width: 150px;
@@ -804,9 +790,17 @@ hr {
   width: 150px;
   height:150px;
   border-radius: 10px;
-  /* border-radius: 50%; */
   object-fit: cover;
   object-position: top;
+}
+
+#profileImageContainer.community-image {
+    width: 100%;
+}
+
+#profileImageContainer.community-image  #profileImage {
+    width: 100%;
+    height: 100%;
 }
 
 @media (max-width: 776px) {
@@ -836,12 +830,21 @@ hr {
   border-radius: 5px;
   display: inline;
   margin-right: 5px;
-  flex-shrink: 0; /* Fixing images squishing on Android Chrome, hopefully? */
+}
+
+.dropdown-menu.show {
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+    border: 1px solid #b6b6b6;
+    top: 50px;
 }
 
 @media (min-width: 576px) {
   #notificationsContainer {
       min-width: 360px;
+      max-height: 500px;
+      overflow-x: scroll;
   }
 }
 #notificationsList,
@@ -857,6 +860,19 @@ hr {
 
 .notification-active {
   font-weight: 500;
+}
+.list-group-item-action:hover {
+    color: #495057;
+    text-decoration: none;
+    background-color: #f9f3f3;
+}
+.button.clear-all-notifications {
+    border-radius: 0;
+    width: 100%;
+    border: 0px;
+    box-sizing: border-box;
+    height: 110%;
+    height: 35px;
 }
 
 #alertModal,
@@ -972,7 +988,6 @@ hr {
   background: #fff;
 }
 
-
 /* Don't let emoji become italicised or bold! */
 .emoji {
   font-style: normal !important;
@@ -983,65 +998,8 @@ hr {
     font-weight: 400;
 }
 
-.content-warning {
-  font-weight: 500;
-}
 
-.abbreviated-content {
-  height: 7rem;
-  overflow: hidden;
-}
-
-.abbreviated-content:not(.content-warning-content)::after {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  top: 9.5rem;
-  left: 0;
-  pointer-events: none;
-  width: 100%;
-  height: 1.5rem;
-}
-
-.show-more,
-.content-warning-show-more {
-  text-transform: uppercase;
-  font-size: smaller;
-  padding: 0 5px;
-  border-radius: 4px;
-  display: block;
-  width: 100px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.show-more {
-  margin: 1rem auto;
-}
-
-.content-warning-show-more {
-  margin: 0 auto 1rem auto;
-}
-/*
-.post-meta {
-  margin-left: 3px;
-  justify-content: space-between;
-  display: flex;
-  flex-direction: column;
-  overflow: none;
-  flex: 1;
-}
-
-.post-meta>p {
-  margin: 0;
-  height: 23px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 90%;
-} */
-
-.comment-header,
+/* .comment-header,
 .post-header {
   display: flex;
   flex-direction: column;
@@ -1077,8 +1035,8 @@ hr {
   padding: 0;
   flex: 1;
   text-align: right;
-}
-.author-username {
+} */
+/* .author-username {
   white-space: nowrap;
 }
 .author-display-name {
@@ -1086,13 +1044,13 @@ hr {
   overflow: hidden;
   white-space: nowrap;
   margin-right: 5px;
-}
-.user-flag {
+} */
+/* .user-flag {
   padding: 0 5px;
-}
+} */
 .post-header .user-flag {
-  position: relative;
-  top: 3px;
+  width: 1.5rem;
+  align-self: center;
 }
 
 .show-more-content {
@@ -1377,10 +1335,6 @@ background-size: 5.66px 5.66px;
   padding-bottom: .25rem;
 }
 
-#commentContent {
-  font-size: 16px;
-}
-
 .booster:not(:last-of-type):after {
     content: ', ';
 }
@@ -1479,4 +1433,464 @@ background-size: 5.66px 5.66px;
     font-weight: 300;
     font-size: 0.9em;
     font-variant: small-caps;
+}
+.pane {
+    padding: 15px;
+}
+
+.comments-marker {
+    position: relative;
+    top: -5px;
+    left: 1px;
+}
+
+.comments-number {
+    font-size: smaller;
+    margin-left: 3px;
+}
+
+.form-control {
+    font-family: 'Ubuntu', sans-serif;
+}
+
+
+.childReplyForm {
+    padding-left: 64px;
+    margin-bottom: 1em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1em;
+}
+
+
+/* NEW POST STYLES */
+
+article.post {
+    padding-top: 1rem;
+    border-bottom: 1px solid #dfdfdf;
+}
+article.post > .notifications,
+article.post > header,
+article.post > .content,
+article.post > .toolbar,
+article.post .comments-container {
+    padding: 0 1rem;
+}
+
+article.post > .notifications > div:last-child {
+    margin-bottom: 1em;
+}
+article.post > .notifications div {
+    color: #959595;
+    margin-bottom: 0.5rem;
+    font-size: 0.925rem;
+}
+article.post > .notifications div a,
+article.post > .notifications div a:active,
+article.post > .notifications div a:visited {
+    color: #959595;
+}
+article.post > .notifications div a:hover {
+    color: #ce1717;
+}
+article.post > .notifications div.recently-commented-notification {
+    color: #F87E2C;
+}
+article.post > .notifications div.recently-commented-notification a,
+article.post > .notifications div.recently-commented-notification a:active,
+article.post > .notifications div.recently-commented-notification a:visited {
+    color: #F87E2C; /* Green #529C5F */
+}
+article.post > .notifications div.recently-commented-notification a:hover {
+    color: #ce1717;
+}
+article.post > .notifications div.community-notification {
+    display: flex;
+    align-items: center;
+}
+article.post > .notifications div.community-notification img {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+article.post > .notifications div.recently-commented-notification a,
+article.post > .notifications div.community-notification a,
+article.post > .notifications div.boosters-notification a {
+    font-weight: 500;
+}
+article.post > header {
+    display: flex;
+}
+article.post > header img.author-image {
+    width: 46px;
+    height: 46px;
+    border-radius: 5px;
+}
+article.post > header .post-header-left {
+    height: 46px;
+    width: 46px;
+    margin-right: 5px;
+}
+article.post > header .post-header-right {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    justify-content: center;
+}
+article.post > header .post-header-right > * {
+    /* height: 23px; */
+}
+article.post > header h2.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+article.post > header .author-display-name,
+article.comment > header .author-display-name,
+#welcome-message-container > footer .author-display-name {
+    font-weight: 500;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-right: 5px;
+}
+article.post > header .author-display-name a,
+article.comment > header .author-display-name a,
+#welcome-message-container > footer .author-display-name a,
+article.post > header .author-username a,
+article.comment > header .author-username a,
+#welcome-message-container > footer .author-username a {
+    color: #1a1717;
+}
+article.post > header .author-display-name a:hover,
+article.comment > header .author-display-name a:hover,
+#welcome-message-container > footer .author-display-name a:hover,
+article.post > header .author-username a:hover,
+article.comment > header .author-username a:hover,
+#welcome-message-container > footer .author-username a:hover {
+    color: #ce1717;
+}
+article.post > header .author-username,
+article.comment > header .author-username,
+#welcome-message-container > footer .author-username {
+    color: #959595;
+}
+article.post > header .author-username:first-child,
+article.comment > header .author-username:first-child,
+#welcome-message-container > footer .author-username:first-child {
+    color: #1a1717;
+    font-weight: 500;
+}
+article.post > header .metadata {
+    color: #959595;
+    font-size: 0.85rem;
+}
+article.post > .content {
+    position: relative;
+    margin: 1rem 0;
+}
+article.post > .content .content-warning {
+    margin-bottom: 0.5rem;
+}
+article.post > .toolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-left: 0.65rem;
+}
+article.post > .toolbar > div {
+    display: flex;
+    flex: 1;
+}
+article.post > .toolbar > div:first-child {
+    justify-content: flex-start;
+}
+article.post > .toolbar > div:last-child {
+    justify-content: flex-end;
+}
+article.post > .toolbar > div:first-child  * {
+    justify-content: flex-start;
+}
+article.post > .toolbar > div:last-child * {
+    justify-content: flex-end;
+}
+
+section.comments {
+    font-size: 0.9rem;
+    display: none;
+}
+section.comments:last-child {
+    padding-bottom: 0.25rem; /* This looks like a CSS bug */
+}
+article.comment {
+    margin-top: 1rem;
+}
+article.comment:last-child {
+    margin-bottom: 1rem;
+}
+article.comment.recent-comment-content {
+    border-radius: 6px;
+    transition: background 0.5s;
+}
+
+article.comment.recent-comment-content.flash {
+    animation: flash 2s ease-out;
+    animation-iteration-count: 1;
+}
+
+@keyframes flash {
+    0% { background-color: transparent; }
+    50% { background-color: #fcfaea; }
+    100% { background-color: transparent; }
+}
+
+#welcome-message-container > footer,
+article.comment > header {
+    display: flex;
+}
+#welcome-message-container > footer  .welcome-message-container,
+article.comment > header .comment-header-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+article.comment > header .comment-header-divider {
+    padding: 0 5px 0 1px;
+    color: #959595;
+}
+#welcome-message-container > footer  .author-image,
+article.comment > header > .author-image {
+    width: 25px;
+    height: 25px;
+    border-radius: 3px;
+    margin-right: 3px;
+}
+#welcome-message-container > footer  h3.author-name,
+article.comment > header h3.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding-right: 5px;
+}
+#welcome-message-container > footer  .author-username,
+article.comment > header .author-username {
+    font-weight: 400;
+}
+article.comment > header .timestamp {
+    font-size: 0.75rem;
+    color: #959595;
+    white-space: nowrap;
+    position: relative;
+    top: 1px;
+}
+
+article.comment > .content {
+    margin-top: 0.5rem;
+}
+article.comment > .content.comment-deleted-content {
+    margin-top: 0;
+}
+article.comment > .content p:last-child {
+    margin-bottom: 0rem;
+}
+
+
+article.comment article.comment {
+    padding-left: 10%;
+}
+
+.user-flag {
+    color: red;
+    margin-left: 5px;
+}
+
+a.show-more { /* Shim for old show more button element */
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: .15rem .35rem;
+    font-weight: 300;
+    text-transform: uppercase;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background: #aaa;
+    color: #fff !important;
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0.5rem auto;
+}
+
+a.show-more:hover { /* Shim for old show more button element */
+    background: #959595;
+}
+
+.button {
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: .15rem .35rem;
+    font-weight: 300;
+    text-transform: uppercase;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    margin: 0;
+}
+
+.grey-button {
+    background: #aaa;
+    color: #fff;
+}
+
+.grey-button:hover {
+    background: #959595;
+}
+
+.outline-button {
+    background: #fff;
+    border-color: #aaa;
+    color: #aaa;
+    font-weight: 400;
+}
+.outline-button:hover {
+    background: #aaa;
+    color: #fff;
+}
+
+.button.show-boosters-list {
+    font-size: 0.7rem;
+    margin-left: 2px;
+}
+
+.button.post-toolbar-button {
+    background: #fff;
+    color: #aaa;
+    min-width: 40px;
+    max-width: 80px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+.button.post-toolbar-button:hover {
+    background: #fff;
+    color: #ce1717;
+}
+.button.comment-toolbar-button {
+    background: none;
+    color: #aaa;
+    padding: 0;
+    font-size: 0.7rem;
+}
+.button.comment-toolbar-button:not(:first-child) {
+    margin-left: 1rem;
+}
+.button.comment-toolbar-button:hover {
+    color: #ce1717;
+}
+
+.post-toolbar-form {
+    min-width: 40px;
+    max-width: 80px;
+    flex: 1;
+    display: flex;
+}
+
+.abbreviated-content:not(.content-warning-content)::after {
+  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
+}
+.comment-content .abbreviated-content:not(.content-warning-content)::after {
+  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
+}
+
+.comment-deleted-message {
+    font-style: italic;
+    font-weight: 300;
+}
+
+.content-warning {
+  font-weight: 500;
+}
+
+.abbreviated-content {
+  height: 7rem;
+  overflow: hidden;
+}
+
+.abbreviated-content:not(.content-warning-content)::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  bottom: 1.5rem;
+  left: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 3rem;
+}
+
+.button.show-more {
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0.5rem auto;
+}
+
+.button.content-warning-show-more {
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0 auto 0.5rem auto;
+}
+
+#welcome-message-container footer {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(173, 134, 219, 0.2);
+    padding: 1rem 0 0 0;
+    font-weight: 300 !important;
+    font-size: 0.75rem !important;
+}
+
+#welcome-message-container .updated-by-text {
+    white-space: nowrap;
+    margin-right: 5px;
+    align-self: center;
+}
+#welcome-message-container > footer .author-image {
+    height: 20px;
+    width: 20px;
+}
+
+.page-load-status {
+    display: block;
+}
+.infinite-scroll-last,
+.infinite-scroll-error {
+    display: none;
 }
