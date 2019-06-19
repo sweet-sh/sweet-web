@@ -839,9 +839,9 @@ module.exports = function (app) {
 
                         classNames = ['one-image','two-images','three-images','four-images'];
                         let commentImageGallery = function() {
-                            html = (postImages.length>0 ? '<div class="post-images '+classNames[postImages.length-1]+'"'+(postImages.length>1 ? ' data-featherlight-gallery data-featherlight-filter="a"' : '')+'>' : '');
+                            html = '<div class="post-images '+classNames[postImages.length-1]+'">';
                             for (let i=0; i<postImages.length;i++){
-                              html += (postImages.length>1 ? '<a href="/api/image/display/'+postImages[i]+'">' : '')+'<img alt="'+imageDescriptions[i]+' (posted by '+req.user.username+')" class="post-single-image" src="/api/image/display/'+postImages[i]+'" '+(postImages.length==1 ? 'data-featherlight="/api/image/display/'+postImages[i]+'"' : '')+'>'+(postImages.length>1 ? '</a>' : '');
+                              html += ('<a href="/api/image/display/'+postImages[i]+'">')+'<img alt="'+imageDescriptions[i]+' (posted by '+req.user.username+')" class="post-single-image" src="/api/image/display/'+postImages[i]+'" '+'</a>';
                             }
                             html += (postImages.length>0 ? '</div>' : '');
                             html += '</div></div>';
