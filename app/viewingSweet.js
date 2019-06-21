@@ -1,8 +1,12 @@
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var notifier = require('./notifier.js');
-var mongoose = require('mongoose');
+const moment = require('moment');
+const sanitizeHtml = require('sanitize-html');
+const notifier = require('./notifier.js');
+const sanitize = require('mongo-sanitize');
+const fs = require('fs');
 
+//just used for error log thing at the very end
+const path = require('path')
+const bcrypt = require('bcrypt-nodejs');
 
 sanitizeHtmlOptions = {
   allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -29,9 +33,6 @@ moment.updateLocale('en', {
     yy: "%dy"
   }
 });
-
-var sanitize = require('mongo-sanitize');
-const fs = require('fs');
 
 // APIs
 
@@ -484,7 +485,6 @@ module.exports = function (app) {
     }
   })
 
-
   //Responds to a get response for a specific post.
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
   //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
@@ -683,14 +683,14 @@ module.exports = function (app) {
       var matchPosts = {
         author: req.params.identifier
       }
-      if(req.isAuthenticated()){
+      if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
       }
     } else if (req.params.context == "community") {
       var matchPosts = {
         community: req.params.identifier
       }
-      if(req.isAuthenticated()){
+      if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
       }
     } else if (req.params.context == "tag") {
@@ -888,7 +888,7 @@ module.exports = function (app) {
                     if (myFollowedUserIds.some(following => {
                         return following.equals(v.booster._id)
                       })) {
-                        followedBoosters.push(v.booster.username);
+                      followedBoosters.push(v.booster.username);
                     } else {
                       notFollowingBoosters.push(v.booster.username);
                     }
@@ -1017,6 +1017,18 @@ module.exports = function (app) {
           // if (displayedPost._id.equals('5d04d2b0da26de82313546f3')){
           //     console.log(displayedPost.comments)
           // }
+          // });
+
+          if (req.isAuthenticated() && req.params.context == "single") {
+            // Mark associated notifications read if post is visible
+            notifier.markRead(loggedInUserData._id, displayContext._id)
+          }
+
+          if (req.isAuthenticated() && req.params.context == "single") {
+            // Mark associated notifications read if post is visible
+            notifier.markRead(loggedInUserData._id, displayContext._id)
+          }
+
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
@@ -1057,43 +1069,44 @@ module.exports = function (app) {
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
           if (typeof displayedPost !== 'undefined') {
-              var canDisplay = true;
-              if (displayedPost.images != "") {
-                console.log("Post has an image!")
-                var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+            console.log(displayedPost)
+            var canDisplay = true;
+            if (displayedPost.images != "") {
+              console.log("Post has an image!")
+              var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+            } else {
+              if (displayedPost.author.imageEnabled) {
+                console.log("Post has no image, but author has an image!")
+                var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
               } else {
-                if (displayedPost.author.imageEnabled) {
-                  console.log("Post has no image, but author has an image!")
-                  var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
-                } else {
-                  console.log("Neither post nor author have an image!")
-                  var metadataImage = "https://sweet.sh/images/cake.svg";
-                }
+                console.log("Neither post nor author have an image!")
+                var metadataImage = "https://sweet.sh/images/cake.svg";
               }
-              metadata = {
-                title: "@" + displayedPost.author.username + " on sweet",
-                description: displayedPost.rawContent.split('\n')[0],
-                image: metadataImage,
-                url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
-              }
-              var post = displayedPosts[0]; //hopefully there's only one...
-              if (post.community && req.isAuthenticated() && post.community.members.some(m => {
-                  return m.equals(req.user._id)
-                })) {
-                var isMember = true;
-              } else {
-                var isMember = false;
-              }
-          }
-          else {
-              var canDisplay = false;
-              // We add some dummy metadata for posts which error
-              metadata = {
-                title: "sweet • a social network",
-                description: "",
-                image: "https://sweet.sh/images/cake.svg",
-                url: "https://sweet.sh/"
-              }
+            }
+            metadata = {
+              title: "@" + displayedPost.author.username + " on sweet",
+              description: displayedPost.rawContent.split('\n')[0],
+              image: metadataImage,
+              url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
+            }
+
+            var post = displayedPosts[0]; //hopefully there's only one...
+            if (post.community && req.isAuthenticated() && post.community.members.some(m => {
+                return m.equals(req.user._id)
+              })) {
+              var isMember = true;
+            } else {
+              var isMember = false;
+            }
+          } else {
+            var canDisplay = false;
+            // We add some dummy metadata for posts which error
+            metadata = {
+              title: "sweet • a social network",
+              description: "",
+              image: "https://sweet.sh/images/cake.svg",
+              url: "https://sweet.sh/"
+            }
           }
           res.render('singlepost', {
             canDisplay: canDisplay,
@@ -1123,7 +1136,6 @@ module.exports = function (app) {
       }
     })
   })
-
 
   //API method that responds to requests for posts tagged a certain way.
   //Input: name is the name of the tag, page is the page number of posts we're viewing.
@@ -1730,7 +1742,6 @@ module.exports = function (app) {
       })
   })
 
-
   app.get('/api/notification/display', function (req, res) {
     if (req.isAuthenticated()) {
       User.findOne({
@@ -1750,6 +1761,18 @@ module.exports = function (app) {
         layout: false,
         loggedIn: false
       });
+    }
+  })
+
+  app.post('/admin/reporterror', function (req, res) {
+    fs.appendFile("clientsideerrors.txt", req.body.errorstring+"\n\n", (error)=>{if(error){console.error(error)}});
+    res.status(200).send('thank');
+  })
+
+  app.get('/admin/errorlogs/:password', function (req, res) {
+    var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq"
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
+      res.status(200).sendFile(path.resolve(global.appRoot,"clientsideerrors.txt"));
     }
   })
 };

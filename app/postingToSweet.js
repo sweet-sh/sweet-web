@@ -185,12 +185,19 @@ module.exports = function (app) {
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
 
-        let parsedResult = helper.parseText(req.body.postContent, req.body.postContentWarnings);
-
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
         }
+
+        var rawContent = sanitize(req.body.postContent);
+        rawContent = sanitizeHtml(rawContent, {
+            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
+            allowedAttributes: {
+                'a': ['href']
+            }
+        });
+        var parsedResult = helper.parseText(rawContent, req.body.postContentWarnings);
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
             // if (linkPreviewEnabled) {
@@ -214,7 +221,7 @@ module.exports = function (app) {
                     privacy: postPrivacy,
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: sanitize(req.body.postContent),
+                    rawContent: rawContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
@@ -337,7 +344,7 @@ module.exports = function (app) {
                     privacy: 'public',
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: sanitize(req.body.postContent),
+                    rawContent: rawContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
@@ -558,17 +565,27 @@ module.exports = function (app) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
-        let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
-        if (!(postImages || parsedResult)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+
+        var rawContent = sanitize(req.body.commentContent);
+        rawContent = sanitizeHtml(rawContent, {
+            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
+            allowedAttributes: {
+                'a': ['href']
+            }
+        });
+        var parsedResult = helper.parseText(rawContent);
+
+        if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
             return;
         }
+
         const comment = {
             _id: commentId,
             authorEmail: req.user.email,
             author: req.user._id,
             timestamp: commentTimestamp,
-            rawContent: sanitize(req.body.commentContent),
+            rawContent: rawContent,
             parsedContent: parsedResult.text,
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,

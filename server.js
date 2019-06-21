@@ -1,21 +1,21 @@
 // Initialization ======================================================================
-var express  = require('express');
+var express = require('express');
 var handlebars = require('express-handlebars');
-var app      = express();
-var port     = process.env.PORT || 8686;
+var app = express();
+var port = process.env.PORT || 8686;
 var mongoose = require('mongoose');
 var passport = require('passport');
-var flash    = require('connect-flash');
+var flash = require('connect-flash');
 var helpers = require('handlebars-helpers')();
 var path = require('path');
 
 var expressValidator = require('express-validator');
 app.use(expressValidator());
 
-var morgan       = require('morgan');
+var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser   = require('body-parser');
-var session      = require('express-session');
+var bodyParser = require('body-parser');
+var session = require('express-session');
 
 var configDatabase = require('./config/database.js');
 
@@ -24,18 +24,22 @@ var sanitize = require('mongo-sanitize');
 const fileUpload = require('express-fileupload');
 var shortid = require('shortid');
 
+var fs = require('fs');
+
 app.use(fileUpload());
 
 // Configuration ===============================================================
-mongoose.connect(configDatabase.url, { useNewUrlParser: true }); // connect to our database
-User         = require('./app/models/user');
+mongoose.connect(configDatabase.url, {
+  useNewUrlParser: true
+}); // connect to our database
+User = require('./app/models/user');
 Relationship = require('./app/models/relationship');
-Post         = require('./app/models/post');
-Tag          = require('./app/models/tag');
-Community    = require('./app/models/community');
-Vote         = require('./app/models/vote');
-Image        = require('./app/models/image');
-ObjectId     = require('mongoose').Types.ObjectId;
+Post = require('./app/models/post');
+Tag = require('./app/models/tag');
+Community = require('./app/models/community');
+Vote = require('./app/models/vote');
+Image = require('./app/models/image');
+ObjectId = require('mongoose').Types.ObjectId;
 
 require('./config/passport')(passport); // pass passport for configuration
 
@@ -89,25 +93,41 @@ const MongoStore = require('connect-mongo')(session);
 var passportAuth = require('./config/auth.js');
 app.use(session({
   secret: passportAuth.secret,
-  cookie:{ maxAge: (48 * 60 * 60 * 1000) }, // 48 hours
+  cookie: {
+    maxAge: (48 * 60 * 60 * 1000)
+  }, // 48 hours
   rolling: true,
   resave: true,
   saveUninitialized: false,
-  store: new MongoStore({mongooseConnection: mongoose.connection, secret:passportAuth.secret})
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection,
+    secret: passportAuth.secret
+  })
 }));
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
-app.use(function(req, res, next){
+app.use(function (req, res, next) {
   res.locals.sessionFlash = req.session.sessionFlash;
   delete req.session.sessionFlash;
   next();
 });
 
-app.on('SIGINT', function() {
-   db.stop(function(err) {
-     process.exit(err ? 1 : 0);
-   });
+app.use(function (req, res, next) {
+  if (req.isAuthenticated() && req.user.username == "very") {
+    fs.appendFileSync("lyds.txt", "request time: " + (new Date()).toISOString() + "\n")
+    fs.appendFileSync("lyds.txt", "request method: " + req.method + "\n")
+    fs.appendFileSync("lyds.txt", "request path: " + req.url + "\n")
+    fs.appendFileSync("lyds.txt", "request body: " + JSON.stringify(req.body) + "\n")
+    fs.appendFileSync("lyds.txt", "\n");
+  }
+  next();
+})
+
+app.on('SIGINT', function () {
+  db.stop(function (err) {
+    process.exit(err ? 1 : 0);
+  });
 });
 
 global.appRoot = path.resolve(__dirname);

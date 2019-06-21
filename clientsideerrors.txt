@@ -1,0 +1,3 @@
+CLIENT SIDE ERROR LOG
+contains all errors reported to /admin/reporterror by client side code!
+

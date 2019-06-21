@@ -29,6 +29,26 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Add Joined Date And Timestamps",
+            "program": "${workspaceFolder}\\databasetransforms\\addJoinedDateAndTimestamps.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Create 'boostsV2' field",
+            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsProperly.js"
+        },
+        
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Server",
+            "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Add fake users",
             "program": "${workspaceFolder}\\databasetransforms\\createFakeTestUsers.js"
         },

@@ -33,13 +33,13 @@ $(function() {
 
   $("#notificationsContainer").load( "/api/notification/display" );
 
-  $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){
-    $(this).find('.badge').css('background-color', '#ce1717');
-  }, function() {
-    $(this).find('.badge').css('background-color', '#6c757d');
-  });
+  // $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){
+  //   $(this).find('.notifications-count').css('color', '#ce1717');
+  // }, function() {
+  //   $(this).find('.notifications-count').css('color', '#6c757d');
+  // });
   if ($('#notificationsPageLink').hasClass('active')){
-    $('#notificationsPageLink').find('.badge').css('background-color', '#900202');
+    $('#notificationsPageLink').find('.notifications-count').css('color', '#900202');
   }
 
   $('.clear-all-notifications').click(function() {

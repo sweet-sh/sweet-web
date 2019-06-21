@@ -58,13 +58,13 @@ var postSchema = new mongoose.Schema({
   },
   mentions: [String],
   tags: [String],
-  boosts: [String],
   boostsV2: [{type:boostSchema, required: true}],
   contentWarnings: String,
   commentsDisabled: Boolean,
   imageVersion: Number,
   images: [String],
   imageDescriptions: [String],
+  imageIsVertical: [Boolean],
   subscribedUsers: [String],
   unsubscribedUsers: [String],
   linkPreview: {
@@ -83,6 +83,9 @@ postSchema.index({community:1});
 //used to sort posts in feeds
 postSchema.index({lastUpdated:-1});
 postSchema.index({timestamp:-1});
+
+//honestly only used by the active users graph but what the hell
+postSchema.index({'comments.timestamp':-1});
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);
