@@ -1,6 +1,8 @@
 var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
+var mongoose = require('mongoose');
+var path = require('path');
 
 const url = require('url');
 
@@ -42,12 +44,6 @@ var apiConfig = require('../config/apis.js');
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
-
-var imaggaOptions = {
-    headers: {
-        'Authorization': apiConfig.imagga
-    }
-};
 
 module.exports = function (app) {
 
@@ -181,7 +177,7 @@ module.exports = function (app) {
     //if it's a community post.
     //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
     //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, function (req, res) {
+    app.post("/createpost", isLoggedInOrRedirect, async function (req, res) {
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
@@ -189,6 +185,17 @@ module.exports = function (app) {
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
+
+        var imageIsVertical = [];
+        for (image of postImages) {
+            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
+                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
+                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+            } else {
+                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
+                imageIsVertical.push("");
+            }
+        }
 
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
@@ -235,6 +242,7 @@ module.exports = function (app) {
                     imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
+                    imageIsVertical: imageIsVertical,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -358,6 +366,7 @@ module.exports = function (app) {
                     imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
+                    imageIsVertical: imageIsVertical,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -390,7 +399,7 @@ module.exports = function (app) {
                             })
                     });
                 }
-
+                var newPostId = post._id;
                 post.save()
                     .then(() => {
                         parsedResult.tags.forEach((tag) => {
@@ -565,10 +574,22 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid", isLoggedInOrErrorResponse, function (req, res) {
-
+    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function (req, res) {
         commentTimestamp = new Date();
+        var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
+        let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
+
+        var imageIsVertical = [];
+        for (image of postImages) {
+            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
+                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
+                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+            } else {
+                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
+                imageIsVertical.push("");
+            }
+        }
 
         var rawContent = sanitize(req.body.commentContent);
         rawContent = sanitizeHtml(rawContent, {
@@ -585,6 +606,7 @@ module.exports = function (app) {
         }
 
         const comment = {
+            _id: commentId,
             authorEmail: req.user.email,
             author: req.user._id,
             timestamp: commentTimestamp,
@@ -593,7 +615,8 @@ module.exports = function (app) {
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,
             images: postImages,
-            imageDescriptions: JSON.parse(req.body.imageDescs).slice(0, 4)
+            imageDescriptions: imageDescriptions,
+            imageIsVertical: imageIsVertical
         };
 
         Post.findOne({
@@ -601,17 +624,75 @@ module.exports = function (app) {
             })
             .populate('author')
             .then((post) => {
+                numberOfComments = 0;
+                var depth = undefined;
+                if (req.params.commentid == 'undefined') {
+                    depth = 1;
+                    // This is a top level comment with no parent (identified by commentid)
+                    post.comments.push(comment);
+
+                    // Count total comments
+                    function countComments(array) {
+                        array.forEach((element) => {
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
+                            if (element.replies) {
+                                var replies = countComments(element.replies)
+                                if (replies) {
+                                    return replies;
+                                }
+                            }
+                        })
+                        return numberOfComments;
+                    }
+                    post.numberOfComments = countComments(post.comments);
+                } else {
+                    // This is a child level comment so we have to drill through the comments
+                    // until we find it
+                    function findNested(array, id, depthSoFar = 2) {
+                        var foundElement = false;
+                        array.forEach((element) => {
+                            if (element._id && element._id.equals(id)) {
+                                if (depthSoFar > 5) {
+                                    res.status(403).send(">:^(");
+                                    return undefined;
+                                } else {
+                                    depth = depthSoFar;
+                                    element.replies.push(comment);
+                                    foundElement = element;
+                                }
+                            }
+                            if (!element.deleted) {
+                                numberOfComments++;
+                            }
+                            if (element.replies) {
+                                var found = findNested(element.replies, id, depthSoFar + 1)
+                                if (found) {
+                                    foundElement = element;
+                                    return found;
+                                }
+                            }
+                        })
+                        return foundElement;
+                    }
+                    var target = findNested(post.comments, req.params.commentid);
+                    if (target) {
+                        post.numberOfComments = numberOfComments;
+                    }
+                }
+                if (!depth) {
+                    //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
+                    return;
+                }
                 postPrivacy = post.privacy;
-                post.comments.push(comment);
-                post.numberOfComments = post.comments.length;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
                 if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
                     post.subscribedUsers.push(req.user._id.toString());
                 }
                 post.save()
-                    .then(() => {
-
+                    .then(async () => {
                         // Parse images
                         if (postImages) {
                             postImages.forEach(function (imageFileName) {
@@ -805,23 +886,51 @@ module.exports = function (app) {
                             image = 'cake.svg'
                         }
                         if (req.user.displayName) {
-                            name = '<div class="author-display-name"><strong><a class="authorLink" href="/' + req.user.username + '">' + req.user.displayName + '</a></strong></div><div class="author-username"><span class="text-muted">@' + req.user.username + '</span></div>';
+                            name = '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>';
                         } else {
-                            name = '<div class="author-username"><strong><a class="authorLink" href="/' + req.user.username + '">@' + req.user.username + '</a></strong></div>';
+                            name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        result = {
-                            image: image,
-                            name: name,
-                            username: req.user.username,
-                            timestamp: moment(commentTimestamp).fromNow(),
-                            content: parsedResult.text,
-                            comment_id: post.comments[post.numberOfComments - 1]._id.toString(),
-                            post_id: post._id.toString()
+                        classNames = ['one-image', 'two-images', 'three-images', 'four-images'];
+                        let commentImageGallery = function () {
+                            html = '<div class="post-images ' + classNames[postImages.length - 1] + '">';
+                            for (let i = 0; i < postImages.length; i++) {
+                                html += ('<a href="/api/image/display/' + postImages[i] + '">') + '<img alt="' + imageDescriptions[i] + ' (posted by ' + req.user.username + ')" class="post-single-image" src="/api/image/display/' + postImages[i] + '" ' + '</a>';
+                            }
+                            html += (postImages.length > 0 ? '</div>' : '');
+                            html += '</div></div>';
+                            return html;
                         }
-                        console.log(result);
-                        res.contentType('json');
-                        res.send(JSON.stringify(result));
+                        var fullImageUrls = []
+                        for (img of postImages) {
+                            fullImageUrls.push("/api/image/display/" + img);
+                        }
+                        commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
+                                image: image,
+                                name: name,
+                                username: req.user.username,
+                                timestamp: moment(commentTimestamp).fromNow(),
+                                content: parsedResult.text,
+                                comment_id: commentId.toString(),
+                                post_id: post._id.toString(),
+                                image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
+                                    images: fullImageUrls,
+                                    post_id: commentId.toString(),
+                                    imageDescriptions: imageDescriptions,
+                                    imageIsVertical: imageIsVertical,
+                                    author: {
+                                        username: req.user.username
+                                    }
+                                }),
+                                depth: depth
+                            })
+                            .then(html => {
+                                result = {
+                                    comment: html
+                                }
+                                res.contentType('json');
+                                res.send(JSON.stringify(result));
+                            })
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -839,14 +948,53 @@ module.exports = function (app) {
                 "_id": req.params.postid
             })
             .then((post) => {
+                commentsByUser = 0;
+                latestTimestamp = 0;
+                numberOfComments = 0;
+
+                function findNested(array, id, parent) {
+                    var foundElement;
+                    var parentElement = (parent ? parent : post)
+                    array.forEach((element) => {
+                        if (!element.deleted) {
+                            numberOfComments++;
+                        }
+                        if ((element.author.toString() == req.user._id.toString()) && !element.deleted) {
+                            commentsByUser++;
+                        }
+                        if (element.timestamp > latestTimestamp) {
+                            latestTimestamp = element.timestamp;
+                        }
+                        element.numberOfSiblings = (parent ? parentElement.replies.length - 1 : post.comments.length - 1);
+                        element.parent = parentElement;
+                        if (element._id && element._id.equals(id)) {
+                            foundElement = element;
+                            commentsByUser--;
+                            numberOfComments--;
+                            console.log('numberOfComments', numberOfComments)
+                        }
+                        if (element.replies) {
+                            var found = findNested(element.replies, id, element)
+                            if (found) {
+                                foundElement = found;
+                            }
+                        }
+                    })
+                    return foundElement;
+                }
+
+                var target = findNested(post.comments, req.params.commentid);
+                if (target) {
+                    post.numberOfComments = numberOfComments;
+                }
 
                 //i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-                if (!post.comments.id(req.params.commentid).author.equals(req.user._id) && post.author.toString() != req.user._id.toString()) {
+                if (!target.author.equals(req.user._id) && post.author.toString() != req.user._id.toString()) {
                     res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it");
                     return;
                 }
 
-                post.comments.id(req.params.commentid).images.forEach((image) => {
+                target.images.forEach((image) => {
                     fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                         if (err) console.log("Image deletion error " + err)
                     })
@@ -854,16 +1002,29 @@ module.exports = function (app) {
                         "filename": image
                     })
                 })
-                post.comments.id(req.params.commentid).remove();
-                post.numberOfComments = post.comments.length;
+
+                // Check if target has children
+                if (target.replies && target.replies.length) {
+                    // We feel sorry for the children - just wipe the target's memory
+                    target.parsedContent = "";
+                    target.rawContent = "";
+                    target.deleted = true;
+                } else {
+                    // There are no children, the target can be destroyed
+                    target.remove();
+                    if (target.numberOfSiblings == 0 && target.parent.deleted) {
+                        // There are also no siblings, and the element's parent
+                        // has been deleted, so we can even destroy that!
+                        target.parent.remove();
+                    }
+                }
+
                 post.save()
                     .then((comment) => {
-                        relocatePost(ObjectId(req.params.postid));
+                        // relocatePost(ObjectId(req.params.postid));
+                        post.lastUpdated = latestTimestamp;
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
-
-                        if (!post.comments.some((v, i, a) => {
-                                return v.author.toString() == req.user._id.toString();
-                            })) {
+                        if (commentsByUser == 0) {
                             post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
                                 return v != req.user._id.toString();
                             })
@@ -871,7 +1032,20 @@ module.exports = function (app) {
                                 console.error(err)
                             })
                         }
-                        res.sendStatus(200);
+                        // if (!target.some((v, i, a) => {
+                        //         return v.author.toString() == req.user._id.toString();
+                        //     })) {
+                        //     post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
+                        //         return v != req.user._id.toString();
+                        //     })
+                        //     post.save().catch(err => {
+                        //         console.error(err)
+                        //     })
+                        // }
+                        result = {
+                            numberOfComments: numberOfComments
+                        }
+                        res.contentType('json').send(JSON.stringify(result));
                     })
                     .catch((error) => {
                         console.error(error)

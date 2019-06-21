@@ -1,0 +1,32 @@
+<article class="comment" data-comment-id="{{comment_id}}">
+    <header>
+        <img alt="Profile image of @{{username}}" class="author-image" src="/images/{{image}}" />
+        <div class="comment-header-container">
+            <h3 class="author-name">
+                {{{name}}}
+            </h3>
+            <div class="comment-header-divider">
+                &middot;
+            </div>
+            <aside class="timestamp">
+                {{timestamp}}
+            </aside>
+        </div>
+    </header>
+    <section class="content">
+        {{{content}}}
+        {{{image_gallery}}}
+    </section>
+    <footer class="toolbar">
+        {{#gt depth 4}}{{else}}
+        <button type="button" class="button comment-toolbar-button reply-to-comment">
+            Reply
+        </button>
+        {{/gt}}
+        <button type="button" class="button comment-toolbar-button delete-comment" id="{{comment_id}}" data-post-id="{{post_id}}" data-comment-id="{{comment_id}}">
+            Delete
+        </button>
+    </footer>
+    <section class="replies">
+    </section>
+</article>

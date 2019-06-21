@@ -57,6 +57,7 @@ var userSchema = new mongoose.Schema({
     homeTagTimelineSorting: { type: String, default: "fluid" },
     userTimelineSorting: { type: String, default: "chronological" },
     communityTimelineSorting: { type: String, default: "fluid" },
+    flashRecentComments: { type: Boolean, default: true },
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],

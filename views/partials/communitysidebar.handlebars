@@ -1,8 +1,8 @@
-<div id="profileImageContainer">
+<div id="profileImageContainer" class="community-image">
   <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}/images/communities/{{communityData.image}}{{else}}/images/communities/cake.svg{{/if}}" />
 </div>
 
-<h3 class="page-header">
+<h3 class="page-header community-name">
   <a href="/community/{{communityData.slug}}" class="text-dark">{{ communityData.name }}</a>
 </h3>
 

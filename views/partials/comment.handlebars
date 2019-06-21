@@ -1,0 +1,57 @@
+<article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}">
+    {{#unless this.deleted}}
+        <header>
+            <img alt="Profile image of @{{this.author.username}}" class="author-image" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+            <div class="comment-header-container">
+                <h3 class="author-name">
+                    {{#if this.author.displayName}}
+                        <span class="author-display-name">
+                            <a href="/{{this.author.username}}">{{this.author.displayName}}</a>
+                        </span>
+                    {{/if}}
+                    <span class="author-username">
+                        {{#unless this.author.displayName}}<span style="font-weight:500"><a href="/{{this.author.username}}">{{/unless}}@{{this.author.username}}{{#unless this.author.displayName}}</a></span>{{/unless}}
+                    </span>
+                    {{#contains ../flaggedUsers this.author.email}}
+                        <i class="fas fa-exclamation-triangle user-flag"></i>
+                    {{/contains}}
+                </h3>
+                <div class="comment-header-divider">
+                    &middot;
+                </div>
+                <aside class="timestamp">
+                    {{this.parsedTimestamp}}
+                </aside>
+            </div>
+        </header>
+    {{/unless}}
+    <section class="content{{#if this.deleted}} comment-deleted-content{{/if}}">
+        {{#unless this.deleted}}
+            {{{this.parsedContent}}}
+            {{#if this.images}}
+                {{> imagegallery }}
+            {{/if}}
+        {{else}}
+            <p class="comment-deleted-message">Comment deleted</p>
+        {{/unless}}
+    </section>
+    <footer class="toolbar">
+        {{#if this.canReply }}
+            {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}
+                <button type="button" class="button comment-toolbar-button reply-to-comment">
+                    Reply
+                </button>
+            {{/if}}
+        {{/if}}
+        {{#if this.canDelete }}
+            <button type="button" class="button comment-toolbar-button delete-comment" id="{{this._id}}" data-comment-id="{{this._id}}">
+                Delete
+            </button>
+        {{/if}}
+    </footer>
+    <section class="replies">
+        {{#each this.replies}}
+            {{> comment }}
+        {{/each}}
+    </section>
+</article>

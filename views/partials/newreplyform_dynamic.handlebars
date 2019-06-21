@@ -1,4 +1,4 @@
-<div class="new-comment-form" data-comment-type="primary" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">
+<div class="new-comment-form" data-comment-type="{{comment_type}}" data-post-id="{{post_id}}" data-comment-id="{{comment_id}}">
   <div class="form-row">
     <textarea class="form-control form-control-sm comment-textarea editable-text editable-comment-content" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
   </div>
