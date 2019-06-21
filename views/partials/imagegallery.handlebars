@@ -1,6 +1,5 @@
 <div class="post-images {{#if this.contentWarnings}}content-warning-images{{/if}} {{#eq this.images.length 1}} one-image{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}">
   {{#each this.images}}
-  {{log ../this}}
     <a href="{{this}}" {{#gt ../this.images.length 1}}data-group="{{#if ../this._id}}{{../this._id}}{{else}}{{../post_id}}{{/if}}"{{/gt}}>
         <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}" class="post-single-image" src="{{this}}"/>
     </a>
