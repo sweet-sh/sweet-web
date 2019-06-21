@@ -1,4 +1,4 @@
-<article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}" data-comment-depth="{{this.level}}">
+<article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}">
     {{#unless this.deleted}}
         <header>
             <img alt="Profile image of @{{this.author.username}}" class="author-image" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />

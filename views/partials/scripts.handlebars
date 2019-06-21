@@ -269,13 +269,11 @@ $(function() {
     let textarea = commentForm.find("textarea.comment-textarea");
     let contentEditable = commentForm.find("div.comment-textarea");
     let commentContent = textarea.val();
-    let commentDepth = 1;
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
     else if (commentType == "child") {
         commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
-        commentDepth = parseInt(commentForm.closest('.comment').attr('data-comment-depth'))+1;
     }
     let emojiWindow = commentForm.find('.replyEmojiWindow');
 
@@ -302,8 +300,7 @@ $(function() {
       $.post("/createcomment/"+postID+"/"+commentID,
       { commentContent: commentContent,
         imageUrls: JSON.stringify(sortedurls),
-        imageDescs: JSON.stringify(imagedescs),
-        depth: commentDepth,
+        imageDescs: JSON.stringify(imagedescs)
       },
       function(data) {
         if (data!='nope'){
