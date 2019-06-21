@@ -129,91 +129,85 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
       element.next('textarea').val(element.html().trim());
    }
 }
-
-$(function() {
+$(function () {
     // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
     // Init tribute
-    $.post('/api/user/followers', function(data){
+    $.post('/api/user/followers', function (data) {
         followers = JSON.parse(data).followers;
         tribute = new Tribute({
             values: followers,
             menuItemTemplate: function (item) {
-                return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
+                return '<img class="tribute-image" src="/images/' + item.original.image + '">' + item.string;
             }
         })
-        tribute.attach($(".editable-text"));
+        tribute.attach($(".editable-text")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
     });
-    // Attach tribute to comment fields
-    $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
+
+    // Attach scripts to newly loaded posts
+    $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         editor.addElements('.editable-text');
-        tribute.attach($(".editable-comment-content"));
+        if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
+            tribute.attach($(".editable-comment-content"));
+        }
+        if ($('.post-images').length > 0) {
+            var imagesLoaded = $('.post-single-image').length;
+            console.log("images loaded: " + imagesLoaded);
+            var imagesLightboxed = 0;
+
+            var $images = $('.post-images a');
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+                // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+                $(element).simpleLightbox(params);
+                imagesLightboxed++;
+            });
+
+            // Handle grouped images
+            if ($imagesGrouped.length > 0) {
+                // Select all groups
+                var groupNames = $imagesGrouped.map(function () {
+                    return $(this).data('group');
+                }).get();
+                groupNames = $.unique(groupNames);
+
+                // Apply on each group
+                $.each(groupNames, function (key, value) {
+                    var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
+                        return $(this).data('group') == value;
+                    })
+                    filteredGroup.simpleLightbox(params);
+                    imagesLightboxed += filteredGroup.length;
+                });
+                console.log("images lightboxed: " + imagesLightboxed)
+                if (imagesLightboxed != imagesLoaded) {
+                    console.log("not all images lightboxed!!!!!!");
+                }
+                //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
+            }
+        }
     });
 
-  // Init tribute
-  $.post('/api/user/followers', function(data){
-    followers = JSON.parse(data).followers;
-    tribute = new Tribute({
-      values: followers,
-      menuItemTemplate: function (item) {
-        return '<img class="tribute-image" src="/images/'+item.original.image + '">' + item.string;
-      }
-    })
-    tribute.attach($(".editable-text"));
-  });
-
-  // Attach scripts to newly loaded posts
-  $('#postsContainer').on( 'append.infiniteScroll', function( event, response, path, items ) {
-    editor.addElements('.editable-text');
-    if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded
-        tribute.attach($(".editable-comment-content"));
-    }
-    if ($('.post-images').length > 0) {
-    var $images = $('.post-images a');
-    var $imagesGrouped = $images.filter('[data-group]');
-    var $imagesAlone = $images.not($imagesGrouped);
-    var params = {
-        // your params
-    };
-
-    // Handle standalone images
-    $imagesAlone.each(function (index, element) {
-        $(element).simpleLightbox(params);
-    });
-
-    // Handle grouped imags
-    if ($imagesGrouped.length > 0) {
-        // Select all groups
-        var groupNames = $imagesGrouped.map(function() {
-            return $(this).data('group');
-        }).get();
-        groupNames = $.unique(groupNames);
-
-        // Apply on each group
-        $.each(groupNames, function(key, value) {
-            $imagesGrouped.filter(function () {
-                return $(this).data('group') == value;
-            })
-            .simpleLightbox(params);
-        });
-    }
-}
-  });
-
-// From https://stackoverflow.com/a/4819886, will undoubtedly break sooner or later
-function is_touch_device() {
-    var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
-    var mq = function(query) {
-        return window.matchMedia(query).matches;
-    }
+    // From https://stackoverflow.com/a/4819886, will undoubtedly break sooner or later
+    function is_touch_device() {
+        var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
+        var mq = function (query) {
+            return window.matchMedia(query).matches;
+        }
         if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
             return true;
         }
 
         // include the 'heartz' as a way to have a non matching MQ to help terminate the join
         // https://git.io/vznFH
-        var query = ['(', prefixes.join('touch-enabled),('), 'heartz',  ')'].join('');
+        var query = ['(', prefixes.join('touch-enabled),('), 'heartz', ')'].join('');
         return mq(query);
     }
+
     function createToolbar(mobileDevice) {
         if (mobileDevice) {
             toolbar = {
@@ -233,8 +227,7 @@ function is_touch_device() {
         imageDragging: false,
         toolbar: createToolbar(is_touch_device()),
         keyboardCommands: {
-            commands: [
-                {
+            commands: [{
                     command: 'bold',
                     key: 'B',
                     meta: true,
