@@ -582,7 +582,9 @@ module.exports = function (app) {
             .populate('author')
             .then((post) => {
                 numberOfComments = 0;
+                var depth = undefined;
                 if (req.params.commentid == 'undefined') {
+                    depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
                     post.comments.push(comment);
 
@@ -602,22 +604,27 @@ module.exports = function (app) {
                         return numberOfComments;
                     }
                     post.numberOfComments = countComments(post.comments);
-                }
-                else {
+                }else {
                     // This is a child level comment so we have to drill through the comments
                     // until we find it
-                    function findNested(array, id) {
+                    function findNested(array, id, depthSoFar=2) {
                         var foundElement = false;
                         array.forEach((element) => {
                             if (element._id && element._id.equals(id)){
-                                element.replies.push(comment);
-                                foundElement = element;
+                                if(depthSoFar > 5){
+                                    res.status(403).send(">:^(");
+                                    return undefined;
+                                }else{
+                                    depth = depthSoFar;
+                                    element.replies.push(comment);
+                                    foundElement = element;
+                                }
                             }
                             if (!element.deleted) {
                                 numberOfComments++;
                             }
                             if (element.replies) {
-                                var found = findNested(element.replies, id)
+                                var found = findNested(element.replies, id, depthSoFar+1)
                                 if (found) {
                                     foundElement = element;
                                     return found;
@@ -630,6 +637,10 @@ module.exports = function (app) {
                     if (target) {
                         post.numberOfComments = numberOfComments;
                     }
+                }
+                if(!depth){
+                    //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
+                    return;
                 }
                 postPrivacy = post.privacy;
                 post.lastUpdated = new Date();
@@ -867,7 +878,7 @@ module.exports = function (app) {
                                     username: req.user.username
                                 }
                             }),
-                            depth: req.body.depth,
+                            depth: depth
                         })
                         .then(html => {
                             result = {
