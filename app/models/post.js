@@ -11,6 +11,7 @@ var commentSchema = new mongoose.Schema({
   tags: [String],
   images: [String],
   imageDescriptions: [String],
+  imageIsVertical: [String],
   deleted: { type: Boolean, default: false },
 });
 
@@ -64,7 +65,7 @@ var postSchema = new mongoose.Schema({
   imageVersion: Number,
   images: [String],
   imageDescriptions: [String],
-  imageIsVertical: [Boolean],
+  imageIsVertical: [String], //stores either the string "vertical-image" or an empty string atm
   subscribedUsers: [String],
   unsubscribedUsers: [String],
   linkPreview: {

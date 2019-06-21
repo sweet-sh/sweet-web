@@ -561,10 +561,10 @@ module.exports = function (app) {
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
     app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, function (req, res) {
-        let parsedResult = helper.parseText(req.body.commentContent);
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
+        let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
 
         var rawContent = sanitize(req.body.commentContent);
         rawContent = sanitizeHtml(rawContent, {

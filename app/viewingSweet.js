@@ -940,6 +940,7 @@ module.exports = function (app) {
             contentWarnings: displayContext.contentWarnings,
             images: imageUrlsArray,
             imageDescriptions: displayContext.imageDescriptions,
+            imageIsVertical: displayContext.imageIsVertical,
             community: displayContext.community,
             headerBoosters: boostsForHeader,
             recentlyCommented: false, // This gets set below
