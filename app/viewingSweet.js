@@ -1,6 +1,12 @@
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var notifier = require('./notifier.js');
+const moment = require('moment');
+const sanitizeHtml = require('sanitize-html');
+const notifier = require('./notifier.js');
+const sanitize = require('mongo-sanitize');
+const fs = require('fs');
+
+//just used for error log thing at the very end
+const path = require('path')
+const bcrypt = require('bcrypt-nodejs');
 
 sanitizeHtmlOptions = {
   allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
@@ -27,9 +33,6 @@ moment.updateLocale('en', {
     yy: "%dy"
   }
 });
-
-var sanitize = require('mongo-sanitize');
-const fs = require('fs');
 
 // APIs
 
@@ -482,7 +485,6 @@ module.exports = function (app) {
     }
   })
 
-
   //Responds to a get response for a specific post.
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
   //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
@@ -491,8 +493,6 @@ module.exports = function (app) {
     next('route');
     return;
   })
-
-
 
   //Responds to requests for posts for feeds. API method, used within the public pages.
   //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
@@ -947,13 +947,13 @@ module.exports = function (app) {
               comment.canDelete = true;
             }
           });
-          
-          if (req.isAuthenticated() && req.params.context=="single"){
+
+          if (req.isAuthenticated() && req.params.context == "single") {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
 
-          if (req.isAuthenticated() && req.params.context=="single"){
+          if (req.isAuthenticated() && req.params.context == "single") {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
@@ -1036,7 +1036,6 @@ module.exports = function (app) {
       }
     })
   })
-
 
   //API method that responds to requests for posts tagged a certain way.
   //Input: name is the name of the tag, page is the page number of posts we're viewing.
@@ -1638,7 +1637,6 @@ module.exports = function (app) {
       })
   })
 
-
   app.get('/api/notification/display', function (req, res) {
     if (req.isAuthenticated()) {
       User.findOne({
@@ -1658,6 +1656,18 @@ module.exports = function (app) {
         layout: false,
         loggedIn: false
       });
+    }
+  })
+
+  app.post('/admin/reporterror', function (req, res) {
+    fs.appendFile("clientsideerrors.txt", req.body.errorstring+"\n\n", (error)=>{if(error){console.error(error)}});
+    res.status(200).send('thank');
+  })
+
+  app.get('/admin/errorlogs/:password', function (req, res) {
+    var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq"
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
+      res.status(200).sendFile(path.resolve(global.appRoot,"clientsideerrors.txt"));
     }
   })
 };

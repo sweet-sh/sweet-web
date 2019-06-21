@@ -69,6 +69,15 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
 }
 
 $(function() {
+    //this is here bc this is the first of our scripts to be linked in in the layout, and this should be the first thing the browser does
+    window.onerror = function(errorMessage, source, lineno, colno, error){
+        var errorstring = "error: "+errorMessage+"\noriginating from script: "+source+"on line "+lineno+" and column "+colno;
+        if(error.stack){
+            errorstring+="\nfull stack trace: \n" + error.stack;
+        }
+        $.post("/admin/reporterror", {errorstring: errorstring});
+    }
+
     // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
     // Init tribute
     $.post('/api/user/followers', function(data){
