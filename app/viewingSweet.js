@@ -730,7 +730,7 @@ module.exports = function (app) {
       //these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
       .populate('community')
-      // If there's a better way to populate a nested tree lmk because this is... dumb
+      // If there's a better way to populate a nested tree lmk because this is... dumb. Mitch says: probably just fetching the authors recursively in actual code below
       .populate('comments.author')
       .populate('comments.replies.author')
       .populate('comments.replies.replies.author')

@@ -638,7 +638,7 @@ module.exports = function (app) {
                     post.subscribedUsers.push(req.user._id.toString());
                 }
                 post.save()
-                    .then(() => {
+                    .then(async () => {
                         // Parse images
                         if (postImages) {
                             postImages.forEach(function (imageFileName) {
@@ -847,6 +847,10 @@ module.exports = function (app) {
                             html += '</div></div>';
                             return html;
                         }
+                        var fullImageUrls = []
+                        for(img of postImages){
+                            fullImageUrls.push("/api/image/display/"+img);
+                        }
                         commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
                             image: image,
                             name: name,
@@ -855,7 +859,14 @@ module.exports = function (app) {
                             content: parsedResult.text,
                             comment_id: commentId.toString(),
                             post_id: post._id.toString(),
-                            image_gallery: commentImageGallery(),
+                            image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
+                                images: fullImageUrls,
+                                post_id: commentId.toString(),
+                                imageDescriptions: imageDescriptions,
+                                author: {
+                                    username: req.user.username
+                                }
+                            }),
                             depth: req.body.depth,
                         })
                         .then(html => {

@@ -212,7 +212,10 @@ $(function() {
     }
   });
 
-  //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever
+  //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever.
+  //um someone rewrite this so it works with comment images. the server's auto-deleter will take care of temp images once they're more than
+  //an hour old anyway though
+  /*
   $(window).on("unload", function (e) {
     uploadedImageUrls.forEach(function (url) {
       if (url) {
@@ -222,6 +225,7 @@ $(function() {
       }
     })
   });
+  */
 
   //IMAGE DRAG-AND-DROP ORDERING STUFF
 
