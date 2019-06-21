@@ -197,7 +197,10 @@ $(function() {
   })
   $('body').on('click', '.reply-to-comment', function() {
     // First, check if the reply form is already open - if it is, just scroll to it
-    var checkFormExists = $(this).closest('.comment').find('.new-comment-form')
+    var commentContainer = $(this).closest('.comment');
+    var postID = commentContainer.closest('.post').attr("data-post-id");
+    var commentID = commentContainer.attr("data-comment-id");
+    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
     if (checkFormExists.length) {
         if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
             $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
@@ -206,10 +209,7 @@ $(function() {
         return;
     }
     // pasteHtmlAtCaret($(this).closest(".replyContainer").children("#commentForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
-    var commentContainer = $(this).closest('.comment');
-    var postID = commentContainer.closest('.post').attr("data-post-id");
-    var commentID = commentContainer.attr("data-comment-id");
-    console.log(postID, commentID)
+
     // Create new comment form with Handlebars.js
     var source = document.getElementById("new-comment-form-template").innerHTML;
     var template = Handlebars.compile(source);
