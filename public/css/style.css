@@ -88,6 +88,9 @@ hr {
 #topNav .dropdown-item {
   color: #666;
 }
+.notifications-count {
+  background-color: rgb(108, 117, 125);
+}
 .userForm {
   background: #fff;
   border: 1px solid #e7e7e7;
@@ -209,24 +212,10 @@ section.comments {
   border: 1px solid #eaeaea;
 }
 .post-single-image {
-  border-bottom: 1px solid transparent;
-}
-.post-images.two-images .post-single-image:hover,
-.post-images.three-images .post-single-image:hover,
-.post-images.four-images .post-single-image:hover {
-  border: 1px solid #9b9b9b;
-}
-.post-images.one-image {
   border: 1px solid transparent;
-  transition: border 100ms ease-in;
-      border-radius: 4px;
 }
-.post-images.one-image:hover {
+.post-single-image:hover {
   border: 1px solid #9b9b9b;
-}
-.post-images.one-image .post-single-image {
-    width: auto;
-    max-width: 100%;
 }
 .image-clear {
   background-color: #ffffff99;
@@ -542,11 +531,10 @@ hr {
 }
 
 .notifications-count {
-    font-size: 14px;
-    position: absolute;
-    top: -6px;
-    left: 9px;
-    /* color: #ce1717; */
+  font-size: 0.5em;
+  position: absolute;
+  top: -5px;
+  left: 7px;
 }
 
 @media (min-width: 839px) {
@@ -555,8 +543,8 @@ hr {
     display: inline;
   }
   .notifications-count {
-      top: -4px;
-      left: 9px;
+    top: -2px;
+    left: 7px;
   }
   #navbarLeftGroup .nav-item:not(:last-child) {
     padding-right: 2rem;
@@ -1192,11 +1180,9 @@ background-size: 5.66px 5.66px;
   grid-template-rows: 100%;
 }
 
-.post-images.one-image > img,
-.post-images.one-image > a {
+.post-images.one-image > img {
   object-fit: contain;
   height:auto;
-  text-align: center;
 }
 
 .post-images.two-images {
@@ -1368,6 +1354,18 @@ background-size: 5.66px 5.66px;
 .subscribed-alert a{
   font-weight: 500;
 }
+
+.featherlight-next:hover, .featherlight-previous:hover {
+    background: none !important;
+}
+
+.featherlight-next span, .featherlight-previous span {
+  text-shadow: 0 0 8px rgba(0,0,0,0.6) !important;
+}
+
+/* .featherlight-next::before {
+  content: '\f054'
+} */
 
 #welcome-message-container {
   padding: 15px;
@@ -1653,12 +1651,14 @@ article.comment.recent-comment-content.flash {
 #welcome-message-container > footer,
 article.comment > header {
     display: flex;
+    overflow: hidden;
 }
 #welcome-message-container > footer  .welcome-message-container,
 article.comment > header .comment-header-container {
     display: flex;
     align-items: center;
     width: 100%;
+    overflow: hidden;
 }
 article.comment > header .comment-header-divider {
     padding: 0 5px 0 1px;
@@ -1686,6 +1686,7 @@ article.comment > header h3.author-name {
 #welcome-message-container > footer  .author-username,
 article.comment > header .author-username {
     font-weight: 400;
+    white-space: nowrap;
 }
 article.comment > header .timestamp {
     font-size: 0.75rem;
@@ -1894,4 +1895,8 @@ a.show-more:hover { /* Shim for old show more button element */
 .infinite-scroll-last,
 .infinite-scroll-error {
     display: none;
+}
+
+.medium-editor-placeholder-relative::after, .medium-editor-placeholder::after {
+    white-space: normal !important;
 }
