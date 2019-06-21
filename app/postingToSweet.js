@@ -2,6 +2,7 @@ var moment = require('moment');
 var sanitizeHtml = require('sanitize-html');
 var notifier = require('./notifier.js');
 var mongoose = require('mongoose');
+var path = require('path');
 
 const url = require('url');
 
@@ -176,7 +177,7 @@ module.exports = function (app) {
     //if it's a community post.
     //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
     //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, function (req, res) {
+    app.post("/createpost", isLoggedInOrRedirect, async function (req, res) {
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
@@ -184,6 +185,17 @@ module.exports = function (app) {
         var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
+
+        var imageIsVertical = [];
+        for (image of postImages) {
+            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
+                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
+                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+            } else {
+                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
+                imageIsVertical.push("");
+            }
+        }
 
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
@@ -230,6 +242,7 @@ module.exports = function (app) {
                     imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
+                    imageIsVertical: imageIsVertical,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -353,6 +366,7 @@ module.exports = function (app) {
                     imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
+                    imageIsVertical: imageIsVertical,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -560,11 +574,22 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, function (req, res) {
+    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function (req, res) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
         let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
+
+        var imageIsVertical = [];
+        for (image of postImages) {
+            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
+                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
+                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+            } else {
+                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
+                imageIsVertical.push("");
+            }
+        }
 
         var rawContent = sanitize(req.body.commentContent);
         rawContent = sanitizeHtml(rawContent, {
@@ -590,7 +615,8 @@ module.exports = function (app) {
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,
             images: postImages,
-            imageDescriptions: imageDescriptions
+            imageDescriptions: imageDescriptions,
+            imageIsVertical: imageIsVertical
         };
 
         Post.findOne({
@@ -621,17 +647,17 @@ module.exports = function (app) {
                         return numberOfComments;
                     }
                     post.numberOfComments = countComments(post.comments);
-                }else {
+                } else {
                     // This is a child level comment so we have to drill through the comments
                     // until we find it
-                    function findNested(array, id, depthSoFar=2) {
+                    function findNested(array, id, depthSoFar = 2) {
                         var foundElement = false;
                         array.forEach((element) => {
-                            if (element._id && element._id.equals(id)){
-                                if(depthSoFar > 5){
+                            if (element._id && element._id.equals(id)) {
+                                if (depthSoFar > 5) {
                                     res.status(403).send(">:^(");
                                     return undefined;
-                                }else{
+                                } else {
                                     depth = depthSoFar;
                                     element.replies.push(comment);
                                     foundElement = element;
@@ -641,7 +667,7 @@ module.exports = function (app) {
                                 numberOfComments++;
                             }
                             if (element.replies) {
-                                var found = findNested(element.replies, id, depthSoFar+1)
+                                var found = findNested(element.replies, id, depthSoFar + 1)
                                 if (found) {
                                     foundElement = element;
                                     return found;
@@ -655,7 +681,7 @@ module.exports = function (app) {
                         post.numberOfComments = numberOfComments;
                     }
                 }
-                if(!depth){
+                if (!depth) {
                     //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
                     return;
                 }
@@ -865,45 +891,46 @@ module.exports = function (app) {
                             name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        classNames = ['one-image','two-images','three-images','four-images'];
-                        let commentImageGallery = function() {
-                            html = '<div class="post-images '+classNames[postImages.length-1]+'">';
-                            for (let i=0; i<postImages.length;i++){
-                              html += ('<a href="/api/image/display/'+postImages[i]+'">')+'<img alt="'+imageDescriptions[i]+' (posted by '+req.user.username+')" class="post-single-image" src="/api/image/display/'+postImages[i]+'" '+'</a>';
+                        classNames = ['one-image', 'two-images', 'three-images', 'four-images'];
+                        let commentImageGallery = function () {
+                            html = '<div class="post-images ' + classNames[postImages.length - 1] + '">';
+                            for (let i = 0; i < postImages.length; i++) {
+                                html += ('<a href="/api/image/display/' + postImages[i] + '">') + '<img alt="' + imageDescriptions[i] + ' (posted by ' + req.user.username + ')" class="post-single-image" src="/api/image/display/' + postImages[i] + '" ' + '</a>';
                             }
-                            html += (postImages.length>0 ? '</div>' : '');
+                            html += (postImages.length > 0 ? '</div>' : '');
                             html += '</div></div>';
                             return html;
                         }
                         var fullImageUrls = []
-                        for(img of postImages){
-                            fullImageUrls.push("/api/image/display/"+img);
+                        for (img of postImages) {
+                            fullImageUrls.push("/api/image/display/" + img);
                         }
                         commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
-                            image: image,
-                            name: name,
-                            username: req.user.username,
-                            timestamp: moment(commentTimestamp).fromNow(),
-                            content: parsedResult.text,
-                            comment_id: commentId.toString(),
-                            post_id: post._id.toString(),
-                            image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
-                                images: fullImageUrls,
-                                post_id: commentId.toString(),
-                                imageDescriptions: imageDescriptions,
-                                author: {
-                                    username: req.user.username
+                                image: image,
+                                name: name,
+                                username: req.user.username,
+                                timestamp: moment(commentTimestamp).fromNow(),
+                                content: parsedResult.text,
+                                comment_id: commentId.toString(),
+                                post_id: post._id.toString(),
+                                image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
+                                    images: fullImageUrls,
+                                    post_id: commentId.toString(),
+                                    imageDescriptions: imageDescriptions,
+                                    imageIsVertical: imageIsVertical,
+                                    author: {
+                                        username: req.user.username
+                                    }
+                                }),
+                                depth: depth
+                            })
+                            .then(html => {
+                                result = {
+                                    comment: html
                                 }
-                            }),
-                            depth: depth
-                        })
-                        .then(html => {
-                            result = {
-                                comment: html
-                            }
-                            res.contentType('json');
-                            res.send(JSON.stringify(result));
-                        })
+                                res.contentType('json');
+                                res.send(JSON.stringify(result));
+                            })
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -924,6 +951,7 @@ module.exports = function (app) {
                 commentsByUser = 0;
                 latestTimestamp = 0;
                 numberOfComments = 0;
+
                 function findNested(array, id, parent) {
                     var foundElement;
                     var parentElement = (parent ? parent : post)
@@ -937,13 +965,13 @@ module.exports = function (app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
-                        element.numberOfSiblings = (parent ? parentElement.replies.length-1 : post.comments.length-1);
+                        element.numberOfSiblings = (parent ? parentElement.replies.length - 1 : post.comments.length - 1);
                         element.parent = parentElement;
-                        if (element._id && element._id.equals(id)){
+                        if (element._id && element._id.equals(id)) {
                             foundElement = element;
                             commentsByUser--;
                             numberOfComments--;
-                            console.log('numberOfComments',numberOfComments)
+                            console.log('numberOfComments', numberOfComments)
                         }
                         if (element.replies) {
                             var found = findNested(element.replies, id, element)
@@ -981,8 +1009,7 @@ module.exports = function (app) {
                     target.parsedContent = "";
                     target.rawContent = "";
                     target.deleted = true;
-                }
-                else {
+                } else {
                     // There are no children, the target can be destroyed
                     target.remove();
                     if (target.numberOfSiblings == 0 && target.parent.deleted) {
