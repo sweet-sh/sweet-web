@@ -310,6 +310,40 @@ $(function() {
           textarea.val("");
           contentEditable.html("");
           $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          //add the lightbox listener to the newly appended comment images
+          var commentimages = $(data.comment).find('.post-images a');
+          if (commentimages.length > 0) {
+            var $images = commentimages;
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+              // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+              $(element).simpleLightbox(params);
+            });
+
+            // Handle grouped imags
+            if ($imagesGrouped.length > 0) {
+              // Select all groups
+              var groupNames = $imagesGrouped.map(function () {
+                return $(this).data('group');
+              }).get();
+              groupNames = $.unique(groupNames);
+
+              // Apply on each group
+              $.each(groupNames, function (key, value) {
+                $imagesGrouped.filter(function () {
+                    return $(this).data('group') == value;
+                  })
+                  .simpleLightbox(params);
+              });
+            }
+          }
+
+
           let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
           if(counterToChange.textContent === ""){
             counterToChange.innerHTML = "1";
