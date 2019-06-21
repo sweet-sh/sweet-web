@@ -490,6 +490,7 @@ module.exports = function (app) {
   //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
   app.get('/:username/:posturl', function (req, res, next) {
     req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
+    req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
     next('route');
     return;
   })
@@ -499,8 +500,6 @@ module.exports = function (app) {
     next('route');
     return;
   })
-
-
 
   //Responds to requests for posts for feeds. API method, used within the public pages.
   //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
@@ -711,7 +710,9 @@ module.exports = function (app) {
         var matchPosts = await getTag();
         var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
     } else if (req.params.context == "single") {
+      var author = (await User.findOne({username:req.singlepostUsername},{_id:1}));
       var matchPosts = {
+        author: author ? author._id : undefined, //won't find anything if the author corresponding to the username couldn't be found
         url: req.params.identifier
       }
       var sortMethod = "-lastUpdated" //this shouldn't matter oh well
@@ -1128,200 +1129,201 @@ module.exports = function (app) {
   //Input: name is the name of the tag, page is the page number of posts we're viewing.
   //Output: isLoggedInOrRedirect might redirect you. Otherwise, you get 404 if no showable posts are found or
   //the rendered posts results.
-  // app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
-  //   let postsPerPage = 10;
-  //   let page = req.params.page - 1;
-  //
-  //   let myFlaggedUserEmails = () => {
-  //     myFlaggedUserEmails = []
-  //     return Relationship.find({
-  //         from: req.user.email,
-  //         value: "flag"
-  //       })
-  //       .then((flags) => {
-  //         for (var key in flags) {
-  //           var flag = flags[key];
-  //           myFlaggedUserEmails.push(flag.to);
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.log("Error in profileData.")
-  //         console.log(err);
-  //       });
-  //   }
-  //
-  //   let usersFlaggedByMyTrustedUsers = () => {
-  //     myTrustedUserEmails = []
-  //     usersFlaggedByMyTrustedUsers = []
-  //     return Relationship.find({
-  //         from: req.user.email,
-  //         value: "trust"
-  //       })
-  //       .then((trusts) => {
-  //         for (var key in trusts) {
-  //           var trust = trusts[key];
-  //           myTrustedUserEmails.push(trust.to);
-  //         }
-  //         return Relationship.find({
-  //             value: "flag",
-  //             from: {
-  //               $in: myTrustedUserEmails
-  //             }
-  //           })
-  //           .then((users) => {
-  //             usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-  //           })
-  //       })
-  //       .catch((err) => {
-  //         console.log("Error in profileData.")
-  //         console.log(err);
-  //       });
-  //   }
-  //
-  //   let usersWhoTrustMe = () => {
-  //     usersWhoTrustMeEmails = []
-  //     return Relationship.find({
-  //         to: req.user.email,
-  //         value: "trust"
-  //       })
-  //       .then((trusts) => {
-  //         for (var key in trusts) {
-  //           var trust = trusts[key];
-  //           usersWhoTrustMeEmails.push(trust.from);
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.log("Error in profileData.")
-  //         console.log(err);
-  //       });
-  //   }
-  //
-  //   usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
-  //
-  //     const today = moment().clone().startOf('day');
-  //     const thisyear = moment().clone().startOf('year');
-  //
-  //     usersWhoTrustMeEmails.push(req.user.email);
-  //     var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
-  //     Tag.findOne({
-  //         name: req.params.name
-  //       })
-  //       .then((tag) => {
-  //         if (req.user.settings.homeTagTimelineSorting == "fluid") {
-  //           sortMethod = '-lastUpdated';
-  //         } else {
-  //           sortMethod = '-timestamp';
-  //         }
-  //         Post.find({
-  //             _id: {
-  //               $in: tag.posts
-  //             }
-  //           })
-  //           .sort(sortMethod)
-  //           .skip(postsPerPage * page)
-  //           .limit(postsPerPage)
-  //           .populate('author', '-password')
-  //           .populate('comments.author', '-password')
-  //           .populate('comments.replies.author')
-  //           .populate('comments.replies.replies.author')
-  //           .populate('comments.replies.replies.replies.author')
-  //           .populate('comments.replies.replies.replies.replies.author')
-  //           .populate({
-  //             path: 'boostTarget',
-  //             populate: {
-  //               path: 'author comments.author'
-  //             }
-  //           })
-  //           .then((posts) => {
-  //             if (!posts.length) {
-  //               res.status(404)
-  //                 .send('Not found');
-  //             } else {
-  //               displayedPosts = [];
-  //               posts.forEach(function (post, i) {
-  //                 if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-  //                   let canDisplay = true;
-  //                   if (post.type == "boost") {
-  //                     displayContext = post.boostTarget;
-  //                   } else {
-  //                     displayContext = post;
-  //                   }
-  //                   if (moment(displayContext.timestamp).isSame(today, 'd')) {
-  //                     parsedTimestamp = moment(displayContext.timestamp).fromNow();
-  //                   } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-  //                     parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-  //                   } else {
-  //                     parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-  //                   }
-  //
-  //                   imageUrlsArray = []
-  //                   if (displayContext.imageVersion === 2) {
-  //                     displayContext.images.forEach(image => {
-  //                       imageUrlsArray.push('/api/image/display/' + image)
-  //                     })
-  //                   } else {
-  //                     displayContext.images.forEach(image => {
-  //                       imageUrlsArray.push('/images/uploads/' + image)
-  //                     })
-  //                   }
-  //
-  //                   displayedPost = {
-  //                     canDisplay: canDisplay,
-  //                     _id: displayContext._id,
-  //                     deleteid: post._id,
-  //                     type: post.type,
-  //                     owner: post.author.username,
-  //                     author: {
-  //                       email: displayContext.author.email,
-  //                       _id: displayContext.author._id,
-  //                       username: displayContext.author.username,
-  //                       displayName: displayContext.author.displayName,
-  //                       imageEnabled: displayContext.author.imageEnabled,
-  //                       image: displayContext.author.image,
-  //                     },
-  //                     url: displayContext.url,
-  //                     privacy: displayContext.privacy,
-  //                     parsedTimestamp: parsedTimestamp,
-  //                     lastUpdated: post.lastUpdated, // For sorting, get the timestamp of the actual post, not the boosted original
-  //                     rawContent: displayContext.rawContent,
-  //                     parsedContent: displayContext.parsedContent,
-  //                     commentsDisabled: displayContext.commentsDisabled,
-  //                     comments: displayContext.comments,
-  //                     numberOfComments: displayContext.numberOfComments,
-  //                     contentWarnings: displayContext.contentWarnings,
-  //                     images: imageUrlsArray,
-  //                     imageDescriptions: displayContext.imageDescriptions,
-  //                     community: displayContext.community,
-  //                     boosts: displayContext.boosts,
-  //                     boostTarget: post.boostTarget,
-  //                     recentlyCommented: recentlyCommented,
-  //                     lastCommentAuthor: lastCommentAuthor,
-  //                     subscribedUsers: displayContext.subscribedUsers,
-  //                     unsubscribedUsers: displayContext.unsubscribedUsers,
-  //                     // linkPreview: displayContext.linkPreview
-  //                   }
-  //                   displayedPost.comments.forEach(function (comment) {
-  //                     comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-  //                     for (var i = 0; i < comment.images.length; i++) {
-  //                       comment.images[i] = '/api/image/display/' + comment.images[i];
-  //                     }
-  //                   });
-  //                   displayedPosts.push(displayedPost);
-  //                 }
-  //               })
-  //               res.render('partials/posts_v2', {
-  //                 layout: false,
-  //                 loggedIn: true,
-  //                 loggedInUserData: req.user,
-  //                 posts: displayedPosts,
-  //                 flaggedUsers: flagged,
-  //                 context: req.params.context
-  //               });
-  //             }
-  //           })
-  //       })
-  //   })
-  // })
+   /*app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
+     let postsPerPage = 10;
+     let page = req.params.page - 1;
+  
+     let myFlaggedUserEmails = () => {
+       myFlaggedUserEmails = []
+       return Relationship.find({
+           from: req.user.email,
+           value: "flag"
+         })
+         .then((flags) => {
+           for (var key in flags) {
+             var flag = flags[key];
+             myFlaggedUserEmails.push(flag.to);
+           }
+         })
+         .catch((err) => {
+           console.log("Error in profileData.")
+           console.log(err);
+         });
+     }
+  
+     let usersFlaggedByMyTrustedUsers = () => {
+       myTrustedUserEmails = []
+       usersFlaggedByMyTrustedUsers = []
+       return Relationship.find({
+           from: req.user.email,
+           value: "trust"
+         })
+         .then((trusts) => {
+           for (var key in trusts) {
+             var trust = trusts[key];
+             myTrustedUserEmails.push(trust.to);
+           }
+           return Relationship.find({
+               value: "flag",
+               from: {
+                 $in: myTrustedUserEmails
+               }
+             })
+             .then((users) => {
+               usersFlaggedByMyTrustedUsers = users.map(a => a.to);
+             })
+         })
+         .catch((err) => {
+           console.log("Error in profileData.")
+           console.log(err);
+         });
+     }
+  
+     let usersWhoTrustMe = () => {
+       usersWhoTrustMeEmails = []
+       return Relationship.find({
+           to: req.user.email,
+           value: "trust"
+         })
+         .then((trusts) => {
+           for (var key in trusts) {
+             var trust = trusts[key];
+             usersWhoTrustMeEmails.push(trust.from);
+           }
+         })
+         .catch((err) => {
+           console.log("Error in profileData.")
+           console.log(err);
+         });
+     }
+  
+     usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
+  
+       const today = moment().clone().startOf('day');
+       const thisyear = moment().clone().startOf('year');
+  
+       usersWhoTrustMeEmails.push(req.user.email);
+       var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
+       Tag.findOne({
+           name: req.params.name
+         })
+         .then((tag) => {
+           if (req.user.settings.homeTagTimelineSorting == "fluid") {
+             sortMethod = '-lastUpdated';
+           } else {
+             sortMethod = '-timestamp';
+           }
+           Post.find({
+               _id: {
+                 $in: tag.posts
+               }
+             })
+             .sort(sortMethod)
+             .skip(postsPerPage * page)
+             .limit(postsPerPage)
+             .populate('author', '-password')
+             .populate('comments.author', '-password')
+             .populate('comments.replies.author')
+             .populate('comments.replies.replies.author')
+             .populate('comments.replies.replies.replies.author')
+             .populate('comments.replies.replies.replies.replies.author')
+             .populate({
+               path: 'boostTarget',
+               populate: {
+                 path: 'author comments.author'
+               }
+             })
+             .then((posts) => {
+               if (!posts.length) {
+                 res.status(404)
+                   .send('Not found');
+               } else {
+                 displayedPosts = [];
+                 posts.forEach(function (post, i) {
+                   if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
+                     let canDisplay = true;
+                     if (post.type == "boost") {
+                       displayContext = post.boostTarget;
+                     } else {
+                       displayContext = post;
+                     }
+                     if (moment(displayContext.timestamp).isSame(today, 'd')) {
+                       parsedTimestamp = moment(displayContext.timestamp).fromNow();
+                     } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
+                       parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
+                     } else {
+                       parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
+                     }
+  
+                     imageUrlsArray = []
+                     if (displayContext.imageVersion === 2) {
+                       displayContext.images.forEach(image => {
+                         imageUrlsArray.push('/api/image/display/' + image)
+                       })
+                     } else {
+                       displayContext.images.forEach(image => {
+                         imageUrlsArray.push('/images/uploads/' + image)
+                       })
+                     }
+  
+                     displayedPost = {
+                       canDisplay: canDisplay,
+                       _id: displayContext._id,
+                       deleteid: post._id,
+                       type: post.type,
+                       owner: post.author.username,
+                       author: {
+                         email: displayContext.author.email,
+                         _id: displayContext.author._id,
+                         username: displayContext.author.username,
+                         displayName: displayContext.author.displayName,
+                         imageEnabled: displayContext.author.imageEnabled,
+                         image: displayContext.author.image,
+                       },
+                       url: displayContext.url,
+                       privacy: displayContext.privacy,
+                       parsedTimestamp: parsedTimestamp,
+                       lastUpdated: post.lastUpdated,  For sorting, get the timestamp of the actual post, not the boosted original
+                       rawContent: displayContext.rawContent,
+                       parsedContent: displayContext.parsedContent,
+                       commentsDisabled: displayContext.commentsDisabled,
+                       comments: displayContext.comments,
+                       numberOfComments: displayContext.numberOfComments,
+                       contentWarnings: displayContext.contentWarnings,
+                       images: imageUrlsArray,
+                       imageDescriptions: displayContext.imageDescriptions,
+                       community: displayContext.community,
+                       boosts: displayContext.boosts,
+                       boostTarget: post.boostTarget,
+                       recentlyCommented: recentlyCommented,
+                       lastCommentAuthor: lastCommentAuthor,
+                       subscribedUsers: displayContext.subscribedUsers,
+                       unsubscribedUsers: displayContext.unsubscribedUsers,
+                        linkPreview: displayContext.linkPreview
+                     }
+                     displayedPost.comments.forEach(function (comment) {
+                       comment.parsedTimestamp = moment(comment.timestamp).fromNow();
+                       for (var i = 0; i < comment.images.length; i++) {
+                         comment.images[i] = '/api/image/display/' + comment.images[i];
+                       }
+                     });
+                     displayedPosts.push(displayedPost);
+                   }
+                 })
+                 res.render('partials/posts_v2', {
+                   layout: false,
+                   loggedIn: true,
+                   loggedInUserData: req.user,
+                   posts: displayedPosts,
+                   flaggedUsers: flagged,
+                   context: req.params.context
+                 });
+               }
+             })
+         })
+     })
+   })
+   */
 
   //Responds to get requests for a user's profile page.
   //Inputs: username is the user's username.
