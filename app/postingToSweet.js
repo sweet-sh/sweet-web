@@ -657,7 +657,7 @@ module.exports = function (app) {
                             if (element._id && element._id.equals(id)) {
                                 if (depthSoFar > 5) {
                                     res.status(403).send(">:^(");
-                                    return undefined;
+                                    return "too deep";
                                 } else {
                                     depth = depthSoFar;
                                     element.replies.push(comment);
@@ -678,7 +678,7 @@ module.exports = function (app) {
                         return foundElement;
                     }
                     target = findNested(post.comments, req.params.commentid);
-                    if (target) {
+                    if (target && target!="too deep") {
                         post.numberOfComments = numberOfComments;
                     }
                 }
