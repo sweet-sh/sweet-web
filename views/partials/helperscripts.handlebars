@@ -146,6 +146,12 @@ $(function() {
         if(errorMessage && errorMessage.stack){
             errorstring+="\npossibly second stack trace: \n"+errorMessage.stack;
         }
+        if(typof errorMessage == "object"){
+            errorstring+="\nJSON stringify:"+JSON.stringify(errorMessage);
+            for(prop in errorMessage){
+                errorstring+="\nproperty: "+prop+"value: "+errorMessage[prop];
+            }
+        }
         if(window.navigator && window.navigator.userAgent){
             errorstring+="\nbrowser user agent header: "+window.navigator.userAgent;
         }
