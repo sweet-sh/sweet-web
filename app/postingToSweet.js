@@ -626,7 +626,6 @@ module.exports = function (app) {
             .then((post) => {
                 numberOfComments = 0;
                 var depth = undefined;
-                var target = undefined;
                 if (req.params.commentid == 'undefined') {
                     depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
@@ -657,7 +656,7 @@ module.exports = function (app) {
                             if (element._id && element._id.equals(id)) {
                                 if (depthSoFar > 5) {
                                     res.status(403).send(">:^(");
-                                    return "too deep";
+                                    return undefined;
                                 } else {
                                     depth = depthSoFar;
                                     element.replies.push(comment);
@@ -677,17 +676,13 @@ module.exports = function (app) {
                         })
                         return foundElement;
                     }
-                    target = findNested(post.comments, req.params.commentid);
-                    if (target && target!="too deep") {
+                    var target = findNested(post.comments, req.params.commentid);
+                    if (target) {
                         post.numberOfComments = numberOfComments;
                     }
                 }
                 if (!depth) {
-                    //if depth was left undefined then it was found to be invalid, let's get out of here.
-                    if(!target){
-                    //if target was left undefined then this comment's theoretical parent wasn't found (prob. just deleted)
-                        res.send({comment:"<p>the comment you just tried to reply to appears to have gotten away! better luck next time</p>"});
-                    }
+                    //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
                     return;
                 }
                 postPrivacy = post.privacy;
@@ -918,6 +913,7 @@ module.exports = function (app) {
                                 content: parsedResult.text,
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
+                                imagesExist: (fullImageUrls.length > 0 ? true : false),
                                 image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
                                     images: fullImageUrls,
                                     post_id: commentId.toString(),
