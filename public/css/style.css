@@ -346,6 +346,10 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Ubuntu', serif;
 }
 
+#settingsForm h4 {
+    color: #ce1717;
+}
+
 /* .post-action-button {
   width: 60px;
   text-align: left;
