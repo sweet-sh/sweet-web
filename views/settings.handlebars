@@ -1,66 +1,113 @@
 <div id="homeBody" class="row justify-content-center">
-  <div class="col-lg-8">
-    <h3 class="page-header mx-2">Settings</h3>
-    <form id="settingsForm" method="post" action="/updatesettings" class="pane">
-      <h4>Privacy</h4>
-      <div class="form-group">
-        <label for="profileVisibility">Profile page and public posts visibility</label>
-        <select name="profileVisibility" class="form-control" id="profileVisibility">
-          <option value="invisible" {{#eq loggedInUserData.settings.profileVisibility "invisible"}}selected{{/eq}}>Visible to logged in users only</option>
-          <option value="profileOnly" {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible to logged out users</option>
-          <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
-        </select>
-      </div>
-      <hr />
-      <h4>Posting</h4>
-      <div class="form-group">
-        <label for="newPostPrivacy">Default privacy for new posts</label>
-        <select name="newPostPrivacy" class="form-control" id="newPostPrivacy">
-          <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>Public</option>
-          <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>Private</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="newPostPrivacy">Quality of uploaded images</label>
-        <select name="imageQuality" class="form-control" id="imageQuality">
-          <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>Standard (up to 1200px standard quality JPGs)</option>
-          <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up to 2048px high quality JPGs/PNGs)</option>
-          <option value="ridiculous" {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to 4096px high quality JPGs/PNGs)</option>
-        </select>
-        <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large number of high quality images, we may ask you in future to help out with sweet's web hosting costs.</p>
-      </div>
-      <hr />
-      <h4>Viewing</h4>
-      <div class="form-group">
-        <label for="homeTagTimelineSorting">Sorting of posts in Home and Tag timelines</label>
-        <select name="homeTagTimelineSorting" class="form-control" id="homeTagTimelineSorting">
-          <option value="chronological" {{#eq loggedInUserData.settings.homeTagTimelineSorting "chronological"}}selected{{/eq}}>Chronological (posts appear in the order they were originally posted)</option>
-          <option value="fluid" {{#eq loggedInUserData.settings.homeTagTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented posts move to the top)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="userTimelineSorting">Sorting of posts in User timelines</label>
-        <select name="userTimelineSorting" class="form-control" id="userTimelineSorting">
-          <option value="chronological" {{#eq loggedInUserData.settings.userTimelineSorting "chronological"}}selected{{/eq}}>Chronological (posts appear in the order they were originally posted)</option>
-          <option value="fluid" {{#eq loggedInUserData.settings.userTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented posts move to the top)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="communityTimelineSorting">Sorting of posts in Community timelines</label>
-        <select name="communityTimelineSorting" class="form-control" id="communityTimelineSorting">
-          <option value="chronological" {{#eq loggedInUserData.settings.communityTimelineSorting "chronological"}}selected{{/eq}}>Chronological (posts appear in the order they were originally posted)</option>
-          <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented posts move to the top)</option>
-        </select>
-      </div>
-        <div class="form-group">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
-                <label class="form-check-label" for="flashRecentComments">
-                    Flash recent comments
-                </label>
+    <div class="col-lg-8">
+        <h3 class="page-header mx-2">Settings</h3>
+        <form id="settingsForm" method="post" action="/updatesettings" class="pane">
+            <h4>Basic settings</h4>
+            <div class="form-group">
+                <label for="timezone">Nearest timezone</label>
+                <select class="form-control" name="timezone" id="timezone">
+                	<option value="-12:00" {{#eq loggedInUserData.settings.timezone "-12:00"}}selected{{/eq}}>(GMT -12:00) Eniwetok, Kwajalein</option>
+                	<option value="-11:00" {{#eq loggedInUserData.settings.timezone "-11:00"}}selected{{/eq}}>(GMT -11:00) Midway Island, Samoa</option>
+                	<option value="-10:00" {{#eq loggedInUserData.settings.timezone "-10:00"}}selected{{/eq}}>(GMT -10:00) Hawaii</option>
+                	<option value="-09:00" {{#eq loggedInUserData.settings.timezone "-09:00"}}selected{{/eq}}>(GMT -9:00) Alaska</option>
+                	<option value="-08:00" {{#eq loggedInUserData.settings.timezone "-08:00"}}selected{{/eq}}>(GMT -8:00) Pacific Time (US &amp; Canada)</option>
+                	<option value="-07:00" {{#eq loggedInUserData.settings.timezone "-07:00"}}selected{{/eq}}>(GMT -7:00) Mountain Time (US &amp; Canada)</option>
+                	<option value="-06:00" {{#eq loggedInUserData.settings.timezone "-06:00"}}selected{{/eq}}>(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
+                	<option value="-05:00" {{#eq loggedInUserData.settings.timezone "-05:00"}}selected{{/eq}}>(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
+                	<option value="-04:00" {{#eq loggedInUserData.settings.timezone "-04:00"}}selected{{/eq}}>(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
+                	<option value="-03:00" {{#eq loggedInUserData.settings.timezone "-03:00"}}selected{{/eq}}>(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
+                	<option value="-02:00" {{#eq loggedInUserData.settings.timezone "-02:00"}}selected{{/eq}}>(GMT -2:00) Mid-Atlantic</option>
+                	<option value="-01:00" {{#eq loggedInUserData.settings.timezone "-01:00"}}selected{{/eq}}>(GMT -1:00) Azores, Cape Verde Islands</option>
+                	<option value="+00:00" {{#eq loggedInUserData.settings.timezone "+00:00"}}selected{{/eq}}>(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
+                	<option value="+01:00" {{#eq loggedInUserData.settings.timezone "+01:00"}}selected{{/eq}}>(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
+                	<option value="+02:00" {{#eq loggedInUserData.settings.timezone "+02:00"}}selected{{/eq}}>(GMT +2:00) Kaliningrad, South Africa</option>
+                	<option value="+03:00" {{#eq loggedInUserData.settings.timezone "+03:00"}}selected{{/eq}}>(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
+                	<option value="+04:00" {{#eq loggedInUserData.settings.timezone "+04:00"}}selected{{/eq}}>(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+                	<option value="+05:00" {{#eq loggedInUserData.settings.timezone "+05:00"}}selected{{/eq}}>(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+                	<option value="+06:00" {{#eq loggedInUserData.settings.timezone "+06:00"}}selected{{/eq}}>(GMT +6:00) Almaty, Dhaka, Colombo</option>
+                	<option value="+07:00" {{#eq loggedInUserData.settings.timezone "+07:00"}}selected{{/eq}}>(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
+                	<option value="+08:00" {{#eq loggedInUserData.settings.timezone "+08:00"}}selected{{/eq}}>(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
+                	<option value="+09:00" {{#eq loggedInUserData.settings.timezone "+09:00"}}selected{{/eq}}>(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+                	<option value="+10:00" {{#eq loggedInUserData.settings.timezone "+10:00"}}selected{{/eq}}>(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
+                	<option value="+11:00" {{#eq loggedInUserData.settings.timezone "+11:00"}}selected{{/eq}}>(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
+                	<option value="+12:00" {{#eq loggedInUserData.settings.timezone "+12:00"}}selected{{/eq}}>(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+                	<option value="+13:00" {{#eq loggedInUserData.settings.timezone "+13:00"}}selected{{/eq}}>(GMT +13:00) Apia, Nukualofa</option>
+                	<option value="+14:00" {{#eq loggedInUserData.settings.timezone "+14:00"}}selected{{/eq}}>(GMT +14:00) Line Islands, Tokelau</option>
+                </select>
+                <p class="form-text small">This is currently only used to avoid sending you digest emails at stupid times.</p>
             </div>
-        </div>
-      <button type="submit" class="btn btn-secondary">Save settings</button>
-    </form>
-  </div>
+            <hr />
+            <h4>Privacy</h4>
+            <div class="form-group">
+                <label for="profileVisibility">Profile page and public posts visibility</label>
+                <select name="profileVisibility" class="form-control" id="profileVisibility">
+                    <option value="invisible" {{#eq loggedInUserData.settings.profileVisibility "invisible"}}selected{{/eq}}>Visible to logged in users only</option>
+                    <option value="profileOnly" {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible to logged out users</option>
+                    <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
+                </select>
+            </div>
+            <hr />
+            <h4 id="email_settings">Emails</h4>
+            <div class="form-group">
+                <label for="profileVisibility">Frequency of digest emails</label>
+                <p class="form-text small mt-0">sweet can send you a daily or weekly digest email with a summary of your unseen notifications.</p>
+                <select name="digestEmailFrequency" class="form-control" id="digestEmailFrequency">
+                    <option value="off" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}selected{{/eq}}>Do not send digest emails</option>
+                    <option value="daily" {{#eq loggedInUserData.settings.digestEmailFrequency "daily"}}selected{{/eq}}>Send a daily digest email</option>
+                    <option value="weekly" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}selected{{/eq}}>Send a weekly digest email</option>
+                </select>
+                <p class="form-text small text-success">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
+            </div>
+            <hr />
+            <h4>Posting</h4>
+            <div class="form-group">
+                <label for="newPostPrivacy">Default privacy for new posts</label>
+                <select name="newPostPrivacy" class="form-control" id="newPostPrivacy">
+                    <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>Public</option>
+                    <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>Private</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="newPostPrivacy">Quality of uploaded images</label>
+                <select name="imageQuality" class="form-control" id="imageQuality">
+                    <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>Standard (up to 1200px standard quality JPGs)</option>
+                    <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up to 2048px high quality JPGs/PNGs)</option>
+                    <option value="ridiculous" {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to 4096px high quality JPGs/PNGs)</option>
+                </select>
+                <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large number of high quality images, we may ask you in future to help out with sweet's web hosting costs.</p>
+            </div>
+            <hr />
+            <h4>Viewing</h4>
+            <div class="form-group">
+                <label for="homeTagTimelineSorting">Sorting of posts in Home and Tag timelines</label>
+                <select name="homeTagTimelineSorting" class="form-control" id="homeTagTimelineSorting">
+                    <option value="chronological" {{#eq loggedInUserData.settings.homeTagTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
+                    <option value="fluid" {{#eq loggedInUserData.settings.homeTagTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="userTimelineSorting">Sorting of posts in User timelines</label>
+                <select name="userTimelineSorting" class="form-control" id="userTimelineSorting">
+                    <option value="chronological" {{#eq loggedInUserData.settings.userTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
+                    <option value="fluid" {{#eq loggedInUserData.settings.userTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="communityTimelineSorting">Sorting of posts in Community timelines</label>
+                <select name="communityTimelineSorting" class="form-control" id="communityTimelineSorting">
+                    <option value="chronological" {{#eq loggedInUserData.settings.communityTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
+                    <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                </select>
+            </div>
+                <div class="form-group">
+                        <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
+                                <label class="form-check-label" for="flashRecentComments">
+                                        Flash recent comments
+                                </label>
+                        </div>
+                </div>
+            <button type="submit" class="btn btn-secondary">Save settings</button>
+        </form>
+    </div>
 </div>

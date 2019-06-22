@@ -337,8 +337,10 @@ module.exports = function (app, passport) {
                 _id: req.user._id
             }, {
                 $set: {
+                    'settings.timezone': updatedSettings.timezone,
                     'settings.profileVisibility': updatedSettings.profileVisibility,
                     'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
+                    'settings.digestEmailFrequency': updatedSettings.digestEmailFrequency,
                     'settings.imageQuality': updatedSettings.imageQuality,
                     'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
                     'settings.userTimelineSorting': updatedSettings.userTimelineSorting,

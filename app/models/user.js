@@ -51,6 +51,7 @@ var userSchema = new mongoose.Schema({
   websiteParsed: String,
   location: String,
   settings: {
+    timezone: { type: String, default: "+00:00" },
     profileVisibility: { type: String, default: "invisible" },
     newPostPrivacy: { type: String, default: "public" },
     imageQuality: { type: String, default: "standard" },
@@ -58,6 +59,7 @@ var userSchema = new mongoose.Schema({
     userTimelineSorting: { type: String, default: "chronological" },
     communityTimelineSorting: { type: String, default: "fluid" },
     flashRecentComments: { type: Boolean, default: true },
+    digestEmailFrequency: { type: String, default: "off" }
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],

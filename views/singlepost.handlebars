@@ -27,6 +27,47 @@
 <script>
 $(function() {
   $(".comments").show();
+  if ($('.post-images').length > 0) {
+      var imagesLoaded = $('.post-single-image').length;
+      console.log("images loaded: " + imagesLoaded);
+      var imagesLightboxed = 0;
+
+      var $images = $('.post-images a');
+      var $imagesGrouped = $images.filter('[data-group]');
+      var $imagesAlone = $images.not($imagesGrouped);
+      var params = {
+          // your params
+      };
+
+      // Handle standalone images
+      $imagesAlone.each(function (index, element) {
+          $(element).simpleLightbox(params);
+          imagesLightboxed++;
+      });
+
+      // Handle grouped images
+      if ($imagesGrouped.length > 0) {
+          // Select all groups
+          var groupNames = $imagesGrouped.map(function () {
+              return $(this).data('group');
+          }).get();
+          groupNames = $.unique(groupNames);
+
+          // Apply on each group
+          $.each(groupNames, function (key, value) {
+              var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
+                  return $(this).data('group') == value;
+              })
+              filteredGroup.simpleLightbox(params);
+              imagesLightboxed += filteredGroup.length;
+          });
+          console.log("images lightboxed: " + imagesLightboxed)
+          if (imagesLightboxed != imagesLoaded) {
+              console.log("not all images lightboxed!!!!!!");
+          }
+          //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
+      }
+  }
   $.post('/api/user/followers', function(data){
     followers = JSON.parse(data).followers;
     tribute = new Tribute({
