@@ -626,6 +626,7 @@ module.exports = function (app) {
             .then((post) => {
                 numberOfComments = 0;
                 var depth = undefined;
+                var target = undefined;
                 if (req.params.commentid == 'undefined') {
                     depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
@@ -676,13 +677,17 @@ module.exports = function (app) {
                         })
                         return foundElement;
                     }
-                    var target = findNested(post.comments, req.params.commentid);
+                    target = findNested(post.comments, req.params.commentid);
                     if (target) {
                         post.numberOfComments = numberOfComments;
                     }
                 }
                 if (!depth) {
-                    //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
+                    //if depth was left undefined then it was found to be invalid, let's get out of here.
+                    if(!target){
+                    //if target was left undefined then this comment's theoretical parent wasn't found (prob. just deleted)
+                        res.send({comment:"<p>the comment you just tried to reply to appears to have gotten away! better luck next time</p>"});
+                    }
                     return;
                 }
                 postPrivacy = post.privacy;
