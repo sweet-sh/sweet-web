@@ -133,9 +133,15 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
 $(function() {
     //this is here bc this is the first of our scripts to be linked in in the layout, and this should be the first thing the browser does
     window.onerror = function(errorMessage, source, lineno, colno, error){
-        var errorstring = "error: "+errorMessage+"\noriginating from script: "+source+"on line "+lineno+" and column "+colno;
+        var errorstring = "error: "+errorMessage+"\noriginating from script: "+source+" on line "+lineno+" and column "+colno;
         if(error && error.stack){
             errorstring+="\nfull stack trace: \n" + error.stack;
+        }
+        if(error && error.message){
+            errorstring+="\nerror object message: "+error.message;
+        }
+        if(window.navigator && window.navigator.userAgent){
+            errorstring+="\nbrowser user agent header: "+window.navigator.userAgent;
         }
         $.post("/admin/reporterror", {errorstring: errorstring});
     }
