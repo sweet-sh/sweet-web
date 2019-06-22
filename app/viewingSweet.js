@@ -663,6 +663,9 @@ module.exports = function (app) {
     //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find
 
     if (req.params.context == "home") {
+        console.log("========= HOME DEBUG =========")
+        console.log(req.user)
+        console.log(req.user.settings)
       //on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
       var matchPosts = {
         '$or': [{
@@ -880,6 +883,9 @@ module.exports = function (app) {
           }
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
+              console.log("======== BOOSTED BY LABEL DEBUG ========")
+              console.log(req.user)
+              console.log(req.isAuthenticated())
             var followedBoosters = [];
             var notFollowingBoosters = [];
             var youBoosted = false;
