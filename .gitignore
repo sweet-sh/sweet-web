@@ -138,5 +138,5 @@ typings/
 
 postTimeline.csv
 userTimeline.csv
-postTimeline.csv
-postTimeline.csv
+activeUsersTimeline.csv
+clientsideerrors.txt
