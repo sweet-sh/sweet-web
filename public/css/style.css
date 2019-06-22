@@ -1217,15 +1217,15 @@ background-size: 5.66px 5.66px;
     max-height:175px;
   }
 }
-.comment-content .post-images {
+.comment .content .post-images {
     max-width: 400px;
     max-height: 200px;
 }
 
-.comment-content  .post-images.one-image {
+.comment .content .post-images.one-image {
   display: inline-block;
 }
-.comment-content .post-images .post-single-image {
+.comment .content .post-images .post-single-image {
     max-height: 200px;
 }
 

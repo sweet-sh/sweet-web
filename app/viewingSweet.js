@@ -807,11 +807,16 @@ module.exports = function (app) {
               canDisplay = true;
             }
             if (post.type == "community") {
-              // Hide muted community members
-              let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-              if (mutedMemberIds.includes(post.author._id.toString())) {
-                canDisplay = false;
-              }
+                if (myCommunities.some(m => { return m.equals(post.community._id) })) {
+                    canDisplay = true;
+                    // Hide muted community members
+                    let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+                    if (mutedMemberIds.includes(post.author._id.toString())) {
+                      canDisplay = false;
+                    }
+                } else {
+                    canDisplay = false;
+                }
             }
           } else {
             //for logged out users, we already eliminated private posts by specifying query.privacy =  'public',
@@ -1145,7 +1150,7 @@ module.exports = function (app) {
    /*app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
      let postsPerPage = 10;
      let page = req.params.page - 1;
-  
+
      let myFlaggedUserEmails = () => {
        myFlaggedUserEmails = []
        return Relationship.find({
@@ -1163,7 +1168,7 @@ module.exports = function (app) {
            console.log(err);
          });
      }
-  
+
      let usersFlaggedByMyTrustedUsers = () => {
        myTrustedUserEmails = []
        usersFlaggedByMyTrustedUsers = []
@@ -1191,7 +1196,7 @@ module.exports = function (app) {
            console.log(err);
          });
      }
-  
+
      let usersWhoTrustMe = () => {
        usersWhoTrustMeEmails = []
        return Relationship.find({
@@ -1209,12 +1214,12 @@ module.exports = function (app) {
            console.log(err);
          });
      }
-  
+
      usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
-  
+
        const today = moment().clone().startOf('day');
        const thisyear = moment().clone().startOf('year');
-  
+
        usersWhoTrustMeEmails.push(req.user.email);
        var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
        Tag.findOne({
@@ -1267,7 +1272,7 @@ module.exports = function (app) {
                      } else {
                        parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
                      }
-  
+
                      imageUrlsArray = []
                      if (displayContext.imageVersion === 2) {
                        displayContext.images.forEach(image => {
@@ -1278,7 +1283,7 @@ module.exports = function (app) {
                          imageUrlsArray.push('/images/uploads/' + image)
                        })
                      }
-  
+
                      displayedPost = {
                        canDisplay: canDisplay,
                        _id: displayContext._id,

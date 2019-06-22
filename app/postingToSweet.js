@@ -913,6 +913,7 @@ module.exports = function (app) {
                                 content: parsedResult.text,
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
+                                imagesExist: (fullImageUrls.length > 0 ? true : false),
                                 image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
                                     images: fullImageUrls,
                                     post_id: commentId.toString(),
