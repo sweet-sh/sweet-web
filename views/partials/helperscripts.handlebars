@@ -140,6 +140,12 @@ $(function() {
         if(error && error.message){
             errorstring+="\nerror object message: "+error.message;
         }
+        if(errorMessage && errorMessage.message){ //it looks like some browsers just use an error object as the first paramater
+            errorstring+="\nother message: "+errorMessage.message;
+        }
+        if(errorMessage && errorMessage.stack){
+            errorstring+="\npossibly second stack trace: \n"+errorMessage.stack;
+        }
         if(window.navigator && window.navigator.userAgent){
             errorstring+="\nbrowser user agent header: "+window.navigator.userAgent;
         }
