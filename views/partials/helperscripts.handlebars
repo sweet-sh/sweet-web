@@ -146,6 +146,32 @@ $(function() {
         if(errorMessage && errorMessage.stack){
             errorstring+="\npossibly second stack trace: \n"+errorMessage.stack;
         }
+        if (typeof errorMessage == "object") {
+
+            try {
+                //stolen from https://stackoverflow.com/questions/11616630/json-stringify-avoid-typeerror-converting-circular-structure-to-json
+                // Note: cache should not be re-used by repeated calls to JSON.stringify.
+                var cache = [];
+                errorstring += JSON.stringify(errorMessage, function (key, value) {
+                    if (typeof value === 'object' && value !== null) {
+                        if (cache.indexOf(value) !== -1) {
+                            // Duplicate reference found, discard key
+                            return;
+                        }
+                        // Store value in our collection
+                        cache.push(value);
+                    }
+                    return value;
+                });
+                
+                cache = null; // Enable garbage collection
+            } catch (err) {
+                errorstring += "\ncould not stringify errorMessage: " + err.message;
+                for (prop in errorMessage) {
+                    errorstring += "\nproperty: " + prop + "      value: " + errorMessage[prop];
+                }
+            }
+        }
         if(window.navigator && window.navigator.userAgent){
             errorstring+="\nbrowser user agent header: "+window.navigator.userAgent;
         }
