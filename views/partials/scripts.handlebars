@@ -1,8 +1,36 @@
 <script type="text/javascript">
+{{#if loggedInUserData.settings.flashRecentComments}}
+    $(window).scroll(function() {
+        $(".recent-comment-content:not(.flash)").each(function(){
+            var element = $(this)
+            var top_of_element = $(this).offset().top;
+            var bottom_of_element = $(this).offset().top + $(this).outerHeight();
+            var bottom_of_screen = $(window).scrollTop() + window.innerHeight;
+            var top_of_screen = $(window).scrollTop();
+
+            if((bottom_of_screen > top_of_element) && (top_of_screen < bottom_of_element)){
+                element.addClass('flash')
+                // setTimeout(function(){
+                //     element.removeClass('flash')
+                // }, 2000);
+            }
+        });
+    });
+{{/if}}
+
 $(function() {
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
+
+    $('html').on('show.simplelightbox', function () {
+	     $('#bodyContainer, #topNav').css('filter','blur(10px)');
+    });
+    $('html').on('close.simplelightbox', function () {
+         $('#bodyContainer, #topNav').css('filter','none');
+    });
+
+
   $("#notificationsContainer").load( "/api/notification/display" );
 
   // $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){
@@ -13,6 +41,12 @@ $(function() {
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.notifications-count').css('color', '#900202');
   }
+
+  $('.clear-all-notifications').click(function() {
+      $.post('/api/notifications/clearall', function(data){
+          $("#notificationsContainer").load( "/api/notification/display" );
+      })
+  })
 
   $("#darkModeToggle").click(function(e){
     e.preventDefault();
@@ -51,8 +85,8 @@ $(function() {
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
     $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
-      let latestPost = $("#checkNewPosts").find(".commentContainer").attr("data-post-id");
-      let currentlyDisplayedPost = $("#postsContainer").find(".commentContainer").attr("data-post-id");
+      let latestPost = $("#checkNewPosts").find(".post").attr("data-post-id");
+      let currentlyDisplayedPost = $("#postsContainer").find(".post").attr("data-post-id");
       if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
         $("#newPostsAvailable").show();
       }
@@ -63,15 +97,21 @@ $(function() {
     {{/eq}}
   }, 60000);
 
-  $('body').on('click', '.openReplyBox', function() {
-    commentsContainer = $(this).closest(".comment").find(".replyContainer");
+  $('body').on('click', '.show-comments', function() {
+    commentsContainer = $(this).closest(".post").find(".comments");
     commentsContainer.slideToggle("fast", function(){
       if (commentsContainer.is(':visible')){
         if(commentsContainer.height() > $(window).height()){
-          var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
+          scrollTarget = $(this).closest('.comments').find('.recent-comment-content')
+          if (scrollTarget[0]) {
+              var scroll = scrollTarget.offset().top+scrollTarget.height()-$(window).height()+200;
+          }
+          else {
+              var scroll = commentsContainer.offset().top+commentsContainer.height()-$(window).height();
+          }
           $("html, body").animate({ scrollTop: scroll+"px" },200);
         }
-        var post = $(this).closest('.commentContainer');
+        var post = $(this).closest('.post');
         $.post("/api/notification/update-by-subject/"+post.attr("data-post-id"), function(data){
           $("#notificationsContainer").load( "/api/notification/display" );
         })
@@ -99,10 +139,10 @@ $(function() {
         text == "Show more" ? "Show less" : "Show more");
   })
   $('body').on('click','.replyEmojiWindowButton', function() {
-    $(this).closest('#replyForm').find('.replyEmojiWindow').slideToggle("fast");
+    $(this).closest('.new-comment-form').find('.replyEmojiWindow').slideToggle("fast");
   })
   $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
-    pasteHtmlAtCaret($(this).closest("#replyForm").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
+    pasteHtmlAtCaret($(this).closest(".new-comment-form").find('.editable-comment-content.medium-editor-element'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
   })
 
     $('#boostersModal').on('show.bs.modal', function (event) {
@@ -111,7 +151,7 @@ $(function() {
         var modal = $(this)
         modal.find('#boosters-list').empty()
         if (users.followedBoosters.includes("you")){
-            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">you</li>');
+            modal.find('#boosters-list').append('<a href="/{{loggedInUserData.username}}" class="list-group-item">You (@{{loggedInUserData.username}})</li>');
         }
         users.followedBoosters.forEach(function(user) {
             if (user === "you") {
@@ -137,31 +177,57 @@ $(function() {
   // })
   $('body').on('click', '.content-warning-show-more', function() {
     var state = $(this).attr("data-state");
-    var abbContent = $(this).closest(".post-content").find(".abbreviated-content");
+    var abbrContent = $(this).closest(".post").find(".abbreviated-content");
+    console.log(abbrContent)
     if (state == "contracted") {
-      var h = abbContent.css('height','100%').height();
-      abbContent.css('height','0');
-      abbContent.animate({height:h},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
+      var h = abbrContent.css('height','100%').height();
+      abbrContent.css('height','0');
+      abbrContent.animate({height:h},200);
+      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","expanded");
     }
     else {
-      abbContent.animate({height:"0"},200);
-      $(this).closest(".commentContainer").find(".content-warning-images").toggleClass("content-warning-images-shown");
+      abbrContent.animate({height:"0"},200);
+      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
       $(this).attr("data-state","contracted");
     }
     var text = $(this).text();
     $(this).text(
         text == "Show post" ? "Hide post" : "Show post");
   })
-  $('body').on('click', '.replyToComment', function() {
-    pasteHtmlAtCaret($(this).closest(".replyContainer").children("#replyForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
+  $('body').on('click', '.reply-to-comment', function() {
+    // First, check if the reply form is already open - if it is, just scroll to it
+    var commentContainer = $(this).closest('.comment');
+    var postID = commentContainer.closest('.post').attr("data-post-id");
+    var commentID = commentContainer.attr("data-comment-id");
+    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
+    if (checkFormExists.length) {
+        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
+            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
+        }
+        console.log("Form already exists!")
+        return;
+    }
+    // pasteHtmlAtCaret($(this).closest(".replyContainer").children("#commentForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
+
+    // Create new comment form with Handlebars.js
+    var source = document.getElementById("new-comment-form-template").innerHTML;
+    var template = Handlebars.compile(source);
+    var html = template({post_id: postID, comment_id: commentID, comment_type: 'child'});
+    $(html).appendTo(commentContainer);
+    editor.addElements('.editable-text');
+    tribute.attach($(".editable-comment-content"));
+    //Scroll to newly created form
+    newForm = commentContainer.find('.new-comment-form');
+    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
+        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
+    }
   })
-  $('body').on('click', '.deletePost', function() {
+  $('body').on('click', '.delete-post', function() {
     var element = $(this);
     bootbox.confirm("Are you sure you want to delete this post?", function(result){
       if (result == true) {
-        let divToDelete = element.closest(".commentContainer");
+        let divToDelete = element.closest(".post");
         $.post("/deletepost/"+element.attr("id"), function(data) {
           divToDelete.fadeOut(function() {
             divToDelete.remove();
@@ -170,36 +236,48 @@ $(function() {
       }
     });
   })
-  $('body').on('click', '.deleteComment', function() {
-    var element = $(this);
+  $('body').on('click', '.delete-comment', function() {
+    let element = $(this);
+    let counterToChange = element.closest(".post").find(".show-comments").find('.comments-number');
+    var postID = element.closest('.post').attr('data-post-id')
     bootbox.confirm("Are you sure you want to delete this comment?", function(result){
       if (result == true) {
-        let divToDelete = element.closest(".individualReplyContainer");
-        $.post("/deletecomment/"+element.attr("data-post-id")+"/"+element.attr("data-comment-id"), function(data) {
-          divToDelete.fadeOut(function() {
-            divToDelete.remove();
-          });
+        let divToDelete = element.closest(".comment");
+        $.post("/deletecomment/"+postID+"/"+element.attr("data-comment-id"), function(data) {
+            divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
+            divToDelete.find('header:first').remove();
+            divToDelete.find('footer button.delete-comment:first').remove();
+
+            let newCommentCount = data.numberOfComments;
+            console.log(element)
+            console.log(counterToChange)
+            if(newCommentCount!=0){
+              counterToChange.html(newCommentCount)
+            }else{
+              counterToChange.html("")
+            }
         });
-        let counterToChange = element.closest(".commentContainer").find(".openReplyBox").find(".comments-number")[0];
-        let newCommentCount = parseInt(counterToChange.textContent)-1;
-        if(newCommentCount!=0){
-          counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount+1), newCommentCount);
-        }else{
-          counterToChange.innerHTML = counterToChange.innerHTML.replace( (newCommentCount+1),"");
-        }
       }
     });
   })
-  $('body').on('click', '.postReply', function() {
+  $('body').on('click', '.create-comment', function() {
     let commentButton = $(this);
-    let replyForm = commentButton.closest('#replyForm');
-    let textarea = replyForm.find("textarea.comment-textarea");
-    let contentEditable = replyForm.find("div.comment-textarea");
+    let commentForm = commentButton.closest('.new-comment-form');
+    let commentType = commentForm.attr('data-comment-type');
+    let postID = commentForm.attr('data-post-id');
+    let commentID = commentForm.attr('data-comment-id');
+    let textarea = commentForm.find("textarea.comment-textarea");
+    let contentEditable = commentForm.find("div.comment-textarea");
     let commentContent = textarea.val();
-    let commentsContainer = commentButton.closest('.replyContainer').find('.repliesContainer');
-    let emojiWindow = replyForm.find('.replyEmojiWindow');
+    if (commentType == "primary") {
+        commentsContainer = commentButton.closest('.comments').find('.comments-container');
+    }
+    else if (commentType == "child") {
+        commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
+    }
+    let emojiWindow = commentForm.find('.replyEmojiWindow');
 
-    let pc = replyForm.find('#image-preview-holder')[0];
+    let pc = commentForm.find('#image-preview-holder')[0];
 
     var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
     var imagedescs = [];
@@ -219,7 +297,7 @@ $(function() {
 
     if (commentContent.replace(/<[^>]*>/g, "") != "" || sortedurls.length > 0) { // Filter out empty comments
       commentButton.prop('disabled', true);
-      $.post("/createcomment/"+$(this).attr("data-post-id"),
+      $.post("/createcomment/"+postID+"/"+commentID,
       { commentContent: commentContent,
         imageUrls: JSON.stringify(sortedurls),
         imageDescs: JSON.stringify(imagedescs)
@@ -228,35 +306,66 @@ $(function() {
         if (data!='nope'){
           textarea.val("");
           contentEditable.html("");
-          console.log(sortedurls.length)
-          classNames = ['one-image','two-images','three-images','four-images'];
-          let html = '<div class="individualReplyContainer"><div class="mb-1 d-flex"><img class="postAuthorImage" style="width:25px;height:25px;border-radius:3px;" src="/images/' + data.image + '" /><div class="comment-header"><div class="comment-header-row-1">' + data.name + '<div class="comment-header-divider">&middot;</div><div class="commentTimestamp"><small class="text-muted">' + data.timestamp + '</small></div><button type="button" class="btn btn-link btn-xs replyToComment comment-button" data-username="' + data.username + '"><i class="fas fa-reply"></i></button><button type="button" class="btn btn-link btn-xs deleteComment comment-button" id="'+ data.comment_id + '" data-post-id="' + data.post_id + '" data-comment-id="'+data.comment_id+'">&times;</button></div></div></div><div class="comment-content">' + data.content + (sortedurls.length>0 ? '<div class="post-images '+classNames[sortedurls.length-1]+'"'+(sortedurls.length>1 ? ' data-featherlight-gallery data-featherlight-filter="a"' : '')+'>' : '');
-          for (let i=0; i<sortedurls.length;i++){
-            html += (sortedurls.length>1 ? '<a href="/api/image/display/'+sortedurls[i]+'">' : '')+'<img alt="'+imagedescs[i]+' (posted by '+$('.navbar-username')[0].innerHTML+')" class="post-single-image" src="/api/image/display/'+sortedurls[i]+'" '+(sortedurls.length==1 ? 'data-featherlight="/api/image/display/'+sortedurls[i]+'"' : '')+'>'+(sortedurls.length>1 ? '</a>' : '');
+          var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          //add the lightbox listener to the newly appended comment images
+          var commentimages = appendedComment.find('.post-images a');
+          if (commentimages.length > 0) {
+            var $images = commentimages;
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+              // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+              $(element).simpleLightbox(params);
+            });
+
+            // Handle grouped imags
+            if ($imagesGrouped.length > 0) {
+              // Select all groups
+              var groupNames = $imagesGrouped.map(function () {
+                return $(this).data('group');
+              }).get();
+              groupNames = $.unique(groupNames);
+
+              // Apply on each group
+              $.each(groupNames, function (key, value) {
+                $imagesGrouped.filter(function () {
+                    return $(this).data('group') == value;
+                  })
+                  .simpleLightbox(params);
+              });
+            }
           }
-          html += (sortedurls.length>0 ? '</div>' : '');
-          html+='</div></div>';
-          $(html).hide().appendTo(commentsContainer).fadeIn();
-          commentButton.prop('disabled', false);
-          let counterToChange = commentButton.closest(".commentContainer").find(".openReplyBox").find('.comments-number')[0];
+
+
+          let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
           if(counterToChange.textContent === ""){
             counterToChange.innerHTML = "1";
-          }else{
+          } else {
             let newCommentCount = parseInt(counterToChange.textContent)+1;
             counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
           }
-          emojiWindow.hide();
-          $(pc).children('.newimagecont').remove(); //removes all image preview windows
+          // Reset (or DESTROY) comment form
+          if (commentType == "primary") {
+              commentButton.prop('disabled', false);
+              emojiWindow.hide();
+              $(pc).children('.newimagecont').remove(); //removes all image preview windows
+          }
+          else if (commentType == "child") {
+              commentForm.remove();
+          }
           pc.uploadsStarted = 0;
           pc.uploadsCompleted = 0;
           pc.uploadsCancelled = 0;
           pc.uploadedImageUrls = [];
           pc.imageUploadRequests = [];
-        }
-        else {
-          let html = '<div class="individualReplyContainer"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></div>'
+        } else {
+          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
           $(html).hide().appendTo(commentsContainer).fadeIn();
-          commentButton.prop('disabled', false);
+          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
         }
       });
     }
@@ -268,22 +377,22 @@ $(function() {
       window.location.href = link;
     });
   })
-  $('body').on('click', '.mutePost', function(e) {
+  $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You are currently receiving notifications when someone comments on this post. Would you like to mute this post to stop receiving these notifications? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('mutePost').addClass('unmutePost').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
         })
       }
     })
   })
-  $('body').on('click', '.unmutePost', function(e) {
+  $('body').on('click', '.subscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You have muted this post. Would you like to unmute it and start receiving notifications when someone comments?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('unmutePost').addClass('mutePost').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
         })
       }
     })
