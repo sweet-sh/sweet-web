@@ -20,9 +20,11 @@
         {{/if}}
     </section>
     <footer class="toolbar">
+        {{#gt depth 4}}{{else}}
         <button type="button" class="button comment-toolbar-button reply-to-comment">
             Reply
         </button>
+        {{/gt}}
         <button type="button" class="button comment-toolbar-button delete-comment" id="{{comment_id}}" data-post-id="{{post_id}}" data-comment-id="{{comment_id}}">
             Delete
         </button>
