@@ -61,7 +61,8 @@ var userSchema = new mongoose.Schema({
     communityTimelineSorting: { type: String, default: "fluid" },
     flashRecentComments: { type: Boolean, default: true },
     digestEmailFrequency: { type: String, default: "off" },
-    emailTime: { type: String, default: "17:00" }
+    emailTime: { type: String, default: "17:00" },
+    emailDay: { type: String, default: "Sunday" },
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],

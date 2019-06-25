@@ -59,35 +59,48 @@
                     <option value="daily" {{#eq loggedInUserData.settings.digestEmailFrequency "daily"}}selected{{/eq}}>Send a daily digest email</option>
                     <option value="weekly" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}selected{{/eq}}>Send a weekly digest email</option>
                 </select>
-                <p id="emailTimePrompt" class="form-text small mt-0">here, you can choose the time at which you would like to receive them:</p>
-                <input name="emailTime" type="time" id="emailTime" value="{{loggedInUserData.settings.emailTime}}">
-                <select id="emailTimeSelect" style="display:none;">
-                    <option value="{{loggedInUserData.settings.emailTime}}">{{loggedInUserData.settings.emailTime}}</option>
-                    <option value="01:00">01:00 am</option>
-                    <option value="02:00">02:00 am</option>
-                    <option value="03:00">03:00 am</option>
-                    <option value="04:00">04:00 am</option>
-                    <option value="05:00">05:00 am</option>
-                    <option value="06:00">06:00 am</option>
-                    <option value="07:00">07:00 am</option>
-                    <option value="08:00">08:00 am</option>
-                    <option value="09:00">09:00 am</option>
-                    <option value="10:00">10:00 am</option>
-                    <option value="11:00">11:00 am</option>
-                    <option value="12:00">12:00 pm</option>
-                    <option value="01:00">01:00 pm</option>
-                    <option value="02:00">02:00 pm</option>
-                    <option value="03:00">03:00 pm</option>
-                    <option value="04:00">04:00 pm</option>
-                    <option value="05:00">05:00 pm</option>
-                    <option value="06:00">06:00 pm</option>
-                    <option value="07:00">07:00 pm</option>
-                    <option value="08:00">08:00 pm</option>
-                    <option value="09:00">09:00 pm</option>
-                    <option value="10:00">10:00 pm</option>
-                    <option value="11:00">11:00 pm</option>
-                    <option value="00:00">12:00 am</option>
-                </select>
+                <div id="timeSelection" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}style="display:none;"{{/eq}}>
+                    <p id="emailTimePrompt" class="form-text small mt-0">here, you can choose the time at which you would like to receive them:</p>
+                    <select name="emailDaySelect" id="emailDaySelect" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}{{else}}style="display:none;"{{/eq}}>
+                        <option value="Sunday" {{#eq loggedInUserData.settings.emailDay "Sunday"}}selected{{/eq}}>Sunday</option>
+                        <option value="Monday" {{#eq loggedInUserData.settings.emailDay "Monday"}}selected{{/eq}}>Monday</option>
+                        <option value="Tuesday" {{#eq loggedInUserData.settings.emailDay "Tuesday"}}selected{{/eq}}>Tuesday</option>
+                        <option value="Wednesday" {{#eq loggedInUserData.settings.emailDay "Wednesday"}}selected{{/eq}}>Wednesday</option>
+                        <option value="Thursday" {{#eq loggedInUserData.settings.emailDay "Thursday"}}selected{{/eq}}>Thursday</option>
+                        <option value="Friday" {{#eq loggedInUserData.settings.emailDay "Friday"}}selected{{/eq}}>Friday</option>
+                        <option value="Saturday" {{#eq loggedInUserData.settings.emailDay "Saturday"}}selected{{/eq}}>Saturday</option>
+                    </select>
+                    <input name="emailTime" type="time" id="emailTime" value="{{loggedInUserData.settings.emailTime}}" required>
+                    <select id="emailTimeSelect" style="display:none;">
+                        {{!-- the idea here is that the user's current option is in the top - it can't definitely be integrated into the rest of the list --}}
+                        {{!-- because it might have a custom minutes value - but then if it is one of the options below we hide its duplicate for neatness. --}}
+                        <option value="{{loggedInUserData.settings.emailTime}}" id="currentEmailTime" selected>{{loggedInUserData.settings.emailTime}}</option>
+                        {{#eq loggedInUserData.settings.emailTime "01:00"}}{{else}}<option value="01:00">01:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "02:00"}}{{else}}<option value="02:00">02:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "03:00"}}{{else}}<option value="03:00">03:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "04:00"}}{{else}}<option value="04:00">04:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "05:00"}}{{else}}<option value="05:00">05:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "06:00"}}{{else}}<option value="06:00">06:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "07:00"}}{{else}}<option value="07:00">07:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "08:00"}}{{else}}<option value="08:00">08:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "09:00"}}{{else}}<option value="09:00">09:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "10:00"}}{{else}}<option value="10:00">10:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "11:00"}}{{else}}<option value="11:00">11:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "12:00"}}{{else}}<option value="12:00">12:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "13:00"}}{{else}}<option value="13:00">01:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "14:00"}}{{else}}<option value="14:00">02:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "15:00"}}{{else}}<option value="15:00">03:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "16:00"}}{{else}}<option value="16:00">04:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "17:00"}}{{else}}<option value="17:00">05:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "18:00"}}{{else}}<option value="18:00">06:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "19:00"}}{{else}}<option value="19:00">07:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "20:00"}}{{else}}<option value="20:00">08:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "21:00"}}{{else}}<option value="21:00">09:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "22:00"}}{{else}}<option value="22:00">10:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "23:00"}}{{else}}<option value="23:00">11:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "00:00"}}{{else}}<option value="00:00">12:00 am</option>{{/eq}}
+                    </select>
+                </div>
                 <p class="form-text small text-success">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
             </div>
             <hr />
@@ -178,10 +191,31 @@
     }
 
     //email time choosing stuff:
+    //show/hide time selection based on whether the user wants to get emails at all:
+    $("#digestEmailFrequency").change(function(event){
+        if($(this).val()=="off"){
+            $('#timeSelection').css('display','none');
+        }else{
+            $('#timeSelection').css('display','block');
+            if($(this).val()=="weekly"){
+                $("#emailDaySelect").css('display','inline');
+            }else{
+                $("#emailDaySelect").css('display','none');
+            }
+        }
+    })
+    //format the user's currently chosen email time so it's not in 24-hour format like how it's stored in the database:
+    var day = moment().tz('GMT'); //we need an arbitrary day to accompany the time when creating the moment object that will give us our formatted output
+    var splitTime = $('#currentEmailTime').html().split(/:/);
+    day.hours(splitTime[0]).minutes(splitTime[1]).seconds(0).milliseconds(0);
+    $('#currentEmailTime').html(day.format('LT'));
+
+    //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
     if($("#emailTime")[0].type == "text"){
-        //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
         $("emailTime").css('display','none');
         $("emailTime").attr('name','UNUSED');
+        $("emailTime").prop('required',false);
+        $("emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
         $("emailTimeSelect").css('display','block');
         $("emailTimeSelect").attr('name','emailTime');
     }
