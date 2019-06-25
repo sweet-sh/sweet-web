@@ -65,7 +65,6 @@ async function sendUpdateEmail(user) {
 
 //do this part every 15 minutes
 function searchForUsersToEmail(jobTime) {
-    var currentTime = moment(jobTime.getTime()); //this will store exactly the start of the minute we're checking (which is always 0, 15, 30, or 45 minutes after the hour)
     User.find({
         $or: [{
                 'settings.digestEmailFrequency': 'daily'
@@ -76,19 +75,15 @@ function searchForUsersToEmail(jobTime) {
         ]
     }).then(users => {
         for (user of users) {
-            //create moment representing when the user wants their email
-            var emailTimeComponents = user.settings.emailTime.split(':');
-            if (user.settings.timezone == 'auto') {
-                //create moment object representing the time at which the user wants their email
-                var emailTime = moment().hour(emailTimeComponents[0]).minute(emailTimeComponents[1]).utcOffset(user.settings.timezone);
+            var emailTimeComps = user.settings.emailTime.split(':');
+            //get the equivalent of jobTime in the user's time zone
+            if (user.settings.timezone == "auto") {
+                var timeInThatZone = moment(jobTime).tz(user.settings.autoDetectedTimeZone);
             } else {
-                var emailTime = moment().hour(emailTimeComponents[0]).minute(emailTimeComponents[1]).tz(user.settings.autoDetectedTimeZone);
+                var timeInThatZone = moment(jobTime).utcOffset(user.settings.timezone);
             }
-            //put them both in utc mode so we can compare minutes and hours correctly
-            emailTime.utc();
-            currentTime.utc();
-            if (emailTime.hour() == currentTime.hour() && emailTime.minute() == currentTime.minute()) {
-                if (user.settings.digestEmailFrequency == 'daily' || emailTime.day() == currentTime.day()) {
+            if(timeInThatZone.hour() == emailTimeComps[0] && timeInThatZone.minute()==emailTimeComps[1]){
+                if(user.settings.digestEmailFrequency=='daily' || timeInThatZone.format('dddd') == user.settings.emailDay){
                     sendUpdateEmail(user);
                 }
             }
