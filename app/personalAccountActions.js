@@ -330,9 +330,18 @@ module.exports = function (app, passport) {
     //Input: the settings
     //Output: settings are saved for the user in the database, we're redirected back to the user's page.
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
-    app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
+    app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
         let updatedSettings = req.body;
         console.log(updatedSettings)
+        var user = await User.findById(req.user._id);
+        var us = user.settings;
+
+        //it would be nice if the email stuff could be kept in the emailer file but not sure how?
+        var emailStuffChanged = false;
+        if(us.emailTime != updatedSettings.emailTime || us.emailDay != updatedSettings.emailDay || us.timezone!=updatedSettings.timezone || us.autoDetectedTimeZone != updatedSettings.autoDetectedTimeZone){
+            emailStuffChanged = true;
+        }
+
         User.update({
                 _id: req.user._id
             }, {
@@ -347,10 +356,14 @@ module.exports = function (app, passport) {
                     'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
                     'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
                     'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false),
-                    'settings.emailTime': updatedSettings.emailTime
+                    'settings.emailTime': updatedSettings.emailTime,
+                    'settings.emailDay': updatedSettings.emailDay
                 }
             })
             .then(user => {
+                if(emailStuffChanged){
+                    emailer.updateEmailSettings(user);
+                }
                 res.redirect('/' + req.user.username)
             })
             .catch(error => {

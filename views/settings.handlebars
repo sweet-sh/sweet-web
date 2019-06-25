@@ -61,7 +61,7 @@
                 </select>
                 <div id="timeSelection" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}style="display:none;"{{/eq}}>
                     <p id="emailTimePrompt" class="form-text small mt-0">here, you can choose the time at which you would like to receive them:</p>
-                    <select name="emailDaySelect" id="emailDaySelect" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}{{else}}style="display:none;"{{/eq}}>
+                    <select name="emailDay" id="emailDaySelect" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}{{else}}style="display:none;"{{/eq}}>
                         <option value="Sunday" {{#eq loggedInUserData.settings.emailDay "Sunday"}}selected{{/eq}}>Sunday</option>
                         <option value="Monday" {{#eq loggedInUserData.settings.emailDay "Monday"}}selected{{/eq}}>Monday</option>
                         <option value="Tuesday" {{#eq loggedInUserData.settings.emailDay "Tuesday"}}selected{{/eq}}>Tuesday</option>
