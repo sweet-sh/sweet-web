@@ -8,7 +8,9 @@
             <div class="form-group">
                 <label for="timezone">Select your timezone (or the nearest equivalent):</label>
                 <select class="form-control" name="timezone" id="timezone">
-                	<option id="guessed-timezone" value="auto" {{#eq loggedInUserData.settings.timezone "auto"}}selected{{/eq}}>...</option>
+                    {{!-- the below line makes the auto-detected timezone the default selection for users who already have it selected and for users who aren't signed up for emails--}}
+                    {{!-- currently and thus probably won't notice their old timezone being replaced by it. --}}
+                	<option id="guessed-timezone" value="auto" {{#eq loggedInUserData.settings.timezone "auto"}}selected{{else}}{{#eq loggedInUserData.emailDigestFrequency "off"}}selected{{/eq}}{{/eq}}>...</option>
                 	<option value="-12:00" {{#eq loggedInUserData.settings.timezone "-12:00"}}selected{{/eq}}>(GMT -12:00) Eniwetok, Kwajalein</option>
                 	<option value="-11:00" {{#eq loggedInUserData.settings.timezone "-11:00"}}selected{{/eq}}>(GMT -11:00) Midway Island, Samoa</option>
                 	<option value="-10:00" {{#eq loggedInUserData.settings.timezone "-10:00"}}selected{{/eq}}>(GMT -10:00) Hawaii</option>
