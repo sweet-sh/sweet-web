@@ -338,6 +338,7 @@ module.exports = function (app, passport) {
             }, {
                 $set: {
                     'settings.timezone': updatedSettings.timezone,
+                    'settings.autoDetectedTimeZone': updatedSettings.autoDetectedTimeZone,
                     'settings.profileVisibility': updatedSettings.profileVisibility,
                     'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
                     'settings.digestEmailFrequency': updatedSettings.digestEmailFrequency,
@@ -345,7 +346,8 @@ module.exports = function (app, passport) {
                     'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
                     'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
                     'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
-                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false)
+                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false),
+                    'settings.emailTime': updatedSettings.emailTime
                 }
             })
             .then(user => {
