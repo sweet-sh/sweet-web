@@ -333,14 +333,6 @@ module.exports = function (app, passport) {
     app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
         let updatedSettings = req.body;
         console.log(updatedSettings)
-        var user = await User.findById(req.user._id);
-        var us = user.settings;
-
-        //it would be nice if the email stuff could be kept in the emailer file but not sure how?
-        var emailStuffChanged = false;
-        if(us.emailTime != updatedSettings.emailTime || us.emailDay != updatedSettings.emailDay || us.timezone!=updatedSettings.timezone || us.autoDetectedTimeZone != updatedSettings.autoDetectedTimeZone){
-            emailStuffChanged = true;
-        }
 
         User.update({
                 _id: req.user._id
@@ -361,9 +353,6 @@ module.exports = function (app, passport) {
                 }
             })
             .then(user => {
-                if(emailStuffChanged){
-                    emailer.updateEmailSettings(user);
-                }
                 res.redirect('/' + req.user.username)
             })
             .catch(error => {

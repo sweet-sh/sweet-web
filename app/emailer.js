@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 const nodemailerHbs = require('nodemailer-express-handlebars');
 const path = require('path');
 const schedule = require('node-schedule');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const auth = require(global.appRoot + '/config/auth.js');
 
 // create reusable transporter object using the default SMTP transport
@@ -28,11 +28,11 @@ nodemailerHbsOptions = {
 
 transporter.use('compile', nodemailerHbs(nodemailerHbsOptions));
 
-async function sendUpdateEmail(type, user) {
+async function sendUpdateEmail(user) {
     email = {};
-    if (type == "daily") {
+    if (user.settings.digestEmailFrequency == "daily") {
         email.subject = "sweet daily update 🍭"
-    } else if (type == "weekly") {
+    } else if (user.settings.digestEmailFrequency == "weekly") {
         email.subject = "sweet weekly update 🍭"
     } else {
         return;
@@ -63,43 +63,43 @@ async function sendUpdateEmail(type, user) {
     }
 }
 
-var weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-var jobs = {};
-
-function scheduleEmailSendingJob(user) {
-    var emailTimeComponents = user.settings.emailTime.split(':');
-    if (user.settings.digestEmailFrequency == 'weekly') {
-        var weekdayValue = weekdays.indexOf(user.settings.emailDay)+"";
-    } else if (user.settings.digestEmailFrequency == 'daily') {
-        var weekdayValue = '*'
-    }
-    jobs[user._id.toString()] = schedule.scheduleJob(emailTimeComponents[1] + emailTimeComponents[0] + "* * " + weekdayValue, () => {
-        sendUpdateEmail(user.settings.digestEmailFrequency, user);
+//do this part every 15 minutes
+function searchForUsersToEmail(jobTime) {
+    var currentTime = moment(jobTime.getTime()); //this will store exactly the start of the minute we're checking (which is always 0, 15, 30, or 45 minutes after the hour)
+    User.find({
+        $or: [{
+                'settings.digestEmailFrequency': 'daily'
+            },
+            {
+                'settings.digestEmailFrequency': 'weekly'
+            }
+        ]
+    }).then(users => {
+        for (user of users) {
+            //create moment representing when the user wants their email
+            var emailTimeComponents = user.settings.emailTime.split(':');
+            if (user.settings.timezone == 'auto') {
+                //create moment object representing the time at which the user wants their email
+                var emailTime = moment().hour(emailTimeComponents[0]).minute(emailTimeComponents[1]).utcOffset(user.settings.timezone);
+            } else {
+                var emailTime = moment().hour(emailTimeComponents[0]).minute(emailTimeComponents[1]).tz(user.settings.autoDetectedTimeZone);
+            }
+            //put them both in utc mode so we can compare minutes and hours correctly
+            emailTime.utc();
+            currentTime.utc();
+            if (emailTime.hour() == currentTime.hour() && emailTime.minute() == currentTime.minute()) {
+                if (user.settings.digestEmailFrequency == 'daily' || emailTime.day() == currentTime.day()) {
+                    sendUpdateEmail(user);
+                }
+            }
+        }
     })
 }
 
-User.find({
-    $or: [{
-            'settings.digestEmailFrequency': 'daily'
-        },
-        {
-            'settings.digestEmailFrequency': 'weekly'
-        }
-    ]
-}).then(users => {
-    for (user of users) {
-        scheduleEmailSendingJob(user);
-    }
-})
-
-function updateEmailSettings(user) {
-    jobs[user._id.toString()].cancel()
-    if (user.settings.digestEmailFrequency == "daily" || user.settings.digestEmailFrequency == "weekly") {
-        scheduleEmailSendingJob(user);
-    } else {
-        delete jobs[user._id.toString()];
-    }
-}
+var rule = new schedule.RecurrenceRule();
+rule.minute = [0, 15, 30, 45];
+schedule.scheduleJob(rule, function (jobTime) {
+    searchForUsersToEmail(jobTime);
+});
 
 module.exports.sendUpdateEmail = sendUpdateEmail;
-module.exports.updateEmailSettings = updateEmailSettings;
