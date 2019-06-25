@@ -74,7 +74,7 @@ function scheduleEmailSendingJob(user) {
         var weekdayValue = '*'
     }
     jobs[user._id.toString()] = schedule.scheduleJob(emailTimeComponents[1] + emailTimeComponents[0] + "* * " + weekdayValue, () => {
-        sendUpdateEmail(type, user);
+        sendUpdateEmail(user.settings.digestEmailFrequency, user);
     })
 }
 
