@@ -1795,10 +1795,18 @@ module.exports = function (app) {
 
   app.get('/admin/errorlogs/:password', function (req, res) {
     var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq"
-    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, "clientsideerrors.txt"))) {
       res.status(200).sendFile(path.resolve(global.appRoot, "clientsideerrors.txt"));
     }
   })
+
+  app.get('/admin/emaillogs/:password', function (req, res) {
+    var passwordHash = "$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq"
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, "emailLog.txt"))) {
+      res.status(200).sendFile(path.resolve(global.appRoot, "emailLog.txt"));
+    }
+  })
+
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
