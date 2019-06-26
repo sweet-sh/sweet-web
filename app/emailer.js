@@ -65,7 +65,7 @@ async function sendUpdateEmail(user) {
 }
 
 var scheduledEmails = {};
-var logFormat = "dddd, MMMM Do YYYY, h:mm:ss a";
+var logFormat = "dddd, MMMM Do YYYY, h:mm a";
 
 function putInUsersLocalTime(momentObject, user) {
     if (user.settings.timezone == "auto") {
