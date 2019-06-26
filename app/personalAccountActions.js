@@ -331,28 +331,37 @@ module.exports = function (app, passport) {
     //Output: settings are saved for the user in the database, we're redirected back to the user's page.
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
     app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
-        let updatedSettings = req.body;
-        console.log(updatedSettings)
+        let newSets = req.body;
+        console.log(newSets)
+        let oldSets = user.settings;
+
+        var emailSetsChanged = false;
+        if(newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
+            emailSetsChanged = true;
+        }
 
         User.update({
                 _id: req.user._id
             }, {
                 $set: {
-                    'settings.timezone': updatedSettings.timezone,
-                    'settings.autoDetectedTimeZone': updatedSettings.autoDetectedTimeZone,
-                    'settings.profileVisibility': updatedSettings.profileVisibility,
-                    'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
-                    'settings.digestEmailFrequency': updatedSettings.digestEmailFrequency,
-                    'settings.imageQuality': updatedSettings.imageQuality,
-                    'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
-                    'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
-                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
-                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false),
-                    'settings.emailTime': updatedSettings.emailTime,
-                    'settings.emailDay': updatedSettings.emailDay
+                    'settings.timezone': newSets.timezone,
+                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone,
+                    'settings.profileVisibility': newSets.profileVisibility,
+                    'settings.newPostPrivacy': newSets.newPostPrivacy,
+                    'settings.digestEmailFrequency': newSets.digestEmailFrequency,
+                    'settings.imageQuality': newSets.imageQuality,
+                    'settings.homeTagTimelineSorting': newSets.homeTagTimelineSorting,
+                    'settings.userTimelineSorting': newSets.userTimelineSorting,
+                    'settings.communityTimelineSorting': newSets.communityTimelineSorting,
+                    'settings.flashRecentComments': (newSets.flashRecentComments == 'on' ? true : false),
+                    'settings.emailTime': newSets.emailTime,
+                    'settings.emailDay': newSets.emailDay
                 }
             })
             .then(user => {
+                if(emailSetsChanged){
+                    emailer.emailRescheduler(user);
+                }
                 res.redirect('/' + req.user.username)
             })
             .catch(error => {
