@@ -333,7 +333,7 @@ module.exports = function (app, passport) {
     app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
         let newSets = req.body;
         console.log(newSets)
-        let oldSets = user.settings;
+        let oldSets = req.user.settings;
 
         var emailSetsChanged = false;
         if(newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
@@ -358,9 +358,9 @@ module.exports = function (app, passport) {
                     'settings.emailDay': newSets.emailDay
                 }
             })
-            .then(user => {
+            .then(async (updateStatus) => {
                 if(emailSetsChanged){
-                    emailer.emailRescheduler(user);
+                    emailer.emailRescheduler((await User.findById(req.user._id)));
                 }
                 res.redirect('/' + req.user.username)
             })
