@@ -156,7 +156,7 @@ p li, ul li, ol li {
     LINKS & BUTTONS
 ------------------------------------- */
 a {
-  color: #348eda;
+  color: #000000;
   text-decoration: underline;
 }
 
@@ -234,7 +234,8 @@ a {
 
 /* -------------------------------------
     INVOICE
-    Styles for the billing table
+    Styles for the billing table 
+    mitch's note: wait, what
 ------------------------------------- */
 .invoice {
   margin: 40px auto;
@@ -332,8 +333,11 @@ a {
                                 {{#each notifications}}
                                     <tr>
                                         <td class="notification-block {{#if @last}}last{{/if}}">
-                                            <img style="float:left;width:25px;height:25px;padding-right:5px;border-radius:4px;" src="https://sweet.sh/images/{{this.image}}"/> {{{this.text}}}
+                                          <a href='https://sweet.sh{{this.url}}'>
+                                            <img style="float:left;width:25px;height:25px;margin-right:5px;border-radius:4px;" src="https://sweet.sh{{this.image}}"/> {{{this.text}}}
+                                          </a>
                                         </td>
+                                      
                                     </tr>
                                 {{/each}}
                                 {{#if action}}
