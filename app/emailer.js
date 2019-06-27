@@ -64,6 +64,7 @@ async function sendUpdateEmail(user) {
             emailLog('could not send email to ' + user.username + '! reason given:');
             emailLog(reason)
         });
+        emailLog('---email sent to '+user.username+'! contained '+unreadNotifications.length+' unread notifications---');
         /*
         //not for production, i only have this here bc i can't actually send emails and then look at them:
         console.log(info);
