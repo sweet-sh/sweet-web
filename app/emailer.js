@@ -29,60 +29,15 @@ nodemailerHbsOptions = {
 
 transporter.use('compile', nodemailerHbs(nodemailerHbsOptions));
 
-async function sendUpdateEmail(user) {
-    email = {};
-    if (user.settings.digestEmailFrequency == "daily") {
-        email.subject = "sweet daily update 🍭"
-    } else if (user.settings.digestEmailFrequency == "weekly") {
-        email.subject = "sweet weekly update 🍭"
-    } else {
-        return;
-    }
-    const unreadNotifications = user.notifications.filter(n => n.seen == false);
-    if (unreadNotifications && unreadNotifications.length != 0) {
-        // send mail with defined transport object
-        let info = {
-            from: '"sweet 🍬" <updates@sweet.sh>', // sender address
-            to: user.email,
-            subject: email.subject,
-            template: "update",
-            context: {
-                title: 'sweet',
-                content: [
-                    'Hi <strong>@' + user.username + '</strong>!',
-                    'Here\'s what went down since you last visted sweet:'
-                ],
-                notifications: unreadNotifications,
-                action: {
-                    url: 'https://sweet.sh',
-                    text: 'Visit sweet'
-                },
-                signoff: '— sweet x'
-            }
-        };
-        await transporter.sendMail(info).catch(reason => {
-            emailLog('could not send email to ' + user.username + '! reason given:');
-            emailLog(reason)
-        });
-        emailLog('---email sent to '+user.username+'! contained '+unreadNotifications.length+' unread notifications---');
-        /*
-        //not for production, i only have this here bc i can't actually send emails and then look at them:
-        console.log(info);
-        var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
-        fs.writeFile(user.username + 'Email.html', emailHTML, err => {
-            if (err) {
-                emailLog('could not log text of email that was just sent to ' + user.username);
-                emailLog('reason given: ' + err);
-            }
-        });
-        */
-    }
+function emailLog(message) {
+    console.log(message);
+    fs.appendFileSync("emailLog.txt", message + '\n');
 }
 
-var scheduledEmails = {};
+var scheduledEmails = {}; //will store timeout objects representing scheduled calls to sendUpdateEmail and execution of next email scheduling code
 var logFormat = "dddd, MMMM Do YYYY, h:mm a";
 
-//note that this transforms the input object "in place", rather than returning the changed version
+//utility function. note that this transforms the input object "in place", rather than returning the changed version
 function putInUsersLocalTime(momentObject, user) {
     if (user.settings.timezone == "auto") {
         momentObject.tz(user.settings.autoDetectedTimeZone);
@@ -91,10 +46,28 @@ function putInUsersLocalTime(momentObject, user) {
     }
 }
 
-function emailLog(message) {
-    console.log(message);
-    fs.appendFileSync("emailLog.txt", message + '\n');
-}
+//whenever the server boots, schedule some mf emails
+emailLog('\n\n---------server booting up ' + moment().format(logFormat) + ', all above log entries can be considered null and void---------\n');
+User.find({
+    $or: [{
+            'settings.digestEmailFrequency': 'daily'
+        },
+        {
+            'settings.digestEmailFrequency': 'weekly'
+        }
+    ]
+}).then(users => {
+    for (user of users) {
+        emailScheduler(user);
+    }
+})
+
+//So. When the server boots, emailScheduler is called (above) for every user that's signed up for weekly or daily emails, and that function
+//schedules a call to sendUpdateEmail for each signed-up user to be executed at the next time that they're supposed to get an email. After the call to sendUpdateEmail
+//executes, emailScheduler is called for that user again to schedule the new next email they're supposed to get.
+//Scheduling is done with setTimeout, and the timeout object it returns is stored in scheduledEmails. If a user changes their email settings,
+//emailRescheduler is called, it cancels the timeout object stored for them in scheduledEmails, and emailScheduler is called for them
+//(if they currently want emails according to the new settings.)
 
 function emailScheduler(user, justSentOne = false) {
     //usersLocalTime starts out as just the current time in the user's time zone and then we change it piece by piece to be the time that we send the next email at!
@@ -149,30 +122,67 @@ function emailScheduler(user, justSentOne = false) {
     emailLog('\n');
 }
 
-//whenever the server boots, schedule some mf emails
-emailLog('\n\n---------server booting up ' + moment().format(logFormat) + ', all above log entries can be considered null and void---------\n');
-User.find({
-    $or: [{
-            'settings.digestEmailFrequency': 'daily'
-        },
-        {
-            'settings.digestEmailFrequency': 'weekly'
-        }
-    ]
-}).then(users => {
-    for (user of users) {
-        emailScheduler(user);
+async function sendUpdateEmail(user) {
+    email = {};
+    if (user.settings.digestEmailFrequency == "daily") {
+        email.subject = "sweet daily update 🍭"
+    } else if (user.settings.digestEmailFrequency == "weekly") {
+        email.subject = "sweet weekly update 🍭"
+    } else {
+        return;
     }
-})
+    const unreadNotifications = user.notifications.filter(n => n.seen == false);
+    if (unreadNotifications && unreadNotifications.length != 0) {
+        // send mail with defined transport object
+        let info = {
+            from: '"sweet 🍬" <updates@sweet.sh>', // sender address
+            to: user.email,
+            subject: email.subject,
+            template: "update",
+            context: {
+                title: 'sweet',
+                content: [
+                    'Hi <strong>@' + user.username + '</strong>!',
+                    'Here\'s what went down since you last visted sweet:'
+                ],
+                notifications: unreadNotifications,
+                action: {
+                    url: 'https://sweet.sh',
+                    text: 'Visit sweet'
+                },
+                signoff: '— sweet x'
+            }
+        };
+        await transporter.sendMail(info).catch(reason => {
+            emailLog('could not send email to ' + user.username + '! reason given:');
+            emailLog(reason)
+        });
+        emailLog('---email sent to '+user.username+'! contained '+unreadNotifications.length+' unread notifications---');
+        /*
+        //not for production, i only have this here bc i can't actually send emails and then look at them:
+        console.log(info);
+        var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
+        fs.writeFile(user.username + 'Email.html', emailHTML, err => {
+            if (err) {
+                emailLog('could not log text of email that was just sent to ' + user.username);
+                emailLog('reason given: ' + err);
+            }
+        });
+        */
+    }
+}
 
-//this is called over in the settings changing code whenever a setting related to emails changes
+//this is called over in the settings changing code in personalAccountActions.js whenever a setting related to emails changes
 function emailRescheduler(user) {
     if (scheduledEmails[user._id.toString()]) {
         clearTimeout(scheduledEmails[user._id.toString()]);
         emailLog('cancelled emails for ' + user.username + '!');
     }
-    emailScheduler(user);
+    if(user.settings.digestEmailFrequency != "none"){
+        emailScheduler(user);
+    }
 }
 
 module.exports.sendUpdateEmail = sendUpdateEmail;
+//export this so it can be called upon email settings changing
 module.exports.emailRescheduler = emailRescheduler;
