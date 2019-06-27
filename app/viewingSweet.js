@@ -688,6 +688,9 @@ module.exports = function (app) {
       }
       if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      }else{
+        //logged out users shouldn't see any community posts on user profile pages
+        matchPosts.community = {$exists:false};
       }
     } else if (req.params.context == "community") {
       var matchPosts = {
@@ -1010,7 +1013,7 @@ module.exports = function (app) {
                 displayedPost.lastCommentAuthor = comment.author;
               }
               // Only pulse comments from people who aren't you
-              if (momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
+              if (req.isAuthenticated() && momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
                 comment.isRecent = true;
               }
               for (var i = 0; i < comment.images.length; i++) {
