@@ -64,14 +64,22 @@ async function sendUpdateEmail(user) {
             emailLog('could not send email to ' + user.username + '! reason given:');
             emailLog(reason)
         });
-        console.log(info); //remove this for production i guess
-        console.log("Update email sent to ", user.username, ":", info.messageId);
+        //remove this for production, i only have this here bc i can't actually send emails and then look at them:
+        console.log(info);
+        var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
+        fs.writeFile(user.username + 'Email.html', emailHTML, err => {
+            if (err) {
+                emailLog('could not log text of email that was just sent to ' + user.username);
+                emailLog('reason given: ' + err);
+            }
+        });
     }
 }
 
 var scheduledEmails = {};
 var logFormat = "dddd, MMMM Do YYYY, h:mm a";
 
+//note that this transforms the input object "in place", rather than returning the changed version
 function putInUsersLocalTime(momentObject, user) {
     if (user.settings.timezone == "auto") {
         momentObject.tz(user.settings.autoDetectedTimeZone);
