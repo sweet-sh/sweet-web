@@ -64,7 +64,8 @@ async function sendUpdateEmail(user) {
             emailLog('could not send email to ' + user.username + '! reason given:');
             emailLog(reason)
         });
-        //remove this for production, i only have this here bc i can't actually send emails and then look at them:
+        /*
+        //not for production, i only have this here bc i can't actually send emails and then look at them:
         console.log(info);
         var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
         fs.writeFile(user.username + 'Email.html', emailHTML, err => {
@@ -73,6 +74,7 @@ async function sendUpdateEmail(user) {
                 emailLog('reason given: ' + err);
             }
         });
+        */
     }
 }
 
