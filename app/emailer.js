@@ -101,11 +101,13 @@ function emailScheduler(user, justSentOne = false) {
         }
     } else {
         var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        usersLocalTime.day(user.settings.emailDay);
         var emailDayIndex = weekdays.indexOf(user.settings.emailDay);
         //if we aren't sending this week's email (either we just sent one or the point at which we're supposed to send it this week has past)
         if (justSentOne || (usersLocalTime.day() > emailDayIndex) || (usersLocalTime.day() == emailDayIndex && usersLocalTime.hour() > emailTimeComps[0]) || (usersLocalTime.day() == emailDayIndex && usersLocalTime.hour() == emailTimeComps[0] && usersLocalTime.minute() > emailTimeComps[1])) {
+            usersLocalTime.day(user.settings.emailDay); //set the day of the week
             usersLocalTime.add(7, 'd'); //then make this moment take place next week
+        }else{
+            usersLocalTime.day(user.settings.emailDay); //if we're sending this week's email, we just need to set the day of the week
         }
     }
 
@@ -115,7 +117,7 @@ function emailScheduler(user, justSentOne = false) {
     scheduledEmails[user._id.toString()] = setTimeout(() => { //schedule an email sending at that time
         sendUpdateEmail(user);
         var emailSentTime = moment();
-        emailLog("sendUpdateEmail ran for " + user.username + " on " + emailSentTime.format(logFormat) + " our local time");
+        emailLog("sendUpdateEmail ran for " + user.username + " on " + emailSentTime.format(logFormat) + " our time, our time zone being UTC"+emailSentTime.format('Z z'));
         putInUsersLocalTime(emailSentTime, user);
         emailLog("that is equivalent to " + emailSentTime.format(logFormat) + " their time!");
         emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
@@ -125,7 +127,7 @@ function emailScheduler(user, justSentOne = false) {
         emailScheduler(user, true); //schedule their next email
     }, msTillSendingTime);
     var nextEmailTime = moment().add(msTillSendingTime, 'ms');
-    emailLog("scheduled email for user " + user.username + " to be sent on " + nextEmailTime.format(logFormat) + " our time");
+    emailLog("scheduled email for user " + user.username + " to be sent on " + nextEmailTime.format(logFormat) + " our time, our time zone being UTC"+nextEmailTime.format('Z z'));
     putInUsersLocalTime(nextEmailTime, user);
     emailLog("that is equivalent to " + nextEmailTime.format(logFormat) + " their time!");
     emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
