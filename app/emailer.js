@@ -41,7 +41,7 @@ async function sendUpdateEmail(user) {
     const unreadNotifications = user.notifications.filter(n => n.seen == false);
     if (unreadNotifications && unreadNotifications.length != 0) {
         // send mail with defined transport object
-        let info = await transporter.sendMail({
+        let info = {
             from: '"sweet 🍬" <updates@sweet.sh>', // sender address
             to: user.email,
             subject: email.subject,
@@ -59,7 +59,12 @@ async function sendUpdateEmail(user) {
                 },
                 signoff: '— sweet x'
             }
+        };
+        await transporter.sendMail(info).catch(reason => {
+            emailLog('could not send email to ' + user.username + '! reason given:');
+            emailLog(reason)
         });
+        console.log(info); //remove this for production i guess
         console.log("Update email sent to ", user.username, ":", info.messageId);
     }
 }
@@ -77,12 +82,7 @@ function putInUsersLocalTime(momentObject, user) {
 
 function emailLog(message) {
     console.log(message);
-    fs.appendFile("emailLog.txt", message + '\n', function (err) {
-        if (err) {
-            console.log('could not write to email log! due to the following:');
-            console.log(err);
-        }
-    });
+    fs.appendFileSync("emailLog.txt", message + '\n');
 }
 
 function emailScheduler(user, justSentOne = false) {
@@ -91,12 +91,14 @@ function emailScheduler(user, justSentOne = false) {
     var usersLocalTime = moment(); //not actually in user's local time yet
     putInUsersLocalTime(usersLocalTime, user); //there we go
 
-    var emailTimeComps = user.settings.emailTime.split(':');
+    var emailTimeComps = user.settings.emailTime.split(':').map(v => {
+        return parseInt(v)
+    });
 
     //set usersLocalTime's day to that of the next email:
     if (user.settings.digestEmailFrequency == 'daily') {
         // if we're not sending today's email (so, either we've just sent it or the time at which we're supposed to send the email today has past)
-        if (justSentOne || (usersLocalTime.hour() > emailTimeComps[0]) || (usersLocalTime.hour() == emailTimeComps[1] && usersLocalTime.minute() > emailTimeComps[1])) {
+        if (justSentOne || (usersLocalTime.hour() > emailTimeComps[0]) || (usersLocalTime.hour() == emailTimeComps[0] && usersLocalTime.minute() > emailTimeComps[1])) {
             usersLocalTime.add(1, "d"); //then make this moment take place tomorrow
         }
     } else {
@@ -106,7 +108,7 @@ function emailScheduler(user, justSentOne = false) {
         if (justSentOne || (usersLocalTime.day() > emailDayIndex) || (usersLocalTime.day() == emailDayIndex && usersLocalTime.hour() > emailTimeComps[0]) || (usersLocalTime.day() == emailDayIndex && usersLocalTime.hour() == emailTimeComps[0] && usersLocalTime.minute() > emailTimeComps[1])) {
             usersLocalTime.day(user.settings.emailDay); //set the day of the week
             usersLocalTime.add(7, 'd'); //then make this moment take place next week
-        }else{
+        } else {
             usersLocalTime.day(user.settings.emailDay); //if we're sending this week's email, we just need to set the day of the week
         }
     }
@@ -117,7 +119,7 @@ function emailScheduler(user, justSentOne = false) {
     scheduledEmails[user._id.toString()] = setTimeout(() => { //schedule an email sending at that time
         sendUpdateEmail(user);
         var emailSentTime = moment();
-        emailLog("sendUpdateEmail ran for " + user.username + " on " + emailSentTime.format(logFormat) + " our time, our time zone being UTC"+emailSentTime.format('Z z'));
+        emailLog("sendUpdateEmail ran for " + user.username + " on " + emailSentTime.format(logFormat) + " our time, our time zone being UTC" + emailSentTime.format('Z z'));
         putInUsersLocalTime(emailSentTime, user);
         emailLog("that is equivalent to " + emailSentTime.format(logFormat) + " their time!");
         emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
@@ -127,7 +129,7 @@ function emailScheduler(user, justSentOne = false) {
         emailScheduler(user, true); //schedule their next email
     }, msTillSendingTime);
     var nextEmailTime = moment().add(msTillSendingTime, 'ms');
-    emailLog("scheduled email for user " + user.username + " to be sent on " + nextEmailTime.format(logFormat) + " our time, our time zone being UTC"+nextEmailTime.format('Z z'));
+    emailLog("scheduled email for user " + user.username + " to be sent on " + nextEmailTime.format(logFormat) + " our time, our time zone being UTC" + nextEmailTime.format('Z z'));
     putInUsersLocalTime(nextEmailTime, user);
     emailLog("that is equivalent to " + nextEmailTime.format(logFormat) + " their time!");
     emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
@@ -137,7 +139,7 @@ function emailScheduler(user, justSentOne = false) {
 }
 
 //whenever the server boots, schedule some mf emails
-emailLog('\n\n---------server booting up '+moment().format(logFormat)+', all above log entries can be considered null and void---------\n');
+emailLog('\n\n---------server booting up ' + moment().format(logFormat) + ', all above log entries can be considered null and void---------\n');
 User.find({
     $or: [{
             'settings.digestEmailFrequency': 'daily'
