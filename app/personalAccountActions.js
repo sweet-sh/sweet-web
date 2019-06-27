@@ -336,7 +336,7 @@ module.exports = function (app, passport) {
         let oldSets = req.user.settings;
 
         var emailSetsChanged = false;
-        if(newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
+        if(newSets.digestEmailFrequency != oldSets.digestEmailFrequency || newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
             emailSetsChanged = true;
         }
 
