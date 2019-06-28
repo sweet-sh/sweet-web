@@ -84,7 +84,7 @@
           <div class="form-group">
             <label>Community image (optional but strongly recommended!)</label>
             <div id="image-preview">
-              <label for="image-upload" id="image-label">Choose file</label>
+              <label for="image-upload" id="image-label">Choose image</label>
               <input type="file" name="imageUpload" id="image-upload" accept="image/*" />
             </div>
           </div>
@@ -135,14 +135,20 @@
     }
   })
 
-  $.uploadPreview({
-    input_field: "#image-upload",
-    preview_box: "#image-preview",
-    label_field: "#image-label",
-    label_default: "Choose file",
-    label_selected: "Change file",
-    no_label: false
-  });
+  $("#image-upload").change(function (e) {
+    var preview = $("#image-preview");
+    var reader = new FileReader();
+    reader.addEventListener("load", function () {
+      preview.css('background-image',"url("+reader.result+")");
+      $("#image-label").html("change image");
+    }, false);
+    if (this.files[0]) {
+      reader.readAsDataURL(this.files[0]);
+    }else{
+      preview.css('background-image',"");
+      $("#image-label").html("choose image");
+    }
+  })
   $("#image-preview").css("background-size", "cover");
   $("#image-preview").css("background-position", "center center");
 
