@@ -710,7 +710,7 @@ module.exports = function (app) {
       var thisComm = await Community.findById(req.params.identifier);
       //we want posts from the community, but only if it's public or we belong to it:
       if (thisComm.settings.visibility == 'public' || myCommunities.some(v => {
-          v.toString() == req.params.identifier
+          return v.toString() == req.params.identifier;
         })) {
         var matchPosts = {
           community: req.params.identifier
