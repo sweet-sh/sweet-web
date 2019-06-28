@@ -1074,12 +1074,7 @@ module.exports = function (app) {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
-
-          if (req.isAuthenticated() && req.params.context == "single") {
-            // Mark associated notifications read if post is visible
-            notifier.markRead(loggedInUserData._id, displayContext._id)
-          }
-
+          
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
@@ -1856,5 +1851,5 @@ function isLoggedInOrRedirect(req, res, next) {
     return next();
   }
   res.redirect('/');
-  next('route');
+  //next('route'); don't want this! the request has been handled by the redirect, we don't need another route to do anything to it
 }
