@@ -489,9 +489,11 @@ module.exports = function (app) {
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
   //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
   app.get('/:username/:posturl', function (req, res, next) {
-    req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
-    req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
-    next('route');
+    if (req.params.username != 'images') { //a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
+      req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
+      req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
+      next('route');
+    }
     return;
   })
 
@@ -660,13 +662,12 @@ module.exports = function (app) {
     const today = moment().clone().startOf('day');
     const thisyear = moment().clone().startOf('year');
 
-    //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find
+    //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find. also, sortMethod
+    //is set according to the relevant user setting if they're logged in or to a default way at the bottom of this part if they're not.
 
     if (req.params.context == "home") {
-        console.log("========= HOME DEBUG =========")
-        console.log(req.user)
-        console.log(req.user.settings)
       //on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
+      //we're assuming the user is logged in if this request is being made (it's only made by code on a page that only loads if the user is logged in.)
       var matchPosts = {
         '$or': [{
             'author': {
@@ -683,18 +684,40 @@ module.exports = function (app) {
       };
       var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
     } else if (req.params.context == "user") {
+      //if we're on a user's page, obviously we want their posts:
       var matchPosts = {
-        author: req.params.identifier
+        author: req.params.identifier,
       }
+      //but we also only want posts if they're non-community or they come from a community that we belong to:
       if (req.isAuthenticated()) {
+        matchPosts.$or = [{
+          community: {
+            $exists: false
+          }
+        }, {
+          community: {
+            $in: myCommunities
+          }
+        }];
         var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
-      }else{
+      } else {
         //logged out users shouldn't see any community posts on user profile pages
-        matchPosts.community = {$exists:false};
+        matchPosts.community = {
+          $exists: false
+        };
       }
     } else if (req.params.context == "community") {
-      var matchPosts = {
-        community: req.params.identifier
+      var thisComm = await Community.findById(req.params.identifier);
+      //we want posts from the community, but only if it's public or we belong to it:
+      if (thisComm.settings.visibility == 'public' || myCommunities.some(v => {
+          v.toString() == req.params.identifier
+        })) {
+        var matchPosts = {
+          community: req.params.identifier
+        }
+      } else {
+        //if we're not in the community and it's not public, there are no posts we're allowed to view!
+        var matchPosts = undefined;
       }
       if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
@@ -768,9 +791,6 @@ module.exports = function (app) {
         displayedPosts = [];
 
         for (const post of posts) {
-
-          var canDisplay = false;
-
           //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
           //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
           //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
@@ -818,16 +838,9 @@ module.exports = function (app) {
               canDisplay = true;
             }
             if (post.type == "community") {
-              if (myCommunities.some(m => {
-                  return m.equals(post.community._id)
-                })) {
-                canDisplay = true;
-                // Hide muted community members
-                let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-                if (mutedMemberIds.includes(post.author._id.toString())) {
-                  canDisplay = false;
-                }
-              } else {
+              // Hide muted community members
+              let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+              if (mutedMemberIds.includes(post.author._id.toString())) {
                 canDisplay = false;
               }
             }
@@ -852,6 +865,11 @@ module.exports = function (app) {
                 // Not a community post, can display
                 canDisplay = true;
               }
+            }else if(req.params.context == "community" && thisComm.settings.visibility == "public"){
+              //also posts in publicly visible communities can be shown, period. i'm 99% sure that posts from private communities won't even
+              //be fetched for logged out users because of the way the matchPosts query is constructed above but just in case i'm checking it
+              //again in the above if statement
+              canDisplay = true;
             }
           }
 
@@ -893,9 +911,9 @@ module.exports = function (app) {
           }
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
-              console.log("======== BOOSTED BY LABEL DEBUG ========")
-              console.log(req.user)
-              console.log(req.isAuthenticated())
+            console.log("======== BOOSTED BY LABEL DEBUG ========")
+            console.log(req.user)
+            console.log(req.isAuthenticated())
             var followedBoosters = [];
             var notFollowingBoosters = [];
             var youBoosted = false;
