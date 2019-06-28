@@ -92,8 +92,9 @@
         </form>
       </div>
       <div class="tab-pane fade show active" id="directory" role="tabpanel" aria-labelledby="directoryTab">
-        <div class="container" id="directoryResults"></div>
-        <div class="page-load-status">
+        <div class="container" id="directoryResults" style="display:none;"></div>
+        {{!--the page loading animation is hidden at the start bc the default starting tab is the "joined communities" one and that doesn't load stuff with infinite scroll --}}
+        <div class="page-load-status" style="display:none;">
           <div class="loader-ellips infinite-scroll-request">
             <span class="loader-ellips__dot"></span>
             <span class="loader-ellips__dot"></span>
@@ -115,6 +116,8 @@
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     console.log(e.target) // newly activated tab
     if (e.target.id == "directoryTab"){
+      $(".page-load-status").css("display", "inherit");
+      $("#directoryResults").css("display", "inherit");
       $('#directoryResults').infiniteScroll({
         path: function() {
           console.log("Blarp")
@@ -126,10 +129,11 @@
         history: true,
         status: '.page-load-status'
       });
+    }else{
+      $(".page-load-status").css("display","none");
+      $("#directoryResults").css("display", "none");
     }
   })
-
-
 
   $.uploadPreview({
     input_field: "#image-upload",
