@@ -113,6 +113,7 @@
       {{#each trustedUserData}}
         <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
       {{/each}}
+      <div style="height:10px;width:100%;"></div>
     </div>
   {{/or}}
 {{/and}}
@@ -122,6 +123,7 @@
     {{#each usersWhoTrustThemData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/and}}
 {{#if followedUserData}}
@@ -130,6 +132,7 @@
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>    
   </div>
 {{/if}}
 {{#if followersData}}
@@ -138,6 +141,7 @@
     {{#each followersData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>    
   </div>
 {{/if}}
 {{#if isOwnProfile}}
@@ -147,6 +151,7 @@
         {{#each flaggedUserData}}
           <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
         {{/each}}
+        <div style="height:10px;width:100%;"></div>
       </div>
   {{/if}}
 {{/if}}
@@ -157,6 +162,7 @@
     {{#each communitiesData}}
       <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
 <script>
