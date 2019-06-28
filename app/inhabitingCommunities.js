@@ -295,27 +295,30 @@ module.exports = function (app, passport) {
 
   });
 
-  app.post('/api/community/user/join/:communityid', isLoggedIn, function (req, res) {
-    Community.findOne({
+  app.post('/api/community/user/join/:communityid', isLoggedIn, async function (req, res) {
+    await Community.findOne({
         _id: req.params.communityid
       })
-      .then(community => {
-        community.members.push(req.user._id)
-        community.save()
+      .then(async community => {
+        if (!community.members.some(v => {
+            return v.equals(req.user._id)
+          })) {
+          community.members.push(req.user._id)
+          await community.save();
+          touchCommunity(req.params.communityid)
+        }
       })
-      .then(community => {
-        User.findOne({
-            _id: req.user._id
-          })
-          .then(user => {
-            user.communities.push(req.params.communityid)
-            user.save()
-          })
-      })
-      .then(success => {
-        touchCommunity(req.params.communityid)
-        res.end('{"success" : "Updated Successfully", "status" : 200}');
-      })
+    await User.findOne({
+      _id: req.user._id
+    }).then(async user => {
+      if (!user.communities.some(v => {
+          return v.toString() == req.params.communityid
+        })) {
+        user.communities.push(req.params.communityid)
+        await user.save();
+      }
+    })
+    res.end('{"success" : "Updated Successfully", "status" : 200}');
   });
 
   app.post('/api/community/user/request/:communityid', isLoggedIn, function (req, res) {
@@ -934,34 +937,34 @@ module.exports = function (app, passport) {
       })
   });
 
-  app.post('/api/community/welcomemessage/update/:communityid', isLoggedIn, function(req, res) {
+  app.post('/api/community/welcomemessage/update/:communityid', isLoggedIn, function (req, res) {
 
-      function isCommunityMember(communityId) {
-          return Community.findOne({
-              _id: communityId
-          })
-          .then(community => {
-              return community.members.some(member => {
-                  return req.user._id.equals(member);
-              });
-          })
-      }
+    function isCommunityMember(communityId) {
+      return Community.findOne({
+          _id: communityId
+        })
+        .then(community => {
+          return community.members.some(member => {
+            return req.user._id.equals(member);
+          });
+        })
+    }
 
-      Community.findOne({
-          _id: req.params.communityid
+    Community.findOne({
+        _id: req.params.communityid
       })
-      .then(async function(community) {
-          if (await isCommunityMember(community)) {
-              community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
-              community.welcomeMessageParsed = helper.parseText(req.body.communityWelcomeMessage).text
-              community.welcomeMessageAuthor = req.user._id
-              community.save()
-              .then(result => {
-                  res.redirect('back')
-              })
-          } else {
+      .then(async function (community) {
+        if (await isCommunityMember(community)) {
+          community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
+          community.welcomeMessageParsed = helper.parseText(req.body.communityWelcomeMessage).text
+          community.welcomeMessageAuthor = req.user._id
+          community.save()
+            .then(result => {
               res.redirect('back')
-          }
+            })
+        } else {
+          res.redirect('back')
+        }
       })
   })
 
