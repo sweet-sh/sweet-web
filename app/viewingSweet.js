@@ -920,9 +920,10 @@ module.exports = function (app) {
           }
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
+            /*
             console.log("======== BOOSTED BY LABEL DEBUG ========")
             console.log(req.user)
-            console.log(req.isAuthenticated())
+            console.log(req.isAuthenticated())*/
             var followedBoosters = [];
             var notFollowingBoosters = [];
             var youBoosted = false;
@@ -1831,7 +1832,6 @@ module.exports = function (app) {
       res.status(200).sendFile(path.resolve(global.appRoot, "emailLog.txt"));
     }
   })
-
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
