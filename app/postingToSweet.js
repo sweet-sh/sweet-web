@@ -1186,7 +1186,7 @@ function isLoggedInOrRedirect(req, res, next) {
         return next();
     }
     res.redirect('/');
-    next('route');
+    //next('route'); don't want this! the request has been handled by the redirect, we don't need to do anything else with it in another route
 }
 
 //For post requests where the jQuery code making the request will handle the response
@@ -1195,7 +1195,7 @@ function isLoggedInOrErrorResponse(req, res, next) {
         return next();
     }
     res.send('nope');
-    next('route');
+    //next('route'); don't want this! the request has been handled by the error response, we don't need to do anything else with it in another route
 }
 
 function getTags(url) {
