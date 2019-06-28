@@ -838,6 +838,15 @@ module.exports = function (app) {
               canDisplay = true;
             }
             if (post.type == "community") {
+              if (req.params.context != "community") {
+                if (myCommunities.some(m => {
+                    return m.equals(post.community._id)
+                  })) {
+                  canDisplay = true;
+                } else {
+                  canDisplay = false;
+                }
+              }
               // Hide muted community members
               let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
               if (mutedMemberIds.includes(post.author._id.toString())) {
@@ -865,7 +874,7 @@ module.exports = function (app) {
                 // Not a community post, can display
                 canDisplay = true;
               }
-            }else if(req.params.context == "community" && thisComm.settings.visibility == "public"){
+            } else if (req.params.context == "community" && thisComm.settings.visibility == "public") {
               //also posts in publicly visible communities can be shown, period. i'm 99% sure that posts from private communities won't even
               //be fetched for logged out users because of the way the matchPosts query is constructed above but just in case i'm checking it
               //again in the above if statement
