@@ -717,17 +717,6 @@ hr {
 .user-list-toggle:hover{
   text-decoration: none;
 }
-.user-list-toggle::before{
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-  content: '\f0dd';
-  margin-left: 5px;
-}
-
-.user-list-toggle.collapsed::before{
-  font-family: "Font Awesome 5 Free";
-  content: '\f0da';
-}
 
 .btn-group-full-width {
   display: flex;
