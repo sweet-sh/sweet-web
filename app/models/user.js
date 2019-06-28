@@ -51,7 +51,8 @@ var userSchema = new mongoose.Schema({
   websiteParsed: String,
   location: String,
   settings: {
-    timezone: { type: String, default: "+00:00" },
+    timezone: { type: String, default: "auto" },
+    autoDetectedTimeZone: {type: String, default: "" }, //this will get set to moment's guess of their timezone as soon as they next make a settings change, which they'll have to do to start getting emails which is the only thing that brings timezones into play anyway
     profileVisibility: { type: String, default: "invisible" },
     newPostPrivacy: { type: String, default: "public" },
     imageQuality: { type: String, default: "standard" },
@@ -59,7 +60,9 @@ var userSchema = new mongoose.Schema({
     userTimelineSorting: { type: String, default: "chronological" },
     communityTimelineSorting: { type: String, default: "fluid" },
     flashRecentComments: { type: Boolean, default: true },
-    digestEmailFrequency: { type: String, default: "off" }
+    digestEmailFrequency: { type: String, default: "off" },
+    emailTime: { type: String, default: "17:00" },
+    emailDay: { type: String, default: "Sunday" },
   },
   notifications: [notificationSchema],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],

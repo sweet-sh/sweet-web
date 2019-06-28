@@ -1,40 +1,44 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js"></script>
 <div id="homeBody" class="row justify-content-center">
     <div class="col-lg-8">
         <h3 class="page-header mx-2">Settings</h3>
         <form id="settingsForm" method="post" action="/updatesettings" class="pane">
             <h4>Basic settings</h4>
             <div class="form-group">
-                <label for="timezone">Nearest timezone</label>
+                <label for="timezone">Select your timezone (or the nearest equivalent):</label>
                 <select class="form-control" name="timezone" id="timezone">
-                	<option value="-12:00" {{#eq loggedInUserData.settings.timezone "-12:00"}}selected{{/eq}}>(GMT -12:00) Eniwetok, Kwajalein</option>
-                	<option value="-11:00" {{#eq loggedInUserData.settings.timezone "-11:00"}}selected{{/eq}}>(GMT -11:00) Midway Island, Samoa</option>
-                	<option value="-10:00" {{#eq loggedInUserData.settings.timezone "-10:00"}}selected{{/eq}}>(GMT -10:00) Hawaii</option>
-                	<option value="-09:00" {{#eq loggedInUserData.settings.timezone "-09:00"}}selected{{/eq}}>(GMT -9:00) Alaska</option>
-                	<option value="-08:00" {{#eq loggedInUserData.settings.timezone "-08:00"}}selected{{/eq}}>(GMT -8:00) Pacific Time (US &amp; Canada)</option>
-                	<option value="-07:00" {{#eq loggedInUserData.settings.timezone "-07:00"}}selected{{/eq}}>(GMT -7:00) Mountain Time (US &amp; Canada)</option>
-                	<option value="-06:00" {{#eq loggedInUserData.settings.timezone "-06:00"}}selected{{/eq}}>(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
-                	<option value="-05:00" {{#eq loggedInUserData.settings.timezone "-05:00"}}selected{{/eq}}>(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
-                	<option value="-04:00" {{#eq loggedInUserData.settings.timezone "-04:00"}}selected{{/eq}}>(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
-                	<option value="-03:00" {{#eq loggedInUserData.settings.timezone "-03:00"}}selected{{/eq}}>(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
-                	<option value="-02:00" {{#eq loggedInUserData.settings.timezone "-02:00"}}selected{{/eq}}>(GMT -2:00) Mid-Atlantic</option>
-                	<option value="-01:00" {{#eq loggedInUserData.settings.timezone "-01:00"}}selected{{/eq}}>(GMT -1:00) Azores, Cape Verde Islands</option>
-                	<option value="+00:00" {{#eq loggedInUserData.settings.timezone "+00:00"}}selected{{/eq}}>(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
-                	<option value="+01:00" {{#eq loggedInUserData.settings.timezone "+01:00"}}selected{{/eq}}>(GMT +1:00) Brussels, Copenhagen, Madrid, Paris</option>
-                	<option value="+02:00" {{#eq loggedInUserData.settings.timezone "+02:00"}}selected{{/eq}}>(GMT +2:00) Kaliningrad, South Africa</option>
-                	<option value="+03:00" {{#eq loggedInUserData.settings.timezone "+03:00"}}selected{{/eq}}>(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
-                	<option value="+04:00" {{#eq loggedInUserData.settings.timezone "+04:00"}}selected{{/eq}}>(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
-                	<option value="+05:00" {{#eq loggedInUserData.settings.timezone "+05:00"}}selected{{/eq}}>(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
-                	<option value="+06:00" {{#eq loggedInUserData.settings.timezone "+06:00"}}selected{{/eq}}>(GMT +6:00) Almaty, Dhaka, Colombo</option>
-                	<option value="+07:00" {{#eq loggedInUserData.settings.timezone "+07:00"}}selected{{/eq}}>(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
-                	<option value="+08:00" {{#eq loggedInUserData.settings.timezone "+08:00"}}selected{{/eq}}>(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
-                	<option value="+09:00" {{#eq loggedInUserData.settings.timezone "+09:00"}}selected{{/eq}}>(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
-                	<option value="+10:00" {{#eq loggedInUserData.settings.timezone "+10:00"}}selected{{/eq}}>(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
-                	<option value="+11:00" {{#eq loggedInUserData.settings.timezone "+11:00"}}selected{{/eq}}>(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
-                	<option value="+12:00" {{#eq loggedInUserData.settings.timezone "+12:00"}}selected{{/eq}}>(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
-                	<option value="+13:00" {{#eq loggedInUserData.settings.timezone "+13:00"}}selected{{/eq}}>(GMT +13:00) Apia, Nukualofa</option>
-                	<option value="+14:00" {{#eq loggedInUserData.settings.timezone "+14:00"}}selected{{/eq}}>(GMT +14:00) Line Islands, Tokelau</option>
+                    {{!-- the defaulted selected timezone for this section is chosen by javascript at the bottom of the page --}}
+                	<option id="guessed-timezone" value="auto">...loading default timezone...</option>
+                	<option value="-12:00">(GMT -12:00) Eniwetok, Kwajalein</option>
+                	<option value="-11:00">(GMT -11:00) Midway Island, Samoa</option>
+                	<option value="-10:00">(GMT -10:00) Hawaii</option>
+                	<option value="-09:00">(GMT -9:00) Alaska</option>
+                	<option value="-08:00">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
+                	<option value="-07:00">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
+                	<option value="-06:00">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
+                	<option value="-05:00">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
+                	<option value="-04:00">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
+                	<option value="-03:00">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
+                	<option value="-02:00">(GMT -2:00) Mid-Atlantic</option>
+                	<option value="-01:00">(GMT -1:00) Azores, Cape Verde Islands</option>
+                	<option value="+00:00">(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
+                	<option value="+01:00">(GMT +1:00) Amsterdam, Brussels, Copenhagen, Madrid, Paris</option>
+                	<option value="+02:00">(GMT +2:00) Kaliningrad, South Africa</option>
+                	<option value="+03:00">(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
+                	<option value="+04:00">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
+                	<option value="+05:00">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
+                	<option value="+06:00">(GMT +6:00) Almaty, Dhaka, Colombo</option>
+                	<option value="+07:00">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
+                	<option value="+08:00">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
+                	<option value="+09:00">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
+                	<option value="+10:00">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
+                	<option value="+11:00">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
+                	<option value="+12:00">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
+                	<option value="+13:00">(GMT +13:00) Apia, Nukualofa</option>
+                	<option value="+14:00">(GMT +14:00) Line Islands, Tokelau</option>
                 </select>
-                <p class="form-text small">This is currently only used to avoid sending you digest emails at stupid times.</p>
+                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal</p>
             </div>
             <hr />
             <h4>Privacy</h4>
@@ -56,6 +60,48 @@
                     <option value="daily" {{#eq loggedInUserData.settings.digestEmailFrequency "daily"}}selected{{/eq}}>Send a daily digest email</option>
                     <option value="weekly" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}selected{{/eq}}>Send a weekly digest email</option>
                 </select>
+                <div id="timeSelection" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}style="display:none;"{{/eq}}>
+                    <p id="emailTimePrompt" class="form-text small mt-0">here, you can choose the time at which you would like to receive them:</p>
+                    <select name="emailDay" id="emailDaySelect" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}{{else}}style="display:none;"{{/eq}}>
+                        <option value="Sunday" {{#eq loggedInUserData.settings.emailDay "Sunday"}}selected{{/eq}}>Sunday</option>
+                        <option value="Monday" {{#eq loggedInUserData.settings.emailDay "Monday"}}selected{{/eq}}>Monday</option>
+                        <option value="Tuesday" {{#eq loggedInUserData.settings.emailDay "Tuesday"}}selected{{/eq}}>Tuesday</option>
+                        <option value="Wednesday" {{#eq loggedInUserData.settings.emailDay "Wednesday"}}selected{{/eq}}>Wednesday</option>
+                        <option value="Thursday" {{#eq loggedInUserData.settings.emailDay "Thursday"}}selected{{/eq}}>Thursday</option>
+                        <option value="Friday" {{#eq loggedInUserData.settings.emailDay "Friday"}}selected{{/eq}}>Friday</option>
+                        <option value="Saturday" {{#eq loggedInUserData.settings.emailDay "Saturday"}}selected{{/eq}}>Saturday</option>
+                    </select>
+                    <input name="emailTime" type="time" id="emailTime" value="{{loggedInUserData.settings.emailTime}}" required>
+                    <select id="emailTimeSelect" style="display:none;">
+                        {{!-- the idea here is that the user's current option is in the top - it can't definitely be integrated into the rest of the list --}}
+                        {{!-- because it might have a custom minutes value - but then if it is one of the options below we hide its duplicate for neatness. --}}
+                        <option value="{{loggedInUserData.settings.emailTime}}" id="currentEmailTime" selected>{{loggedInUserData.settings.emailTime}}</option>
+                        {{#eq loggedInUserData.settings.emailTime "01:00"}}{{else}}<option value="01:00">01:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "02:00"}}{{else}}<option value="02:00">02:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "03:00"}}{{else}}<option value="03:00">03:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "04:00"}}{{else}}<option value="04:00">04:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "05:00"}}{{else}}<option value="05:00">05:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "06:00"}}{{else}}<option value="06:00">06:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "07:00"}}{{else}}<option value="07:00">07:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "08:00"}}{{else}}<option value="08:00">08:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "09:00"}}{{else}}<option value="09:00">09:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "10:00"}}{{else}}<option value="10:00">10:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "11:00"}}{{else}}<option value="11:00">11:00 am</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "12:00"}}{{else}}<option value="12:00">12:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "13:00"}}{{else}}<option value="13:00">01:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "14:00"}}{{else}}<option value="14:00">02:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "15:00"}}{{else}}<option value="15:00">03:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "16:00"}}{{else}}<option value="16:00">04:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "17:00"}}{{else}}<option value="17:00">05:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "18:00"}}{{else}}<option value="18:00">06:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "19:00"}}{{else}}<option value="19:00">07:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "20:00"}}{{else}}<option value="20:00">08:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "21:00"}}{{else}}<option value="21:00">09:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "22:00"}}{{else}}<option value="22:00">10:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "23:00"}}{{else}}<option value="23:00">11:00 pm</option>{{/eq}}
+                        {{#eq loggedInUserData.settings.emailTime "00:00"}}{{else}}<option value="00:00">12:00 am</option>{{/eq}}
+                    </select>
+                </div>
                 <p class="form-text small text-success">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
             </div>
             <hr />
@@ -107,7 +153,79 @@
                                 </label>
                         </div>
                 </div>
+                <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <button type="submit" class="btn btn-secondary">Save settings</button>
         </form>
     </div>
 </div>
+<script>
+    //ok so this detects the user's time zone and if it's changed and creates options in the drop-down for time zones based on that
+    function stringifyTZ(tz){
+        //just to make moment's time zone strings more human-readable
+        return tz.replace(new RegExp('_', 'g'), ' ').replace(new RegExp('/', 'g'), ', ');
+    }
+
+    var autoDetectedTimeZone = moment.tz.guess();
+    var autoDetectedTimeZoneString = stringifyTZ(autoDetectedTimeZone);
+    var lastKnownTimeZone = "{{loggedInUserData.settings.autoDetectedTimeZone}}";
+
+    if("" === lastKnownTimeZone){
+        //if it's not yet saved, we need to put it in the form so it becomes saved upon submission
+        $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
+    }
+
+    if("" === lastKnownTimeZone || autoDetectedTimeZone === lastKnownTimeZone){
+        //if auto-detected time zone is not yet saved (like, it will be on submission though) or is being used currently, it's just the default option
+        $("#guessed-timezone")[0].innerHTML = 'Default (for you) equivalent to that of: '+autoDetectedTimeZoneString;
+        
+    }else if(autoDetectedTimeZone !== lastKnownTimeZone){
+        //if auto-detected time zone was saved but is now different, offer them the new one as the second option, and change their auto-detected time zone if they choose it
+        var lastKnownTimeZoneString = stringifyTZ(lastKnownTimeZone);
+        $("#guessed-timezone")[0].innerHTML = "Last known default (for you) that of: "+lastKnownTimeZoneString;
+        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you) that of: '+autoDetectedTimeZoneString+'</option>');
+        $('#settingsForm').submit(function(event){
+            if($("#newDefault")[0].selected){
+                $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
+            }
+            return true;
+        })
+    }
+
+    //email time choosing stuff:
+    //show/hide time selection based on whether the user wants to get emails at all:
+    $("#digestEmailFrequency").change(function(event){
+        if($(this).val()=="off"){
+            $('#timeSelection').css('display','none');
+        }else{
+            $('#timeSelection').css('display','block');
+            if($(this).val()=="weekly"){
+                $("#emailDaySelect").css('display','inline');
+            }else{
+                $("#emailDaySelect").css('display','none');
+            }
+        }
+    })
+    
+    {{!-- if the user isn't using their timezone, select auto for them, otherwise select the timezone they have currently selected --}}
+    {{#eq loggedInUserData.settings.digestEmailFrequency 'off'}}
+    $('#timezone').find('[value="auto"]').prop('selected',true);
+    {{else}}
+    $('#timezone').find('[value="{{loggedInUserData.settings.timezone}}"]').prop('selected',true);
+    {{/eq}}
+
+    //format the user's currently chosen email time so it's not in 24-hour format like how it's stored in the database:
+    var day = moment().tz('GMT'); //we need an arbitrary day to accompany the time when creating the moment object that will give us our formatted output
+    var splitTime = $('#currentEmailTime').html().split(/:/);
+    day.hours(splitTime[0]).minutes(splitTime[1]).seconds(0).milliseconds(0);
+    $('#currentEmailTime').html(day.format('LT'));
+
+    //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
+    if($("#emailTime")[0].type == "text"){
+        $("emailTime").css('display','none');
+        $("emailTime").attr('name','UNUSED');
+        $("emailTime").prop('required',false);
+        $("emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
+        $("emailTimeSelect").css('display','block');
+        $("emailTimeSelect").attr('name','emailTime');
+    }
+</script>

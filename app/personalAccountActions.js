@@ -330,25 +330,38 @@ module.exports = function (app, passport) {
     //Input: the settings
     //Output: settings are saved for the user in the database, we're redirected back to the user's page.
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
-    app.post('/updatesettings', isLoggedInOrRedirect, function (req, res) {
-        let updatedSettings = req.body;
-        console.log(updatedSettings)
+    app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
+        let newSets = req.body;
+        console.log(newSets)
+        let oldSets = req.user.settings;
+
+        var emailSetsChanged = false;
+        if(newSets.digestEmailFrequency != oldSets.digestEmailFrequency || newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
+            emailSetsChanged = true;
+        }
+
         User.update({
                 _id: req.user._id
             }, {
                 $set: {
-                    'settings.timezone': updatedSettings.timezone,
-                    'settings.profileVisibility': updatedSettings.profileVisibility,
-                    'settings.newPostPrivacy': updatedSettings.newPostPrivacy,
-                    'settings.digestEmailFrequency': updatedSettings.digestEmailFrequency,
-                    'settings.imageQuality': updatedSettings.imageQuality,
-                    'settings.homeTagTimelineSorting': updatedSettings.homeTagTimelineSorting,
-                    'settings.userTimelineSorting': updatedSettings.userTimelineSorting,
-                    'settings.communityTimelineSorting': updatedSettings.communityTimelineSorting,
-                    'settings.flashRecentComments': (updatedSettings.flashRecentComments == 'on' ? true : false)
+                    'settings.timezone': newSets.timezone,
+                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone,
+                    'settings.profileVisibility': newSets.profileVisibility,
+                    'settings.newPostPrivacy': newSets.newPostPrivacy,
+                    'settings.digestEmailFrequency': newSets.digestEmailFrequency,
+                    'settings.imageQuality': newSets.imageQuality,
+                    'settings.homeTagTimelineSorting': newSets.homeTagTimelineSorting,
+                    'settings.userTimelineSorting': newSets.userTimelineSorting,
+                    'settings.communityTimelineSorting': newSets.communityTimelineSorting,
+                    'settings.flashRecentComments': (newSets.flashRecentComments == 'on' ? true : false),
+                    'settings.emailTime': newSets.emailTime,
+                    'settings.emailDay': newSets.emailDay
                 }
             })
-            .then(user => {
+            .then(async (updateStatus) => {
+                if(emailSetsChanged){
+                    emailer.emailRescheduler((await User.findById(req.user._id)));
+                }
                 res.redirect('/' + req.user.username)
             })
             .catch(error => {
