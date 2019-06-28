@@ -174,12 +174,13 @@ $(function() {
         if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
             tribute.attach($(".editable-comment-content"));
         }
-        if ($('.post-images').length > 0) {
-            var imagesLoaded = $('.post-single-image').length;
+        var newlyLoadedStuff = $(items);
+        if (newlyLoadedStuff.find('.post-images').length > 0) {
+            var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;
             console.log("images loaded: " + imagesLoaded);
             var imagesLightboxed = 0;
 
-            var $images = $('.post-images a');
+            var $images = newlyLoadedStuff.find('.post-images a');
             var $imagesGrouped = $images.filter('[data-group]');
             var $imagesAlone = $images.not($imagesGrouped);
             var params = {
