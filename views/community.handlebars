@@ -120,6 +120,9 @@
                     <label for="communityName">Name</label>
                     <input type="text" class="form-control" id="communityName" name="proposedValue" value="{{communityData.name}}">
                   </div>
+                  <div class="form-group">
+                    Your community's URL will be: <span class="text-info">https://sweet.sh/community/<span id="communitySlug"></span></span>
+                  </div>
                   <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
                 </form>
               </div>
@@ -374,6 +377,25 @@ $("#requestButton").click(function() {
 {{#if isMember}}
 
 {{#unless isMuted}}
+
+function slugify(string) {
+    const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
+    const b = 'aaaaaaaaceeeeghiiiimnnnoooooprssstuuuuuwxyz------'
+    const p = new RegExp(a.split('').join('|'), 'g')
+
+    return string.toString().toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+        .replace(/&/g, '-and-') // Replace & with 'and'
+        .replace(/[^\w\-]+/g, '') // Remove all non-word characters
+        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, '') // Trim - from end of text
+  }
+
+  $(document).on('input', '#communityName', function() {
+    $("#communitySlug").text(slugify($(this).val()))
+  });
 
 $(".approveUser").click(function() {
   $.post( "/api/community/user/accept/{{ communityData._id }}/" + $(this).attr("data-user-id"), function( result ) {
