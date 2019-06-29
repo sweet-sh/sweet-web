@@ -643,7 +643,7 @@ module.exports = function (app, passport) {
       })
   });
 
-  app.post('/api/community/vote/create/:communityid', isLoggedIn, function (req, res) {
+  app.post('/api/community/vote/create/:communityid', isLoggedIn, async function (req, res) {
     console.log(req.body)
     if (req.body.reference == "image") {
       imageUrl = shortid.generate() + '.jpg';
@@ -695,79 +695,94 @@ module.exports = function (app, passport) {
       30: '30 days'
     }
     let parsedReference = parsedReferences[req.body.reference]
+    var community = await Community.findOne({
+      _id: req.params.communityid
+    })
+    var allowedChange = false; //is there a change? and is it allowed?
     if (req.body.reference == "description" || req.body.reference == "rules") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
+      if(req.body.reference=="description"){
+        allowedChange = (community.descriptionParsed != parsedProposedValue);
+      }else{
+        allowedChange = (community.rulesParsed != parsedProposedValue);
+      }
     } else if (req.body.reference == "joinType") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = parsedJoinType[req.body.proposedValue]
+      allowedChange = (parsedProposedValue && community.settings.joinType != req.body.proposedValue); //parsedProposedValue will be undefined if req.body.proposedValue wasn't one of the allowed values
     } else if (req.body.reference == "visibility") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = parsedVisibility[req.body.proposedValue]
+      allowedChange = (parsedProposedValue && community.settings.visibility != req.body.proposedValue);
     } else if (req.body.reference == "voteLength") {
       proposedValue = req.body.proposedValue
       parsedProposedValue = parsedVoteLength[req.body.proposedValue]
+      allowedChange = (parsedProposedValue && community.settings.voteLength != parseInt(req.body.proposedValue));
     } else if (req.body.reference == "image") {
       proposedValue = imageUrl
       parsedProposedValue = imageUrl
+      //allowedChange = does image actually exist
     } else if (req.body.reference == "name") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
-      
+      allowedChange = (parsedProposedValue && community.name != parsedProposedValue)
     }
-    Community.findOne({
-        _id: req.params.communityid
-      })
-      .then(community => {
-        console.log(community)
-        voteUrl = shortid.generate();
-        created = new Date();
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
-        if (community.members.length - community.mutedMembers.length === 1) {
-          // This vote automatically passes so we force the single eligible member to vote on it
-          votesNumber = 0;
-        } else {
-          votesNumber = 1;
-        }
-        const vote = new Vote({
-          status: 'active',
-          community: req.params.communityid,
-          reference: req.body.reference,
-          parsedReference: parsedReference,
-          proposedValue: proposedValue,
-          parsedProposedValue: parsedProposedValue,
-          creatorEmail: req.user.email,
-          creator: req.user._id,
-          url: voteUrl,
-          timestamp: created,
-          lastUpdated: created,
-          voteThreshold: 50,
-          expiryTime: expiryTime,
-          votes: votesNumber,
-          voters: votesNumber == 1 ? [req.user._id] : [],
-        })
-        voteId = vote._id;
-        console.log(vote)
-        vote.save()
-          .then(vote => {
-            var expireVote = schedule.scheduleJob(expiryTime, function () {
-              Vote.findOne({
-                  _id: vote._id
-                })
-                .then(vote => {
-                  vote.status = "expired"
-                  vote.save();
-                })
-            });
-            expiryTimers.push(expireVote);
-            community.members.forEach(member => {
-              if (!member._id.equals(req.user._id)) {
-                notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'created')
-              }
+    if(!allowedChange){
+      req.session.sessionFlash = {
+        type: 'warning',
+        message: 'This vote will not change anything! But of course none of them do'
+      }
+      return res.redirect('back');
+    }
+    console.log(community)
+    voteUrl = shortid.generate();
+    created = new Date();
+    expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+    if (community.members.length - community.mutedMembers.length === 1) {
+      // This vote automatically passes so we force the single eligible member to vote on it
+      votesNumber = 0;
+    } else {
+      votesNumber = 1;
+    }
+    const vote = new Vote({
+      status: 'active',
+      community: req.params.communityid,
+      reference: req.body.reference,
+      parsedReference: parsedReference,
+      proposedValue: proposedValue,
+      parsedProposedValue: parsedProposedValue,
+      creatorEmail: req.user.email,
+      creator: req.user._id,
+      url: voteUrl,
+      timestamp: created,
+      lastUpdated: created,
+      voteThreshold: 50,
+      expiryTime: expiryTime,
+      votes: votesNumber,
+      voters: votesNumber == 1 ? [req.user._id] : [],
+    })
+    voteId = vote._id;
+    console.log(vote)
+    vote.save()
+      .then(vote => {
+        var expireVote = schedule.scheduleJob(expiryTime, function () {
+          Vote.findOne({
+              _id: vote._id
             })
-            touchCommunity(req.params.communityid)
-            res.redirect('back')
-          })
+            .then(vote => {
+              vote.status = "expired"
+              vote.save();
+            })
+        });
+        expiryTimers.push(expireVote);
+        community.members.forEach(member => {
+          if (!member._id.equals(req.user._id)) {
+            notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'created')
+          }
+        })
+        touchCommunity(req.params.communityid)
+        res.redirect('back')
       })
   });
 
