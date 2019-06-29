@@ -1901,3 +1901,7 @@ a.show-more:hover { /* Shim for old show more button element */
 .medium-editor-placeholder-relative::after, .medium-editor-placeholder::after {
     white-space: normal !important;
 }
+
+.sl-image {
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+}
