@@ -4,6 +4,8 @@ const notifier = require('./notifier.js');
 const sanitize = require('mongo-sanitize');
 const fs = require('fs');
 
+var auth = require('../config/auth.js'); //used on the settings page to set up push notifications
+
 //just used for error log thing at the very end
 const path = require('path')
 const bcrypt = require('bcrypt-nodejs');
@@ -280,7 +282,7 @@ module.exports = function (app) {
     res.render('settings', {
       loggedIn: true,
       loggedInUserData: req.user,
-      notifierPublicKey: vapidKeys.publicKey,
+      notifierPublicKey: auth.vapidPublicKey,
       activePage: 'settings'
     })
   })
