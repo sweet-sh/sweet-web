@@ -713,6 +713,7 @@ module.exports = function (app, passport) {
     } else if (req.body.reference == "name") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
+      
     }
     Community.findOne({
         _id: req.params.communityid

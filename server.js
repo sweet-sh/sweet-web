@@ -24,6 +24,15 @@ var sanitize = require('mongo-sanitize');
 const fileUpload = require('express-fileupload');
 var shortid = require('shortid');
 
+webpush = require('web-push');
+vapidKeys = webpush.generateVAPIDKeys();
+
+webpush.setVapidDetails(
+  'mailto:support@sweet.sh',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
 var fs = require('fs');
 
 app.use(fileUpload());

@@ -145,15 +145,16 @@
                     <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
-                <div class="form-group">
-                        <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
-                                <label class="form-check-label" for="flashRecentComments">
-                                        Flash recent comments
-                                </label>
-                        </div>
-                </div>
-                <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
+            <div class="form-group">
+                    <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
+                            <label class="form-check-label" for="flashRecentComments">
+                                    Flash recent comments
+                            </label>
+                    </div>
+            </div>
+            <button style="display:block;margin-bottom:10px;" type="button" id="notifs-button" class="btn btn-secondary">Click to subscribe this browser to sweet push notifications!</button>
+            <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <button type="submit" class="btn btn-secondary">Save settings</button>
         </form>
     </div>
@@ -227,5 +228,111 @@
         $("emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
         $("emailTimeSelect").css('display','block');
         $("emailTimeSelect").attr('name','emailTime');
+    }
+
+    //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
+    var isSubscribed = false;
+    var pushButton = $('#notifs-button');
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        console.log('Service Worker and Push are supported');
+
+        navigator.serviceWorker.register('/js/sw.js')
+            .then(function (swReg) {
+                console.log('Service Worker is registered', swReg);
+                swRegistration = swReg;
+                // Set the initial subscription value
+                swRegistration.pushManager.getSubscription().then(function (subscription) {
+                    isSubscribed = !(subscription === null);
+                    if (isSubscribed) {
+                        console.log('User IS subscribed.');
+                    } else {
+                        console.log('User is NOT subscribed.');
+                    }
+                    updateButtonDisplay();
+                });
+            })
+            .catch(function (error) {
+                console.error('Service Worker Error', error);
+            });
+
+        pushButton.click(function (e) {
+            pushButton[0].disabled = true; //so it can't be clicked again and double-send subscription info to server
+            if (Notification.permission == "denied") {
+                bootbox.alert("You have notification permissions turned off for this site!");
+                updateButtonDisplay();
+            } else if (isSubscribed) {
+                swRegistration.pushManager.getSubscription()
+                .then(function (subscription) {
+                    if (subscription) {
+                        subscription.unsubscribe()
+                        .catch(function (error) {
+                            console.log('Error unsubscribing', error);
+                        })
+                        .then(function () {
+                            $.post("/pushnotifs/unsubscribe", {
+                                subscription: JSON.stringify(subscription)
+                            })
+                            console.log('User is unsubscribed.');
+                            isSubscribed = false;
+                            updateButtonDisplay();
+                        });
+                    }
+                })
+            } else {
+                const applicationServerKey = urlBase64ToUint8Array("{{this.notifierPublicKey}}");
+                swRegistration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: applicationServerKey
+                }).then(function (subscription) {
+                    console.log('User is subscribed.');
+
+                    $.post("/pushnotifs/subscribe", {
+                        subscription: JSON.stringify(subscription)
+                    })
+
+                    isSubscribed = true;
+
+                    updateButtonDisplay()
+
+                }).catch(function (err) {
+                    console.log('Failed to subscribe the user: ', err);
+                    updateButtonDisplay()
+                });
+            }
+        })
+
+    } else {
+        console.warn('Push messaging is not supported');
+        pushButton.html('Push Not Supported');
+    }
+
+    //call this whenever the subscription state changes
+    function updateButtonDisplay() {
+        if(Notification.permission == "denied"){
+            console.log("notification permission denied");
+            isSubscribed = false;
+            //send unsub notice to server! we have to do this here, outside of the normal event processing above, bc it's
+            //unpredictable when the user will turn notif permissions on/off
+        }else if (isSubscribed) {
+            pushButton[0].textContent = 'Click to unsubscribe this browser from sweet push notifications!';
+        } else {
+            pushButton[0].textContent = 'Click to subscribe this browser to sweet push notifications!';
+        }
+        pushButton[0].disabled = false;
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     }
 </script>

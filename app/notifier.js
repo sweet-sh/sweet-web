@@ -100,6 +100,22 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
     .then(notifiedUser => {
       buildNotification()
         .then(response => {
+          //send the user push notifications if they have a subscribed browser
+          if (notifiedUser.pushNotifSubscriptions.length > 0) {
+            for (subbed of notifiedUser.pushNotifSubscriptions) {
+              const pushSubscription = JSON.parse(subbed);
+              const options = {
+                gcmAPIKey: ''
+              };
+              const payload = JSON.stringify({
+                body: response.text.replace('<strong>', '').replace('</strong>', ''),
+                imageURL: response.image,
+                link: url.replace('.svg', '.png') //we can't use svgs here, which cake.svg (the default profile image) is, this will use cake.png instead
+              })
+              webpush.sendNotification(pushSubscription, payload, options);
+            }
+          }
+          //if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
           var lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
           if (cause == 'relationship' && lastNotif.category == 'relationship' && lastNotif.url == url) {
             if ((lastNotif.text.includes('follow') && context == 'trust') || (lastNotif.text.includes('trust') && context == 'follow')) {

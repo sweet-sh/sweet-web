@@ -280,6 +280,7 @@ module.exports = function (app) {
     res.render('settings', {
       loggedIn: true,
       loggedInUserData: req.user,
+      notifierPublicKey: vapidKeys.publicKey,
       activePage: 'settings'
     })
   })
