@@ -165,4 +165,15 @@ require('./app/postingToSweet.js')(app);
 
 // launch ======================================================================
 app.listen(port);
+
+/*var https = require('https');
+var httpsOptions = {
+    key: fs.readFileSync('../192.168.1.15-key.pem'),
+    cert: fs.readFileSync('../192.168.1.15.pem')
+};
+https.createServer(httpsOptions, app)
+.listen(3000, function () {
+  console.log('app listening on port 3000! Go to https://localhost:3000/')
+})*/
+
 console.log('The magic happens on port ' + port);

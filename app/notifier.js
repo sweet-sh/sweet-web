@@ -109,8 +109,8 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               };
               const payload = JSON.stringify({
                 body: response.text.replace('<strong>', '').replace('</strong>', ''),
-                imageURL: response.image,
-                link: url.replace('.svg', '.png') //we can't use svgs here, which cake.svg (the default profile image) is, this will use cake.png instead
+                imageURL: response.image.replace('.svg', '.png'), //we can't use svgs here, which cake.svg (the default profile image) is, this will use cake.png instead,
+                link: url
               })
               webpush.sendNotification(pushSubscription, payload, options);
             }

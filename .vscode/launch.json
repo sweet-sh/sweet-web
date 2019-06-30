@@ -35,14 +35,6 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Create 'boostsV2' field",
-            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsProperly.js"
-        },
-        
-
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Launch Server",
             "program": "${workspaceFolder}\\server.js"
         },
