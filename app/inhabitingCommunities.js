@@ -722,16 +722,18 @@ module.exports = function (app, passport) {
     } else if (req.body.reference == "image") {
       proposedValue = imageUrl
       parsedProposedValue = imageUrl
-      //allowedChange = does image actually exist
     } else if (req.body.reference == "name") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
-      allowedChange = (parsedProposedValue && community.name != parsedProposedValue)
+      //create "slug"
+      //make sure name && slug aren't in use
+      //create placeholder community
+      allowedChange = (parsedProposedValue && community.name != parsedProposedValue);
     }
     if(!allowedChange){
       req.session.sessionFlash = {
         type: 'warning',
-        message: 'This vote will not change anything! But of course none of them do'
+        message: 'This vote will not change anything! But of course none ever seem to anyway'
       }
       return res.redirect('back');
     }

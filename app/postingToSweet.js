@@ -203,12 +203,7 @@ module.exports = function (app) {
         }
 
         var rawContent = sanitize(req.body.postContent);
-        rawContent = sanitizeHtml(rawContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
-            allowedAttributes: {
-                'a': ['href']
-            }
-        });
+        rawContent = helper.sanitizeHtmlForSweet(rawContent)
         var parsedResult = helper.parseText(rawContent, req.body.postContentWarnings);
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
@@ -592,12 +587,7 @@ module.exports = function (app) {
         }
 
         var rawContent = sanitize(req.body.commentContent);
-        rawContent = sanitizeHtml(rawContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
-            allowedAttributes: {
-                'a': ['href']
-            }
-        });
+        rawContent = helper.sanitizeHtmlForSweet(rawContent);
         var parsedResult = helper.parseText(rawContent);
 
         if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
