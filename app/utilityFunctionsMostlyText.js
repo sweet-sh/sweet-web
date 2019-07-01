@@ -51,6 +51,30 @@ module.exports = {
         trimmedTags.push(el.replace(/(#|\s)*/i, ''));
       })
     }
+    if (parsedContent.substring(0, 3) != '<p>') { //fix weird copy and paste bug
+      parsedContent = '<p>' + parsedContent;
+    }
+
+    parsedContent = this.sanitizeHtmlForSweet(parsedContent);
+
+    var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
+    //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+    var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+
+    if (parsedContent.search(linkFindingRegex)!=-1) {
+      var searchableParsedContent = parsedContent.replace(/&amp;/,'&');
+      var r = linkFindingRegex.exec(searchableParsedContent);
+      var parsedContentWEmbeds = searchableParsedContent.slice(); //need a copy of searchableParsedContent that we can modify without throwing off lastIndex in RegExp.exec
+      while (r) {
+        if (r[2].search(youtubeUrlFindingRegex)!=-1 && r[3].search(youtubeUrlFindingRegex)!=-1) {
+          var videoid = youtubeUrlFindingRegex.exec(r[2])[5];
+          parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<p><iframe width="560" height="315" style="max-width:100%;" src="https://www.youtube.com/embed/'+videoid+'" frameborder="0" allowfullscreen></iframe></p>');
+        }
+        r = linkFindingRegex.exec(searchableParsedContent);
+      }
+      parsedContent = parsedContentWEmbeds.replace(/&/,'&amp;');
+    }
+
     return {
       text: parsedContent,
       mentions: trimmedMentions,
@@ -79,7 +103,7 @@ module.exports = {
   },
   sanitizeHtmlForSweet: function (parsedContent) {
     return sanitizeHtml(parsedContent, {
-      allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
+      allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p', 'br'],
       allowedAttributes: {
         'a': ['href']
       },
