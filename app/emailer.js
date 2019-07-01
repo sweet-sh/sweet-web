@@ -17,6 +17,15 @@ transporter = nodemailer.createTransport({
     }
 });
 
+// verify connection configuration
+transporter.verify(function (error, success) {
+    if (error) {
+        emailLog("email server connection error! " + error);
+    } else {
+        emailLog("Server is ready to take our messages! " + success);
+    }
+});
+
 nodemailerHbsOptions = {
     viewEngine: {
         extName: ".handlebars",
@@ -109,6 +118,7 @@ function emailScheduler(user, justSentOne = false) {
         emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
         emailLog("their time zone is: " + (user.settings.timezone == "auto" ? user.settings.autoDetectedTimeZone : user.settings.timezone));
         emailLog("their email frequency preference is: " + user.settings.digestEmailFrequency);
+        emailLog("their email address is: " + user.email);
         emailLog('\n');
         emailScheduler(user, true); //schedule their next email
     }, msTillSendingTime);
@@ -119,56 +129,74 @@ function emailScheduler(user, justSentOne = false) {
     emailLog("their email time is: " + (user.settings.digestEmailFrequency == "weekly" ? user.settings.emailDay + ', ' : '') + user.settings.emailTime);
     emailLog("their time zone is: " + (user.settings.timezone == "auto" ? user.settings.autoDetectedTimeZone : user.settings.timezone));
     emailLog("their email frequency preference is: " + user.settings.digestEmailFrequency);
+    emailLog("their email address is: " + user.email);
     emailLog('\n');
 }
 
 async function sendUpdateEmail(user) {
-    email = {};
-    if (user.settings.digestEmailFrequency == "daily") {
-        email.subject = "sweet daily update 🍭"
-    } else if (user.settings.digestEmailFrequency == "weekly") {
-        email.subject = "sweet weekly update 🍭"
-    } else {
-        return;
-    }
-    const unreadNotifications = user.notifications.filter(n => n.seen == false);
-    if (unreadNotifications && unreadNotifications.length != 0) {
-        // send mail with defined transport object
-        let info = {
-            from: '"sweet 🍬" <updates@sweet.sh>', // sender address
-            to: user.email,
-            subject: email.subject,
-            template: "update",
-            context: {
-                title: 'sweet',
-                content: [
-                    'Hi <strong>@' + user.username + '</strong>!',
-                    'Here\'s what went down since you last visted sweet:'
-                ],
-                notifications: unreadNotifications,
-                action: {
-                    url: 'https://sweet.sh',
-                    text: 'Visit sweet'
-                },
-                signoff: '— sweet x'
-            }
-        };
-        await transporter.sendMail(info).catch(reason => {
-            emailLog('could not send email to ' + user.username + '! reason given:');
-            emailLog(reason)
-        });
-        emailLog('---email sent to '+user.username+'! contained '+unreadNotifications.length+' unread notifications---');
-        /*
-        //not for production, i only have this here bc i can't actually send emails and then look at them:
-        console.log(info);
-        var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
-        fs.writeFile(user.username + 'Email.html', emailHTML, err => {
-            if (err) {
-                emailLog('could not log text of email that was just sent to ' + user.username);
-                emailLog('reason given: ' + err);
-            }
-        });
-        */
+    try {
+        email = {};
+        if (user.settings.digestEmailFrequency == "daily") {
+            email.subject = "sweet daily update 🍭"
+        } else if (user.settings.digestEmailFrequency == "weekly") {
+            email.subject = "sweet weekly update 🍭"
+        } else {
+            emailLog("\n" + "sendUpdateEmail was called, but " + user.username + " does not appear to have their email preference set correctly?");
+            return;
+        }
+        const unreadNotifications = user.notifications.filter(n => n.seen == false);
+        if (unreadNotifications && unreadNotifications.length != 0) {
+            // send mail with defined transport object
+            let info = {
+                from: '"sweet 🍬" <updates@sweet.sh>', // sender address
+                to: user.email,
+                subject: email.subject,
+                template: "update",
+                context: {
+                    title: 'sweet',
+                    content: [
+                        'Hi <strong>@' + user.username + '</strong>!',
+                        'Here\'s what went down since you last visted sweet:'
+                    ],
+                    notifications: unreadNotifications,
+                    action: {
+                        url: 'https://sweet.sh',
+                        text: 'Visit sweet'
+                    },
+                    signoff: '— sweet x'
+                }
+            };
+            await transporter.sendMail(info, function (error, info) {
+                if (error) {
+                    emailLog("could not send email to " + user.username + ": " + error);
+                } else {
+                    emailLog('\n---email sent to ' + user.username + '! contained ' + unreadNotifications.length + ' unread notifications---');
+                    emailLog("info:\n" + JSON.stringify(info, null, 4) + "\n");
+                }
+            })
+            /*
+            //not for production, i only have this here bc i can't actually send emails and then look at them:
+            console.log(info);
+            var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
+            fs.writeFile(user.username + 'Email.html', emailHTML, err => {
+                if (err) {
+                    emailLog('could not log text of email that was just sent to ' + user.username);
+                    emailLog('reason given: ' + err);
+                }
+            });
+            */
+        } else {
+            emailLog("\nlooks like " + user.username + ' had no unread notifications! no email will be forthcoming');
+        }
+    } catch (err) {
+        emailLog("something went really catastrophically wrong when trying to send an email!")
+        emailLog(err)
+        emailLog(err.message)
+        if (!user) {
+            emailLog("user undefined!!!")
+        } else {
+            emailLog("with user " + user.username);
+        }
     }
 }
 
@@ -178,7 +206,7 @@ function emailRescheduler(user) {
         clearTimeout(scheduledEmails[user._id.toString()]);
         emailLog('cancelled emails for ' + user.username + '!');
     }
-    if(user.settings.digestEmailFrequency != "none"){
+    if (user.settings.digestEmailFrequency != "off") {
         emailScheduler(user);
     }
 }
