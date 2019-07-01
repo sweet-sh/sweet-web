@@ -725,9 +725,22 @@ module.exports = function (app, passport) {
     } else if (req.body.reference == "name") {
       proposedValue = sanitize(req.body.proposedValue)
       parsedProposedValue = helper.parseText(req.body.proposedValue).text
-      //create "slug"
-      //make sure name && slug aren't in use
-      //create placeholder community
+      var slug = helper.slugify(parsedProposedValue);
+      if(Community.find({slug:slug})){
+        req.session.sessionFlash = {
+          type: 'warning',
+          message: 'The url for that name is unfortunately already taken'
+        }
+        return res.redirect('back');
+      }else if(Community.find({name:parsedProposedValue})){
+        req.session.sessionFlash = {
+          type: 'warning',
+          message: 'The community name is unfortunately already taken'
+        }
+        return res.redirect('back');
+      }
+      var placeholdercommunity = {}
+      
       allowedChange = (parsedProposedValue && community.name != parsedProposedValue);
     }
     if(!allowedChange){
