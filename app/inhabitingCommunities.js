@@ -291,6 +291,7 @@ module.exports = function (app, passport) {
   app.post('/api/community/delete', isLoggedIn, function (req, res) {
 
   });
+  
   app.post('/api/community/update', isLoggedIn, function (req, res) {
 
   });

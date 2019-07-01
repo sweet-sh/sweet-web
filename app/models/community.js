@@ -56,5 +56,11 @@ communitySchema.pre('validate', function (next) {
 
 communitySchema.index({slug:1});
 
+var communityPlaceholderSchema = new mongoose.Schema({
+  name: String,
+  slug: String
+})
+
 // create the model for users and expose it to our app
-module.exports = mongoose.model('Community', communitySchema);
+module.exports.communityModel = mongoose.model('Community', communitySchema);
+module.exports.communityPlaceholderModel = mongoose.model('Community Placeholder', communityPlaceholderSchema);
