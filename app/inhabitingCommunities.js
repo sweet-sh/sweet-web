@@ -35,54 +35,29 @@ var Autolinker = require('autolinker');
 
 const schedule = require('node-schedule');
 
+//this is never read from but it could be someday i guess
 const expiryTimers = [];
 
 //set vote expiration timers when the server starts up
 Vote.find({}).then(votes => {
     for (vote of votes) {
-        //account for votes that expired
+        //account for votes that expired while server was down
         if (vote.expiryTime.getTime() < new Date() && vote.status != "expired") {
             vote.status = "expired";
             vote.save();
-        }else{
+        } else {
             var expireVote = schedule.scheduleJob(vote.expiryTime, function() {
-                Vote.findOne({
-                        _id: vote._id
-                    })
-                    .then(vote => {
-                        vote.status = "expired"
-                        vote.save();
-                    })
-            });
+                if (vote) {
+                    vote.status = "expired"
+                    vote.save();
+                }
+            })
             expiryTimers.push(expireVote);
         }
     }
 })
 
 module.exports = function(app, passport) {
-
-    app.get('/api/community/getall/:page', isLoggedIn, function(req, res) {
-
-        let postsPerPage = 10;
-        let page = req.params.page - 1;
-
-        Community.find()
-            .sort('-lastUpdated')
-            .skip(postsPerPage * page)
-            .limit(postsPerPage)
-            .then(communities => {
-                if (!communities.length) {
-                    res.status(404)
-                        .send('Not found');
-                } else {
-                    res.render('partials/communities', {
-                        layout: false,
-                        loggedInUserData: req.user,
-                        communities: communities
-                    });
-                }
-            })
-    })
 
     app.get('/communities', isLoggedIn, function(req, res) {
         Community.find({
@@ -307,18 +282,12 @@ module.exports = function(app, passport) {
 
     });
 
-    app.post('/api/community/update', isLoggedIn, function(req, res) {
-
-    });
-
     app.post('/api/community/user/join/:communityid', isLoggedIn, async function(req, res) {
         await Community.findOne({
                 _id: req.params.communityid
             })
             .then(async community => {
-                if (!community.members.some(v => {
-                        return v.equals(req.user._id)
-                    })) {
+                if (!community.members.some(v => v.equals(req.user._id))) {
                     community.members.push(req.user._id)
                     await community.save();
                     touchCommunity(req.params.communityid)
@@ -327,9 +296,7 @@ module.exports = function(app, passport) {
         await User.findOne({
             _id: req.user._id
         }).then(async user => {
-            if (!user.communities.some(v => {
-                    return v.toString() == req.params.communityid
-                })) {
+            if (!user.communities.some(v => v.toString() == req.params.communityid)) {
                 user.communities.push(req.params.communityid)
                 await user.save();
             }
@@ -660,6 +627,12 @@ module.exports = function(app, passport) {
     });
 
     app.post('/api/community/vote/create/:communityid', isLoggedIn, async function(req, res) {
+        var community = await Community.findOne({
+            _id: req.params.communityid
+        })
+        if (!community.members.some(v => v.equals(req.user._id))) {
+            return res.sendStatus(403);
+        }
         console.log(req.body)
         if (req.body.reference == "image") {
             imageUrl = shortid.generate() + '.jpg';
@@ -711,9 +684,6 @@ module.exports = function(app, passport) {
             30: '30 days'
         }
         let parsedReference = parsedReferences[req.body.reference]
-        var community = await Community.findOne({
-            _id: req.params.communityid
-        })
         var allowedChange = true; //is there a change? and is it allowed?
         if (req.body.reference == "description" || req.body.reference == "rules") {
             proposedValue = sanitize(req.body.proposedValue)
@@ -832,21 +802,27 @@ module.exports = function(app, passport) {
     });
 
     app.post('/api/community/vote/delete/:voteid', isLoggedIn, function(req, res) {
-        Vote.findByIdAndRemove(req.params.voteid)
-            .then(vote => {
-                res.end('{"success" : "Updated Successfully", "status" : 200}');
-            })
-    });
+        Vote.findById(req.params.voteid).then(vote => {
+            if (req.user._id.equals(vote.creator)) {
+                Vote.findByIdAndRemove(req.params.voteid)
+                    .then(vote => {
+                        res.end('{"success" : "Updated Successfully", "status" : 200}');
+                    })
+            } else {
+                return res.sendStatus(403);
+            }
+        });
+    })
 
     app.post('/api/community/vote/cast/:communityid/:voteid', isLoggedIn, function(req, res) {
-        if(!req.user.communities.some(v=> v.toString()==req.params.communityid)){
+        if (!req.user.communities.some(v => v.toString() == req.params.communityid)) {
             return res.sendStatus(403);
         }
         Vote.findOne({
                 _id: req.params.voteid
             })
             .then(vote => {
-                if(vote.voters.some(v=>v.equals(req.user._id))){
+                if (vote.voters.some(v => v.equals(req.user._id))) {
                     return res.sendStatus(403);
                 }
                 vote.votes++;
@@ -886,7 +862,7 @@ module.exports = function(app, passport) {
                                         })
                                     } else if (vote.reference == "name") {
                                         community.name = vote.proposedValue;
-                                        CommunityPlaceholder.remove({name:vote.proposedValue}, true);
+                                        CommunityPlaceholder.remove({ name: vote.proposedValue }, true);
                                         community.url = helper.slugify(vote.proposedValue); //i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
                                     } else if (vote.reference == "userban") {
                                         community.members.pull(vote.proposedValue)
@@ -1042,6 +1018,9 @@ module.exports = function(app, passport) {
                 _id: req.params.voteid
             })
             .then(vote => {
+                if(!vote.voters.some(v=>v.equals(req.user._is))){
+                    return res.sendStatus(403);
+                }
                 vote.votes--;
                 vote.voters.pull(req.user._id);
                 vote.save()
