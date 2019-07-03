@@ -745,7 +745,7 @@ module.exports = function(app, passport) {
                         type: 'warning',
                         message: 'That community name/url is reserved bc another community is currently voting on it, sorry!'
                     }
-                    CommunityPlaceholder.remove({ name: proposedValue }, true) //the "true" makes it just delete one
+                    CommunityPlaceholder.deleteOne({ name: proposedValue }) //the "true" makes it just delete one
                     return res.redirect('back');
                 }
             }
@@ -760,7 +760,7 @@ module.exports = function(app, passport) {
         console.log(community)
         voteUrl = shortid.generate();
         created = new Date();
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'm')
         if (community.members.length - community.mutedMembers.length === 1) {
             //if there is only one member with permissions, start out with 0 votes total so that they have to at least click on the 'vote' button to make it pass
             votesNumber = 0;
@@ -869,7 +869,7 @@ module.exports = function(app, passport) {
                                         })
                                     } else if (vote.reference == "name") {
                                         community.name = vote.proposedValue;
-                                        CommunityPlaceholder.remove({ name: vote.proposedValue }, true);
+                                        CommunityPlaceholder.deleteOne({ name: vote.proposedValue });
                                         community.url = helper.slugify(vote.proposedValue); //i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
                                     } else if (vote.reference == "userban") {
                                         community.members.pull(vote.proposedValue)
