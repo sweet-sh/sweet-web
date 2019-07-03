@@ -287,6 +287,14 @@ module.exports = function (app) {
     })
   })
 
+  app.get('/support', isLoggedInOrRedirect, function (req, res) {
+    res.render('support', {
+      loggedIn: true,
+      loggedInUserData: req.user,
+      activePage: 'support'
+    })
+  })
+
   //Responds to get requests for /search.
   //Input: none
   //Output: renders search page unless isLoggedInOrRedirect redirects you
@@ -923,10 +931,6 @@ module.exports = function (app) {
           }
           //generate some arrays containing usernames that will be put in "boosted by" labels
           if (req.isAuthenticated() && (req.params.context != "community")) {
-            /*
-            console.log("======== BOOSTED BY LABEL DEBUG ========")
-            console.log(req.user)
-            console.log(req.isAuthenticated())*/
             var followedBoosters = [];
             var notFollowingBoosters = [];
             var youBoosted = false;
