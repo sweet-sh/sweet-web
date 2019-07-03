@@ -350,20 +350,6 @@ h1, h2, h3, h4, h5, h6 {
     color: #ce1717;
 }
 
-/* .post-action-button {
-  width: 60px;
-  text-align: left;
-  padding-left: 1px;
-  font-size: 1rem;
-}
-.post-action-button:hover {
-    text-decoration: none;
-}
-#authorTools > button {
-  text-align: right;
-  padding-right: 0px;
-} */
-
 hr {
   height: 1px;
   border: 0;
@@ -381,16 +367,8 @@ hr {
   padding-top: 0.75rem;
 }
 
-/* #navTitle {
-  font-family: "Inconsolata", monospace;
-  align-self: center;
-  color: #ce1717;
-  font-size: 1.6em;
-  font-weight: 500;
-} */
-
 #navTitle {
-  font-family: "Inconsolata", monospace;
+  font-family: "Inconsolata", monospace; /* excellent font name */
   align-self: center;
   font-size: 1.6em;
   font-weight: 500;
@@ -609,10 +587,6 @@ hr {
   }
 }
 
-/* a, a:visited, a:active {
-  color: #175cf4;
-} */
-
 #topPostControlsRow,
 #bottomPostControlsRow {
   display: none;
@@ -636,8 +610,6 @@ hr {
   padding: 0;
 }
 
-
-
 @media (max-width: 768px) {
   #homeBody,
   #userBody {
@@ -655,35 +627,9 @@ hr {
   padding-bottom: 0px;
 }
 
-/* .commentContent {
-    overflow: hidden;
-    word-wrap: break-word;
-}
-.commentMetadata {
-  padding-bottom: 10px;
-}
-.replyContainer {
-    display: none;
-    /* border-top: 1px solid #e7e7e7; */
-    /* margin-top: 10px; */
-    /* padding-top: 0px; */
-/*}*/
-
-/* .individualReplyContainer {
-    word-wrap: break-word;
-}
-.repliesContainer>.individualReplyContainer:first-of-type {
-  padding-top: 20px;
-} */
-
 .post-content {
   position: relative;
 }
-
-/* .comment-content {
-  margin: 0.5rem 0 1rem 0;
-  position: relative;
-} */
 
 .user-list {
     padding: 0;
@@ -998,55 +944,6 @@ hr {
     font-weight: 400;
 }
 
-
-/* .comment-header,
-.post-header {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  width: 100%;
-}
-.comment-header-row-1,
-.post-header-row-1 {
-  display: flex;
-  overflow: hidden;
-}
-.comment-header-row-1>*{
-  align-self: center;
-}
-.comment-header-divider {
-  padding: 0 5px;
-}
-.commentTimestamp {
-  white-space: nowrap;
-}
-.comment-button {
-  position: relative;
-  top: 2px;
-}
-.comment-button:hover {
-  text-decoration: none;
-}
-.replyToComment {
-  padding: 0 10px;
-}
-.deleteComment {
-  padding: 0;
-  flex: 1;
-  text-align: right;
-} */
-/* .author-username {
-  white-space: nowrap;
-}
-.author-display-name {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-right: 5px;
-} */
-/* .user-flag {
-  padding: 0 5px;
-} */
 .post-header .user-flag {
   width: 1.5rem;
   align-self: center;
@@ -1065,6 +962,28 @@ hr {
   position: relative;
   margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
+ }
+
+ .embedded-video-cont {
+  background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
+  background-size: 5.66px 5.66px;
+  border: 1px solid #00000000;
+  border-radius: 4px;
+  margin: 20px 0;
+ }
+
+ .embedded-video {
+   width: 75%;
+   height: 293.6px; /*16:9 aspect ratio on maximized window on desktop*/
+   margin: 0 auto;
+   display: block;
+ }
+
+ @media (max-width: 500px){
+   .embedded-video{
+     width: 100%;
+     height: 190.8px; /*16:9 aspect ratio on iPhone 6, at least @very will get the intended experience*/
+   }
  }
 
  .image-preview-holder {

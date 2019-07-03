@@ -71,14 +71,14 @@ module.exports = {
                 while (r && embedsAdded < embedsAllowed) {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
                         var videoid = youtubeUrlFindingRegex.exec(r[2])[5];
-                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<p><iframe width="560" height="315" style="max-width:100%;" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></p>');
+                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
                         ++embedsAdded;
                     }
                     r = linkFindingRegex.exec(searchableParsedContent);
                 }
                 while (s && embedsAdded < embedsAllowed) {
                     var videoid = s[5];
-                    parsedContentWEmbeds = parsedContentWEmbeds.replace(s[0], '<p><iframe width="560" height="315" style="max-width:100%;" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></p>');
+                    parsedContentWEmbeds = parsedContentWEmbeds.replace(s[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
                     ++embedsAdded;
                     s = urlFindingRegex.exec(searchableParsedContent);
                 }
