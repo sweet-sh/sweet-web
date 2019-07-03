@@ -45,8 +45,10 @@
             <strong>Proposal to change the <span class="text-info">{{parsedReference}}</span> of {{../communityData.name}} to:</strong>
           </p>
           {{#eq this.reference "image"}}
-            <div class="post-images">
+            <div class="post-images one-image">
+              <a> {{!-- this <a> is slightly extremely terrible but otherwise the css to center the image won't kick in. i can't be bothered actually adding the lightbox stuff, it won't be displayed that large if it passes anyway --}}
               <img class="post-single-image" src="/images/communities/staging/{{this.proposedValue}}" data-featherlight="/images/communities/staging/{{this.proposedValue}}"/>
+              </a>
             </div>
           {{else}}
             <div class="alert alert-light text-dark proposal-box">{{{this.parsedProposedValue}}}</div>
