@@ -31,8 +31,6 @@ const sharp = require('sharp');
 var shortid = require('shortid');
 const fs = require('fs');
 
-var Autolinker = require('autolinker');
-
 const schedule = require('node-schedule');
 
 //this is never read from but it could be someday i guess
@@ -355,9 +353,10 @@ module.exports = function(app, passport) {
                 created = new Date();
                 expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
                 if (community.members.length - community.mutedMembers.length === 1) {
-                    // This vote automatically passes
+                    //if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass                    
                     votesNumber = 0;
                 } else {
+                    //otherwise, assume that the person who created the vote is in favor of it and cause them to have voted for it
                     votesNumber = 1;
                 }
                 if (isMember) {
@@ -413,9 +412,10 @@ module.exports = function(app, passport) {
                 created = new Date();
                 expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
                 if (community.members.length - community.mutedMembers.length === 1) {
-                    // This vote automatically passes
+                    //if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
                     votesNumber = 0;
                 } else {
+                    //otherwise, assume that the person who created the vote is in favor of it and cause them to have voted for it
                     votesNumber = 1;
                 }
                 if (isMember) {
@@ -471,9 +471,10 @@ module.exports = function(app, passport) {
                 created = new Date();
                 expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
                 if (community.members.length - community.mutedMembers.length === 1) {
-                    // This vote automatically passes
+                    //if there is only one member with permissions, start out with 0 votes total so that someone has to at least click on the 'vote' button to make it pass
                     votesNumber = 0;
                 } else {
+                    //otherwise, assume that the person who created the vote is in favor of it and cause them to have voted for it
                     votesNumber = 1;
                 }
                 if (isMember) {
@@ -529,9 +530,10 @@ module.exports = function(app, passport) {
                 created = new Date();
                 expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
                 if (community.members.length - community.mutedMembers.length === 1) {
-                    // This vote automatically passes
+                    //if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
                     votesNumber = 0;
                 } else {
+                    //otherwise, assume that the person who created the vote is in favor of it and cause them to have voted for it
                     votesNumber = 1;
                 }
                 if (isMember) {
@@ -712,8 +714,13 @@ module.exports = function(app, passport) {
             proposedValue = sanitize(req.body.proposedValue)
             parsedProposedValue = helper.parseText(req.body.proposedValue, false, false, false, false, false).text //don't need links and stuff
             var slug = helper.slugify(proposedValue);
-            if (!parsedProposedValue && community.name == proposedValue) {
-                allowedChange = false;
+            if (!parsedProposedValue || community.name == proposedValue) {
+                //not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
+                req.session.sessionFlash = {
+                    type: 'warning',
+                    message: 'That vote would not change anything! But of course none ever seem to anyway'
+                }
+                return res.redirect('back');
             } else {
                 allowedChange = true;
                 if (await Community.findOne({ slug: slug }) || await Community.findOne({ name: proposedValue })) {
@@ -755,7 +762,7 @@ module.exports = function(app, passport) {
         created = new Date();
         expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         if (community.members.length - community.mutedMembers.length === 1) {
-            // This vote automatically passes so we force the single eligible member to vote on it
+            //if there is only one member with permissions, start out with 0 votes total so that they have to at least click on the 'vote' button to make it pass
             votesNumber = 0;
         } else {
             votesNumber = 1;
@@ -1042,7 +1049,6 @@ function touchCommunity(id) {
         console.log("Updated community!")
     })
 }
-
 
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {

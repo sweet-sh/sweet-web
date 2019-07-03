@@ -55,13 +55,16 @@ module.exports = {
         parsedContent = this.sanitizeHtmlForSweet(parsedContent);
 
         if (youtubeEnabled) {
+            //sometimes when you paste a url into mediumeditor it's immediately a link and sometimes not and i have no clue why so just for now we have to deal with both cases
             var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
+            var urlFindingRegex = /<p>((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?<\/p>/g //matches all unlinked youtube urls with a line to themselves
             //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
             var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
 
             if (parsedContent.search(linkFindingRegex) != -1) {
                 var searchableParsedContent = parsedContent.replace(/&amp;/, '&');
                 var r = linkFindingRegex.exec(searchableParsedContent);
+                var s = urlFindingRegex.exec(searchableParsedContent);
                 var parsedContentWEmbeds = searchableParsedContent.slice(); //need a copy of searchableParsedContent that we can modify without throwing off lastIndex in RegExp.exec
                 while (r) {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
@@ -69,6 +72,11 @@ module.exports = {
                         parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<p><iframe width="560" height="315" style="max-width:100%;" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></p>');
                     }
                     r = linkFindingRegex.exec(searchableParsedContent);
+                }
+                while (s) {
+                    var videoid = s[5];
+                    parsedContentWEmbeds = parsedContentWEmbeds.replace(s[0], '<p><iframe width="560" height="315" style="max-width:100%;" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></p>');
+                    s = urlFindingRegex.exec(searchableParsedContent);
                 }
                 parsedContent = parsedContentWEmbeds.replace(/&/, '&amp;');
             }

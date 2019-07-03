@@ -1854,5 +1854,4 @@ function isLoggedInOrRedirect(req, res, next) {
     return next();
   }
   res.redirect('/');
-  //next('route'); don't want this! the request has been handled by the redirect, we don't need another route to do anything to it
 }
