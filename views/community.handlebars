@@ -14,6 +14,7 @@
           <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
         </div>
         {{/unless}}
+        {{> message }}
         {{#and loggedIn isMember}}
           {{#unless isMuted}}
             {{> newpostform }}
