@@ -740,7 +740,7 @@ module.exports = function(app, passport) {
             parsedProposedValue = imageUrl
         } else if (req.body.reference == "name") { //this is where it gets complicated
             proposedValue = sanitize(req.body.proposedValue)
-            parsedProposedValue = helper.parseText(req.body.proposedValue).text
+            parsedProposedValue = helper.parseText(req.body.proposedValue, false, false, false, false, false).text //don't need links and stuff
             var slug = helper.slugify(proposedValue);
             if (!parsedProposedValue && community.name == proposedValue) {
                 allowedChange = false;
