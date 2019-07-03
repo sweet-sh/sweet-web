@@ -58,9 +58,13 @@ communitySchema.index({slug:1});
 
 var communityPlaceholderSchema = new mongoose.Schema({
   name: String,
-  slug: String
+  slug: String,
+  community: { type: Schema.Types.ObjectId, ref: 'Community' },
+  vote: { type: Schema.Types.ObjectId, ref: 'Vote' }
 })
 
+//just retrieve this with mongoose.model('Community Placeholder') in the one place in which it is needed
+mongoose.model('Community Placeholder', communityPlaceholderSchema);
+
 // create the model for users and expose it to our app
-module.exports.communityModel = mongoose.model('Community', communitySchema);
-module.exports.communityPlaceholderModel = mongoose.model('Community Placeholder', communityPlaceholderSchema);
+module.exports = mongoose.model('Community', communitySchema);
