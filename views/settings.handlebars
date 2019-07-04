@@ -225,12 +225,12 @@
 
     //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
     if($("#emailTime")[0].type == "text"){
-        $("emailTime").css('display','none');
-        $("emailTime").attr('name','UNUSED');
-        $("emailTime").prop('required',false);
-        $("emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
-        $("emailTimeSelect").css('display','block');
-        $("emailTimeSelect").attr('name','emailTime');
+        $("#emailTime").css('display','none');
+        $("#emailTime").attr('name','UNUSED');
+        $("#emailTime").prop('required',false);
+        $("#emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
+        $("#emailTimeSelect").css('display','block');
+        $("#emailTimeSelect").attr('name','emailTime');
     }
 
     //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
