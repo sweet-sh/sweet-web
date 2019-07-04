@@ -38,7 +38,7 @@
                 	<option value="+13:00">(GMT +13:00) Apia, Nukualofa</option>
                 	<option value="+14:00">(GMT +14:00) Line Islands, Tokelau</option>
                 </select>
-                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal</p>
+                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal.</p>
             </div>
             <hr />
             <h4>Privacy</h4>
@@ -153,7 +153,10 @@
                             </label>
                     </div>
             </div>
-            <button style="display:block;margin-bottom:10px;" type="button" id="notifs-button" class="btn btn-secondary">Click to subscribe this browser to sweet push notifications!</button>
+            <div class="pushNotifSubStuff" style="margin:20px 0;">
+                <button style="white-space:normal;" type="button" id="notifs-button" class="btn btn-secondary">Click to subscribe this browser to sweet push notifications!</button>
+                <p class="form-text small">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
+            </div>
             <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <button type="submit" class="btn btn-secondary">Save settings</button>
         </form>
@@ -177,13 +180,13 @@
 
     if("" === lastKnownTimeZone || autoDetectedTimeZone === lastKnownTimeZone){
         //if auto-detected time zone is not yet saved (like, it will be on submission though) or is being used currently, it's just the default option
-        $("#guessed-timezone")[0].innerHTML = 'Default (for you) equivalent to that of: '+autoDetectedTimeZoneString;
+        $("#guessed-timezone")[0].innerHTML = 'Default (for you): '+autoDetectedTimeZoneString;
         
     }else if(autoDetectedTimeZone !== lastKnownTimeZone){
         //if auto-detected time zone was saved but is now different, offer them the new one as the second option, and change their auto-detected time zone if they choose it
         var lastKnownTimeZoneString = stringifyTZ(lastKnownTimeZone);
-        $("#guessed-timezone")[0].innerHTML = "Last known default (for you) that of: "+lastKnownTimeZoneString;
-        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you) that of: '+autoDetectedTimeZoneString+'</option>');
+        $("#guessed-timezone")[0].innerHTML = "Last known default (for you): "+lastKnownTimeZoneString;
+        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you): '+autoDetectedTimeZoneString+'</option>');
         $('#settingsForm').submit(function(event){
             if($("#newDefault")[0].selected){
                 $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
@@ -235,12 +238,11 @@
     var pushButton = $('#notifs-button');
     if ('serviceWorker' in navigator && 'PushManager' in window) {
         console.log('Service Worker and Push are supported');
-
+        //service worker is like a mini program that contains some code that responds to events no matter what page the user is on.
+        //the below line will only have an effect the first time it is run, after that it will be already registered
         navigator.serviceWorker.register('/js/sw.js')
             .then(function (swReg) {
-                console.log('Service Worker is registered', swReg);
-                swRegistration = swReg;
-                // Set the initial subscription value
+                swRegistration = swReg; //store the registration in a global variable for future use
                 swRegistration.pushManager.getSubscription().then(function (subscription) {
                     isSubscribed = !(subscription === null);
                     if (isSubscribed) {
@@ -256,19 +258,51 @@
             });
 
         pushButton.click(function (e) {
-            pushButton[0].disabled = true; //so it can't be clicked again and double-send subscription info to server
+            pushButton[0].disabled = true; //so it can't be clicked again right away and double-send subscription info to server
             if (Notification.permission == "denied") {
-                bootbox.alert("You have notification permissions turned off for this site!");
+                bootbox.alert("You have notification permissions turned off for this site! To change this, click the button with the letter 'i' on it on the left side of the address bar and look for the word 'notifications' in the menu that shows up.");
                 updateButtonDisplay();
             } else if (isSubscribed) {
-                swRegistration.pushManager.getSubscription()
-                .then(function (subscription) {
-                    if (subscription) {
-                        subscription.unsubscribe()
-                        .catch(function (error) {
+                //if the user is subscribed they're clicking on the button in order to unsubscribe
+                unsubscribeUser()
+            } else {
+                //if the user is not subscribed they're clicking on the button in order to subscribe
+                subscribeUser()
+            }
+        })
+        
+    } else {
+        console.warn('Push messaging is not supported');
+        $('.pushNotifSubStuff').css('display','none');
+    }
+
+    function subscribeUser(){
+        const applicationServerKey = urlBase64ToUint8Array("{{this.notifierPublicKey}}");
+        swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        }).then(function (subscription) {
+            console.log('User was just subscribed');
+            $.post("/pushnotifs/subscribe", {
+                subscription: JSON.stringify(subscription)
+            })
+            isSubscribed = true;
+            updateButtonDisplay()
+        }).catch(function (err) {
+            console.log('Failed to subscribe the user: ', err);
+            updateButtonDisplay()
+        });
+    }
+
+    function unsubscribeUser() {
+        swRegistration.pushManager.getSubscription()
+            .then(function(subscription) {
+                if (subscription) {
+                    subscription.unsubscribe()
+                        .catch(function(error) {
                             console.log('Error unsubscribing', error);
                         })
-                        .then(function () {
+                        .then(function() {
                             $.post("/pushnotifs/unsubscribe", {
                                 subscription: JSON.stringify(subscription)
                             })
@@ -276,47 +310,21 @@
                             isSubscribed = false;
                             updateButtonDisplay();
                         });
-                    }
-                })
-            } else {
-                const applicationServerKey = urlBase64ToUint8Array("{{this.notifierPublicKey}}");
-                swRegistration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: applicationServerKey
-                }).then(function (subscription) {
-                    console.log('User is subscribed.');
-
-                    $.post("/pushnotifs/subscribe", {
-                        subscription: JSON.stringify(subscription)
-                    })
-
-                    isSubscribed = true;
-
-                    updateButtonDisplay()
-
-                }).catch(function (err) {
-                    console.log('Failed to subscribe the user: ', err);
-                    updateButtonDisplay()
-                });
-            }
-        })
-
-    } else {
-        console.warn('Push messaging is not supported');
-        pushButton.css('display','none');
+                }
+            })
     }
 
     //call this whenever the subscription state changes
     function updateButtonDisplay() {
-        if(Notification.permission == "denied"){
-            console.log("notification permission denied");
+        if(Notification.permission == "denied"){ //this isn't actually about updating the button but this is a convenient place to check permissions, we can't predict when the user will change them so we want to check this whenever it might be relevant
             isSubscribed = false;
-            //send unsub notice to server! we have to do this here, outside of the normal event processing above, bc it's
-            //unpredictable when the user will turn notif permissions on/off
+            //unsubscribe the user so that the server doesn't waste time trying to send them stuff
+            unsubscribeUser();
+            pushButton.html('Click to subscribe this browser to sweet push notifications!');
         }else if (isSubscribed) {
-            pushButton[0].textContent = 'Click to unsubscribe this browser from sweet push notifications!';
+            pushButton.html('Click to unsubscribe this browser from sweet push notifications!');
         } else {
-            pushButton[0].textContent = 'Click to subscribe this browser to sweet push notifications!';
+            pushButton.html('Click to subscribe this browser to sweet push notifications!');
         }
         pushButton[0].disabled = false;
     }
