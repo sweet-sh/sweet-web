@@ -737,10 +737,10 @@ module.exports = function(app, passport) {
                 //proposed at the same time and both of them being rejected, but that's incredibly unlikely and also oh well
                 var placeholder = new CommunityPlaceholder({
                     name: proposedValue,
-                    slug: helper.slugify(parsedProposedValue)
+                    slug: helper.slugify(proposedValue)
                 });
                 await placeholder.save();
-                if ((await CommunityPlaceholder.find({ slug: slug })).length > 1 || (await CommunityPlaceholder.find({ name: proposedValue }))) {
+                if ((await CommunityPlaceholder.find({ slug: slug })).length > 1 || (await CommunityPlaceholder.find({ name: proposedValue })).length > 1) {
                     req.session.sessionFlash = {
                         type: 'warning',
                         message: 'That community name/url is reserved bc another community is currently voting on it, sorry!'

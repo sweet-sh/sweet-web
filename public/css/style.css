@@ -973,6 +973,10 @@ hr {
   margin: 20px 0;
  }
 
+ .embedded-video-cont:hover{
+  border: 1px solid lightgrey;
+ }
+
  .embedded-video {
    width: 75%;
    height: 293.6px; /*16:9 aspect ratio on maximized window on desktop*/
