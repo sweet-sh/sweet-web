@@ -654,7 +654,6 @@ module.exports = function (app) {
               mutedMemberIds = community.mutedMembers.map(a => a.toString());
               if (mutedMemberIds.includes(loggedInUserData._id.toString()))
                 isMuted = true;
-              console.log(isMuted)
             })
             .catch((err) => {
               console.log("Error in profileData.")

@@ -461,7 +461,12 @@ $(".withdrawVoteButton").click(function() {
 });
 $(".castVoteButton").click(function() {
   $.post( "/api/community/vote/cast/{{ communityData._id }}/" + $(this).attr("data-vote-id"), function( result ) {
-     location.reload();
+    var resultData = JSON.parse(result);
+     if(resultData.redirect){
+       window.location.replace(resultData.redirect);
+     }else{
+      location.reload();
+     }
   });
 });
 $(".deleteVoteButton").click(function() {

@@ -82,6 +82,8 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                   case 'managementResponse':
                     text = 'You have been ' + context + ' from <strong>' + community.name + '</strong>.'
                     break;
+                  case 'nameChange':
+                    text = "The name of the community <strong>"+context+"</strong> has been changed to <strong>"+community.name+'</strong>.'
                 }
                 final = text;
                 return {
@@ -108,8 +110,8 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                 gcmAPIKey: ''
               };
               const payload = JSON.stringify({
-                body: response.text.replace('<strong>', '').replace('</strong>', ''),
-                imageURL: response.image.replace('.svg', '.png'), //we can't use svgs here, which cake.svg (the default profile image) is, this will use cake.png instead,
+                body: response.text.replace(/<strong>/g, '').replace(/<\/strong>/g, ''),
+                imageURL: response.image.replace('.svg', '.png'), //we can't use svgs here, which cake.svg (the default profile image) is, this will use cake.png instead
                 link: url
               })
               webpush.sendNotification(pushSubscription, payload, options);

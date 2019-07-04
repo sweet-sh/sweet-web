@@ -43,7 +43,8 @@ Vote.find({}).then(votes => {
         if (vote.expiryTime.getTime() < new Date() && vote.status != "expired") {
             vote.status = "expired";
             vote.save();
-        } else {
+        //account for currently active votes that need to be scheduled to expire
+        } else if(vote.status == "active") {
             var expireVote = schedule.scheduleJob(vote.expiryTime, function() {
                 if (vote) {
                     vote.status = "expired"
@@ -745,7 +746,7 @@ module.exports = function(app, passport) {
                         type: 'warning',
                         message: 'That community name/url is reserved bc another community is currently voting on it, sorry!'
                     }
-                    CommunityPlaceholder.deleteOne({ name: proposedValue }) //the "true" makes it just delete one
+                    CommunityPlaceholder.deleteOne({ name: proposedValue }, function(err){console.error(err)}) //the "true" makes it just delete one
                     return res.redirect('back');
                 }
             }
@@ -799,7 +800,7 @@ module.exports = function(app, passport) {
                 });
                 expiryTimers.push(expireVote);
                 community.members.forEach(member => {
-                    if (!member._id.equals(req.user._id)) {
+                    if (!member.equals(req.user._id)) {
                         notifier.notify('community', 'vote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'created')
                     }
                 })
@@ -865,12 +866,13 @@ module.exports = function(app, passport) {
                                         fs.rename(global.appRoot + "/public/images/communities/staging/" + vote.proposedValue, global.appRoot + "/public/images/communities/" + vote.proposedValue, function() {
                                             community[vote.reference] = vote.proposedValue;
                                             community['imageEnabled'] = true;
-                                            community.save()
+                                            community.save();
                                         })
                                     } else if (vote.reference == "name") {
+                                        var oldName = community.name;
                                         community.name = vote.proposedValue;
-                                        CommunityPlaceholder.deleteOne({ name: vote.proposedValue });
-                                        community.url = helper.slugify(vote.proposedValue); //i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
+                                        CommunityPlaceholder.deleteOne({ name: vote.proposedValue }, function (err) {console.error(err)});
+                                        community.slug = helper.slugify(vote.proposedValue); //i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
                                     } else if (vote.reference == "userban") {
                                         community.members.pull(vote.proposedValue)
                                         community.bannedMembers.push(vote.proposedValue)
@@ -965,8 +967,13 @@ module.exports = function(app, passport) {
                                                                 notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
                                                             }
                                                         })
-
-                                                    } else {
+                                                    } else if(vote.reference == "name"){
+                                                        community.members.forEach(member=>{
+                                                            if(!member.equals(req.user._id)){
+                                                                notifier.notify('community', 'nameChange', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, oldName)
+                                                            }
+                                                        })
+                                                    }else {
                                                         community.members.forEach(member => {
                                                             if (member.equals(vote.creator)) {
                                                                 notifier.notify('community', 'yourVote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'passed')
@@ -975,8 +982,12 @@ module.exports = function(app, passport) {
                                                             }
                                                         })
                                                     }
-                                                    touchCommunity(req.params.communityid)
-                                                    res.end('{"success" : "Updated Successfully", "status" : 200}');
+                                                    touchCommunity(req.params.communityid);
+                                                    if(vote.reference == "name"){
+                                                        res.end('{"success" : "Updated Successfully", "status" : 302, "redirect": "/community/'+community.slug+'"}');
+                                                    }else{
+                                                        res.end('{"success" : "Updated Successfully", "status" : 200}');
+                                                    }
                                                 })
                                         })
                                 } else {
