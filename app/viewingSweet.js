@@ -498,7 +498,7 @@ module.exports = function (app) {
 
   //Responds to a get response for a specific post.
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
-  //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
+  //Outputs: showposts handles it!
   app.get('/:username/:posturl', function (req, res, next) {
     if (req.params.username != 'images') { //a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
       req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
@@ -719,9 +719,7 @@ module.exports = function (app) {
     } else if (req.params.context == "community") {
       var thisComm = await Community.findById(req.params.identifier);
       //we want posts from the community, but only if it's public or we belong to it:
-      if (thisComm.settings.visibility == 'public' || myCommunities.some(v => {
-          return v.toString() == req.params.identifier;
-        })) {
+      if (thisComm.settings.visibility == 'public' || myCommunities.some(v => v.toString() == req.params.identifier)) {
         var matchPosts = {
           community: req.params.identifier
         }
