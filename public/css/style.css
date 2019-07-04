@@ -331,7 +331,7 @@ p {
 }
 
 body {
-  font-family: 'Ubuntu', serif;
+  font-family: 'Ubuntu', sans-serif;
   font-size: 96.5%;
 }
 
@@ -343,7 +343,7 @@ h1, h2, h3, h4, h5, h6 {
 .col-md-4 h4,
 .col-md-4 h5,
 .col-md-4 h6 {
-  font-family: 'Ubuntu', serif;
+  font-family: 'Ubuntu', sans-serif;
 }
 
 #settingsForm h4 {
