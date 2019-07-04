@@ -345,7 +345,7 @@ module.exports = function (app, passport) {
             }, {
                 $set: {
                     'settings.timezone': newSets.timezone,
-                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone,
+                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone ? newSets.autoDetectedTimeZone : oldSets.autoDetectedTimeZone,
                     'settings.profileVisibility': newSets.profileVisibility,
                     'settings.newPostPrivacy': newSets.newPostPrivacy,
                     'settings.digestEmailFrequency': newSets.digestEmailFrequency,
@@ -360,7 +360,7 @@ module.exports = function (app, passport) {
             })
             .then(async (updateStatus) => {
                 if (emailSetsChanged) {
-                    emailer.emailRescheduler((await User.findById(req.user._id)));
+                    emailer.emailRescheduler((await User.findById(req.user._id))); //can't use req.user bc that will still store the old settings
                 }
                 res.redirect('/' + req.user.username)
             })
