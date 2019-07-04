@@ -761,7 +761,7 @@ module.exports = function(app, passport) {
         console.log(community)
         voteUrl = shortid.generate();
         created = new Date();
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'm')
+        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         if (community.members.length - community.mutedMembers.length === 1) {
             //if there is only one member with permissions, start out with 0 votes total so that they have to at least click on the 'vote' button to make it pass
             votesNumber = 0;
