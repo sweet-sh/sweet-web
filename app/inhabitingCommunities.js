@@ -58,6 +58,28 @@ Vote.find({}).then(votes => {
 
 module.exports = function(app, passport) {
 
+    app.get('/api/community/getall/:page', isLoggedIn, function(req, res) {
+        let postsPerPage = 10;
+        let page = req.params.page - 1;
+
+        Community.find()
+            .sort('-lastUpdated')
+            .skip(postsPerPage * page)
+            .limit(postsPerPage)
+            .then(communities => {
+                if (!communities.length) {
+                    res.status(404)
+                        .send('Not found');
+                } else {
+                    res.render('partials/communities', {
+                        layout: false,
+                        loggedInUserData: req.user,
+                        communities: communities
+                    });
+                }
+            })
+    })
+
     app.get('/communities', isLoggedIn, function(req, res) {
         Community.find({
                 members: req.user._id
@@ -283,7 +305,7 @@ module.exports = function(app, passport) {
 
     app.post('/api/community/user/join/:communityid', isLoggedIn, async function(req, res) {
         var community = await Community.findOne({ _id: req.params.communityid });
-        if(community.bannedMembers.includes(req.user._id)){
+        if (community.bannedMembers.includes(req.user._id)) {
             return res.sendStatus(403);
         }
         if (!community.members.some(v => v.equals(req.user._id))) {
