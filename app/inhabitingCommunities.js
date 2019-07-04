@@ -43,8 +43,8 @@ Vote.find({}).then(votes => {
         if (vote.expiryTime.getTime() < new Date() && vote.status != "expired") {
             vote.status = "expired";
             vote.save();
-        //account for currently active votes that need to be scheduled to expire
-        } else if(vote.status == "active") {
+            //account for currently active votes that need to be scheduled to expire
+        } else if (vote.status == "active") {
             var expireVote = schedule.scheduleJob(vote.expiryTime, function() {
                 if (vote) {
                     vote.status = "expired"
@@ -282,24 +282,20 @@ module.exports = function(app, passport) {
     });
 
     app.post('/api/community/user/join/:communityid', isLoggedIn, async function(req, res) {
-        await Community.findOne({
-                _id: req.params.communityid
-            })
-            .then(async community => {
-                if (!community.members.some(v => v.equals(req.user._id))) {
-                    community.members.push(req.user._id)
-                    await community.save();
-                    touchCommunity(req.params.communityid)
-                }
-            })
-        await User.findOne({
-            _id: req.user._id
-        }).then(async user => {
-            if (!user.communities.some(v => v.toString() == req.params.communityid)) {
-                user.communities.push(req.params.communityid)
-                await user.save();
-            }
-        })
+        var community = await Community.findOne({ _id: req.params.communityid });
+        if(community.bannedMembers.includes(req.user._id)){
+            return res.sendStatus(403);
+        }
+        if (!community.members.some(v => v.equals(req.user._id))) {
+            community.members.push(req.user._id)
+            await community.save();
+            touchCommunity(req.params.communityid)
+        }
+        var user = await User.findOne({ _id: req.user._id })
+        if (!user.communities.some(v => v.toString() == req.params.communityid)) {
+            user.communities.push(req.params.communityid)
+            await user.save();
+        }
         res.end('{"success" : "Updated Successfully", "status" : 200}');
     });
 
@@ -746,7 +742,7 @@ module.exports = function(app, passport) {
                         type: 'warning',
                         message: 'That community name/url is reserved bc another community is currently voting on it, sorry!'
                     }
-                    CommunityPlaceholder.deleteOne({ name: proposedValue }, function(err){console.error(err)}) //the "true" makes it just delete one
+                    CommunityPlaceholder.deleteOne({ name: proposedValue }, function(err) { console.error(err) }) //the "true" makes it just delete one
                     return res.redirect('back');
                 }
             }
@@ -871,7 +867,7 @@ module.exports = function(app, passport) {
                                     } else if (vote.reference == "name") {
                                         var oldName = community.name;
                                         community.name = vote.proposedValue;
-                                        CommunityPlaceholder.deleteOne({ name: vote.proposedValue }, function (err) {console.error(err)});
+                                        CommunityPlaceholder.deleteOne({ name: vote.proposedValue }, function(err) { console.error(err) });
                                         community.slug = helper.slugify(vote.proposedValue); //i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
                                     } else if (vote.reference == "userban") {
                                         community.members.pull(vote.proposedValue)
@@ -967,13 +963,13 @@ module.exports = function(app, passport) {
                                                                 notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
                                                             }
                                                         })
-                                                    } else if(vote.reference == "name"){
-                                                        community.members.forEach(member=>{
-                                                            if(!member.equals(req.user._id)){
+                                                    } else if (vote.reference == "name") {
+                                                        community.members.forEach(member => {
+                                                            if (!member.equals(req.user._id)) {
                                                                 notifier.notify('community', 'nameChange', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, oldName)
                                                             }
                                                         })
-                                                    }else {
+                                                    } else {
                                                         community.members.forEach(member => {
                                                             if (member.equals(vote.creator)) {
                                                                 notifier.notify('community', 'yourVote', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'passed')
@@ -983,9 +979,9 @@ module.exports = function(app, passport) {
                                                         })
                                                     }
                                                     touchCommunity(req.params.communityid);
-                                                    if(vote.reference == "name"){
-                                                        res.end('{"success" : "Updated Successfully", "status" : 302, "redirect": "/community/'+community.slug+'"}');
-                                                    }else{
+                                                    if (vote.reference == "name") {
+                                                        res.end('{"success" : "Updated Successfully", "status" : 302, "redirect": "/community/' + community.slug + '"}');
+                                                    } else {
                                                         res.end('{"success" : "Updated Successfully", "status" : 200}');
                                                     }
                                                 })
@@ -1036,7 +1032,7 @@ module.exports = function(app, passport) {
                 _id: req.params.voteid
             })
             .then(vote => {
-                if(!vote.voters.some(v=>v.equals(req.user._is))){
+                if (!vote.voters.some(v => v.equals(req.user._is))) {
                     return res.sendStatus(403);
                 }
                 vote.votes--;
