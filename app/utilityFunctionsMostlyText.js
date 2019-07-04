@@ -23,7 +23,6 @@ module.exports = {
                 if (hashtagsEnabled) {
                     line = line.replace(hashtagRegex, hashtagReplace);
                 }
-                line = line.replace(/<div[^>]*>|<\/div>/g, ''); // Removes DIV tags
                 parsedContent.push(line);
             }
         })
@@ -55,23 +54,32 @@ module.exports = {
         parsedContent = this.sanitizeHtmlForSweet(parsedContent);
 
         if (youtubeEnabled) {
+            //this part is super repetitive but like it's late right now. but if we add any other embeds definitely some stuff should be seperated out into some functions. also someone figure out why we sometimes have video links with <a>s and sometimes just urls to deal with
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
             //sometimes when you paste a url into mediumeditor it's immediately a link and sometimes not and i have no clue why so just for now we have to deal with both cases
             var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
-            var urlFindingRegex = /<p>((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?<\/p>/g //matches all unlinked youtube urls with a line to themselves
+            var YurlFindingRegex = /<p>((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?<\/p>/g //matches all unlinked youtube urls with a line to themselves
+            var VurlFindingRegex = /<p>(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)<\/p>/g;
             //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
             var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+            //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+            var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
 
             if (parsedContent.search(linkFindingRegex) != -1) {
                 var searchableParsedContent = parsedContent.replace(/&amp;/, '&');
                 var r = linkFindingRegex.exec(searchableParsedContent);
-                var s = urlFindingRegex.exec(searchableParsedContent);
+                var s = YurlFindingRegex.exec(searchableParsedContent);
+                var t = VurlFindingRegex.exec(searchableParsedContent);
                 var parsedContentWEmbeds = searchableParsedContent.slice(); //need a copy of searchableParsedContent that we can modify without throwing off lastIndex in RegExp.exec
                 while (r && embedsAdded < embedsAllowed) {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
                         var videoid = youtubeUrlFindingRegex.exec(r[2])[5];
                         parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
+                        ++embedsAdded;
+                    }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
+                        var videoid = vimeoUrlFindingRegex.exec(r[2])[4];
+                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://player.vimeo.com/video/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
                         ++embedsAdded;
                     }
                     r = linkFindingRegex.exec(searchableParsedContent);
@@ -80,7 +88,13 @@ module.exports = {
                     var videoid = s[5];
                     parsedContentWEmbeds = parsedContentWEmbeds.replace(s[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
                     ++embedsAdded;
-                    s = urlFindingRegex.exec(searchableParsedContent);
+                    s = YurlFindingRegex.exec(searchableParsedContent);
+                }
+                while(t && embedsAdded < embedsAllowed){
+                    var videoid = t[4];
+                    parsedContentWEmbeds = parsedContentWEmbeds.replace(t[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://player.vimeo.com/video/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
+                    ++embedsAdded;
+                    t = VurlFindingRegex.exec(searchableParsedContent);
                 }
                 parsedContent = parsedContentWEmbeds.replace(/&/, '&amp;');
             }
