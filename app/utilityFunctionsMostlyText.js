@@ -9,7 +9,7 @@ module.exports = {
         let parsedContent = [];
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
         var mentionReplace = '$1<a href="/$2">@$2</a>';
-        var hashtagRegex = /(>|\n|\ |\t)#(\w{1,60})\b/g
+        var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
         var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
         splitContent.forEach(function(line) {
             line += '</p>'
