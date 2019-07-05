@@ -133,6 +133,9 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
 $(function() {
     //this is here bc this is the first of our scripts to be linked in in the layout, and this should be the first thing the browser does
     window.onerror = function(errorMessage, source, lineno, colno, error){
+        if(source == "Error: Not Found"){
+            return; //this is a routine error coming from scrolling to the bottom of an infinite scroll feed, it's not a problem, unless something weird happens later
+        }
         var errorstring = "error: "+errorMessage+"\noriginating from script: "+source+" on line "+lineno+" and column "+colno;
         if(error && error.stack){
             errorstring+="\nfull stack trace: \n" + error.stack;
