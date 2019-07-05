@@ -323,11 +323,11 @@ module.exports = function (app) {
                             // This is a public post, notify everyone
                             parsedResult.mentions.forEach(function (mention) {
                                 if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                    User.findOne({
-                                            username: mention
-                                        })
+                                    User.findOne({ username: mention })
                                         .then((user) => {
-                                            notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                            if(user){
+                                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                            }
                                         })
                                 }
                             });
