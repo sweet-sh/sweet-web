@@ -1460,9 +1460,7 @@ article.post > header .post-header-right {
     width: 100%;
     justify-content: center;
 }
-article.post > header .post-header-right > * {
-    /* height: 23px; */
-}
+
 article.post > header h2.author-name {
     font-size: 1em;
     font-family: 'Ubuntu', sans-serif;
@@ -1471,7 +1469,9 @@ article.post > header h2.author-name {
     display: flex;
     overflow: hidden;
     margin-bottom: 4px;
+    white-space: nowrap;
 }
+
 article.post > header .author-display-name,
 article.comment > header .author-display-name,
 #welcome-message-container > footer .author-display-name {
