@@ -9,6 +9,9 @@ var flash = require('connect-flash');
 var helpers = require('handlebars-helpers')();
 var path = require('path');
 
+var compression = require('compression');
+app.use(compression());
+
 var expressValidator = require('express-validator');
 app.use(expressValidator());
 
