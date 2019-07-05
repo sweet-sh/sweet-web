@@ -1109,6 +1109,10 @@ hr {
   .post-single-image > img {
     max-height: 450px;
   }
+  .post-single-image.vertical-image,
+  .post-single-image.vertical-image > img {
+    max-height:450px;
+  }
 }
 
 .post-images.one-image {
@@ -1165,6 +1169,14 @@ hr {
 }
 .comment .content .post-images .post-single-image {
     max-height: 200px;
+}
+
+.comment .content .post-images img.post-single-image.vertical-image {
+  max-height: 350px;
+}
+
+.comment .content .post-images.one-image.vertical-image {
+  max-height: 350px;
 }
 
 .community-container {
