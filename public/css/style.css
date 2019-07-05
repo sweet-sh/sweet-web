@@ -953,17 +953,6 @@ hr {
   display: none;
 }
 
-.custom-file-container {
-  box-sizing: border-box;
-  position: relative;
-  display: block;
-  height: 200px;
-  width: 45%;
-  position: relative;
-  margin-top: 1rem !important;
-  margin-bottom: 0.5rem !important;
- }
-
  .embedded-video-cont {
   background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
   background-size: 5.66px 5.66px;
@@ -1056,14 +1045,6 @@ hr {
   resize: none;
 }
 
-.sortable-placeholder {
-  height: 100px;
-  background: #efefef;
-  border: 1px dashed #ddd;
-  width: 100%;
-  margin-bottom: 0.5em;
-  border-radius: 4px;
-}
 .newimagecont {
   transition: scale .1s ease-in-out, opacity .1s ease-in-out;
 }
