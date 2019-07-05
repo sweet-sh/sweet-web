@@ -225,7 +225,6 @@ section.comments {
   border: 1px solid #9b9b9b;
 }
 .post-images.one-image .post-single-image {
-    width: auto;
     max-width: 100%;
 }
 .image-clear {
@@ -1091,7 +1090,7 @@ hr {
 
 .post-single-image,
 .post-single-image > img {
-  object-fit: cover;
+  object-fit: contain;
   cursor: pointer;
   width: 100%;
   height: 100%;
@@ -1116,7 +1115,7 @@ hr {
   background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
   background-size: 5.66px 5.66px;
   grid-template-columns: 100%;
-  grid-template-rows: 100%;
+  grid-template-rows: min-content;
 }
 
 .post-images.one-image > img,
