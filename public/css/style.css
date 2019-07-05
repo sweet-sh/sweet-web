@@ -1090,7 +1090,7 @@ hr {
 
 .post-single-image,
 .post-single-image > img {
-  object-fit: contain;
+  object-fit: cover;
   cursor: pointer;
   width: 100%;
   height: 100%;
@@ -1120,9 +1120,12 @@ hr {
 
 .post-images.one-image > img,
 .post-images.one-image > a {
-  object-fit: contain;
   height:auto;
   text-align: center;
+}
+
+.one-image img.post-single-image{
+  object-fit: contain;
 }
 
 .post-images.two-images {
