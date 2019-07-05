@@ -37,7 +37,7 @@ blockquote {
   border-left: 2px solid #bbb;
   color: #777;
   padding-left: 0.5rem;
-  margin: 0;
+  margin: 0.5rem 0;
 }
 
 .post-action-button {
@@ -1505,6 +1505,7 @@ article.post > header .metadata {
 article.post > .content {
     position: relative;
     margin: 1rem 0;
+    overflow-wrap: break-word;
 }
 article.post > .content .content-warning {
     margin-bottom: 0.5rem;
