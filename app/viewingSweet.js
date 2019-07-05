@@ -747,11 +747,7 @@ module.exports = function (app) {
       var matchPosts = await getTag();
       var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
     } else if (req.params.context == "single") {
-      var author = (await User.findOne({
-        username: req.singlepostUsername
-      }, {
-        _id: 1
-      }));
+      var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }));
       var matchPosts = {
         author: author ? author._id : undefined, //won't find anything if the author corresponding to the username couldn't be found
         url: req.params.identifier
@@ -846,10 +842,10 @@ module.exports = function (app) {
               canDisplay = true;
             }
             if (post.type == "community") {
-              if (req.params.context != "community") {
-                if (myCommunities.some(m => {
-                    return m.equals(post.community._id)
-                  })) {
+              //we don't have to check if the user is in the community before displaying posts to them if we're on the community's page, or if it's a single post page and: the community is public or the user wrote the post
+              //in other words, we do have to check if the user is in the community if those things aren't true, hence the !
+              if (!(req.params.context == "community" || (req.params.context == "single" && (post.author.equals(req.user._id) || post.community.settings.visibilty == "public")))) {
+                if (myCommunities.some(m => { return m.equals(post.community._id)})) {
                   canDisplay = true;
                 } else {
                   canDisplay = false;
