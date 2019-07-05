@@ -21,12 +21,12 @@
             {{/if}}
         {{/if}}
         {{#isnt ../context "community"}}
-            {{#contains ../loggedInUserData.communities this.community._id}}
+            {{#if this.community._id}}
                 <div class="community-notification">
                     <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
                     <span>Posted in <a href="/community/{{this.community.slug}}">{{this.community.name}}</a></span>
                 </div>
-            {{/contains}}
+            {{/if}}
         {{/isnt}}
     </aside>
     <header>
