@@ -136,13 +136,14 @@ module.exports = {
         return sanitizeHtml(parsedContent, {
             allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p', 'br'],
             allowedAttributes: {
-                'a': ['href']
+                'a': ['href','target']
             },
             transformTags: {
                 'a': function(tagName, attribs) {
                     if (!attribs.href.includes('//')) {
                         attribs.href = "//" + attribs.href;
                     }
+                    attribs.target = "_blank";
                     return {
                         tagName: 'a',
                         attribs: attribs
