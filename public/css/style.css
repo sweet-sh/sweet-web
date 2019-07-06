@@ -1313,6 +1313,10 @@ hr {
   font-size: 90%;
 }
 
+.medium-editor-element {
+  height: auto;
+}
+
 .link-preview-container {
     display: flex;
     height: 100px;
