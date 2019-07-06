@@ -92,9 +92,8 @@ module.exports = {
             var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
 
             if (parsedContent.search(linkFindingRegex) != -1) {
-                var searchableParsedContent = parsedContent.replace(/&amp;/, '&');
-                var r = linkFindingRegex.exec(searchableParsedContent);
-                var parsedContentWEmbeds = searchableParsedContent.slice(); //need a copy of searchableParsedContent that we can modify without throwing off lastIndex in RegExp.exec
+                var r = linkFindingRegex.exec(parsedContent);
+                var parsedContentWEmbeds = parsedContent.slice(); //need a copy of parsedContent that we can modify without throwing off lastIndex in RegExp.exec
                 while (r && embedsAdded < embedsAllowed) {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
                         var parsedVUrl = youtubeUrlFindingRegex.exec(r[2])
@@ -130,9 +129,9 @@ module.exports = {
                         parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) + linkPreviewHtml + parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
                     }
-                    r = linkFindingRegex.exec(searchableParsedContent);
+                    r = linkFindingRegex.exec(parsedContent);
                 }
-                parsedContent = parsedContentWEmbeds.replace(/&/, '&amp;');
+                parsedContent = parsedContentWEmbeds
             }
         }
 
