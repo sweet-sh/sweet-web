@@ -1334,6 +1334,7 @@ hr {
     flex-direction: column;
     justify-content: space-between;
     overflow: hidden;
+    margin-left: 10px;
 }
 
 .link-preview-text-container>span {
@@ -1346,8 +1347,8 @@ hr {
 
 .link-preview-image {
     flex: 0;
-    margin-right: 10px;
     border-radius: 2px;
+    height:80px;
 }
 
 .link-preview-description {

@@ -1,10 +1,18 @@
 const Autolinker = require('autolinker');
 var sanitize = require('mongo-sanitize');
 var sanitizeHtml = require('sanitize-html');
+var got = require('got');
+const urlp = require('url');
+const metascraper = require('metascraper')([
+    require('metascraper-description')(),
+    require('metascraper-image')(),
+    require('metascraper-title')(),
+    require('metascraper-url')()
+  ])
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
-    parseText: function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, youtubeEnabled = false) {
+    parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, youtubeEnabled = false) {
         let splitContent = rawText.split('</p>');
         let parsedContent = [];
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
@@ -60,11 +68,14 @@ module.exports = {
         }
 
         if (youtubeEnabled) {
+
+            //(({ body: html, url }) => {metascraper({ html, url })});
+
             //this part is super repetitive but like it's late right now. but if we add any other embeds definitely some stuff should be seperated out into some functions. also someone figure out why we sometimes have video links with <a>s and sometimes just urls to deal with
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
             //sometimes when you paste a url into mediumeditor it's immediately a link and sometimes not and i have no clue why so just for now we have to deal with both cases
-            var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
+            var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)" target="_blank">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
             var YurlFindingRegex = /<p>((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?<\/p>/g //matches all unlinked youtube urls with a line to themselves
             var VurlFindingRegex = /<p>(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)<\/p>/g;
             //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
@@ -81,7 +92,18 @@ module.exports = {
                 while (r && embedsAdded < embedsAllowed) {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
                         var videoid = youtubeUrlFindingRegex.exec(r[2])[5];
-                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], '<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '" frameborder="0" allowfullscreen></iframe></div>');
+                        const { body: html, url } = await got(youtubeUrlFindingRegex.exec(r[2])[0])
+                        const metadata = await metascraper({ html, url })
+
+                        var linkPreviewHtml = await hbs.render('./views/partials/previewedYoutubeEmbed.handlebars', {
+                            videoid:videoid,
+                            image:metadata.image,
+                            title:metadata.title,
+                            description:metadata.description
+                        })
+                        
+                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], linkPreviewHtml);
+
                         ++embedsAdded;
                     }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
                         var videoid = vimeoUrlFindingRegex.exec(r[2])[4];

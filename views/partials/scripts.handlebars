@@ -397,5 +397,11 @@ $(function() {
       }
     })
   })
+  $('body').on('click','.youtube-preview', function(e){
+    console.log('adsf');
+    e.preventDefault()
+    var videoid = $(this).attr('videoid');
+    $(this).replaceWith('<div class="embedded-video-cont"><iframe class="embedded-video" src="https://www.youtube.com/embed/' + videoid + '?autoplay=1" frameborder="0" allowfullscreen></iframe></div>')
+  })
 });
 </script>

@@ -222,7 +222,7 @@ module.exports = function(app, passport) {
         Community.findOne({
                 slug: newCommunitySlug
             })
-            .then(community => {
+            .then(async community => {
                 if (community) {
                     req.session.sessionFlash = {
                         type: 'warning',
@@ -260,6 +260,8 @@ module.exports = function(app, passport) {
                                 });
                         }
                     }
+                    var parsedDesc = await helper.parseText(newCommunityData.communityDescription).text;
+                    var parsedRules = await helper.parseText(newCommunityData.communityRules).text;
 
                     const community = new Community({
                         created: new Date(),
@@ -267,9 +269,9 @@ module.exports = function(app, passport) {
                         slug: newCommunitySlug,
                         url: communityUrl,
                         descriptionRaw: sanitize(newCommunityData.communityDescription),
-                        descriptionParsed: helper.parseText(newCommunityData.communityDescription).text,
+                        descriptionParsed: parsedDesc,
                         rulesRaw: sanitize(newCommunityData.communityRules),
-                        rulesParsed: helper.parseText(newCommunityData.communityRules).text,
+                        rulesParsed: parsedRules,
                         image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
                         imageEnabled: imageEnabled,
                         settings: {
@@ -708,7 +710,7 @@ module.exports = function(app, passport) {
         var allowedChange = true; //is there a change? and is it allowed?
         if (req.body.reference == "description" || req.body.reference == "rules") {
             proposedValue = sanitize(req.body.proposedValue)
-            parsedProposedValue = helper.parseText(req.body.proposedValue).text
+            parsedProposedValue = await helper.parseText(req.body.proposedValue).text
             if (req.body.reference == "description") {
                 allowedChange = (community.descriptionRaw != proposedValue);
             } else {
@@ -731,7 +733,7 @@ module.exports = function(app, passport) {
             parsedProposedValue = imageUrl
         } else if (req.body.reference == "name") { //this is where it gets complicated
             proposedValue = sanitize(req.body.proposedValue)
-            parsedProposedValue = helper.parseText(req.body.proposedValue, false, false, false, false, false).text //don't need links and stuff
+            parsedProposedValue = await helper.parseText(req.body.proposedValue, false, false, false, false, false).text //don't need links and stuff
             var slug = helper.slugify(proposedValue);
             if (!parsedProposedValue || community.name == proposedValue) {
                 //not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
@@ -1037,7 +1039,7 @@ module.exports = function(app, passport) {
             .then(async function(community) {
                 if (await isCommunityMember(community)) {
                     community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
-                    community.welcomeMessageParsed = helper.parseText(req.body.communityWelcomeMessage).text
+                    community.welcomeMessageParsed = await helper.parseText(req.body.communityWelcomeMessage).text
                     community.welcomeMessageAuthor = req.user._id
                     community.save()
                         .then(result => {
