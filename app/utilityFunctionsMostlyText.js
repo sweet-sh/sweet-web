@@ -68,6 +68,21 @@ module.exports = {
         }
 
         if (youtubeEnabled) {
+            //i mean, handlebars is way overkill for this
+            function renderVideoPreview(embedurl,linkurl,imageurl,title,description,domain){
+                return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
+                    <div style="display:flex;justify-content:center;position:relative;">\
+                        <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
+                        <img src="/images/fa-playbutton-red.svg" style="position:absolute;height:100%;">\
+                    </div>\
+                    <div class="link-preview-text-container">\
+                        <span class="link-preview-title">'+title+'</span>\
+                        <span class="link-preview-description">'+description+'</span>\
+                        <span class="link-preview-domain">'+domain+'</span>\
+                    </div>\
+                </a>';
+            }
+
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
             var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)" target="_blank">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
@@ -84,36 +99,35 @@ module.exports = {
                     if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
                         var parsedVUrl = youtubeUrlFindingRegex.exec(r[2])
                         var videoid = parsedVUrl[5];
-                        const { body: html, url } = await got(youtubeUrlFindingRegex.exec(r[2])[0])
+                        const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
 
-                        var linkPreviewHtml = await hbs.render('./views/partials/previewedVideoEmbed.handlebars', {
-                            embedurl: "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
-                            linkurl: parsedVUrl[0],
-                            image:metadata.image,
-                            title:metadata.title,
-                            description:metadata.description
-                        })
-                        
-                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], linkPreviewHtml);
-
+                        var linkPreviewHtml = renderVideoPreview(
+                            "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
+                            parsedVUrl[0],
+                            metadata.image,
+                            metadata.title,
+                            metadata.description,
+                            "youtube.com"
+                        )
+                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) + linkPreviewHtml + parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
                     }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
                         var parsedVUrl = vimeoUrlFindingRegex.exec(r[2]);
                         var videoid = parsedVUrl[4];
 
-                        const { body: html, url } = await got(vimeoUrlFindingRegex.exec(r[2])[0])
+                        const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
 
-                        var linkPreviewHtml = await hbs.render('./views/partials/previewedVideoEmbed.handlebars', {
-                            embedurl:'https://player.vimeo.com/video/' + videoid + "?autoplay=1",
-                            linkurl: parsedVUrl[0],
-                            image:metadata.image,
-                            title:metadata.title,
-                            description:metadata.description
-                        })
-                        parsedContentWEmbeds = parsedContentWEmbeds.replace(r[0], linkPreviewHtml);
-
+                        var linkPreviewHtml = renderVideoPreview(
+                            'https://player.vimeo.com/video/' + videoid + "?autoplay=1",
+                            parsedVUrl[0],
+                            metadata.image,
+                            metadata.title,
+                            metadata.description,
+                            "vimeo.com"
+                        )
+                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) + linkPreviewHtml + parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
                     }
                     r = linkFindingRegex.exec(searchableParsedContent);
