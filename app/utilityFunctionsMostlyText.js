@@ -62,9 +62,9 @@ module.exports = {
         parsedContent = this.sanitizeHtmlForSweet(parsedContent);
 
         //sometimes the editor starts the post content with links that are outside of paragraphs and thus don't look like they're on their own line to the embedding code below, that needs patched for now
-        if(parsedContent.substring(0,3) == '<a>'){
-            parsedContent += "<p>"
-            parsedContent = parsedContent.replace(/<a\/>/,'</a></p>');
+        if(parsedContent.substring(0,3) == '<a '){
+            parsedContent = "<p>" + parsedContent;
+            parsedContent = parsedContent.replace(/<\/a>/,'</a></p>');
         }
 
         if (youtubeEnabled) {
