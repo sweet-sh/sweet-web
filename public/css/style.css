@@ -1322,6 +1322,7 @@ hr {
     border: 1px solid #dfdfdf;
     border-radius: 4px;
     margin: 0.5em 0;
+    background-color: #ffffff;
 }
 
 .link-preview-container:hover {
