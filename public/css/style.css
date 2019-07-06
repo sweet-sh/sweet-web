@@ -1329,6 +1329,12 @@ hr {
     background-color: #ffffff;
 }
 
+@media(max-width:500px){
+  .link-preview-container{
+    height:75px;
+  }
+}
+
 .link-preview-container:hover {
     text-decoration: none;
     background: #fcfcfc;
@@ -1351,9 +1357,11 @@ hr {
 }
 
 .link-preview-image {
-    flex: 0;
+    flex: 1;
     border-radius: 2px;
-    height:80px;
+    align-self: center;
+    max-height:100%;
+    margin-right:auto;
 }
 
 .link-preview-description {
