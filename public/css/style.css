@@ -1329,12 +1329,6 @@ hr {
     background-color: #ffffff;
 }
 
-@media(max-width:500px){
-  .link-preview-container{
-    height:75px;
-  }
-}
-
 .link-preview-container:hover {
     text-decoration: none;
     background: #fcfcfc;
@@ -1362,6 +1356,7 @@ hr {
     align-self: center;
     max-height:100%;
     margin-right:auto;
+    max-width: 140px;
 }
 
 .link-preview-description {
@@ -1374,6 +1369,16 @@ hr {
     font-size: 0.9em;
     font-variant: small-caps;
 }
+
+@media(max-width:500px){
+  .link-preview-container{
+    height:75px;
+  }
+  .link-preview-image {
+      max-width: 100px;
+  }
+}
+
 .pane {
     padding: 15px;
 }

@@ -73,7 +73,7 @@ module.exports = {
                 return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
                     <div style="display:flex;justify-content:center;position:relative;">\
                         <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
-                        <img src="/images/fa-playbutton-red.svg" style="position:absolute;height:100%;">\
+                        <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>\
                     </div>\
                     <div class="link-preview-text-container">\
                         <span class="link-preview-title">'+title+'</span>\

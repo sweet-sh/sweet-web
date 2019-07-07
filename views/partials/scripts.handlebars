@@ -97,6 +97,13 @@ $(function() {
     {{/eq}}
   }, 60000);
 
+  $('body').on('mouseover', '.link-preview-container', function() {
+      $(this).find('.link-preview-icon').css('color','#eee');
+  });
+  $('body').on('mouseout', '.link-preview-container', function() {
+      $(this).find('.link-preview-icon').css('color','white');
+  });
+
   $('body').on('click', '.show-comments', function() {
     commentsContainer = $(this).closest(".post").find(".comments");
     commentsContainer.slideToggle("fast", function(){
