@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "no-duplicate-selectors": true,
+    "no-empty-source": true,
+    "no-empty-first-line": true,
+    "no-eol-whitespace": true
+  }
+}
