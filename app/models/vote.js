@@ -18,11 +18,11 @@ var commentSchema = new mongoose.Schema({
 });
 
 var voteSchema = new mongoose.Schema({
-  status: String,
-  type: String,
+  status: String, //'active' or 'expired'
+  type: String, //no longer used, i believe
   community: { type: Schema.Types.ObjectId, ref: 'Community' },
-  reference: String,
-  parsedReference: String,
+  reference: String, //what is possibly being changed: description, rules, joinType, visibility, voteLength, image, or name
+  parsedReference: String, //a human-readble (non-camelCase) equivalent to one of the above
   proposedValue: String,
   parsedProposedValue: String,
   creatorEmail: String,

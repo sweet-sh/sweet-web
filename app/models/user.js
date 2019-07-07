@@ -65,6 +65,7 @@ var userSchema = new mongoose.Schema({
     emailDay: { type: String, default: "Sunday" },
   },
   notifications: [notificationSchema],
+  pushNotifSubscriptions: [String],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
   bannedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
   mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }]

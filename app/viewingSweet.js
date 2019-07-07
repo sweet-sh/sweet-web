@@ -4,6 +4,8 @@ const notifier = require('./notifier.js');
 const sanitize = require('mongo-sanitize');
 const fs = require('fs');
 
+var auth = require('../config/auth.js'); //used on the settings page to set up push notifications
+
 //just used for error log thing at the very end
 const path = require('path')
 const bcrypt = require('bcrypt-nodejs');
@@ -280,6 +282,7 @@ module.exports = function (app) {
     res.render('settings', {
       loggedIn: true,
       loggedInUserData: req.user,
+      notifierPublicKey: auth.vapidPublicKey,
       activePage: 'settings'
     })
   })
@@ -495,11 +498,13 @@ module.exports = function (app) {
 
   //Responds to a get response for a specific post.
   //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
-  //Outputs: showposts handles it! in fact, we don't even use the username, anything could be in there and this would still work
+  //Outputs: showposts handles it!
   app.get('/:username/:posturl', function (req, res, next) {
-    req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
-    req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
-    next('route');
+    if (req.params.username != 'images') { //a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
+      req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
+      req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
+      next('route');
+    }
     return;
   })
 
@@ -649,7 +654,6 @@ module.exports = function (app) {
               mutedMemberIds = community.mutedMembers.map(a => a.toString());
               if (mutedMemberIds.includes(loggedInUserData._id.toString()))
                 isMuted = true;
-              console.log(isMuted)
             })
             .catch((err) => {
               console.log("Error in profileData.")
@@ -668,10 +672,12 @@ module.exports = function (app) {
     const today = moment().clone().startOf('day');
     const thisyear = moment().clone().startOf('year');
 
-    //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find
+    //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find. also, sortMethod
+    //is set according to the relevant user setting if they're logged in or to a default way at the bottom of this part if they're not.
 
     if (req.params.context == "home") {
       //on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
+      //we're assuming the user is logged in if this request is being made (it's only made by code on a page that only loads if the user is logged in.)
       var matchPosts = {
         '$or': [{
             'author': {
@@ -688,15 +694,38 @@ module.exports = function (app) {
       };
       var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
     } else if (req.params.context == "user") {
+      //if we're on a user's page, obviously we want their posts:
       var matchPosts = {
-        author: req.params.identifier
+        author: req.params.identifier,
       }
+      //but we also only want posts if they're non-community or they come from a community that we belong to:
       if (req.isAuthenticated()) {
+        matchPosts.$or = [{
+          community: {
+            $exists: false
+          }
+        }, {
+          community: {
+            $in: myCommunities
+          }
+        }];
         var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
+      } else {
+        //logged out users shouldn't see any community posts on user profile pages
+        matchPosts.community = {
+          $exists: false
+        };
       }
     } else if (req.params.context == "community") {
-      var matchPosts = {
-        community: req.params.identifier
+      var thisComm = await Community.findById(req.params.identifier);
+      //we want posts from the community, but only if it's public or we belong to it:
+      if (thisComm.settings.visibility == 'public' || myCommunities.some(v => v.toString() == req.params.identifier)) {
+        var matchPosts = {
+          community: req.params.identifier
+        }
+      } else {
+        //if we're not in the community and it's not public, there are no posts we're allowed to view!
+        var matchPosts = undefined;
       }
       if (req.isAuthenticated()) {
         var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
@@ -718,11 +747,7 @@ module.exports = function (app) {
       var matchPosts = await getTag();
       var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
     } else if (req.params.context == "single") {
-      var author = (await User.findOne({
-        username: req.singlepostUsername
-      }, {
-        _id: 1
-      }));
+      var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }));
       var matchPosts = {
         author: author ? author._id : undefined, //won't find anything if the author corresponding to the username couldn't be found
         url: req.params.identifier
@@ -770,9 +795,6 @@ module.exports = function (app) {
         displayedPosts = [];
 
         for (const post of posts) {
-
-          var canDisplay = false;
-
           //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
           //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
           //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
@@ -820,16 +842,18 @@ module.exports = function (app) {
               canDisplay = true;
             }
             if (post.type == "community") {
-              if (myCommunities.some(m => {
-                  return m.equals(post.community._id)
-                })) {
-                canDisplay = true;
-                // Hide muted community members
-                let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
-                if (mutedMemberIds.includes(post.author._id.toString())) {
+              //we don't have to check if the user is in the community before displaying posts to them if we're on the community's page, or if it's a single post page and: the community is public or the user wrote the post
+              //in other words, we do have to check if the user is in the community if those things aren't true, hence the !
+              if (!(req.params.context == "community" || (req.params.context == "single" && (post.author.equals(req.user._id) || post.community.settings.visibilty == "public")))) {
+                if (myCommunities.some(m => { return m.equals(post.community._id)})) {
+                  canDisplay = true;
+                } else {
                   canDisplay = false;
                 }
-              } else {
+              }
+              // Hide muted community members
+              let mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString());
+              if (mutedMemberIds.includes(post.author._id.toString())) {
                 canDisplay = false;
               }
             }
@@ -854,6 +878,11 @@ module.exports = function (app) {
                 // Not a community post, can display
                 canDisplay = true;
               }
+            } else if (req.params.context == "community" && thisComm.settings.visibility == "public") {
+              //also posts in publicly visible communities can be shown, period. i'm 99% sure that posts from private communities won't even
+              //be fetched for logged out users because of the way the matchPosts query is constructed above but just in case i'm checking it
+              //again in the above if statement
+              canDisplay = true;
             }
           }
 
@@ -1012,7 +1041,7 @@ module.exports = function (app) {
                 displayedPost.lastCommentAuthor = comment.author;
               }
               // Only pulse comments from people who aren't you
-              if (momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
+              if (req.isAuthenticated() && momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
                 comment.isRecent = true;
               }
               for (var i = 0; i < comment.images.length; i++) {
@@ -1046,12 +1075,7 @@ module.exports = function (app) {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
-
-          if (req.isAuthenticated() && req.params.context == "single") {
-            // Mark associated notifications read if post is visible
-            notifier.markRead(loggedInUserData._id, displayContext._id)
-          }
-
+          
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
@@ -1808,7 +1832,6 @@ module.exports = function (app) {
       res.status(200).sendFile(path.resolve(global.appRoot, "emailLog.txt"));
     }
   })
-
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
@@ -1828,5 +1851,4 @@ function isLoggedInOrRedirect(req, res, next) {
     return next();
   }
   res.redirect('/');
-  next('route');
 }

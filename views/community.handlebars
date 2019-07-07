@@ -14,6 +14,7 @@
           <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
         </div>
         {{/unless}}
+        {{> message }}
         {{#and loggedIn isMember}}
           {{#unless isMuted}}
             {{> newpostform }}
@@ -120,6 +121,9 @@
                     <label for="communityName">Name</label>
                     <input type="text" class="form-control" id="communityName" name="proposedValue" value="{{communityData.name}}">
                   </div>
+                  <div class="form-group">
+                    Your community's URL will be: <span class="text-info">https://sweet.sh/community/<span id="communitySlug"></span></span>
+                  </div>
                   <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
                 </form>
               </div>
@@ -166,7 +170,7 @@
                     <input type="hidden" name="imageUrl" value="{{communityData.image}}" />
                     <label>Community image</label>
                     <div id="image-preview">
-                      <label for="image-upload" id="image-label">Choose file</label>
+                      <label for="image-upload" id="image-label">Choose image</label>
                       <input type="file" name="proposedValue" id="image-upload" />
                     </div>
                   </div>
@@ -375,6 +379,25 @@ $("#requestButton").click(function() {
 
 {{#unless isMuted}}
 
+function slugify(string) {
+    const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
+    const b = 'aaaaaaaaceeeeghiiiimnnnoooooprssstuuuuuwxyz------'
+    const p = new RegExp(a.split('').join('|'), 'g')
+
+    return string.toString().toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+        .replace(/&/g, '-and-') // Replace & with 'and'
+        .replace(/[^\w\-]+/g, '') // Remove all non-word characters
+        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, '') // Trim - from end of text
+  }
+
+  $(document).on('input', '#communityName', function() {
+    $("#communitySlug").text(slugify($(this).val()))
+  });
+
 $(".approveUser").click(function() {
   $.post( "/api/community/user/accept/{{ communityData._id }}/" + $(this).attr("data-user-id"), function( result ) {
      location.reload();
@@ -438,7 +461,12 @@ $(".withdrawVoteButton").click(function() {
 });
 $(".castVoteButton").click(function() {
   $.post( "/api/community/vote/cast/{{ communityData._id }}/" + $(this).attr("data-vote-id"), function( result ) {
-     location.reload();
+    var resultData = JSON.parse(result);
+     if(resultData.redirect){
+       window.location.replace(resultData.redirect);
+     }else{
+      location.reload();
+     }
   });
 });
 $(".deleteVoteButton").click(function() {
@@ -473,14 +501,20 @@ $(".community-panel-link").click(function() {
   }
 });
 
-$.uploadPreview({
-  input_field: "#image-upload",
-  preview_box: "#image-preview",
-  label_field: "#image-label",
-  label_default: "Choose file",
-  label_selected: "Change file",
-  no_label: false
-});
+$("#image-upload").change(function (e) {
+    var preview = $("#image-preview");
+    var reader = new FileReader();
+    reader.addEventListener("load", function () {
+      preview.css('background-image',"url("+reader.result+")");
+      $("#image-label").html("change image");
+    }, false);
+    if (this.files[0]) {
+      reader.readAsDataURL(this.files[0]);
+    }else{
+      preview.css('background-image',"");
+      $("#image-label").html("choose image");
+    }
+  })
 $("#image-preview").css("background-image", "url('/images/communities/{{communityData.image}}')");
 $("#image-preview").css("background-size", "cover");
 $("#image-preview").css("background-position", "center center");

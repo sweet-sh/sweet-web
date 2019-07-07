@@ -1,5 +1,5 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js" crossorigin="anonymous"></script>
 <div id="homeBody" class="row justify-content-center">
     <div class="col-lg-8">
         <h3 class="page-header mx-2">Settings</h3>
@@ -38,7 +38,7 @@
                 	<option value="+13:00">(GMT +13:00) Apia, Nukualofa</option>
                 	<option value="+14:00">(GMT +14:00) Line Islands, Tokelau</option>
                 </select>
-                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal</p>
+                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal.</p>
             </div>
             <hr />
             <h4>Privacy</h4>
@@ -145,15 +145,19 @@
                     <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
-                <div class="form-group">
-                        <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
-                                <label class="form-check-label" for="flashRecentComments">
-                                        Flash recent comments
-                                </label>
-                        </div>
-                </div>
-                <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
+            <div class="form-group">
+                    <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
+                            <label class="form-check-label" for="flashRecentComments">
+                                    Flash recent comments
+                            </label>
+                    </div>
+            </div>
+            <div class="pushNotifSubStuff" style="margin:20px 0;">
+                <button style="white-space:normal;" type="button" id="notifs-button" class="btn btn-secondary">Click to subscribe this browser to sweet push notifications!</button>
+                <p class="form-text small">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
+            </div>
+            <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <button type="submit" class="btn btn-secondary">Save settings</button>
         </form>
     </div>
@@ -176,13 +180,13 @@
 
     if("" === lastKnownTimeZone || autoDetectedTimeZone === lastKnownTimeZone){
         //if auto-detected time zone is not yet saved (like, it will be on submission though) or is being used currently, it's just the default option
-        $("#guessed-timezone")[0].innerHTML = 'Default (for you) equivalent to that of: '+autoDetectedTimeZoneString;
+        $("#guessed-timezone")[0].innerHTML = 'Default (for you): '+autoDetectedTimeZoneString;
         
     }else if(autoDetectedTimeZone !== lastKnownTimeZone){
         //if auto-detected time zone was saved but is now different, offer them the new one as the second option, and change their auto-detected time zone if they choose it
         var lastKnownTimeZoneString = stringifyTZ(lastKnownTimeZone);
-        $("#guessed-timezone")[0].innerHTML = "Last known default (for you) that of: "+lastKnownTimeZoneString;
-        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you) that of: '+autoDetectedTimeZoneString+'</option>');
+        $("#guessed-timezone")[0].innerHTML = "Last known default (for you): "+lastKnownTimeZoneString;
+        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you): '+autoDetectedTimeZoneString+'</option>');
         $('#settingsForm').submit(function(event){
             if($("#newDefault")[0].selected){
                 $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
@@ -221,11 +225,122 @@
 
     //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
     if($("#emailTime")[0].type == "text"){
-        $("emailTime").css('display','none');
-        $("emailTime").attr('name','UNUSED');
-        $("emailTime").prop('required',false);
-        $("emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
-        $("emailTimeSelect").css('display','block');
-        $("emailTimeSelect").attr('name','emailTime');
+        $("#emailTime").css('display','none');
+        $("#emailTime").attr('name','UNUSED');
+        $("#emailTime").prop('required',false);
+        $("#emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
+        $("#emailTimeSelect").css('display','block');
+        $("#emailTimeSelect").attr('name','emailTime');
+    }
+
+    //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
+    var isSubscribed = false;
+    var pushButton = $('#notifs-button');
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        console.log('Service Worker and Push are supported');
+        //service worker is like a mini program that contains some code that responds to events no matter what page the user is on.
+        //the below line will only have an effect the first time it is run, after that it will be already registered
+        navigator.serviceWorker.register('/js/sw.js')
+            .then(function (swReg) {
+                swRegistration = swReg; //store the registration in a global variable for future use
+                swRegistration.pushManager.getSubscription().then(function (subscription) {
+                    isSubscribed = !(subscription === null);
+                    if (isSubscribed) {
+                        console.log('User IS subscribed.');
+                    } else {
+                        console.log('User is NOT subscribed.');
+                    }
+                    updateButtonDisplay();
+                });
+            })
+            .catch(function (error) {
+                console.error('Service Worker Error', error);
+            });
+
+        pushButton.click(function (e) {
+            pushButton[0].disabled = true; //so it can't be clicked again right away and double-send subscription info to server
+            if (Notification.permission == "denied") {
+                bootbox.alert("You have notification permissions turned off for this site! To change this, click the button with the letter 'i' on it on the left side of the address bar and look for the word 'notifications' in the menu that shows up.");
+                updateButtonDisplay();
+            } else if (isSubscribed) {
+                //if the user is subscribed they're clicking on the button in order to unsubscribe
+                unsubscribeUser()
+            } else {
+                //if the user is not subscribed they're clicking on the button in order to subscribe
+                subscribeUser()
+            }
+        })
+        
+    } else {
+        console.warn('Push messaging is not supported');
+        $('.pushNotifSubStuff').css('display','none');
+    }
+
+    function subscribeUser(){
+        const applicationServerKey = urlBase64ToUint8Array("{{this.notifierPublicKey}}");
+        swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        }).then(function (subscription) {
+            console.log('User was just subscribed');
+            $.post("/pushnotifs/subscribe", {
+                subscription: JSON.stringify(subscription)
+            })
+            isSubscribed = true;
+            updateButtonDisplay()
+        }).catch(function (err) {
+            console.log('Failed to subscribe the user: ', err);
+            updateButtonDisplay()
+        });
+    }
+
+    function unsubscribeUser() {
+        swRegistration.pushManager.getSubscription()
+            .then(function(subscription) {
+                if (subscription) {
+                    subscription.unsubscribe()
+                        .catch(function(error) {
+                            console.log('Error unsubscribing', error);
+                        })
+                        .then(function() {
+                            $.post("/pushnotifs/unsubscribe", {
+                                subscription: JSON.stringify(subscription)
+                            })
+                            console.log('User is unsubscribed.');
+                            isSubscribed = false;
+                            updateButtonDisplay();
+                        });
+                }
+            })
+    }
+
+    //call this whenever the subscription state changes
+    function updateButtonDisplay() {
+        if(Notification.permission == "denied"){ //this isn't actually about updating the button but this is a convenient place to check permissions, we can't predict when the user will change them so we want to check this whenever it might be relevant
+            isSubscribed = false;
+            //unsubscribe the user so that the server doesn't waste time trying to send them stuff
+            unsubscribeUser();
+            pushButton.html('Click to subscribe this browser to sweet push notifications!');
+        }else if (isSubscribed) {
+            pushButton.html('Click to unsubscribe this browser from sweet push notifications!');
+        } else {
+            pushButton.html('Click to subscribe this browser to sweet push notifications!');
+        }
+        pushButton[0].disabled = false;
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     }
 </script>

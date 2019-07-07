@@ -1,58 +1,62 @@
 {{#if isOwnProfile}}
 <script type="text/javascript">
-  $.uploadPreview({
-    input_field: "#image-upload",
-    preview_box: "#image-preview",
-    label_field: "#image-label",
-    label_default: "Choose file",
-    label_selected: "Change file",
-    no_label: false
-  });
+  $("#image-upload").change(function (e) {
+    var preview = $("#image-preview");
+    var reader = new FileReader();
+    reader.addEventListener("load", function () {
+      preview.css('background-image',"url("+reader.result+")");
+      $("#image-label").html("change image");
+    }, false);
+    if (this.files[0]) {
+      reader.readAsDataURL(this.files[0]);
+    }else{
+      preview.css('background-image',"");
+      $("#image-label").html("choose image");
+    }
+  })
   $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
   $("#image-preview").css("background-size", "cover");
   $("#image-preview").css("background-position", "center center");
 </script>
 {{else}}
 <script type="text/javascript">
-$("#flagButton").click(function() {
-  $.post( "/useraction/flag/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
+function confirmRelationshipChange(confirmQString, relType, addOrDelete) {
+  bootbox.confirm(confirmQString, function (result) {
+    if (result == true) {
+      $.post("/useraction/" + relType + "/" + addOrDelete + "/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
+        location.reload();
+      });
+    }
+  });
+}
+
+$("#flagButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to flag this user?', 'flag', 'add');
+});
+
+$("#unflagButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
+});
+$("#blockButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to block this user?', 'block', 'add');
+});
+$("#unblockButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to unblock this user?', 'block', 'delete');
+});
+$("#trustButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
+});
+$("#untrustButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to stop trusting this user?', 'trust', 'delete');
+});
+$("#followButton").click(function () {
+  //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
+  $.post("/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
+    location.reload();
   });
 });
-$("#unflagButton").click(function() {
-  $.post( "/useraction/flag/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#blockButton").click(function() {
-  $.post( "/useraction/block/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#unblockButton").click(function() {
-  $.post( "/useraction/block/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#trustButton").click(function() {
-  $.post( "/useraction/trust/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#untrustButton").click(function() {
-  $.post( "/useraction/trust/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#followButton").click(function() {
-  $.post( "/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
-$("#unfollowButton").click(function() {
-  $.post( "/useraction/follow/delete/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function( result ) {
-     location.reload();
-  });
-});
+$("#unfollowButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
+}); 
 </script>
 {{/if}}

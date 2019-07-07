@@ -108,54 +108,68 @@
 
 {{#and loggedIn trustedUserData }}
   {{#or userTrustsYou isOwnProfile}}
-    <h5>Trusts{{#gt trustedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"></a>{{/gt}}</h5>
+    <h5>Trusts{{#gt trustedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
     <div id="trustedUsersList" class="user-list{{#gt trustedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
       {{#each trustedUserData}}
         <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
       {{/each}}
+      <div style="height:10px;width:100%;"></div>
     </div>
   {{/or}}
 {{/and}}
 {{#and loggedIn usersWhoTrustThemData }}
-  <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedByUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"></a>{{/gt}}</h5>
+  <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedByUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="trustedByUsersList" class="user-list{{#gt usersWhoTrustThemData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each usersWhoTrustThemData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/and}}
 {{#if followedUserData}}
-  <h5>Follows{{#gt followedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"></a>{{/gt}}</h5>
-  <div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  <h5>Follows{{#gt followedUserData.length 2}} <a class="text-dark user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+  <div id="followedUsersList" class="user-list{{#gt followedUserData.length 2}} collapse{{else}} d-flex{{/gt}}">
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>    
   </div>
 {{/if}}
 {{#if followersData}}
-  <h5>Followed by{{#gt followersData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"></a>{{/gt}}</h5>
+  <h5>Followed by{{#gt followersData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="followersList" class="user-list{{#gt followersData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each followersData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>    
   </div>
 {{/if}}
 {{#if isOwnProfile}}
   {{#if flaggedUserData}}
-    <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#flaggedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"></a>{{/gt}}</h5>
+    <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#flaggedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
       <div id="flaggedUsersList" class="user-list{{#gt flaggedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
         {{#each flaggedUserData}}
           <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
         {{/each}}
+        <div style="height:10px;width:100%;"></div>
       </div>
   {{/if}}
 {{/if}}
 
 {{#if communitiesData}}
-  <h5>Communities{{#gt communitiesData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#communitiesList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"></a>{{/gt}}</h5>
+  <h5>Communities{{#gt communitiesData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#communitiesList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="communitiesList" class="user-list{{#gt communitiesData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each communitiesData}}
       <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
     {{/each}}
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
+<script>
+  $('.user-list.collapse').on('hide.bs.collapse', function () {
+    $(this).prev().find(".user-list-toggle")[0].innerHTML = '<i class="fas fa-caret-right"></i>';
+  })
+  $('.user-list.collapse').on('show.bs.collapse', function () {
+    $(this).prev().find(".user-list-toggle")[0].innerHTML = '<i class="fas fa-caret-down"></i>';
+  })
+</script>

@@ -123,10 +123,10 @@ module.exports = function (app, passport) {
                 res.redirect(301, '/login');
             } else {
                 passport.authenticate('login', {
-                    successRedirect : '/home',
-                    failureRedirect : '/login',
-                    failureFlash : true
-                  })(req,res);
+                    successRedirect: '/home',
+                    failureRedirect: '/login',
+                    failureFlash: true
+                })(req, res);
             }
         });
     });
@@ -247,7 +247,7 @@ module.exports = function (app, passport) {
                 let parsedAbout = req.user.aboutParsed;
                 if (req.body.about != req.user.aboutRaw) {
                     // Parse about section
-                    let splitAbout = req.body.about.substring(0,500).split(/\r\n|\r|\n/gi);
+                    let splitAbout = req.body.about.substring(0, 500).split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
                     splitAbout.forEach(function (line) {
                         if (line != "") {
@@ -263,13 +263,13 @@ module.exports = function (app, passport) {
                     })
                     parsedAbout = parsedAboutArray.join('');
                 }
-                user.displayName = sanitize(sanitizeHtml(req.body.displayName.substring(0,50), sanitizeHtmlOptions));
-                user.pronouns = sanitize(sanitizeHtml(req.body.pronouns.substring(0,50), sanitizeHtmlOptions));
-                user.aboutRaw = sanitize(req.body.about.substring(0,500));
+                user.displayName = sanitize(sanitizeHtml(req.body.displayName.substring(0, 50), sanitizeHtmlOptions));
+                user.pronouns = sanitize(sanitizeHtml(req.body.pronouns.substring(0, 50), sanitizeHtmlOptions));
+                user.aboutRaw = sanitize(req.body.about.substring(0, 500));
                 user.aboutParsed = sanitize(sanitizeHtml(parsedAbout, sanitizeHtmlOptions));
-                user.location = sanitize(sanitizeHtml(req.body.location.substring(0,50), sanitizeHtmlOptions));
-                user.websiteRaw = sanitize(req.body.website.substring(0,50));
-                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website.substring(0,50)), sanitizeHtmlOptions));
+                user.location = sanitize(sanitizeHtml(req.body.location.substring(0, 50), sanitizeHtmlOptions));
+                user.websiteRaw = sanitize(req.body.website.substring(0, 50));
+                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website.substring(0, 50)), sanitizeHtmlOptions));
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {
@@ -290,7 +290,7 @@ module.exports = function (app, passport) {
                 _id: req.params.postid
             })
             .then(async post => {
-                if(post.type=="boost"){
+                if (post.type == "boost") {
                     post = await Post.findById(post.boostTarget);
                 }
                 post.subscribedUsers.pull(req.user._id)
@@ -311,7 +311,7 @@ module.exports = function (app, passport) {
                 _id: req.params.postid
             })
             .then(async post => {
-                if(post.type=="boost"){
+                if (post.type == "boost") {
                     post = await Post.findById(post.boostTarget);
                 }
                 post.unsubscribedUsers.pull(req.user._id)
@@ -336,7 +336,7 @@ module.exports = function (app, passport) {
         let oldSets = req.user.settings;
 
         var emailSetsChanged = false;
-        if(newSets.digestEmailFrequency != oldSets.digestEmailFrequency || newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay){
+        if (newSets.digestEmailFrequency != oldSets.digestEmailFrequency || newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay) {
             emailSetsChanged = true;
         }
 
@@ -345,7 +345,7 @@ module.exports = function (app, passport) {
             }, {
                 $set: {
                     'settings.timezone': newSets.timezone,
-                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone,
+                    'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone ? newSets.autoDetectedTimeZone : oldSets.autoDetectedTimeZone,
                     'settings.profileVisibility': newSets.profileVisibility,
                     'settings.newPostPrivacy': newSets.newPostPrivacy,
                     'settings.digestEmailFrequency': newSets.digestEmailFrequency,
@@ -359,8 +359,8 @@ module.exports = function (app, passport) {
                 }
             })
             .then(async (updateStatus) => {
-                if(emailSetsChanged){
-                    emailer.emailRescheduler((await User.findById(req.user._id)));
+                if (emailSetsChanged) {
+                    emailer.emailRescheduler((await User.findById(req.user._id))); //can't use req.user bc that will still store the old settings
                 }
                 res.redirect('/' + req.user.username)
             })
@@ -372,20 +372,20 @@ module.exports = function (app, passport) {
 
     app.post('/api/notifications/clearall', isLoggedInOrRedirect, function (req, res) {
         User.findOne({
-            _id: req.user._id
-          }, 'notifications')
-          .then(user => {
-            user.notifications.forEach(notification => {
-               notification.seen = true;
+                _id: req.user._id
+            }, 'notifications')
+            .then(user => {
+                user.notifications.forEach(notification => {
+                    notification.seen = true;
+                })
+                user.save()
+                    .then(result => {
+                        if (result) {
+                            res.sendStatus(200);
+                        }
+                    })
             })
-            user.save()
-            .then(result => {
-                if (result) {
-                    res.sendStatus(200);
-                }
-            })
-          })
-      })
+    })
 
     //Responds to get requests for email verification that don't have the verification token included. Deprecated? When would this happen
     //Input: none
@@ -735,6 +735,30 @@ module.exports = function (app, passport) {
                 }
             });
     });
+
+    app.post('/pushnotifs/subscribe', async function (req, res) {
+        if (req.isAuthenticated()) {
+            var user = await User.findById(req.user._id);
+            if (!user.pushNotifSubscriptions.some(v => { //check to make sure there isn't already a subscription set up with this endpoint
+                    return JSON.parse(v).endpoint == JSON.parse(req.body.subscription).endpoint;
+                })) {
+                user.pushNotifSubscriptions.push(req.body.subscription);
+                user.save();
+            }
+        }
+        res.sendStatus(200);
+    })
+
+    app.post('/pushnotifs/unsubscribe', async function (req, res) {
+        if (req.isAuthenticated()) {
+            var user = await User.findById(req.user._id);
+            user.pushNotifSubscriptions = user.pushNotifSubscriptions.filter(v => { //check to make sure there isn't already a subscription set up with this endpoint
+                return !(JSON.parse(v).endpoint == JSON.parse(req.body.subscription).endpoint);
+            });
+            user.save();
+        }
+        res.sendStatus(200);
+    })
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
@@ -754,5 +778,5 @@ function isLoggedInOrRedirect(req, res, next) {
         return next();
     }
     res.redirect('/');
-    next('route');
+    //next('route'); don't want this! the request has been handled by the redirect, we don't need to do anything else with it in another route
 }

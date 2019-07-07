@@ -203,13 +203,7 @@ module.exports = function (app) {
         }
 
         var rawContent = sanitize(req.body.postContent);
-        rawContent = sanitizeHtml(rawContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
-            allowedAttributes: {
-                'a': ['href']
-            }
-        });
-        var parsedResult = helper.parseText(rawContent, req.body.postContentWarnings);
+        var parsedResult = await helper.parseText(rawContent, req.body.postContentWarnings, true, true, true, true);
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
             // if (linkPreviewEnabled) {
@@ -329,11 +323,11 @@ module.exports = function (app) {
                             // This is a public post, notify everyone
                             parsedResult.mentions.forEach(function (mention) {
                                 if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                    User.findOne({
-                                            username: mention
-                                        })
+                                    User.findOne({ username: mention })
                                         .then((user) => {
-                                            notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                            if(user){
+                                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
+                                            }
                                         })
                                 }
                             });
@@ -592,13 +586,7 @@ module.exports = function (app) {
         }
 
         var rawContent = sanitize(req.body.commentContent);
-        rawContent = sanitizeHtml(rawContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p'],
-            allowedAttributes: {
-                'a': ['href']
-            }
-        });
-        var parsedResult = helper.parseText(rawContent);
+        var parsedResult = await helper.parseText(rawContent, false, true, true, true, true);
 
         if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
@@ -1186,7 +1174,7 @@ function isLoggedInOrRedirect(req, res, next) {
         return next();
     }
     res.redirect('/');
-    next('route');
+    //next('route'); don't want this! the request has been handled by the redirect, we don't need to do anything else with it in another route
 }
 
 //For post requests where the jQuery code making the request will handle the response
@@ -1195,73 +1183,5 @@ function isLoggedInOrErrorResponse(req, res, next) {
         return next();
     }
     res.send('nope');
-    next('route');
-}
-
-function getTags(url) {
-    return new Promise((resolve, reject) => {
-        request('https://api.imagga.com/v2/tags?image_url=' + url, imaggaOptions, function (error, response, body) {
-            if (error) {
-                console.log(error);
-                tagList = {}
-                resolve(tagList)
-            } else {
-                var parsedBody = JSON.parse(body);
-                if (parsedBody.status.type != "error") {
-                    var threshold = 60;
-                    var tagList = {
-                        auto: [],
-                        all: []
-                    }
-                    var tags = parsedBody.result.tags;
-                    for (var i = 0, ii = tags.length; i < ii; i++) {
-                        var tag = tags[i],
-                            t = tag.tag.en;
-                        // Add first three tags to 'auto-suggest' array, along with any
-                        // others over confidence threshold
-                        if (tagList.auto.length < 3 || tag.confidence > threshold) {
-                            tagList.auto.push(t);
-                        }
-                        tagList.all.push(t);
-                    }
-                    if (error) reject(error);
-                    else resolve(tagList);
-                } else {
-                    tagList = {}
-                    resolve(tagList)
-                }
-            }
-        })
-    })
-}
-
-//This function relocates posts on the timeline when a comment is deleted by changing lastUpdated (the post feed sorting field.)
-//input: post id
-//output: the post's lastUpdated field is set to either the timestamp of the new most recent comment or if there are no comments remaining the timestamp of the post
-function relocatePost(postid) {
-    Post.findById(postid).then(post => {
-        if (post.comments.length) {
-            Post.findOneAndUpdate({
-                _id: postid
-            }, {
-                $set: {
-                    lastUpdated: post.comments[post.comments.length - 1].timestamp
-                }
-            }).catch(err => {
-                console.log('could not relocate post:')
-                console.log(err)
-            })
-        } else {
-            Post.findOneAndUpdate({
-                _id: postid
-            }, {
-                $set: {
-                    lastUpdated: post.timestamp
-                }
-            }).catch(err => {
-                console.log('could not relocate post:')
-                console.log(err)
-            })
-        }
-    })
+    //next('route'); don't want this! the request has been handled by the error response, we don't need to do anything else with it in another route
 }

@@ -3,11 +3,14 @@ var express = require('express');
 var handlebars = require('express-handlebars');
 var app = express();
 var port = process.env.PORT || 8686;
-var mongoose = require('mongoose');
+mongoose = require('mongoose');
 var passport = require('passport');
 var flash = require('connect-flash');
 var helpers = require('handlebars-helpers')();
 var path = require('path');
+
+var compression = require('compression');
+app.use(compression());
 
 var expressValidator = require('express-validator');
 app.use(expressValidator());
@@ -52,32 +55,37 @@ app.use(bodyParser()); // get information from html forms
 
 // View engine (Handlebars)
 hbs = handlebars.create({
-    defaultLayout: 'main',
-    helpers: {
-        plural: function (number, text) {
-            var singular = number === 1;
-            // If no text parameter was given, just return a conditional s.
-            if ( typeof text !== 'string' ) return singular ? '' : 's';
-            // Split with regex into group1/group2 or group1(group3)
-            var match = text.match( /^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/ );
-            // If no match, just append a conditional s.
-            if ( !match ) return text + ( singular ? '' : 's' );
-            // We have a good match, so fire away
-            return singular && match[1] // Singular case
-            || match[2] // Plural case: 'bagel/bagels' --> bagels
-            || match[1] + ( match[3] || 's' ); // Plural case: 'bagel(s)' or 'bagel' --> bagels
-        },
-        buildComment(comment, depth) {
-            if (!depth) depth = 1;
-            var tree = [];
-            tree.push({comment: comment, depth: depth})
-            comment.replies.forEach((r) => {
-                depth = depth+1
-                tree.comment.replies.depth = depth;
-            });
-            return tree;
-        }
+  defaultLayout: 'main',
+  helpers: {
+    plural: function (number, text) {
+      var singular = number === 1;
+      // If no text parameter was given, just return a conditional s.
+      if (typeof text !== 'string') return singular ? '' : 's';
+      // Split with regex into group1/group2 or group1(group3)
+      var match = text.match(/^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/);
+      // If no match, just append a conditional s.
+      if (!match) return text + (singular ? '' : 's');
+      // We have a good match, so fire away
+      return singular && match[1] // Singular case
+        ||
+        match[2] // Plural case: 'bagel/bagels' --> bagels
+        ||
+        match[1] + (match[3] || 's'); // Plural case: 'bagel(s)' or 'bagel' --> bagels
+    },
+    buildComment(comment, depth) {
+      if (!depth) depth = 1;
+      var tree = [];
+      tree.push({
+        comment: comment,
+        depth: depth
+      })
+      comment.replies.forEach((r) => {
+        depth = depth + 1
+        tree.comment.replies.depth = depth;
+      });
+      return tree;
     }
+  }
 });
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
@@ -90,9 +98,9 @@ app.use(express.static('public'));
 const MongoStore = require('connect-mongo')(session);
 
 // Required for passport
-var passportAuth = require('./config/auth.js');
+var auth = require('./config/auth.js');
 app.use(session({
-  secret: passportAuth.secret,
+  secret: auth.secret,
   cookie: {
     maxAge: (48 * 60 * 60 * 1000)
   }, // 48 hours
@@ -101,7 +109,7 @@ app.use(session({
   saveUninitialized: false,
   store: new MongoStore({
     mongooseConnection: mongoose.connection,
-    secret: passportAuth.secret
+    secret: auth.secret
   })
 }));
 app.use(passport.initialize());
@@ -112,6 +120,22 @@ app.use(function (req, res, next) {
   delete req.session.sessionFlash;
   next();
 });
+
+webpush = require('web-push');
+if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {
+  vapidKeys = webpush.generateVAPIDKeys();
+  webpush.setVapidDetails(
+    'mailto:support@sweet.sh',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+} else {
+  webpush.setVapidDetails(
+    'mailto:support@sweet.sh',
+    auth.vapidPublicKey,
+    auth.vapidPrivateKey
+  );
+}
 
 app.use(function (req, res, next) {
   if (req.isAuthenticated() && req.user.username == "very") {
@@ -144,4 +168,15 @@ require('./app/postingToSweet.js')(app);
 
 // launch ======================================================================
 app.listen(port);
+
+/*var https = require('https');
+var httpsOptions = {
+    key: fs.readFileSync('../192.168.1.15-key.pem'),
+    cert: fs.readFileSync('../192.168.1.15.pem')
+};
+https.createServer(httpsOptions, app)
+.listen(3000, function () {
+  console.log('app listening on port 3000! Go to https://localhost:3000/')
+})*/
+
 console.log('The magic happens on port ' + port);

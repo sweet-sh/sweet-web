@@ -84,7 +84,7 @@
           <div class="form-group">
             <label>Community image (optional but strongly recommended!)</label>
             <div id="image-preview">
-              <label for="image-upload" id="image-label">Choose file</label>
+              <label for="image-upload" id="image-label">Choose image</label>
               <input type="file" name="imageUpload" id="image-upload" accept="image/*" />
             </div>
           </div>
@@ -92,8 +92,9 @@
         </form>
       </div>
       <div class="tab-pane fade show active" id="directory" role="tabpanel" aria-labelledby="directoryTab">
-        <div class="container" id="directoryResults"></div>
-        <div class="page-load-status">
+        <div class="container" id="directoryResults" style="display:none;"></div>
+        {{!--the page loading animation is hidden at the start bc the default starting tab is the "joined communities" one and that doesn't load stuff with infinite scroll --}}
+        <div class="page-load-status" style="display:none;">
           <div class="loader-ellips infinite-scroll-request">
             <span class="loader-ellips__dot"></span>
             <span class="loader-ellips__dot"></span>
@@ -115,6 +116,8 @@
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     console.log(e.target) // newly activated tab
     if (e.target.id == "directoryTab"){
+      $(".page-load-status").css("display", "inherit");
+      $("#directoryResults").css("display", "inherit");
       $('#directoryResults').infiniteScroll({
         path: function() {
           console.log("Blarp")
@@ -126,19 +129,26 @@
         history: true,
         status: '.page-load-status'
       });
+    }else{
+      $(".page-load-status").css("display","none");
+      $("#directoryResults").css("display", "none");
     }
   })
 
-
-
-  $.uploadPreview({
-    input_field: "#image-upload",
-    preview_box: "#image-preview",
-    label_field: "#image-label",
-    label_default: "Choose file",
-    label_selected: "Change file",
-    no_label: false
-  });
+  $("#image-upload").change(function (e) {
+    var preview = $("#image-preview");
+    var reader = new FileReader();
+    reader.addEventListener("load", function () {
+      preview.css('background-image',"url("+reader.result+")");
+      $("#image-label").html("change image");
+    }, false);
+    if (this.files[0]) {
+      reader.readAsDataURL(this.files[0]);
+    }else{
+      preview.css('background-image',"");
+      $("#image-label").html("choose image");
+    }
+  })
   $("#image-preview").css("background-size", "cover");
   $("#image-preview").css("background-position", "center center");
 

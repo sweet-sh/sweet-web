@@ -397,5 +397,10 @@ $(function() {
       }
     })
   })
+  $('body').on('click','.embedded-video-preview', function(e){
+    e.preventDefault()
+    var embedurl = $(this).attr('embedurl');
+    $(this).replaceWith('<div class="embedded-video-cont"><iframe class="embedded-video" src="'+embedurl+'" frameborder="0" allowfullscreen></iframe></div>')
+  })
 });
 </script>
