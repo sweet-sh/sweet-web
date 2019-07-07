@@ -260,6 +260,7 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center !important
 }
 
+@media(min-width:600px){
 .col-md-4 {
     -webkit-box-flex: 0;
     -ms-flex: 0 0 33.333333%;
@@ -273,12 +274,15 @@ h1, h2, h3, h4, h5, h6 {
     flex: 0 0 66.666667%;
     max-width: 66.666667%
 }
-
+}
 .col-6 {
     -webkit-box-flex: 0;
     -ms-flex: 0 0 50%;
     flex: 0 0 50%;
     max-width: 50%;
+    position: relative;
+    padding-right: 15px;
+    padding-left: 15px;
 }
 
 @media (min-width: 992px) {
@@ -323,14 +327,6 @@ h1, h2, h3, h4, h5, h6 {
     margin-right: .5rem !important
 }
 
-.mb-2, .my-2 {
-    margin-bottom: .5rem !important
-}
-
-.ml-2, .mx-2 {
-    margin-left: .5rem !important
-}
-
 .pt-0, .py-0 {
     padding-top: 0 !important
 }
@@ -363,8 +359,10 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 1.5rem !important
 }
 
+@media(min-width:600px){
 .mr-md-0, .mx-md-0 {
     margin-right: 0 !important
+}
 }
 
 .ml-md-0, .mx-md-0 {
@@ -373,6 +371,16 @@ h1, h2, h3, h4, h5, h6 {
 
 .mt-0, .my-0 {
     margin-top: 0 !important
+}
+
+@media(max-width:600px){
+.mb-2, .my-2 {
+    margin-bottom: .5rem !important
+}
+
+.ml-2, .mx-2 {
+    margin-left: .5rem !important
+}
 }
 
 /*old posts container, deprecated in postsV2.handlebars, still used by systempost and the hidden newPostsAvailable thing*/
@@ -454,6 +462,15 @@ h1, h2, h3, h4, h5, h6 {
 @media (min-width: 1200px) {
     .container {
         max-width: 1140px;
+    }
+}
+
+@media screen and (max-width: 768px){
+    #bodyContainer {
+        width: 100%;
+        padding-left: 0px;
+        padding-right: 0px;
+        padding-top: 70px;
     }
 }
 
