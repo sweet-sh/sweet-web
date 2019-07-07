@@ -74,13 +74,6 @@ body {
     background: #F9F9FA;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    margin-top: 0;
-    margin-bottom: .5rem;
-    font-family: 'Inconsolata', monospace;
-    letter-spacing: -0.5px;
-}
-
 p {
     margin-top: 0;
     margin-bottom: 0.5em;
@@ -214,6 +207,13 @@ blockquote {
 
 .h6, h6 {
     font-size: 1rem
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: -0.5px;
 }
 
 /*containers and page layout-ers*/
@@ -852,21 +852,21 @@ blockquote {
     max-width: 100%;
 }
 
-
-.content-warning-images {
-    display: none;
-}
-
-.content-warning-images-shown {
-    display: grid;
-}
-
 .post-images {
     display: grid;
     grid-column-gap: 2px;
     grid-row-gap: 2px;
     max-height: 450px;
     margin-bottom: 10px;
+}
+
+/*content-warning-images must come after post-images in order to hide them properly*/
+.content-warning-images {
+    display: none;
+}
+
+.content-warning-images-shown {
+    display: grid;
 }
 
 .post-images.vertical-image {
@@ -1825,6 +1825,14 @@ article.comment article.comment {
     color: #fff;
 }
 
+
+button.close {
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    -webkit-appearance: none;
+}
+
 .btn:focus, .btn:hover {
     text-decoration: none
 }
@@ -1832,6 +1840,12 @@ article.comment article.comment {
 .btn.focus, .btn:focus {
     outline: 0;
     box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
 }
 
 .btn:not(:disabled):not(.disabled).active, .btn:not(:disabled):not(.disabled):active {
@@ -1958,11 +1972,6 @@ article.comment article.comment {
     background-color: #6c757d;
     border-color: #6c757d;
 }
-
-.btn-primary {
-    color: #fff;
-}
-
 .btn-secondary {
     color: #fff;
     background-color: #6c757d;
@@ -2124,6 +2133,11 @@ select.form-control:not([size]):not([multiple]) {
     opacity: .9;
 }
 
+.fade {
+    opacity: 0;
+    transition: opacity .15s linear;
+}
+
 .fade.show {
     opacity: 1;
 }
@@ -2154,11 +2168,6 @@ select.form-control:not([size]):not([multiple]) {
     font-size: .875rem;
     word-wrap: break-word;
     opacity: 0;
-}
-
-.fade {
-    opacity: 0;
-    transition: opacity .15s linear;
 }
 
 .bs-tooltip-auto[x-placement^=top] .arrow, .bs-tooltip-top .arrow {
@@ -2207,12 +2216,6 @@ select.form-control:not([size]):not([multiple]) {
     background-color: #ffffff;
 }
 
-@media(max-width:500px) {
-    .link-preview-container {
-        height: 75px;
-    }
-}
-
 .link-preview-container:hover {
     text-decoration: none;
     background: #fcfcfc;
@@ -2240,6 +2243,7 @@ select.form-control:not([size]):not([multiple]) {
     align-self: center;
     max-height: 100%;
     margin-right: auto;
+    max-width: 140px;
 }
 
 .link-preview-description {
@@ -2252,6 +2256,15 @@ select.form-control:not([size]):not([multiple]) {
     font-size: 0.9em;
     font-variant: small-caps;
 }
+
+@media(max-width:500px){
+    .link-preview-container{
+      height:75px;
+    }
+    .link-preview-image {
+        max-width: 100px;
+    }
+  }
 
 .embedded-video-cont {
     background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
@@ -2482,17 +2495,7 @@ select.form-control:not([size]):not([multiple]) {
     background-color: #6c757d
 }
 
-/*miscellaneous! not a big fan of that label but, */
-
-[type=search] {
-    outline-offset: -2px;
-    -webkit-appearance: none
-}
-
-[type=search]::-webkit-search-cancel-button, [type=search]::-webkit-search-decoration {
-    -webkit-appearance: none
-}
-
+/*modal stuff mostly stolen from bootstrap*/
 .modal {
     position: fixed;
     top: 0;
@@ -2503,6 +2506,161 @@ select.form-control:not([size]):not([multiple]) {
     display: none;
     overflow: hidden;
     outline: 0
+}
+
+/*is applied to the body element*/
+.modal-open {
+    overflow: hidden;
+}
+
+.modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    border-top-left-radius: .3rem;
+    border-top-right-radius: .3rem;
+}
+
+.modal.fade .modal-dialog {
+    transition: -webkit-transform .3s ease-out;
+    transition: transform .3s ease-out;
+    transition: transform .3s ease-out,-webkit-transform .3s ease-out;
+    -webkit-transform: translate(0,-25%);
+    transform: translate(0,-25%);
+}
+
+.modal.show .modal-dialog {
+    -webkit-transform: translate(0,0);
+    transform: translate(0,0);
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: .5rem;
+    pointer-events: none;
+}
+
+@media (min-width: 576px){
+    .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+    }
+}
+
+.modal-content {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: .3rem;
+    outline: 0;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+.modal-backdrop.show {
+    opacity: .5;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+}
+.modal-title {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#alertModal, #updateProfileModal {
+    margin-top: 90px;
+}
+
+.bootbox-confirm {
+    padding-top: 60px;
+}
+.close:not(:disabled):not(.disabled) {
+    cursor: pointer;
+}
+.modal-header .close {
+    padding: 1rem;
+    margin: -1rem -1rem -1rem auto;
+}
+.modal-footer>:not(:last-child) {
+    margin-right: .25rem;
+}
+.modal-footer>:not(:first-child) {
+    margin-left: .25rem;
+}
+.close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+.modal-body {
+    position: relative;
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+.modal-footer {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+
+/*miscellaneous! not a big fan of that label but, */
+
+[type=search] {
+    outline-offset: -2px;
+    -webkit-appearance: none
+}
+
+[type=search]::-webkit-search-cancel-button, [type=search]::-webkit-search-decoration {
+    -webkit-appearance: none
 }
 
 /*list-group is used for notifications list and boosters list*/
@@ -2586,13 +2744,6 @@ select.form-control:not([size]):not([multiple]) {
     }
 }
 
-#alertModal, #updateProfileModal {
-    margin-top: 90px;
-}
-
-.bootbox-confirm {
-    padding-top: 60px;
-}
 
 .loader-ellips {
     font-size: 15px;
