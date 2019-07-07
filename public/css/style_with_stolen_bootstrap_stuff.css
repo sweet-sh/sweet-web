@@ -1442,6 +1442,8 @@ article.post>header .metadata {
 }
 
 .postAuthorImage {
+    width: 46px;
+    height: 46px;
     border-radius: 5px;
     display: inline;
     margin-right: 5px;
