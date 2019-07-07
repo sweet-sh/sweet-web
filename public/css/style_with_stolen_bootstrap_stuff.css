@@ -312,6 +312,12 @@ h1, h2, h3, h4, h5, h6 {
 .mt-2, .my-2 {
     margin-top: .5rem !important
 }
+.d-block {
+    display: block!important;
+}
+.mt-3, .my-3 {
+    margin-top: 1rem!important;
+}
 
 .mr-2, .mx-2 {
     margin-right: .5rem !important
@@ -2021,29 +2027,6 @@ button.close {
 
 
 /*boring non-rich-text form stuff, for login, search, settings, etc*/
-.form-control {
-    display: block;
-    width: 100%;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    font-family: 'Ubuntu', sans-serif;
-}
-
-.form-control:focus {
-    color: #495057;
-    background-color: #fff;
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
-}
-
 .form-control::-webkit-input-placeholder {
     color: #6c757d;
     opacity: 1
@@ -2073,6 +2056,11 @@ button.close {
     margin-left: -5px
 }
 
+.form-inline .form-control {
+    display: inline-block;
+    vertical-align: middle
+}
+
 .form-inline {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -2086,10 +2074,27 @@ button.close {
     align-items: center
 }
 
-.form-inline .form-control {
-    display: inline-block;
-    width: auto;
-    vertical-align: middle
+.form-control {
+    display: block;
+    width: 100%;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
 }
 
 select.form-control:not([size]):not([multiple]) {
@@ -2746,6 +2751,37 @@ select.form-control:not([size]):not([multiple]) {
     }
 }
 
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert {
+    position: relative;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+
+.alert-secondary {
+    color: #383d41;
+    background-color: #e2e3e5;
+    border-color: #d6d8db;
+}
+
+.collapse {
+    display: none;
+}
+
+.alert-success .alert-link {
+    color: #0b2e13;
+}
+
+.alert-link {
+    font-weight: 700;
+}
 
 .loader-ellips {
     font-size: 15px;
