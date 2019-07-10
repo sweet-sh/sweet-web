@@ -97,8 +97,7 @@ hr {
   border-color: #aaa;
 }
 #resultsContainer,
-#directoryResults,
-.commentsList {
+#directoryResults {
   border: 1px solid #dfdfdf;
   background: white;
 }
@@ -131,7 +130,6 @@ article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
 section.comments {
-  background: #f6f6f6;
   border-top: 1px solid #eaeaea;
 }
 .user-list li{
@@ -347,17 +345,22 @@ div.post-images > 1 or more (a > img.post-single-image)
 }
 
 .new-comment-form {
-  background-color: #ffffffaa;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
-  padding: 1rem 1.25rem;
+    background-color: #f6f6f6;
+    /* box-shadow: inset 0 2px 3px rgba(0,0,0,0.09); */
+    padding: .75rem 1rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    margin: 0 0 1rem;
 }
 .comment .new-comment-form {
-  background-color: transparent;
-  box-shadow: none;
-  padding-left: 10%;
-  padding-right: 0.5rem;
-  padding-bottom: 0;
-  padding-top: 0.5rem;
+    background-color: transparent;
+    box-shadow: none;
+    padding-left: 10%;
+    padding-right: 0.5rem;
+    padding-bottom: 0;
+    padding-top: 0.5rem;
+    border: none;
+    margin: 0;
 }
 .pane {
     background: #fff;
@@ -682,8 +685,7 @@ hr {
 
 #resultsContainer,
 #directoryResults,
-.commentsList {
-  /*border moved to colors section*/
+#postsContainer {
   padding: 0;
 }
 
@@ -1381,13 +1383,14 @@ hr {
 
 article.post {
     padding-top: 1rem;
-    border-bottom: 1px solid #dfdfdf;
+    border: 1px solid #cecece;
+    margin-bottom: 1rem;
+    background: #fff;
 }
 article.post > .notifications,
 article.post > header,
 article.post > .content,
-article.post > .toolbar,
-article.post .comments-container {
+article.post > .toolbar {
     padding: 0 1rem;
 }
 
@@ -1539,6 +1542,7 @@ article.post > .toolbar > div:last-child * {
 section.comments {
     font-size: 0.9rem;
     display: none;
+    margin: 0 1rem;
 }
 section.comments:last-child {
     padding-bottom: 0.25rem; /* This looks like a CSS bug */
@@ -1614,7 +1618,12 @@ article.comment > header .timestamp {
 }
 
 article.comment > .content {
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+    background: #f6f6f6;
+    padding: 0.5rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    max-width: 480px;
 }
 article.comment > .content.comment-deleted-content {
     margin-top: 0;
