@@ -990,6 +990,7 @@ module.exports = function (app) {
             images: imageUrlsArray,
             imageDescriptions: displayContext.imageDescriptions,
             imageIsVertical: displayContext.imageIsVertical,
+            imageIsHorizontal: displayContext.imageIsHorizontal,
             community: displayContext.community,
             headerBoosters: boostsForHeader,
             recentlyCommented: false, // This gets set below
@@ -1075,7 +1076,7 @@ module.exports = function (app) {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
-          
+
           //wow, finally.
           displayedPosts.push(displayedPost);
         }

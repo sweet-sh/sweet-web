@@ -187,13 +187,16 @@ module.exports = function (app) {
         var postImageQuality = req.user.settings.imageQuality;
 
         var imageIsVertical = [];
+        var imageIsHorizontal = [];
         for (image of postImages) {
             if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
                 var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
                 imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+                imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
             } else {
                 console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
                 imageIsVertical.push("");
+                imageIsHorizontal.push("");
             }
         }
 
@@ -237,6 +240,7 @@ module.exports = function (app) {
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
+                    imageIsHorizontal: imageIsHorizontal,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -361,6 +365,7 @@ module.exports = function (app) {
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
+                    imageIsHorizontal: imageIsHorizontal,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -575,13 +580,16 @@ module.exports = function (app) {
         let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
 
         var imageIsVertical = [];
+        var imageIsHorizontal = [];
         for (image of postImages) {
             if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
                 var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
                 imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+                imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
             } else {
                 console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
                 imageIsVertical.push("");
+                imageIsHorizontal.push("");
             }
         }
 
@@ -604,7 +612,8 @@ module.exports = function (app) {
             tags: parsedResult.tags,
             images: postImages,
             imageDescriptions: imageDescriptions,
-            imageIsVertical: imageIsVertical
+            imageIsVertical: imageIsVertical,
+            imageIsHorizontal: imageIsHorizontal
         };
 
         Post.findOne({
@@ -907,6 +916,7 @@ module.exports = function (app) {
                                     post_id: commentId.toString(),
                                     imageDescriptions: imageDescriptions,
                                     imageIsVertical: imageIsVertical,
+                                    imageIsHorizontal: imageIsHorizontal,
                                     author: {
                                         username: req.user.username
                                     }
