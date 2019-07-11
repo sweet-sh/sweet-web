@@ -111,9 +111,7 @@ hr {
 }
 #searchHeader,
 #postForm {
-  border-top: 1px solid #dfdfdf;
-  border-left: 1px solid #dfdfdf;
-  border-right: 1px solid #dfdfdf;
+  border: 1px solid #cecece;
   background: white;
   padding: 15px;
 }
@@ -129,7 +127,10 @@ hr {
 article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-section.comments {
+/* If this border were applied to .comments, not the first comment, it would sit
+on top of the new comment form when there aren't any comments, and that looks dumb */
+section.comments > .comments-container > .comment:first-child {
+  padding-top: 1.5rem;
   border-top: 1px solid #eaeaea;
 }
 .user-list li{
@@ -1387,6 +1388,10 @@ article.post {
     margin-bottom: 1rem;
     background: #fff;
 }
+/* Prevent double border on first post in feed */
+article.post:first-child {
+    border-top: 0;
+}
 article.post > .notifications,
 article.post > header,
 article.post > .content,
@@ -1544,14 +1549,15 @@ section.comments {
     display: none;
     margin: 0 1rem;
 }
-section.comments:last-child {
-    padding-bottom: 0.25rem; /* This looks like a CSS bug */
-}
+
 article.comment {
-    margin-top: 1rem;
+    margin-top: .75rem;
+}
+div.comments-container > article.comment:first-child {
+    margin-top: 0; /* Otherwise comments section jumps when appearing??  */
 }
 article.comment:last-child {
-    margin-bottom: 1rem;
+    margin-bottom: .75rem;
 }
 article.comment.recent-comment-content {
     border-radius: 6px;
