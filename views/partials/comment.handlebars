@@ -25,16 +25,22 @@
             </div>
         </header>
     {{/unless}}
-    <section class="content{{#if this.deleted}} comment-deleted-content{{/if}}">
-        {{#unless this.deleted}}
-            {{{this.parsedContent}}}
-            {{#if this.images}}
-                {{> imagegallery }}
-            {{/if}}
-        {{else}}
+    {{#if this.deleted}}
+        <section class="content comment-deleted-content">
             <p class="comment-deleted-message">Comment deleted</p>
-        {{/unless}}
-    </section>
+        </section>
+    {{else}}
+        {{#if this.parsedContent}}
+            <section class="content">
+                {{{this.parsedContent}}}
+            </section>
+        {{/if}}
+    {{/if}}
+    {{#unless this.deleted}}
+        {{#if this.images}}
+            {{> imagegallery }}
+        {{/if}}
+    {{/unless}}
     <footer class="toolbar">
         {{#if this.canReply }}
             {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}

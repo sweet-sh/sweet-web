@@ -130,7 +130,7 @@ article.post:hover {
 /* If this border were applied to .comments, not the first comment, it would sit
 on top of the new comment form when there aren't any comments, and that looks dumb */
 section.comments > .comments-container > .comment:first-child {
-  padding-top: 1.5rem;
+  padding-top: 1rem;
   border-top: 1px solid #eaeaea;
 }
 .user-list li{
@@ -282,23 +282,24 @@ div.post-images > 1 or more (a > img.post-single-image)
   min-height: 100%;
 }
 
-.comment .content .post-images {
-    max-width: 450px;
+.comment .post-images {
+    max-width: 480px;
     max-height: 200px;
+    margin-top: 0.35rem;
 }
 
-.comment .content .post-images.one-image {
+.comment .post-images.one-image {
   display: inline-block;
 }
-.comment .content .post-images .post-single-image {
+.comment .post-images .post-single-image {
     max-height: 200px;
 }
 
-.comment .content .post-images img.post-single-image.vertical-image {
+.comment .post-images img.post-single-image.vertical-image {
   max-height: 350px;
 }
 
-.comment .content .post-images.one-image.vertical-image {
+.comment.post-images.one-image.vertical-image {
   max-height: 350px;
 }
 
