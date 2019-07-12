@@ -80,54 +80,66 @@
         <div class="general-tools">
             {{#unless this.commentsDisabled}}
                 {{#if ../loggedIn}}
-                    <button type="button" class="button post-toolbar-button show-comments">
-                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                <div class="toolbar-button-container">
+                	<button type="button" class="button post-toolbar-button show-comments">
+                    	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     </button>
+                </div>
                 {{else}}
                     {{#if this.numberOfComments}}
-                        <button type="button" class="button post-toolbar-button show-comments">
-                            <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
-                        </button>
+                   		<div class="toolbar-button-container">
+                        	<button type="button" class="button post-toolbar-button show-comments">
+                            	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                        	</button>
+                        </div>
                     {{/if}}
                 {{/if}}
             {{/unless}}
             {{#eq this.privacy "public"}}
                 {{#if ../loggedIn}}
                     {{#isnt this.type "community"}}
-                        <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
-                            <button type="submit" class="button post-toolbar-button boost-post">
-                                {{#if youBoosted}}
-                                    <span class="fa-layers fa-fw">
-                                        <i class="fas fa-retweet"></i>
-                                        <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
-                                    </span>
-                                {{else}}
-                                    <i class="fas fa-retweet"></i>
-                                {{/if}}
-                            </button>
-                        </form>
+	                    <div class="toolbar-button-container">
+	                        <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
+	                            <button type="submit" class="button post-toolbar-button boost-post">
+	                                {{#if youBoosted}}
+	                                    <span class="fa-layers fa-fw">
+	                                        <i class="fas fa-retweet"></i>
+	                                        <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+	                                    </span>
+	                                {{else}}
+	                                    <i class="fas fa-retweet"></i>
+	                                {{/if}}
+	                            </button>
+	                        </form>
+	                    </div>
                     {{/isnt}}
                 {{/if}}
             {{/eq}}
-            <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
-              <i class="fas fa-link"></i>
-            </a>
-        </div>
-        <div id="authorTools">
+            <div class="toolbar-button-container">
+	            <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
+	              <i class="fas fa-link"></i>
+	            </a>
+	        </div>
             {{#contains this.subscribedUsers ../loggedInUserData._id}}
-                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
-                    <i class="far fa-bell"></i>
-                </button>
+	            <div class="toolbar-button-container">
+	                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
+	                    <i class="far fa-bell"></i>
+	                </button>
+	            </div>
             {{/contains}}
             {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
-                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
-                    <i class="far fa-bell-slash"></i>
-                </button>
+            	<div class="toolbar-button-container">
+	                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
+	                    <i class="far fa-bell-slash"></i>
+	                </button>
+	            </div>
             {{/contains}}
             {{#if isYourPost}}
-                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
-                    <i class="far fa-trash-alt"></i>
-                </button>
+            	<div class="toolbar-button-container">
+	                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
+	                    <i class="far fa-trash-alt"></i>
+	                </button>
+	            </div>
             {{/if}}
         </div>
     </footer>
