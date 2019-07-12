@@ -68,7 +68,8 @@ var userSchema = new mongoose.Schema({
   pushNotifSubscriptions: [String],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
   bannedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
-  mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }]
+  mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
+  hiddenUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 });
 
 // methods ======================

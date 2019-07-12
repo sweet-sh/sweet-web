@@ -579,6 +579,24 @@ module.exports = function (app) {
           });
       }
 
+      var myMutedUserEmails = () => {
+        myMutedUserEmails = []
+        return Relationship.find({
+            from: loggedInUserData.email,
+            value: "mute"
+          })
+          .then((mutes) => {
+            for (var key in mutes) {
+              var mute = mutes[key];
+              myMutedUserEmails.push(mute.to);
+            }
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
       var usersFlaggedByMyTrustedUsers = () => {
         myTrustedUserEmails = []
         usersFlaggedByMyTrustedUsers = []
@@ -662,7 +680,7 @@ module.exports = function (app) {
         }
       }
 
-      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
+      await myFollowedUserEmails().then(myMutedUserEmails).then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
 
       myFollowedUserEmails.push(loggedInUserData.email)
       usersWhoTrustMeEmails.push(loggedInUserData.email)
@@ -884,6 +902,11 @@ module.exports = function (app) {
               //again in the above if statement
               canDisplay = true;
             }
+          }
+
+          // As a final hurrah, just hide all posts by members you've muted
+          if (myMutedUserEmails.includes(post.authorEmail)) {
+              canDisplay = false;
           }
 
           if (!canDisplay) {
@@ -1530,25 +1553,25 @@ module.exports = function (app) {
       }
     }
 
-    let myBlockedUsers = () => {
+    let myMutedUsers = () => {
       if (req.isAuthenticated()) {
-        myBlockedUserEmails = []
+        myMutedUserEmails = []
         return Relationship.find({
             from: req.user.email,
-            value: "block"
+            value: "mute"
           })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
+          .then((mutes) => {
+            for (var key in mutes) {
+              var mute = mutes[key];
+              myMutedUserEmails.push(mute.to);
             }
             return User.find({
                 email: {
-                  $in: myFlaggedUserEmails
+                  $in: myMutedUserEmails
                 }
               })
               .then((users) => {
-                results.myFlaggedUserData = users
+                results.myMutedUserData = users
               })
           })
           .catch((err) => {
@@ -1668,7 +1691,7 @@ module.exports = function (app) {
         });
     }
 
-    profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
+    profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myMutedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
       var userTrustsYou = false;
       var userFollowsYou = false;
       if (req.isAuthenticated()) {
@@ -1705,6 +1728,13 @@ module.exports = function (app) {
             followed = true;
           }
         })
+        var muted = false;
+        myMutedUserEmails.forEach(function (email) {
+          // Check if logged in user has muted profile user
+          if (email == results.profileData.email) {
+            muted = true;
+          }
+        })
         for (var key in results.flagsOnUser) {
           var flag = results.flagsOnUser[key];
           // Check if logged in user has flagged profile user
@@ -1735,6 +1765,7 @@ module.exports = function (app) {
         profileData: results.profileData,
         trusted: trusted,
         flagged: flagged,
+        muted: muted,
         followed: followed,
         followersData: results.followers,
         usersWhoTrustThemData: results.usersWhoTrustThem,

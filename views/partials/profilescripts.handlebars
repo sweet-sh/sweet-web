@@ -37,11 +37,11 @@ $("#flagButton").click(function () {
 $("#unflagButton").click(function () {
   confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
 });
-$("#blockButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to block this user?', 'block', 'add');
+$("#muteButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to mute this user? Their posts will be hidden from you across sweet - they will not be notified of this.', 'mute', 'add');
 });
-$("#unblockButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unblock this user?', 'block', 'delete');
+$("#unmuteButton").click(function () {
+  confirmRelationshipChange('Are you sure you want to unmute this user? You will be able to see their posts across sweet.', 'mute', 'delete');
 });
 $("#trustButton").click(function () {
   confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
@@ -57,6 +57,6 @@ $("#followButton").click(function () {
 });
 $("#unfollowButton").click(function () {
   confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
-}); 
+});
 </script>
 {{/if}}

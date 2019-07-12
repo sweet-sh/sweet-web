@@ -71,7 +71,7 @@
           </button>
         {{/if}}
         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-ellipsis-h"></i>
+          More
         </button>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
           {{#if flagged}}
@@ -79,11 +79,11 @@
           {{else}}
             <button type="button" id="flagButton" class="dropdown-item text-danger"><i class="fas fa-exclamation-triangle"></i> Flag</button>
           {{/if}}
-          <!-- {{#if blocked}}
-            <button type="button" id="unblockButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unblock</button>
+          {{#if muted}}
+            <button type="button" id="unmuteButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unmute</button>
           {{else}}
-            <button type="button" id="blockButton" class="dropdown-item text-danger"><i class="fas fa-ban"></i> Block</button>
-          {{/if}} -->
+            <button type="button" id="muteButton" class="dropdown-item text-dark"><i class="fas fa-comment-slash"></i> Mute</button>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -91,6 +91,12 @@
       <div class="alert alert-danger w-100 my-2" style="text-align:center;">
         <i class="fas fa-exclamation-triangle"></i>
         {{numberOfFlagsFromTrustedUsers}} {{plural numberOfFlagsFromTrustedUsers 'person/people'}} you trust {{plural numberOfFlagsFromTrustedUsers 'has/have'}} flagged this user.
+      </div>
+    {{/if}}
+    {{#if muted}}
+      <div class="alert alert-dark w-100 my-2" style="text-align:center;">
+        <i class="fas fa-comment-slash"></i>
+        You have muted this user. Their posts are hidden from you.
       </div>
     {{/if}}
     {{#if userTrustsYou}}
@@ -132,7 +138,7 @@
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
-    <div style="height:10px;width:100%;"></div>    
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
 {{#if followersData}}
@@ -141,7 +147,7 @@
     {{#each followersData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
-    <div style="height:10px;width:100%;"></div>    
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
 {{#if isOwnProfile}}
