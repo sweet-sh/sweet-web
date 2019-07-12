@@ -184,10 +184,14 @@ module.exports = function(app, passport) {
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
                                            !mutedMemberIds.includes(member._id.toString());
                                 })
-                                console.log(recentlyActiveMembers.length)
+                                let recentlyActiveMemberIds = recentlyActiveMembers.map(a => a._id.toString());
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
                                 notifier.markRead(req.user._id, community._id);
-                                console.log(majorityMargin)
+                                community.members.forEach((member) => {
+                                    if (recentlyActiveMemberIds.includes(member._id.toString())) {
+                                        member.isRecentlyActive = true;
+                                    }
+                                })
                                 res.render('community', {
                                     loggedIn: isLoggedIn,
                                     loggedInUserData: req.user,

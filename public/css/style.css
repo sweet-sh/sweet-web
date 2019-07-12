@@ -720,6 +720,23 @@ hr {
     flex-wrap: wrap;
 }
 
+.user-list a {
+    display: inline-block;
+    position: relative;
+}
+
+.recently-active-marker {
+    color: #46e146;
+    position: absolute;
+    font-size: 0.65rem;
+    left: 23px;
+    bottom: 0px;
+}
+.recently-active-marker-inline {
+    color: #46e146;
+    font-size: 0.65rem;
+}
+
 .user-list.collapse.show,
 .user-list.collapsing {
   display: flex !important;
