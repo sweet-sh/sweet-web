@@ -1411,7 +1411,8 @@ article.post {
     background: #fff;
 }
 /* Prevent double border on first post in feed */
-article.post:first-child {
+/* But then add it back when it's the only one! */
+article.post:first-child:not(:only-child) {
     border-top: 0;
 }
 article.post > .notifications,
