@@ -174,8 +174,20 @@ module.exports = function(app, passport) {
                                     if (bannedMemberIds.includes(member._id.toString()))
                                         member.isBanned = true;
                                 })
-                                let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
+
+                                // Find the number of members who have been active on sweet in the last 2 weeks
+                                // and are not muted - these are members allowed to vote - then work out the
+                                // majority margin required for a vote to pass based on the number of those members
+                                var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
+                                let recentlyActiveMembers = community.members.filter((member) => {
+                                    console.log(member.lastUpdated)
+                                    return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
+                                           !mutedMemberIds.includes(member._id.toString());
+                                })
+                                console.log(recentlyActiveMembers.length)
+                                let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
                                 notifier.markRead(req.user._id, community._id);
+                                console.log(majorityMargin)
                                 res.render('community', {
                                     loggedIn: isLoggedIn,
                                     loggedInUserData: req.user,
@@ -374,7 +386,7 @@ module.exports = function(app, passport) {
                 created = new Date();
                 expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
                 if (community.members.length - community.mutedMembers.length === 1) {
-                    //if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass                    
+                    //if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
                     votesNumber = 0;
                 } else {
                     //otherwise, assume that the person who created the vote is in favor of it and cause them to have voted for it
@@ -753,7 +765,7 @@ module.exports = function(app, passport) {
                 }
                 //first, create the placeholder; then, check if you've just created a duplicate (and remove one and cancel if that's the case.)
                 //it's a bit weird, but it's bc we have no way of checking in advance if there already is one that guarantees there won't be
-                //a placeholder with our proposed name created between our check and our creation of the new one (bc we don't know what code will 
+                //a placeholder with our proposed name created between our check and our creation of the new one (bc we don't know what code will
                 //execute while we are awaiting the save of the new one.) i think this could still result in two changes to the same name being
                 //proposed at the same time and both of them being rejected, but that's incredibly unlikely and also oh well
                 var placeholder = new CommunityPlaceholder({
@@ -860,8 +872,19 @@ module.exports = function(app, passport) {
                         Community.findOne({
                                 _id: req.params.communityid
                             })
+                            .populate('members')
                             .then(community => {
-                                let majorityMargin = helper.isOdd(community.votingMembersCount) ? (community.votingMembersCount / 2) + 0.5 : (community.votingMembersCount / 2) + 1
+                                let mutedMemberIds = community.mutedMembers.map(a => a._id.toString());
+                                // Find the number of members who have been active on sweet in the last 2 weeks
+                                // and are not muted - these are members allowed to vote - then work out the
+                                // majority margin required for a vote to pass based on the number of those members
+                                var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
+                                let recentlyActiveMembers = community.members.filter((member) => {
+                                    return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
+                                           !mutedMemberIds.includes(member._id.toString());
+                                })
+                                let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
+
                                 if (vote.votes >= majorityMargin) {
                                     console.log("Vote passed!")
                                     if (vote.reference == "visibility") {
@@ -1056,7 +1079,7 @@ module.exports = function(app, passport) {
                 _id: req.params.voteid
             })
             .then(vote => {
-                if (!vote.voters.some(v => v.equals(req.user._is))) {
+                if (!vote.voters.some(v => v.equals(req.user._id))) {
                     return res.sendStatus(403);
                 }
                 vote.votes--;
