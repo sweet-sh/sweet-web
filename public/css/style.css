@@ -1586,20 +1586,19 @@ div.comments-container > article.comment:first-child {
 article.comment:last-child {
     margin-bottom: .75rem;
 }
-article.comment.recent-comment-content {
-    border-radius: 6px;
+article.comment .recent-comment-content {
     transition: background 0.5s;
 }
 
-article.comment.recent-comment-content.flash {
+article.comment .recent-comment-content.flash {
     animation: flash 2s ease-out;
     animation-iteration-count: 1;
 }
 
 @keyframes flash {
-    0% { background-color: transparent; }
+    0% { background-color: #f6f6f6; }
     50% { background-color: #fcfaea; }
-    100% { background-color: transparent; }
+    100% { background-color: #f6f6f6; }
 }
 
 #welcome-message-container > footer,
