@@ -412,7 +412,8 @@ p {
 }
 
 body {
-  font-family: 'Ubuntu', sans-serif;
+  /* font-family: 'Ubuntu', sans-serif; */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 96.5%;
 }
 
@@ -424,7 +425,8 @@ h1, h2, h3, h4, h5, h6 {
 .col-md-4 h4,
 .col-md-4 h5,
 .col-md-4 h6 {
-  font-family: 'Ubuntu', sans-serif;
+  /* font-family: 'Ubuntu', sans-serif; */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 #settingsForm h4 {
@@ -1390,7 +1392,8 @@ hr {
 }
 
 .form-control {
-    font-family: 'Ubuntu', sans-serif;
+    /* font-family: 'Ubuntu', sans-serif; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 
@@ -1486,7 +1489,8 @@ article.post > header .post-header-right {
 
 article.post > header h2.author-name {
     font-size: 1em;
-    font-family: 'Ubuntu', sans-serif;
+    /* font-family: 'Ubuntu', sans-serif; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     letter-spacing: 0;
     margin: 0;
     display: flex;
@@ -1624,7 +1628,8 @@ article.comment > header > .author-image {
 #welcome-message-container > footer  h3.author-name,
 article.comment > header h3.author-name {
     font-size: 1em;
-    font-family: 'Ubuntu', sans-serif;
+    /* font-family: 'Ubuntu', sans-serif; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     letter-spacing: 0;
     margin: 0;
     display: flex;
