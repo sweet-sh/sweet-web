@@ -59,11 +59,12 @@
             <section class="content comment-deleted-content">
                 <p class="comment-deleted-message">Comment deleted</p>
             </section>
-        {{/if}}
-        {{#if this.muted}}
-            <section class="content comment-muted-content">
-                <p class="comment-muted-message">Comment hidden</p>
-            </section>
+        {{else}}
+            {{#if this.muted}}
+                <section class="content comment-muted-content">
+                    <p class="comment-muted-message">Comment hidden</p>
+                </section>
+            {{/if}}
         {{/if}}
         <footer class="toolbar">
             {{#if this.canReply }}
