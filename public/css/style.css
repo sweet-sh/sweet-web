@@ -1570,8 +1570,11 @@ article.post > .toolbar > div:last-child * {
 
 section.comments {
     font-size: 0.9rem;
-    display: none;
     margin: 0 1rem;
+}
+
+section.comments:not(.single-post-comments) {
+    display: none;
 }
 
 article.comment {

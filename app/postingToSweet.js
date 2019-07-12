@@ -790,6 +790,20 @@ module.exports = function (app) {
                                     notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                                 }
 
+                                // NOTIFY THE PARENT COMMENT'S AUTHOR
+                                // Author doesn't need to know about their own child comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above, and if they're the post's author as well as the parent comment's author (they got a notification above for that too)
+                                // First check if this comment even HAS a parent (damn orphan comments)
+                                if (target) {
+                                    parentCommentAuthor = target.author;
+                                    if (!parentCommentAuthor._id.equals(req.user._id) &&
+                                        (post.unsubscribedUsers.includes(parentCommentAuthor._id.toString()) === false) &&
+                                        (!parsedResult.mentions.includes(parentCommentAuthor.username)) &&
+                                        (!originalPoster._id.equals(parentCommentAuthor._id))) {
+                                        console.log("Notifying parent comment author of a reply")
+                                        notifier.notify('user', 'commentReply', parentCommentAuthor._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url + '#comment-' + target._id, 'post')
+                                    }
+                                }
+
                                 //NOTIFY PEOPLE WHO BOOSTED THE POST
                                 if (post.boostsV2.length > 0) {
                                     var boosterIDs = [];
@@ -855,6 +869,8 @@ module.exports = function (app) {
                                         (subscriberID != originalPoster._id.toString()) //don't notify the post's author (because they get a different notification, above)
                                         &&
                                         (post.unsubscribedUsers.includes(subscriberID) === false) //don't notify unsubscribed users
+                                        &&
+                                        (target && subscriberID != parentCommentAuthor._id.toString()) // don't notify parent comment author, if it's a child comment
                                     ) {
                                         console.log("Notifying subscribed user");
                                         User.findById(subscriberID).then((subscriber) => {

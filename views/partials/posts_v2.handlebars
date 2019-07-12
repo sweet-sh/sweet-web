@@ -142,7 +142,7 @@
         {{/if}}
     </footer>
     {{#unless this.commentsDisabled}}
-        <section class="comments">
+        <section class="comments{{#eq @root/activePage "singlepost"}} single-post-comments{{/eq}}">
             <div class="comments-container">
                 {{#if this.comments}}
                     {{#each this.comments}}

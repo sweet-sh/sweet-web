@@ -1,5 +1,5 @@
 {{#if this.canDisplay}}
-    <article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}">
+    <article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}" id="comment-{{this._id}}">
         <header>
             <img alt="Profile image of @{{this.author.username}}" class="author-image" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
             <div class="comment-header-container">
