@@ -647,6 +647,7 @@ module.exports = function (app) {
                 } else {
                     // This is a child level comment so we have to drill through the comments
                     // until we find it
+                    commentParent = undefined;
                     function findNested(array, id, depthSoFar = 2) {
                         var foundElement = false;
                         array.forEach((element) => {
@@ -658,6 +659,7 @@ module.exports = function (app) {
                                     depth = depthSoFar;
                                     element.replies.push(comment);
                                     foundElement = element;
+                                    commentParent = element;
                                 }
                             }
                             if (!element.deleted) {
@@ -667,6 +669,7 @@ module.exports = function (app) {
                                 var found = findNested(element.replies, id, depthSoFar + 1)
                                 if (found) {
                                     foundElement = element;
+                                    commentParent = element;
                                     return found;
                                 }
                             }
@@ -787,20 +790,20 @@ module.exports = function (app) {
                                 // Author doesn't need to know about their own comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above
                                 if (!originalPoster._id.equals(req.user._id) && (post.unsubscribedUsers.includes(originalPoster._id.toString()) === false) && (!parsedResult.mentions.includes(originalPoster.username))) {
                                     console.log("Notifying post author of a reply")
-                                    notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
+                                    notifier.notify('user', 'reply', originalPoster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url + '#comment-' + comment._id, 'post')
                                 }
 
                                 // NOTIFY THE PARENT COMMENT'S AUTHOR
                                 // Author doesn't need to know about their own child comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above, and if they're the post's author as well as the parent comment's author (they got a notification above for that too)
-                                // First check if this comment even HAS a parent (damn orphan comments)
-                                if (target) {
-                                    parentCommentAuthor = target.author;
+                                // First check if this comment even HAS a parent
+                                if (commentParent) {
+                                    parentCommentAuthor = commentParent.author;
                                     if (!parentCommentAuthor._id.equals(req.user._id) &&
                                         (post.unsubscribedUsers.includes(parentCommentAuthor._id.toString()) === false) &&
                                         (!parsedResult.mentions.includes(parentCommentAuthor.username)) &&
                                         (!originalPoster._id.equals(parentCommentAuthor._id))) {
                                         console.log("Notifying parent comment author of a reply")
-                                        notifier.notify('user', 'commentReply', parentCommentAuthor._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url + '#comment-' + target._id, 'post')
+                                        notifier.notify('user', 'commentReply', parentCommentAuthor._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url + '#comment-' + commentParent._id, 'post')
                                     }
                                 }
 
@@ -870,7 +873,7 @@ module.exports = function (app) {
                                         &&
                                         (post.unsubscribedUsers.includes(subscriberID) === false) //don't notify unsubscribed users
                                         &&
-                                        (target && subscriberID != parentCommentAuthor._id.toString()) // don't notify parent comment author, if it's a child comment
+                                        (commentParent && subscriberID != parentCommentAuthor._id.toString()) // don't notify parent comment author, if it's a child comment
                                     ) {
                                         console.log("Notifying subscribed user");
                                         User.findById(subscriberID).then((subscriber) => {
