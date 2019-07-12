@@ -904,7 +904,7 @@ module.exports = function (app) {
             }
           }
 
-          // As a final hurrah, just hide all posts by members you've muted
+          // As a final hurrah, just hide all posts by users you've muted
           if (myMutedUserEmails.includes(post.authorEmail)) {
               canDisplay = false;
           }
@@ -1041,16 +1041,24 @@ module.exports = function (app) {
           function parseComments(element, level) {
             if (!level) level = 1;
             element.forEach(async function (comment) {
+              comment.canDisplay = true;
+              comment.muted = false;
               // I'm not sure why, but boosts in the home feed don't display
               // comment authors below the top level - this fixes it, but
               // it's kind of a hack - I can't work out what's going on
               if (!comment.author.username) {
                 console.log("Comment did not have author information!")
-
                 function getUser(user) {
                   return User.findById(user);
                 }
                 comment.author = await getUser(comment.author)
+              }
+              if (myMutedUserEmails.includes(comment.author.email)) {
+                  comment.muted = true;
+                  comment.canDisplay = false;
+              }
+              if (comment.deleted) {
+                  comment.canDisplay = false;
               }
               momentifiedTimestamp = moment(comment.timestamp);
               if (momentifiedTimestamp.isSame(today, 'd')) {
@@ -1090,10 +1098,6 @@ module.exports = function (app) {
             }
           }
           parseComments(displayedPost.comments);
-          // if (displayedPost._id.equals('5d04d2b0da26de82313546f3')){
-          //     console.log(displayedPost.comments)
-          // }
-          // });
 
           if (req.isAuthenticated() && req.params.context == "single") {
             // Mark associated notifications read if post is visible

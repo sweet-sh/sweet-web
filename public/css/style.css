@@ -1654,7 +1654,8 @@ article.comment > .content {
     border-radius: 4px;
     max-width: 480px;
 }
-article.comment > .content.comment-deleted-content {
+article.comment > .content.comment-deleted-content,
+article.comment > .content.comment-muted-content {
     margin-top: 0;
 }
 article.comment > .content p:last-child {
@@ -1781,7 +1782,8 @@ a.show-more:hover { /* Shim for old show more button element */
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
 }
 
-.comment-deleted-message {
+.comment-deleted-message,
+.comment-muted-message {
     font-style: italic;
     font-weight: 300;
 }

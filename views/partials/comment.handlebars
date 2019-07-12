@@ -1,5 +1,5 @@
-<article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}">
-    {{#unless this.deleted}}
+{{#if this.canDisplay}}
+    <article class="comment {{#if isRecent}} recent-comment-content{{/if}}" data-comment-id="{{this._id}}">
         <header>
             <img alt="Profile image of @{{this.author.username}}" class="author-image" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
             <div class="comment-header-container">
@@ -24,40 +24,65 @@
                 </aside>
             </div>
         </header>
-    {{/unless}}
-    {{#if this.deleted}}
-        <section class="content comment-deleted-content">
-            <p class="comment-deleted-message">Comment deleted</p>
-        </section>
-    {{else}}
         {{#if this.parsedContent}}
             <section class="content">
                 {{{this.parsedContent}}}
             </section>
         {{/if}}
-    {{/if}}
-    {{#unless this.deleted}}
         {{#if this.images}}
             {{> imagegallery }}
         {{/if}}
-    {{/unless}}
-    <footer class="toolbar">
-        {{#if this.canReply }}
-            {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}
-                <button type="button" class="button comment-toolbar-button reply-to-comment">
-                    Reply
+        <footer class="toolbar">
+            {{#if this.canReply }}
+                {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}
+                    <button type="button" class="button comment-toolbar-button reply-to-comment">
+                        Reply
+                    </button>
+                {{/if}}
+            {{/if}}
+            {{#if this.canDelete }}
+                <button type="button" class="button comment-toolbar-button delete-comment" id="{{this._id}}" data-comment-id="{{this._id}}">
+                    Delete
                 </button>
             {{/if}}
+        </footer>
+        <section class="replies">
+            {{#each this.replies}}
+                {{> comment }}
+            {{/each}}
+        </section>
+    </article>
+{{else}}
+    {{! comment will not be displayed - render it with the reason}}
+    <article class="comment" data-comment-id="{{this._id}}">
+        {{#if this.deleted}}
+            <section class="content comment-deleted-content">
+                <p class="comment-deleted-message">Comment deleted</p>
+            </section>
         {{/if}}
-        {{#if this.canDelete }}
-            <button type="button" class="button comment-toolbar-button delete-comment" id="{{this._id}}" data-comment-id="{{this._id}}">
-                Delete
-            </button>
+        {{#if this.muted}}
+            <section class="content comment-muted-content">
+                <p class="comment-muted-message">Comment hidden</p>
+            </section>
         {{/if}}
-    </footer>
-    <section class="replies">
-        {{#each this.replies}}
-            {{> comment }}
-        {{/each}}
-    </section>
-</article>
+        <footer class="toolbar">
+            {{#if this.canReply }}
+                {{#if @root.canReply }} {{! Prevents replying to posts in comms where you're not a member, etc.}}
+                    <button type="button" class="button comment-toolbar-button reply-to-comment">
+                        Reply
+                    </button>
+                {{/if}}
+            {{/if}}
+            {{#if this.canDelete }}
+                <button type="button" class="button comment-toolbar-button delete-comment" id="{{this._id}}" data-comment-id="{{this._id}}">
+                    Delete
+                </button>
+            {{/if}}
+        </footer>
+        <section class="replies">
+            {{#each this.replies}}
+                {{> comment }}
+            {{/each}}
+        </section>
+    </article>
+{{/if}}
