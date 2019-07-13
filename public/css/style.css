@@ -1051,31 +1051,21 @@ hr {
   display: none;
 }
 
- .embedded-video-cont {
-  background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
-  background-size: 5.66px 5.66px;
-  border: 1px solid #00000000;
-  border-radius: 4px;
-  margin: 20px 0;
- }
+.embedded-video-cont {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
 
- .embedded-video-cont:hover{
-  border: 1px solid lightgrey;
- }
-
- .embedded-video {
-   width: 75%;
-   height: 293.6px; /*16:9 aspect ratio on maximized window on desktop*/
-   margin: 0 auto;
-   display: block;
- }
-
- @media (max-width: 500px){
-   .embedded-video{
-     width: 100%;
-     height: 190.8px; /*16:9 aspect ratio on iPhone 6, at least @very will get the intended experience*/
-   }
- }
+.embedded-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
  .image-preview-holder {
    margin: 0.5em 0;
