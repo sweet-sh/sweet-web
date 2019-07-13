@@ -30,6 +30,20 @@
     <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> Log out</a>
   </div>
 {{/if}}
+{{#unless isOwnProfile}}
+    <div class="user-tags">
+        {{#if userTrustsYou}}
+            <span class="badge badge-secondary mr-1">
+                Trusts you
+            </span>
+        {{/if}}
+        {{#if userFollowsYou}}
+            <span class="badge badge-secondary mr-1">
+                Follows you
+            </span>
+        {{/if}}
+    </div>
+{{/unless}}
 {{#if profileData.aboutParsed}}
     <section class="profile-about">
         <p>
@@ -99,16 +113,6 @@
       <div class="alert alert-dark w-100 my-2" style="text-align:center;">
         <i class="fas fa-comment-slash"></i>
         You have muted this user. Their posts are hidden from you.
-      </div>
-    {{/if}}
-    {{#if userTrustsYou}}
-      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
-        This user trusts you. You can see their private posts.
-      </div>
-    {{/if}}
-    {{#if userFollowsYou}}
-      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
-        This user follows you.
       </div>
     {{/if}}
   {{/if}}

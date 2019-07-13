@@ -200,19 +200,116 @@ module.exports = function (app) {
     })
   });
 
-  //Responds to get requests for the home page.
-  //Input: none
-  //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
-  app.get('/home', isLoggedInOrRedirect, function (req, res) {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-    res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
-    res.setHeader("Expires", "0"); // Proxies.
-    res.render('home', {
-      loggedIn: true,
-      loggedInUserData: req.user,
-      activePage: 'home'
+    //Responds to get requests for the home page.
+    //Input: none
+    //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
+    app.get('/home', isLoggedInOrRedirect, async function (req, res) {
+        async function getRecommendations(){
+            popularCommunities = [];
+            secondaryTrusts = [];
+            secondaryFollows = [];
+            secondaryTrustsArray = [];
+            secondaryFollowsArray = [];
+            lastWeek = moment(new Date()).subtract(7, 'days');
+            popularCommunities = await Community.find({
+                $and: [
+                    { lastUpdated: { $gt: lastWeek } },
+                    { members: { $ne: req.user._id } }
+                ]
+            })
+            .then(communities => {
+                return communities;
+            })
+            async function getRelationships(id, type) {
+                var usersArray = [];
+                return Relationship.find({
+                    fromUser: id,
+                    value: type
+                })
+                .populate('toUser')
+                .sort('-lastUpdated')
+                .then((trusts) => {
+                    trusts.forEach(trust => {
+                        if (!trust.toUser._id.equals(req.user._id) && usersArray.filter(e => !e._id.equals(trust.toUser._id))) {
+                            usersArray.push(trust.toUser);
+                        }
+                    })
+                    return usersArray;
+                })
+            }
+            primaryTrustsArray = await getRelationships(req.user._id, "trust");
+            for (const primaryUser of primaryTrustsArray) {
+                const secondaryTrusts = await getRelationships(primaryUser._id, "trust")
+                for (const secondaryUser of secondaryTrusts) {
+                    if (secondaryTrustsArray.filter(e => !e._id.equals(secondaryUser._id))) {
+                        secondaryTrustsArray.push(secondaryUser)
+                    }
+                }
+            }
+            primaryFollowsArray = await getRelationships(req.user._id, "follow");
+            for (const primaryUser of primaryFollowsArray) {
+                const secondaryFollows = await getRelationships(primaryUser._id, "follow")
+                for (const secondaryUser of secondaryFollows) {
+                    if (secondaryFollowsArray.filter(e => !e._id.equals(secondaryUser._id))) {
+                        secondaryFollowsArray.push(secondaryUser)
+                    }
+                }
+            }
+            results = {
+                popularCommunities: popularCommunities,
+                primaryTrusts: primaryTrustsArray,
+                primaryFollows: primaryFollowsArray,
+                secondaryTrusts: secondaryTrustsArray,
+                secondaryFollows: secondaryFollowsArray
+            }
+            return results;
+        }
+
+        recommendations = await getRecommendations();
+
+        User.findOne({
+            _id: req.user._id
+        })
+        .then(user => {
+            popularCommunities = recommendations.popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
+
+            if (recommendations.popularCommunities.length > 10)
+                recommendations.popularCommunities.length = 10;
+
+            // Dark sorcery to remove duplicate users across two arrays and merge them
+            // High chance of summoning evil demon - is that a bug or a feature?
+            usernames = new Set(recommendations.secondaryTrusts.map(d => d.username));
+            mergedUserRecommendations = [...recommendations.secondaryTrusts, ...recommendations.secondaryFollows.filter(d => !usernames.has(d.username))];
+
+            usersKnown = []
+            recommendations.primaryTrusts.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            recommendations.primaryFollows.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            usersKnown = [...new Set(usersKnown)];
+            console.log(usersKnown)
+            unknownUsers = mergedUserRecommendations.filter(user => !usersKnown.includes(user._id.toString()));
+
+            unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
+            
+            if (unknownUsers.length > 10)
+                unknownUsers.length = 10;
+
+
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+            res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+            res.setHeader("Expires", "0"); // Proxies.
+            res.render('home', {
+                loggedIn: true,
+                loggedInUserData: req.user,
+                activePage: 'home',
+                popularCommunities: popularCommunities,
+                userRecommendations: unknownUsers
+            });
+        });
     });
-  });
 
   //Responds to get requests for the 404 page.
   //Input: user data from req.user
@@ -958,7 +1055,9 @@ module.exports = function (app) {
                     youBoosted = true;
                   } else {
                     if (myFollowedUserIds.some(following => {
-                        return following.equals(v.booster._id)
+                        if (following) {
+                            return following.equals(v.booster._id)
+                        }
                       })) {
                       followedBoosters.push(v.booster.username);
                     } else {

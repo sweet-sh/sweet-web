@@ -176,6 +176,7 @@ section.comments > .comments-container > .comment:first-child {
   border-color: #ddd;
 }
 
+.user-tags .badge,
 .community-tags .badge {
   color: white !important;
   background: #aaa;
@@ -375,7 +376,7 @@ p {
 }
 
 #bodyContainer {
-  padding-top: 90px;
+  padding-top: 80px;
   padding-bottom: 20px;
 }
 
@@ -444,8 +445,8 @@ hr {
   /*box shadow property moved to colors section*/
   border-bottom-width: 2px;
   border-bottom-style: solid;
-  padding-bottom: 0.75rem;
-  padding-top: 0.75rem;
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 #navTitle {
@@ -716,14 +717,15 @@ hr {
     padding: 0;
     margin: 0 0 0 0;
     list-style: none;
-    /* display: flex; */
+    display: flex;
     justify-content: flex-start;
     flex-wrap: wrap;
 }
-
-.user-list a {
-    display: inline-block;
+.user-list-icon {
+    display: flex;
     position: relative;
+    margin-right: 8px;
+    width: 30px;
 }
 
 .recently-active-marker {
@@ -857,9 +859,10 @@ hr {
   margin-bottom: 0 !important;
 }
 
+.user-tags,
 .community-tags {
     margin-top: -10px;
-    margin-bottom: 20px;
+    margin-bottom: 0.5rem;
 }
 
 #updateImage {
@@ -1292,10 +1295,11 @@ hr {
 #welcome-message-container > p:last-child {
   margin: 0;
 }
-
+.user-tags .badge,
 .community-tags .badge {
-  font-weight: 400;
-  font-size: 90%;
+    font-weight: 300;
+    font-size: 0.8rem;
+    text-transform: uppercase;
 }
 
 .medium-editor-element {
@@ -1880,4 +1884,37 @@ a.show-more:hover { /* Shim for old show more button element */
     33%  { transform: translateY(-3px); }
     66%  { transform: translateY(3px); }
     100% { transform: translateY(0); }
+}
+
+.recommendations {
+    border: 1px solid #cecece;
+    background: #fffafc;
+    padding: 0.5rem 1rem 1rem 1rem;
+    position: fixed;
+    width: 350px;
+}
+
+.recommendations-links {
+    font-size: small;
+    margin-top: 0.75rem;
+    display: block;
+    width: 100%;
+    text-align: right;
+}
+
+.recommendations-help-text {
+    display: none;
+}
+
+.hide-recommendation {
+    position: relative !important;
+    right: 11px;
+    bottom: -21px;
+    color: #333;
+    font-size: 0.75rem;
+    background: white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
 }

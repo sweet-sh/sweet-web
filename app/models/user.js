@@ -63,13 +63,15 @@ var userSchema = new mongoose.Schema({
     digestEmailFrequency: { type: String, default: "off" },
     emailTime: { type: String, default: "17:00" },
     emailDay: { type: String, default: "Sunday" },
+    showRecommendations: { type: Boolean, default: true }
   },
   notifications: [notificationSchema],
   pushNotifSubscriptions: [String],
   communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
   bannedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
   mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
-  hiddenUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+  hiddenRecommendedUsers: [String],
+  hiddenRecommendedCommunities: [String]
 });
 
 // methods ======================
