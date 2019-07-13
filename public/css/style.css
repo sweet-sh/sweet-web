@@ -1869,3 +1869,15 @@ a.show-more:hover { /* Shim for old show more button element */
 .post.vote:last-child {
     border-bottom: none;
 }
+
+.bounce {
+    animation-name: bounce;
+    animation-timing-function: linear;
+    animation-duration: 100ms;
+}
+@keyframes bounce {
+    0%   { transform: translateY(0); }
+    33%  { transform: translateY(-3px); }
+    66%  { transform: translateY(3px); }
+    100% { transform: translateY(0); }
+}

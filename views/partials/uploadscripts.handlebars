@@ -17,7 +17,16 @@ $(function() {
     $(".post-controls").css('display', 'flex');
   })
   $("#postContentWarningsButton").click(function () {
-    $("#postContentWarningsContainer").slideToggle("fast");
+    $("#postContentWarningsContainer").removeClass("bounce")
+    if ($("#postContentWarningsContainer").is(":hidden")) {
+        $("#postContentWarningsContainer").slideDown("fast");
+    }
+    else if ($("#postContentWarningsContainer").is(":visible") && !$("#postContentWarnings").val()) {
+        $("#postContentWarningsContainer").slideUp("fast");
+    }
+    else {
+        $("#postContentWarningsContainer").addClass("bounce")
+    }
   })
   $("#postPrivacy-private").change(function () {
     if (this.checked) {
