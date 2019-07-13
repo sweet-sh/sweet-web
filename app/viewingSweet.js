@@ -306,7 +306,6 @@ module.exports = function (app) {
         }
 
         recommendations = await getRecommendations();
-        
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
         res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         res.setHeader("Expires", "0"); // Proxies.
@@ -314,8 +313,8 @@ module.exports = function (app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'home',
-            popularCommunities: recommendations.popularCommunities,
-            userRecommendations: recommendations.userRecommendations
+            popularCommunities: (recommendations.popularCommunities.length > 0 ? rnrecommendations.popularCommunities : false),
+            userRecommendations: (recommendations.userRecommendations.length > 0 ? recommendations.userRecommendations : false)
         });
     });
 
