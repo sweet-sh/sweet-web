@@ -211,15 +211,6 @@ module.exports = function (app) {
             secondaryTrustsArray = [];
             secondaryFollowsArray = [];
             lastWeek = moment(new Date()).subtract(7, 'days');
-            popularCommunities = await Community.find({
-                $and: [
-                    { lastUpdated: { $gt: lastWeek } },
-                    { members: { $ne: req.user._id } }
-                ]
-            })
-            .then(communities => {
-                return communities;
-            })
             async function getRelationships(id, type) {
                 var usersArray = [];
                 return Relationship.find({
@@ -255,10 +246,30 @@ module.exports = function (app) {
                     }
                 }
             }
+
+            usersKnown = []
+            primaryTrustsArray.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            primaryFollowsArray.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            usersKnown = [...new Set(usersKnown)];
+
+            popularCommunities = await Community.find({
+                $and: [
+                    { lastUpdated: { $gt: lastWeek } },
+                    { members: { $ne: req.user._id } },
+                    { members: { $in: usersKnown } }
+                ]
+            })
+            .then(communities => {
+                return communities;
+            })
+
             results = {
                 popularCommunities: popularCommunities,
-                primaryTrusts: primaryTrustsArray,
-                primaryFollows: primaryFollowsArray,
+                usersKnown: usersKnown,
                 secondaryTrusts: secondaryTrustsArray,
                 secondaryFollows: secondaryFollowsArray
             }
@@ -278,22 +289,15 @@ module.exports = function (app) {
 
             // Dark sorcery to remove duplicate users across two arrays and merge them
             // High chance of summoning evil demon - is that a bug or a feature?
-            usernames = new Set(recommendations.secondaryTrusts.map(d => d.username));
-            mergedUserRecommendations = [...recommendations.secondaryTrusts, ...recommendations.secondaryFollows.filter(d => !usernames.has(d.username))];
+            mergedUserRecommendations = recommendations.secondaryTrusts.concat(recommendations.secondaryFollows);
+            mergedUserRecommendations = mergedUserRecommendations.filter((obj, pos, arr) => {
+                return arr.map(mapObj => mapObj['username']).indexOf(obj['username']) === pos;
+            });
 
-            usersKnown = []
-            recommendations.primaryTrusts.forEach(user => {
-                usersKnown.push(user._id.toString())
-            })
-            recommendations.primaryFollows.forEach(user => {
-                usersKnown.push(user._id.toString())
-            })
-            usersKnown = [...new Set(usersKnown)];
-            console.log(usersKnown)
-            unknownUsers = mergedUserRecommendations.filter(user => !usersKnown.includes(user._id.toString()));
+            unknownUsers = mergedUserRecommendations.filter(user => !recommendations.usersKnown.includes(user._id.toString()));
 
             unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
-            
+
             if (unknownUsers.length > 10)
                 unknownUsers.length = 10;
 

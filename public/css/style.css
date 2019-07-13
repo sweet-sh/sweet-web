@@ -176,11 +176,6 @@ section.comments > .comments-container > .comment:first-child {
   border-color: #ddd;
 }
 
-.user-tags .badge,
-.community-tags .badge {
-  color: white !important;
-  background: #aaa;
-}
 .comment-button {
   color: #aaa;
 }
@@ -726,6 +721,10 @@ hr {
     position: relative;
     margin-right: 8px;
     width: 30px;
+}
+
+.user-list a {
+    position: relative;
 }
 
 .recently-active-marker {
@@ -1295,11 +1294,22 @@ hr {
 #welcome-message-container > p:last-child {
   margin: 0;
 }
-.user-tags .badge,
-.community-tags .badge {
+.tag {
     font-weight: 300;
-    font-size: 0.8rem;
     text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 1px solid;
+    border-radius: 4px;
+    line-height: 1rem;
+    padding: 0.15rem 0.25rem;
+    margin-right: 0.25rem;
+    background: #efefef;
+}
+
+.tag.tag-green {
+    border-color: #28a745;
+    background: #eaffea;
+    color: #28a745;
 }
 
 .medium-editor-element {

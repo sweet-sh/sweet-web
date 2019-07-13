@@ -55,9 +55,11 @@ $(function() {
       id = $(this).attr('data-target')
       type = $(this).attr('data-type')
       bootbox.confirm("Are you sure you want to hide this recommendation? There isn't currently a way to restore hidden recommendations.", function(result){
-          $.post('/api/recommendations/remove/' + type + '/' + id, function(){
-              icon.remove();
-          }).fail(function () { console.log("I errored!"); bootbox.alert("Hiding this recommendation failed! Refresh the page and try again."); });
+          if (result == true) {
+              $.post('/api/recommendations/remove/' + type + '/' + id, function(){
+                  icon.remove();
+              }).fail(function () { console.log("I errored!"); bootbox.alert("Hiding this recommendation failed! Refresh the page and try again."); });
+          }
       });
   })
 
