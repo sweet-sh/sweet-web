@@ -1848,3 +1848,24 @@ a.show-more:hover { /* Shim for old show more button element */
 .sl-image {
     box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
 }
+
+ {
+    border-top: 1px solid #cecece;
+}
+
+#votesContainer {
+    padding: 0;
+    border-bottom: 1px solid #cecece;
+    margin-bottom: 1rem;
+}
+.post.vote {
+    background: none;
+    border: 0;
+    border-bottom: 1px solid #cecece;
+}
+.post.vote:hover {
+    box-shadow: none;
+}
+.post.vote:last-child {
+    border-bottom: none;
+}
