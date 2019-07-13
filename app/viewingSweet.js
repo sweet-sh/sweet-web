@@ -256,62 +256,66 @@ module.exports = function (app) {
             })
             usersKnown = [...new Set(usersKnown)];
 
+            // Shows all recently active communities if the user has no friends,
+            // otherwise only recently active communities with a friend in them
+            if (usersKnown.length == 0) {
+                membersQuery = {}
+            }
+            else {
+                membersQuery = { members: { $in: usersKnown } }
+            }
             popularCommunities = await Community.find({
                 $and: [
                     { lastUpdated: { $gt: lastWeek } },
                     { members: { $ne: req.user._id } },
-                    { members: { $in: usersKnown } }
+                    membersQuery
                 ]
             })
             .then(communities => {
                 return communities;
             })
 
-            results = {
-                popularCommunities: popularCommunities,
-                usersKnown: usersKnown,
-                secondaryTrusts: secondaryTrustsArray,
-                secondaryFollows: secondaryFollowsArray
-            }
-            return results;
-        }
-
-        recommendations = await getRecommendations();
-
-        User.findOne({
-            _id: req.user._id
-        })
-        .then(user => {
-            popularCommunities = recommendations.popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
-
-            if (recommendations.popularCommunities.length > 10)
-                recommendations.popularCommunities.length = 10;
-
             // Dark sorcery to remove duplicate users across two arrays and merge them
             // High chance of summoning evil demon - is that a bug or a feature?
-            mergedUserRecommendations = recommendations.secondaryTrusts.concat(recommendations.secondaryFollows);
+            mergedUserRecommendations = secondaryTrustsArray.concat(secondaryFollowsArray);
             mergedUserRecommendations = mergedUserRecommendations.filter((obj, pos, arr) => {
                 return arr.map(mapObj => mapObj['username']).indexOf(obj['username']) === pos;
             });
 
-            unknownUsers = mergedUserRecommendations.filter(user => !recommendations.usersKnown.includes(user._id.toString()));
+            return User.findOne({
+                _id: req.user._id
+            })
+            .then(user => {
+                popularCommunities = popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
 
-            unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
+                if (popularCommunities.length > 10)
+                    popularCommunities.length = 10;
 
-            if (unknownUsers.length > 10)
-                unknownUsers.length = 10;
+                unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e._id.toString()));
+                unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
 
+                if (unknownUsers.length > 10)
+                    unknownUsers.length = 10;
 
-            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-            res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
-            res.setHeader("Expires", "0"); // Proxies.
-            res.render('home', {
-                loggedIn: true,
-                loggedInUserData: req.user,
-                activePage: 'home',
-                popularCommunities: popularCommunities,
-                userRecommendations: unknownUsers
+                results = {
+                    popularCommunities: popularCommunities,
+                    userRecommendations: unknownUsers
+                }
+                return results;
             });
+        }
+
+        recommendations = await getRecommendations();
+        
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        res.setHeader("Expires", "0"); // Proxies.
+        res.render('home', {
+            loggedIn: true,
+            loggedInUserData: req.user,
+            activePage: 'home',
+            popularCommunities: recommendations.popularCommunities,
+            userRecommendations: recommendations.userRecommendations
         });
     });
 

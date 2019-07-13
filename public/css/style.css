@@ -883,7 +883,7 @@ hr {
     flex-direction: column;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
     border: 1px solid #b6b6b6;
-    top: 50px;
+    top: 46px;
 }
 
 @media (min-width: 576px) {
