@@ -125,9 +125,8 @@
                     <i class="far fa-bell"></i>
                 </button>
             </div>
-        {{/contains}}
-        {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
-        	<div class="toolbar-button-container">
+        {{else}}
+            <div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Not receiving notifications (click to change)">
                     <i class="far fa-bell-slash"></i>
                 </button>

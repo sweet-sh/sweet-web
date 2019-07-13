@@ -623,6 +623,7 @@ module.exports = function (app) {
             .then((post) => {
                 numberOfComments = 0;
                 var depth = undefined;
+                commentParent = false;
                 if (req.params.commentid == 'undefined') {
                     depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
@@ -873,7 +874,7 @@ module.exports = function (app) {
                                         &&
                                         (post.unsubscribedUsers.includes(subscriberID) === false) //don't notify unsubscribed users
                                         &&
-                                        (commentParent && subscriberID != parentCommentAuthor._id.toString()) // don't notify parent comment author, if it's a child comment
+                                        (commentParent ? subscriberID != parentCommentAuthor._id.toString() : true) // don't notify parent comment author, if it's a child comment (because they get a different notification, above)
                                     ) {
                                         console.log("Notifying subscribed user");
                                         User.findById(subscriberID).then((subscriber) => {

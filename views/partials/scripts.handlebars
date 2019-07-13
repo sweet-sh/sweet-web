@@ -384,7 +384,7 @@ $(function() {
   })
   $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
-    bootbox.confirm("You are currently receiving notifications when someone comments on this post. Would you like to mute this post to stop receiving these notifications? You will still be notified if someone mentions you.", function(result){
+    bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
           button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
@@ -394,7 +394,7 @@ $(function() {
   })
   $('body').on('click', '.subscribe-post', function(e) {
     var button = $(this);
-    bootbox.confirm("You have muted this post. Would you like to unmute it and start receiving notifications when someone comments?", function(result){
+    bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
           button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
