@@ -72,6 +72,11 @@
             </div>
             <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
         {{/if}}
+        {{#if this.embeds}}
+            {{#each this.embeds}}
+                {{> embed }}
+            {{/each}}
+        {{/if}}
         {{#if this.images}}
             {{> imagegallery }}
         {{/if}}

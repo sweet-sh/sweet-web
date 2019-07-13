@@ -245,7 +245,8 @@ module.exports = function (app) {
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
-                    }]
+                    }],
+                    embeds: parsedResult.embeds
                     // linkPreview: linkPreview
                 });
 
@@ -371,6 +372,7 @@ module.exports = function (app) {
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
+                    embeds: parsedResult.embeds,
                     // linkPreview: linkPreview
                 });
 

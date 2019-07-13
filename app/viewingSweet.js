@@ -1020,6 +1020,7 @@ module.exports = function (app) {
             lastCommentAuthor: "", // As does this
             subscribedUsers: displayContext.subscribedUsers,
             unsubscribedUsers: displayContext.unsubscribedUsers,
+            embeds: displayContext.embeds,
             // linkPreview: displayContext.linkPreview
           }
 
