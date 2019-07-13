@@ -904,7 +904,7 @@ module.exports = function (app) {
             }
           }
 
-          // As a final hurrah, just hide all posts by users you've muted
+          // As a final hurrah, just hide all posts and boosts made by users you've muted
           if (myMutedUserEmails.includes(post.authorEmail)) {
               canDisplay = false;
           }
@@ -1143,7 +1143,6 @@ module.exports = function (app) {
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
           if (typeof displayedPost !== 'undefined') {
-            console.log(displayedPost)
             var canDisplay = true;
             if (displayedPost.images != "") {
               console.log("Post has an image!")
@@ -1788,6 +1787,10 @@ module.exports = function (app) {
       console.log(err)
     })
   });
+
+  app.get("/api/suggestions/users", isLoggedInOrRedirect, function (req, res){
+
+  })
 
   //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
   //to seen=true
