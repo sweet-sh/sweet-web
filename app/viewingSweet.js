@@ -313,7 +313,7 @@ module.exports = function (app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'home',
-            popularCommunities: (recommendations.popularCommunities.length > 0 ? rnrecommendations.popularCommunities : false),
+            popularCommunities: (recommendations.popularCommunities.length > 0 ? recommendations.popularCommunities : false),
             userRecommendations: (recommendations.userRecommendations.length > 0 ? recommendations.userRecommendations : false)
         });
     });
