@@ -542,23 +542,6 @@ h1, h2, h3, h4, h5, h6 {
     color: #666;
     font-size: 90%;
 }
-
-#navTitle {
-    font-family: "Inconsolata", monospace;
-    align-self: center;
-    font-size: 1.6em;
-    font-weight: 500;
-    display: flex;
-    width: 28px;
-    margin: 0;
-    padding: 0;
-    height: 28px;
-    justify-content: center;
-    align-items: center;
-    border-radius: 6px;
-    padding-bottom: 5px;
-}
-
 #sweetLogo {
     width: 30px;
     height: 30px;
@@ -617,11 +600,6 @@ h1, h2, h3, h4, h5, h6 {
     height: 30px;
     border-radius: 6px;
     border: 1px solid transparent;
-}
-
-
-#navTitle a {
-    text-decoration: none;
 }
 
 .navbar-group {
