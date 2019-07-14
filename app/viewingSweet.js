@@ -218,11 +218,11 @@ module.exports = function (app) {
                     fromUser: id,
                     value: type
                 })
-                .populate('toUser')
+                // .populate('toUser')
                 .sort('-lastUpdated')
                 .then((trusts) => {
                     trusts.forEach(trust => {
-                        if (!trust.toUser._id.equals(req.user._id) && usersArray.filter(e => !e._id.equals(trust.toUser._id))) {
+                        if (!trust.toUser.equals(req.user._id) && usersArray.filter(e => !e.equals(trust.toUser))) {
                             usersArray.push(trust.toUser);
                         }
                     })
@@ -241,9 +241,9 @@ module.exports = function (app) {
             console.time('primaryTrusts')
             primaryTrustsArray = await getRelationships(req.user._id, "trust");
             for (const primaryUser of primaryTrustsArray) {
-                const secondaryTrusts = await getRelationships(primaryUser._id, "trust")
+                const secondaryTrusts = await getRelationships(primaryUser, "trust")
                 for (const secondaryUser of secondaryTrusts) {
-                    if (secondaryTrustsArray.filter(e => !e._id.equals(secondaryUser._id))) {
+                    if (secondaryTrustsArray.filter(e => !e.equals(secondaryUser))) {
                         secondaryTrustsArray.push(secondaryUser)
                     }
                 }
@@ -263,10 +263,10 @@ module.exports = function (app) {
 
             usersKnown = []
             primaryTrustsArray.forEach(user => {
-                usersKnown.push(user._id.toString())
+                usersKnown.push(user.toString())
             })
             primaryFollowsArray.forEach(user => {
-                usersKnown.push(user._id.toString())
+                usersKnown.push(user.toString())
             })
             usersKnown = [...new Set(usersKnown)];
 
@@ -289,12 +289,13 @@ module.exports = function (app) {
                 return communities;
             })
 
-            // Dark sorcery to remove duplicate users across two arrays and merge them
-            // High chance of summoning evil demon - is that a bug or a feature?
+            function dedupeIDs(objectIDs) {
+              const ids = {}
+              objectIDs.forEach(_id => (ids[_id.toString()] = _id))
+              return Object.values(ids)
+            }
             mergedUserRecommendations = secondaryTrustsArray.concat(secondaryFollowsArray);
-            mergedUserRecommendations = mergedUserRecommendations.filter((obj, pos, arr) => {
-                return arr.map(mapObj => mapObj['username']).indexOf(obj['username']) === pos;
-            });
+            mergedUserRecommendations = dedupeIDs(mergedUserRecommendations)
 
             return User.findOne({
                 _id: req.user._id
@@ -306,22 +307,27 @@ module.exports = function (app) {
                 if (popularCommunities.length > 10)
                     popularCommunities.length = 10;
 
-                unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e._id.toString()));
+                unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e.toString()));
                 unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
 
-                unknownUsers.sort((a,b) => b.lastUpdated - a.lastUpdated);
+                return User.find({
+                    _id: unknownUsers
+                })
+                .then(userData => {
+                    userData.sort((a,b) => b.lastUpdated - a.lastUpdated);
 
-                if (unknownUsers.length > 10)
-                    unknownUsers.length = 10;
+                    if (userData.length > 10)
+                        userData.length = 10;
 
-                results = {
-                    popularCommunities: popularCommunities,
-                    userRecommendations: unknownUsers,
-                    popularHashtags: popularHashtags
-                }
-                console.timeEnd('userFunctions')
-                console.timeEnd('getRecommendationsFunction')
-                return results;
+                    results = {
+                        popularCommunities: popularCommunities,
+                        userRecommendations: userData,
+                        popularHashtags: popularHashtags
+                    }
+                    console.timeEnd('userFunctions')
+                    console.timeEnd('getRecommendationsFunction')
+                    return results;
+                })
             });
         }
         recommendations = await getRecommendations();
