@@ -302,6 +302,8 @@ module.exports = function (app) {
                 unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e._id.toString()));
                 unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
 
+                unknownUsers.sort((a,b) => b.lastUpdated - a.lastUpdated);
+
                 if (unknownUsers.length > 10)
                     unknownUsers.length = 10;
 

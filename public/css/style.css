@@ -1448,12 +1448,12 @@ article.post > .notifications div a:hover {
     color: #ce1717;
 }
 article.post > .notifications div.recently-commented-notification {
-    color: #F87E2C;
+    color: #D99BB4;
 }
 article.post > .notifications div.recently-commented-notification a,
 article.post > .notifications div.recently-commented-notification a:active,
 article.post > .notifications div.recently-commented-notification a:visited {
-    color: #F87E2C; /* Green #529C5F */
+    color: #D99BB4; /* Green #529C5F */
 }
 article.post > .notifications div.recently-commented-notification a:hover {
     color: #ce1717;
