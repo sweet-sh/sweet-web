@@ -97,8 +97,7 @@ hr {
   border-color: #aaa;
 }
 #resultsContainer,
-#directoryResults,
-.commentsList {
+#directoryResults {
   border: 1px solid #dfdfdf;
   background: white;
 }
@@ -112,9 +111,7 @@ hr {
 }
 #searchHeader,
 #postForm {
-  border-top: 1px solid #dfdfdf;
-  border-left: 1px solid #dfdfdf;
-  border-right: 1px solid #dfdfdf;
+  border: 1px solid #cecece;
   background: white;
   padding: 15px;
 }
@@ -130,8 +127,10 @@ hr {
 article.post:hover {
     box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
-section.comments {
-  background: #f6f6f6;
+/* If this border were applied to .comments, not the first comment, it would sit
+on top of the new comment form when there aren't any comments, and that looks dumb */
+section.comments > .comments-container > .comment:first-child {
+  padding-top: 1rem;
   border-top: 1px solid #eaeaea;
 }
 .user-list li{
@@ -177,10 +176,6 @@ section.comments {
   border-color: #ddd;
 }
 
-.community-tags .badge {
-  color: white !important;
-  background: #aaa;
-}
 .comment-button {
   color: #aaa;
 }
@@ -203,30 +198,108 @@ section.comments {
   background-color: #fff;
   border: 1px dashed #d5d5d5;
 }
-.two-images img,
-.three-images img,
-.four-images img {
-  border: 1px solid #eaeaea;
+
+/* ====== POST IMAGES ======= */
+
+/*
+STRUCTURE
+div.post-images > 1 or more (a > img.post-single-image)
+*/
+
+/* Base style for outside container */
+.post-images {
+  display: grid;
+  grid-column-gap: 2px;
+  grid-row-gap: 2px;
+  max-height: 450px;
 }
+
+/* Base style for individual images */
 .post-single-image {
-  border-bottom: 1px solid transparent;
+  transition: all 100ms ease-in;
+  border-radius: 4px;
+  border: 1px solid #ededed;
 }
-.post-images.two-images .post-single-image:hover,
-.post-images.three-images .post-single-image:hover,
-.post-images.four-images .post-single-image:hover {
-  border: 1px solid #9b9b9b;
+.post-images .post-single-image:hover {
+  border-color: #9b9b9b;
 }
-.post-images.one-image {
-  border: 1px solid transparent;
-  transition: border 100ms ease-in;
-      border-radius: 4px;
-}
-.post-images.one-image:hover {
-  border: 1px solid #9b9b9b;
-}
+
+/* One image */
 .post-images.one-image .post-single-image {
-    max-width: 100%;
+  max-width: 100%;
+  max-height: 450px;
+  grid-template-columns: 100%; /* Is this and the line below necessary? */
+  grid-template-rows: min-content;
 }
+
+/* Single vertical images are taller */
+.post-images.one-image.vertical-image {
+  max-height: 600px;
+}
+.post-images.one-image.vertical-image .post-single-image {
+  max-height: 600px;
+}
+
+/* Single horizontal images fill the whole box
+(currently images narrower than the box expand to fit which is not ideal but... okay) */
+.post-images.horizontal-image .post-single-image {
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Two images */
+.post-images.two-images {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 100%;
+}
+
+/* Three and four images */
+.post-images.three-images,
+.post-images.four-images {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.post-images.three-images > *:first-child {
+  grid-row-end: span 2;
+}
+
+/* Images in multi-image containers expand to fill their whole cell */
+.post-images.two-images .post-single-image,
+.post-images.three-images .post-single-image,
+.post-images.four-images .post-single-image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  max-height: 450px;
+}
+
+/* Hack of sorts to fit images to maximum height of multi-image container */
+.post-images a {
+  min-height: 100%;
+}
+
+.comment .post-images {
+    max-width: 480px;
+    max-height: 200px;
+    margin-top: 0.35rem;
+}
+
+.comment .post-images.one-image {
+  display: inline-block;
+}
+.comment .post-images .post-single-image {
+    max-height: 200px;
+}
+
+.comment .post-images img.post-single-image.vertical-image {
+  max-height: 350px;
+}
+
+.comment.post-images.one-image.vertical-image {
+  max-height: 350px;
+}
+
+
 .image-clear {
   background-color: #ffffff99;
   color: #000000;
@@ -270,17 +343,22 @@ section.comments {
 }
 
 .new-comment-form {
-  background-color: #ffffffaa;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,0.09);
-  padding: 1rem 1.25rem;
+    background-color: #f6f6f6;
+    /* box-shadow: inset 0 2px 3px rgba(0,0,0,0.09); */
+    padding: .75rem 1rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    margin: 0 0 1rem;
 }
 .comment .new-comment-form {
-  background-color: transparent;
-  box-shadow: none;
-  padding-left: 10%;
-  padding-right: 0.5rem;
-  padding-bottom: 0;
-  padding-top: 0.5rem;
+    background-color: transparent;
+    box-shadow: none;
+    padding-left: 10%;
+    padding-right: 0.5rem;
+    padding-bottom: 0;
+    padding-top: 0.5rem;
+    border: none;
+    margin: 0;
 }
 .pane {
     background: #fff;
@@ -293,7 +371,7 @@ p {
 }
 
 #bodyContainer {
-  padding-top: 90px;
+  padding-top: 80px;
   padding-bottom: 20px;
 }
 
@@ -362,8 +440,8 @@ hr {
   /*box shadow property moved to colors section*/
   border-bottom-width: 2px;
   border-bottom-style: solid;
-  padding-bottom: 0.75rem;
-  padding-top: 0.75rem;
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 #navTitle {
@@ -605,9 +683,13 @@ hr {
 
 #resultsContainer,
 #directoryResults,
-.commentsList {
-  /*border moved to colors section*/
+#postsContainer {
   padding: 0;
+}
+
+#homeBody,
+#userBody {
+  justify-content: center;
 }
 
 @media (max-width: 768px) {
@@ -635,9 +717,31 @@ hr {
     padding: 0;
     margin: 0 0 0 0;
     list-style: none;
-    /* display: flex; */
+    display: flex;
     justify-content: flex-start;
     flex-wrap: wrap;
+}
+.user-list-icon {
+    display: flex;
+    position: relative;
+    margin-right: 8px;
+    width: 30px;
+}
+
+.user-list a {
+    position: relative;
+}
+
+.recently-active-marker {
+    color: #46e146;
+    position: absolute;
+    font-size: 0.65rem;
+    left: 23px;
+    bottom: 0px;
+}
+.recently-active-marker-inline {
+    color: #46e146;
+    font-size: 0.65rem;
 }
 
 .user-list.collapse.show,
@@ -759,9 +863,10 @@ hr {
   margin-bottom: 0 !important;
 }
 
+.user-tags,
 .community-tags {
     margin-top: -10px;
-    margin-bottom: 20px;
+    margin-bottom: 0.5rem;
 }
 
 #updateImage {
@@ -783,7 +888,7 @@ hr {
     flex-direction: column;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
     border: 1px solid #b6b6b6;
-    top: 50px;
+    top: 46px;
 }
 
 @media (min-width: 576px) {
@@ -953,31 +1058,21 @@ hr {
   display: none;
 }
 
- .embedded-video-cont {
-  background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
-  background-size: 5.66px 5.66px;
-  border: 1px solid #00000000;
-  border-radius: 4px;
-  margin: 20px 0;
- }
+.embedded-video-cont {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
 
- .embedded-video-cont:hover{
-  border: 1px solid lightgrey;
- }
-
- .embedded-video {
-   width: 75%;
-   height: 293.6px; /*16:9 aspect ratio on maximized window on desktop*/
-   margin: 0 auto;
-   display: block;
- }
-
- @media (max-width: 500px){
-   .embedded-video{
-     width: 100%;
-     height: 190.8px; /*16:9 aspect ratio on iPhone 6, at least @very will get the intended experience*/
-   }
- }
+.embedded-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
  .image-preview-holder {
    margin: 0.5em 0;
@@ -1053,113 +1148,6 @@ hr {
   opacity: .75;
 }
 
-.post-images {
-  display: grid;
-  grid-column-gap: 2px;
-  grid-row-gap: 2px;
-  max-height: 450px;
-  margin-bottom: 10px;
-}
-
-.post-images.vertical-image {
-  max-height: 550px;
-}
-
-.post-images a {
-  min-height: 100%;
-}
-
-.post-single-image,
-.post-single-image > img {
-  object-fit: cover;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  max-height: 450px;
-  transition: border 100ms ease-in;
-  border-radius: 4px;
-}
-
-.post-single-image.vertical-image,
-.post-single-image.vertical-image > img {
-  max-height:550px;
-}
-
-@media (max-width: 500px){
-  .post-single-image,
-  .post-single-image > img {
-    max-height: 450px;
-  }
-  .post-single-image.vertical-image,
-  .post-single-image.vertical-image > img {
-    max-height:450px;
-  }
-}
-
-.post-images.one-image {
-  background-image: linear-gradient(45deg, #fff5f9 25%, #ffffff 25%, #ffffff 50%, #fff5f9 50%, #fff5f9 75%, #ffffff 75%, #ffffff 100%);
-  background-size: 5.66px 5.66px;
-  grid-template-columns: 100%;
-  grid-template-rows: min-content;
-}
-
-.post-images.one-image > img,
-.post-images.one-image > a {
-  height:auto;
-  text-align: center;
-}
-
-.one-image img.post-single-image{
-  object-fit: contain;
-}
-
-.post-images.two-images {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 100%;
-}
-
-.post-images.three-images,
-.post-images.four-images {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.post-images.three-images > *:first-child {
-  grid-row-end: span 2;
-}
-
-@media(max-width: 500px){
-  .post-images{
-    max-height:175px;
-  }
-  .post-images.one-image {
-    max-height:450px;
-  }
-  .post-single-image > img {
-    max-height: 450px;
-  }
-}
-
-.comment .content .post-images {
-    max-width: 450px;
-    max-height: 200px;
-}
-
-.comment .content .post-images.one-image {
-  display: inline-block;
-}
-.comment .content .post-images .post-single-image {
-    max-height: 200px;
-}
-
-.comment .content .post-images img.post-single-image.vertical-image {
-  max-height: 350px;
-}
-
-.comment .content .post-images.one-image.vertical-image {
-  max-height: 350px;
-}
-
 .community-container {
   display: none;
 }
@@ -1188,6 +1176,8 @@ hr {
 
 #votesContainer {
   background: #fff6f1;
+  border-left: 1px solid #cecece;
+  border-right: 1px solid #cecece;
 }
 
 .proposal-box>p:last-of-type {
@@ -1302,15 +1292,29 @@ hr {
   background: linear-gradient(135deg, #f7efff 0%,#d8cce5 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f7efff', endColorstr='#d8cce5',GradientType=1 );
   color: #2c1445;
+  border-left: 1px solid #cecece;
+  border-right: 1px solid #cecece;
 }
 
 #welcome-message-container > p:last-child {
   margin: 0;
 }
+.tag {
+    font-weight: 300;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 1px solid;
+    border-radius: 4px;
+    line-height: 1rem;
+    padding: 0.15rem 0.25rem;
+    margin-right: 0.25rem;
+    background: #efefef;
+}
 
-.community-tags .badge {
-  font-weight: 400;
-  font-size: 90%;
+.tag.tag-green {
+    border-color: #28a745;
+    background: #eaffea;
+    color: #28a745;
 }
 
 .medium-editor-element {
@@ -1327,12 +1331,6 @@ hr {
     border-radius: 4px;
     margin: 0.5em 0;
     background-color: #ffffff;
-}
-
-@media(max-width:500px){
-  .link-preview-container{
-    height:75px;
-  }
 }
 
 .link-preview-container:hover {
@@ -1362,6 +1360,7 @@ hr {
     align-self: center;
     max-height:100%;
     margin-right:auto;
+    max-width: 140px;
 }
 
 .link-preview-description {
@@ -1374,6 +1373,16 @@ hr {
     font-size: 0.9em;
     font-variant: small-caps;
 }
+
+@media(max-width:500px){
+  .link-preview-container{
+    height:75px;
+  }
+  .link-preview-image {
+      max-width: 100px;
+  }
+}
+
 .pane {
     padding: 15px;
 }
@@ -1406,13 +1415,19 @@ hr {
 
 article.post {
     padding-top: 1rem;
-    border-bottom: 1px solid #dfdfdf;
+    border: 1px solid #cecece;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+/* Prevent double border on first post in feed */
+/* But then add it back when it's the only one! */
+article.post:first-child:not(:only-child) {
+    border-top: 0;
 }
 article.post > .notifications,
 article.post > header,
 article.post > .content,
-article.post > .toolbar,
-article.post .comments-container {
+article.post > .toolbar {
     padding: 0 1rem;
 }
 
@@ -1433,12 +1448,12 @@ article.post > .notifications div a:hover {
     color: #ce1717;
 }
 article.post > .notifications div.recently-commented-notification {
-    color: #F87E2C;
+    color: #D99BB4;
 }
 article.post > .notifications div.recently-commented-notification a,
 article.post > .notifications div.recently-commented-notification a:active,
 article.post > .notifications div.recently-commented-notification a:visited {
-    color: #F87E2C; /* Green #529C5F */
+    color: #D99BB4; /* Green #529C5F */
 }
 article.post > .notifications div.recently-commented-notification a:hover {
     color: #ce1717;
@@ -1540,15 +1555,16 @@ article.post > .content .content-warning {
 }
 article.post > .toolbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin-bottom: 1rem;
     padding-left: 0.65rem;
+    max-width: 390px;
 }
-article.post > .toolbar > div {
+/* article.post > .toolbar > div {
     display: flex;
     flex: 1;
-}
-article.post > .toolbar > div:first-child {
+} */
+/* article.post > .toolbar > div:first-child {
     justify-content: flex-start;
 }
 article.post > .toolbar > div:last-child {
@@ -1559,35 +1575,39 @@ article.post > .toolbar > div:first-child  * {
 }
 article.post > .toolbar > div:last-child * {
     justify-content: flex-end;
-}
+} */
 
 section.comments {
     font-size: 0.9rem;
+    margin: 0 1rem;
+}
+
+section.comments:not(.single-post-comments) {
     display: none;
 }
-section.comments:last-child {
-    padding-bottom: 0.25rem; /* This looks like a CSS bug */
-}
+
 article.comment {
-    margin-top: 1rem;
+    margin-top: .75rem;
+}
+div.comments-container > article.comment:first-child {
+    margin-top: 0; /* Otherwise comments section jumps when appearing??  */
 }
 article.comment:last-child {
-    margin-bottom: 1rem;
+    margin-bottom: .75rem;
 }
-article.comment.recent-comment-content {
-    border-radius: 6px;
+article.comment .recent-comment-content {
     transition: background 0.5s;
 }
 
-article.comment.recent-comment-content.flash {
+article.comment .recent-comment-content.flash {
     animation: flash 2s ease-out;
     animation-iteration-count: 1;
 }
 
 @keyframes flash {
-    0% { background-color: transparent; }
+    0% { background-color: #f6f6f6; }
     50% { background-color: #fcfaea; }
-    100% { background-color: transparent; }
+    100% { background-color: #f6f6f6; }
 }
 
 #welcome-message-container > footer,
@@ -1639,9 +1659,15 @@ article.comment > header .timestamp {
 }
 
 article.comment > .content {
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+    background: #f6f6f6;
+    padding: 0.5rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    max-width: 480px;
 }
-article.comment > .content.comment-deleted-content {
+article.comment > .content.comment-deleted-content,
+article.comment > .content.comment-muted-content {
     margin-top: 0;
 }
 article.comment > .content p:last-child {
@@ -1737,11 +1763,12 @@ a.show-more:hover { /* Shim for old show more button element */
 .button.post-toolbar-button {
     background: #fff;
     color: #aaa;
-    min-width: 40px;
-    max-width: 80px;
     flex: 1;
     display: flex;
     align-items: center;
+    width: 40px;
+    justify-content: center;
+    margin-right: 32px;
 }
 .button.post-toolbar-button:hover {
     background: #fff;
@@ -1760,13 +1787,6 @@ a.show-more:hover { /* Shim for old show more button element */
     color: #ce1717;
 }
 
-.post-toolbar-form {
-    min-width: 40px;
-    max-width: 80px;
-    flex: 1;
-    display: flex;
-}
-
 .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
@@ -1774,7 +1794,8 @@ a.show-more:hover { /* Shim for old show more button element */
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
 }
 
-.comment-deleted-message {
+.comment-deleted-message,
+.comment-muted-message {
     font-style: italic;
     font-weight: 300;
 }
@@ -1845,4 +1866,88 @@ a.show-more:hover { /* Shim for old show more button element */
 
 .sl-image {
     box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+}
+
+ {
+    border-top: 1px solid #cecece;
+}
+
+#votesContainer {
+    padding: 0;
+    border-bottom: 1px solid #cecece;
+    margin-bottom: 1rem;
+}
+.post.vote {
+    background: none;
+    border: 0;
+    border-bottom: 1px solid #cecece;
+}
+.post.vote:hover {
+    box-shadow: none;
+}
+.post.vote:last-child {
+    border-bottom: none;
+}
+
+.bounce {
+    animation-name: bounce;
+    animation-timing-function: linear;
+    animation-duration: 100ms;
+}
+@keyframes bounce {
+    0%   { transform: translateY(0); }
+    33%  { transform: translateY(-3px); }
+    66%  { transform: translateY(3px); }
+    100% { transform: translateY(0); }
+}
+
+.fixed-container {
+    position: fixed;
+}
+
+.fixed-container > section {
+    border: 1px solid #cecece;
+    background: #fffafc;
+    padding: 0.5rem 1rem 1rem 1rem;
+    width: 350px;
+    margin-bottom: 1rem;
+}
+
+.hashtags p:nth-child(7) {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.discovery-help-links {
+    font-size: small;
+    margin-top: 0.75rem;
+    display: block;
+    width: 100%;
+    text-align: right;
+}
+
+.recommendations-help-text {
+    display: none;
+}
+
+.hide-recommendation {
+    position: relative !important;
+    right: 11px;
+    bottom: -21px;
+    color: #333;
+    font-size: 0.75rem;
+    background: white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
+}
+
+.hashtags-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.hashtags-list > * {
+    margin-right: 0.5rem;
 }

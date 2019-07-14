@@ -72,28 +72,37 @@
             </div>
             <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
         {{/if}}
+        {{#if this.embeds}}
+            {{#each this.embeds}}
+                {{> embed }}
+            {{/each}}
+        {{/if}}
         {{#if this.images}}
             {{> imagegallery }}
         {{/if}}
     </section>
     <footer class="toolbar">
-        <div class="general-tools">
-            {{#unless this.commentsDisabled}}
-                {{#if ../loggedIn}}
-                    <button type="button" class="button post-toolbar-button show-comments">
-                        <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
-                    </button>
-                {{else}}
-                    {{#if this.numberOfComments}}
-                        <button type="button" class="button post-toolbar-button show-comments">
-                            <i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
-                        </button>
-                    {{/if}}
+        {{#unless this.commentsDisabled}}
+            {{#if ../loggedIn}}
+            <div class="toolbar-button-container">
+            	<button type="button" class="button post-toolbar-button show-comments">
+                	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                </button>
+            </div>
+            {{else}}
+                {{#if this.numberOfComments}}
+               		<div class="toolbar-button-container">
+                    	<button type="button" class="button post-toolbar-button show-comments">
+                        	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
+                    	</button>
+                    </div>
                 {{/if}}
-            {{/unless}}
-            {{#eq this.privacy "public"}}
-                {{#if ../loggedIn}}
-                    {{#isnt this.type "community"}}
+            {{/if}}
+        {{/unless}}
+        {{#eq this.privacy "public"}}
+            {{#if ../loggedIn}}
+                {{#isnt this.type "community"}}
+                    <div class="toolbar-button-container">
                         <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
                             <button type="submit" class="button post-toolbar-button boost-post">
                                 {{#if youBoosted}}
@@ -106,33 +115,41 @@
                                 {{/if}}
                             </button>
                         </form>
-                    {{/isnt}}
-                {{/if}}
-            {{/eq}}
+                    </div>
+                {{/isnt}}
+            {{/if}}
+        {{/eq}}
+        <div class="toolbar-button-container">
             <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
-              <i class="fas fa-link"></i>
+                <span class="fa-layers">
+                  <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
+                  <i class="far fa-sticky-note"></i>
+                </span>
             </a>
         </div>
-        <div id="authorTools">
-            {{#contains this.subscribedUsers ../loggedInUserData._id}}
-                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Receiving notifications (click to change)">
+        {{#contains this.subscribedUsers ../loggedInUserData._id}}
+            <div class="toolbar-button-container">
+                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Receiving notifications (click to change)">
                     <i class="far fa-bell"></i>
                 </button>
-            {{/contains}}
-            {{#contains this.unsubscribedUsers ../loggedInUserData._id}}
-                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="left" title="Not receiving notifications (click to change)">
+            </div>
+        {{else}}
+            <div class="toolbar-button-container">
+                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Not receiving notifications (click to change)">
                     <i class="far fa-bell-slash"></i>
                 </button>
-            {{/contains}}
-            {{#if isYourPost}}
+            </div>
+        {{/contains}}
+        {{#if isYourPost}}
+        	<div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
                     <i class="far fa-trash-alt"></i>
                 </button>
-            {{/if}}
-        </div>
+            </div>
+        {{/if}}
     </footer>
     {{#unless this.commentsDisabled}}
-        <section class="comments">
+        <section class="comments{{#eq @root/activePage "singlepost"}} single-post-comments{{/eq}}">
             <div class="comments-container">
                 {{#if this.comments}}
                     {{#each this.comments}}

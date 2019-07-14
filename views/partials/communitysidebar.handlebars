@@ -7,8 +7,8 @@
 </h3>
 
 <div class="community-tags">
-  <span class="badge badge-secondary mr-1">{{#eq communityData.settings.joinType "open"}}Open{{else}}Approval only{{/eq}}</span>
-  <span class="badge badge-secondary">{{#eq communityData.settings.visibility "public"}}Public{{else}}Private{{/eq}}</span>
+  <span class="tag">{{#eq communityData.settings.joinType "open"}}Open{{else}}Approval only{{/eq}}</span>
+  <span class="tag">{{#eq communityData.settings.visibility "public"}}Public{{else}}Private{{/eq}}</span>
 </div>
 
 {{#if communityData.descriptionParsed}}
@@ -93,9 +93,15 @@
         <h5>Members</h5>
         <div id="membersList" class="user-list">
           {{#each communityData.members}}
-            <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+            <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
+                <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                {{#if this.isRecentlyActive}}
+                    <i class="recently-active-marker fas fa-circle"></i>
+                {{/if}}
+            </a>
           {{/each}}
         </div>
+        <small><i class="recently-active-marker-inline fas fa-circle"></i> active community member</small>
 
     {{/if}}
   {{/if}}

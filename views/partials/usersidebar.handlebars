@@ -2,7 +2,7 @@
 <div class="row mb-3">
   <div class="col-6 d-flex">
 {{/if}}
-    <div id="profileImageContainer" class="{{#if isOwnProfile}}own-profile-image{{/if}}">
+    <div id="profileImageContainer" class="{{#if isOwnProfile}}own-profile-image{{else}}user-image{{/if}}">
       <img alt="Profile image for the user @{{ profileData.username}}" id="profileImage" src="{{#if profileData.imageEnabled}}/images/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
     </div>
 {{#if isOwnProfile}}
@@ -30,10 +30,26 @@
     <a href="/logout" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> Log out</a>
   </div>
 {{/if}}
+{{#unless isOwnProfile}}
+    <div class="user-tags">
+        {{#if userTrustsYou}}
+            <span class="tag tag-green">
+                Trusts you
+            </span>
+        {{/if}}
+        {{#if userFollowsYou}}
+            <span class="tag tag-green">
+                Follows you
+            </span>
+        {{/if}}
+    </div>
+{{/unless}}
 {{#if profileData.aboutParsed}}
-  <p>
-    {{{profileData.aboutParsed}}}
-  </p>
+    <section class="profile-about">
+        <p>
+          {{{profileData.aboutParsed}}}
+        </p>
+    </section>
 {{/if}}
 {{#if profileData.pronouns}}
   <p>
@@ -71,7 +87,7 @@
           </button>
         {{/if}}
         <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fas fa-ellipsis-h"></i>
+          More
         </button>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
           {{#if flagged}}
@@ -79,11 +95,11 @@
           {{else}}
             <button type="button" id="flagButton" class="dropdown-item text-danger"><i class="fas fa-exclamation-triangle"></i> Flag</button>
           {{/if}}
-          <!-- {{#if blocked}}
-            <button type="button" id="unblockButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unblock</button>
+          {{#if muted}}
+            <button type="button" id="unmuteButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unmute</button>
           {{else}}
-            <button type="button" id="blockButton" class="dropdown-item text-danger"><i class="fas fa-ban"></i> Block</button>
-          {{/if}} -->
+            <button type="button" id="muteButton" class="dropdown-item text-dark"><i class="fas fa-comment-slash"></i> Mute</button>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -93,14 +109,10 @@
         {{numberOfFlagsFromTrustedUsers}} {{plural numberOfFlagsFromTrustedUsers 'person/people'}} you trust {{plural numberOfFlagsFromTrustedUsers 'has/have'}} flagged this user.
       </div>
     {{/if}}
-    {{#if userTrustsYou}}
-      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
-        This user trusts you. You can see their private posts.
-      </div>
-    {{/if}}
-    {{#if userFollowsYou}}
-      <div class="alert alert-secondary w-100 my-2" style="text-align:center;font-size:0.9em">
-        This user follows you.
+    {{#if muted}}
+      <div class="alert alert-dark w-100 my-2" style="text-align:center;">
+        <i class="fas fa-comment-slash"></i>
+        You have muted this user. Their posts are hidden from you.
       </div>
     {{/if}}
   {{/if}}
@@ -132,7 +144,7 @@
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
-    <div style="height:10px;width:100%;"></div>    
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
 {{#if followersData}}
@@ -141,7 +153,7 @@
     {{#each followersData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
-    <div style="height:10px;width:100%;"></div>    
+    <div style="height:10px;width:100%;"></div>
   </div>
 {{/if}}
 {{#if isOwnProfile}}

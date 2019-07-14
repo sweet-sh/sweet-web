@@ -1,75 +1,81 @@
 {{#each votes}}
 {{#if canDisplay}}
-<div class="comment commentContainer">
-  <div class="row">
-    <div class="col commentContent">
-      <div class="mb-2 d-flex">
-        <img class="postAuthorImage" src="/images/{{#if this.creator.imageEnabled}}{{this.creator.image}}{{else}}cake.svg{{/if}}" />
-        <div class="post-meta">
-          <p>
-            {{#if this.creator.displayName}}
-              <strong><a class="authorLink" href="/{{this.creator.username}}">{{this.creator.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.creator.username}}</span>
-            {{else}}
-              <strong><a class="authorLink" href="/{{this.creator.username}}">@{{this.creator.username}}</a></strong>
-            {{/if}} {{#contains ../flaggedUsers this.creator.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-          </p>
-          <p>
-            <small class="commentTimestamp text-muted">{{this.parsedTimestamp}}</small>
-          </p>
+<article class="post vote">
+    <header>
+        <div class="post-header-left">
+            <a href="/{{this.creator.username}}">
+                <img class="author-image" alt="Profile image of @{{this.creator.username}}" src="/images/{{#if this.creator.imageEnabled}}{{this.creator.image}}{{else}}cake.svg{{/if}}" />
+            </a>
         </div>
-      </div>
-      <div class="post-content">
+        <div class="post-header-right">
+            <h2 class="author-name">
+                {{#if this.creator.displayName}}
+                    <span class="author-display-name">
+                        <a href="/{{this.author.username}}">{{this.creator.displayName}}</a>
+                    </span>
+                {{/if}}
+                <span class="author-username">
+                    {{#unless this.creator.displayName}}<span style="font-weight:500"><a href="/{{this.creator.username}}">{{/unless}}@{{this.creator.username}}{{#unless this.creator.displayName}}</a></span>{{/unless}}
+                </span>
+                {{#contains ../flaggedUsers this.creator.email}}
+                    <i class="fas fa-exclamation-triangle user-flag"></i>
+                {{/contains}}
+            </h2>
+            <aside class="metadata">
+                <span class="post-timestamp">
+                    {{this.parsedTimestamp}}
+                </span>
+            </aside>
+        </div>
+    </header>
+    <section class="content">
         {{#eq this.group "uservotes"}}
-          {{#eq this.reference "userban"}}
-            <p>
-              <strong>Proposal to ban <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> from {{../communityData.name}}.</strong>
-            </p>
-          {{/eq}}
-          {{#eq this.reference "usermute"}}
-            <p>
-              <strong>Proposal to mute <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> in {{../communityData.name}}.</strong>
-            </p>
-          {{/eq}}
-          {{#eq this.reference "userunban"}}
-            <p>
-              <strong>Proposal to unban <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> from {{../communityData.name}}.</strong>
-            </p>
-          {{/eq}}
-          {{#eq this.reference "userunmute"}}
-            <p>
-              <strong>Proposal to unmute <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> in {{../communityData.name}}.</strong>
-            </p>
-          {{/eq}}
+            {{#eq this.reference "userban"}}
+                <p>
+                    <strong>Proposal to ban <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> from {{../communityData.name}}.</strong>
+                </p>
+            {{/eq}}
+            {{#eq this.reference "usermute"}}
+                <p>
+                    <strong>Proposal to mute <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> in {{../communityData.name}}.</strong>
+                </p>
+            {{/eq}}
+            {{#eq this.reference "userunban"}}
+                <p>
+                    <strong>Proposal to unban <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> from {{../communityData.name}}.</strong>
+                </p>
+            {{/eq}}
+            {{#eq this.reference "userunmute"}}
+                <p>
+                    <strong>Proposal to unmute <a href="/{{this.userData.username}}"><span class="text-info">@{{this.userData.username}}</span></a> in {{../communityData.name}}.</strong>
+                </p>
+            {{/eq}}
         {{else}}
-          <p>
-            <strong>Proposal to change the <span class="text-info">{{parsedReference}}</span> of {{../communityData.name}} to:</strong>
-          </p>
-          {{#eq this.reference "image"}}
-            <div class="post-images one-image">
-              <a> {{!-- this <a> is slightly extremely terrible but otherwise the css to center the image won't kick in. i can't be bothered actually adding the lightbox stuff, it won't be displayed that large if it passes anyway --}}
-              <img class="post-single-image" src="/images/communities/staging/{{this.proposedValue}}" data-featherlight="/images/communities/staging/{{this.proposedValue}}"/>
-              </a>
-            </div>
-          {{else}}
-            <div class="alert alert-light text-dark proposal-box">{{{this.parsedProposedValue}}}</div>
-          {{/eq}}
+            <p>
+                <strong>Proposal to change the <span class="text-info">{{parsedReference}}</span> of {{../communityData.name}} to:</strong>
+            </p>
+            {{#eq this.reference "image"}}
+                <div class="post-images one-image" style="margin-bottom:1rem;">
+                    <img class="post-single-image" src="/images/communities/staging/{{this.proposedValue}}"/>
+                </div>
+            {{else}}
+                <div class="alert alert-light text-dark proposal-box">{{{this.parsedProposedValue}}}</div>
+            {{/eq}}
         {{/eq}}
         <div class="vote-display mb-3">
-          <span class="text-info"><strong>{{this.votes}}</strong></span> {{plural this.votes "vote(s)"}} out of <span class="text-info"><strong>{{../majorityMargin}}</strong></span> required to pass. This proposal will expire {{this.parsedExpiry}}.
+            <span class="text-info"><strong>{{this.votes}}</strong></span> {{plural this.votes "vote(s)"}} out of <span class="text-info"><strong>{{../majorityMargin}}</strong></span> required to pass. This proposal will expire {{this.parsedExpiry}}.
         </div>
         {{#unless ../isMuted}}
-          {{#contains this.voters ../loggedInUserData._id}}
-            <button class="btn btn-outline-dark mb-2 withdrawVoteButton community-action-button" data-vote-id="{{this._id}}">Withdraw your vote</button>
-          {{else}}
-            <button class="btn btn-outline-secondary mb-2 castVoteButton community-action-button" data-vote-id="{{this._id}}">Vote for this proposal</button>
-          {{/contains}}
-          {{#eq ../loggedInUserData.email this.creatorEmail}}
-            <button class="btn btn-outline-dark mb-2 deleteVoteButton community-action-button" data-vote-id="{{this._id}}">Delete proposal</button>
-          {{/eq}}
+            {{#contains this.voters ../loggedInUserData._id}}
+                <button class="btn btn-outline-dark mb-2 withdrawVoteButton community-action-button" data-vote-id="{{this._id}}">Withdraw your vote</button>
+            {{else}}
+                <button class="btn btn-outline-secondary mb-2 castVoteButton community-action-button" data-vote-id="{{this._id}}">Vote for this proposal</button>
+            {{/contains}}
+            {{#eq ../loggedInUserData.email this.creatorEmail}}
+                <button class="btn btn-outline-dark mb-2 deleteVoteButton community-action-button" data-vote-id="{{this._id}}">Delete proposal</button>
+            {{/eq}}
         {{/unless}}
-      </div>
-    </div>
-  </div>
-</div>
+    </section>
+</article>
 {{/if}}
 {{/each}}

@@ -200,19 +200,135 @@ module.exports = function (app) {
     })
   });
 
-  //Responds to get requests for the home page.
-  //Input: none
-  //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
-  app.get('/home', isLoggedInOrRedirect, function (req, res) {
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-    res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
-    res.setHeader("Expires", "0"); // Proxies.
-    res.render('home', {
-      loggedIn: true,
-      loggedInUserData: req.user,
-      activePage: 'home'
+    //Responds to get requests for the home page.
+    //Input: none
+    //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
+    app.get('/home', isLoggedInOrRedirect, async function (req, res) {
+        async function getRecommendations(){
+            popularCommunities = [];
+            secondaryTrusts = [];
+            secondaryFollows = [];
+            secondaryTrustsArray = [];
+            secondaryFollowsArray = [];
+            lastWeek = moment(new Date()).subtract(7, 'days');
+            async function getRelationships(id, type) {
+                var usersArray = [];
+                return Relationship.find({
+                    fromUser: id,
+                    value: type
+                })
+                .populate('toUser')
+                .sort('-lastUpdated')
+                .then((trusts) => {
+                    trusts.forEach(trust => {
+                        if (!trust.toUser._id.equals(req.user._id) && usersArray.filter(e => !e._id.equals(trust.toUser._id))) {
+                            usersArray.push(trust.toUser);
+                        }
+                    })
+                    return usersArray;
+                })
+            }
+
+            popularHashtags = await Tag.find()
+                                  .limit(5)
+                                  .sort('-lastUpdated')
+                                  .then(tags => {
+                                      return tags;
+                                  })
+
+            primaryTrustsArray = await getRelationships(req.user._id, "trust");
+            for (const primaryUser of primaryTrustsArray) {
+                const secondaryTrusts = await getRelationships(primaryUser._id, "trust")
+                for (const secondaryUser of secondaryTrusts) {
+                    if (secondaryTrustsArray.filter(e => !e._id.equals(secondaryUser._id))) {
+                        secondaryTrustsArray.push(secondaryUser)
+                    }
+                }
+            }
+            primaryFollowsArray = await getRelationships(req.user._id, "follow");
+            for (const primaryUser of primaryFollowsArray) {
+                const secondaryFollows = await getRelationships(primaryUser._id, "follow")
+                for (const secondaryUser of secondaryFollows) {
+                    if (secondaryFollowsArray.filter(e => !e._id.equals(secondaryUser._id))) {
+                        secondaryFollowsArray.push(secondaryUser)
+                    }
+                }
+            }
+
+            usersKnown = []
+            primaryTrustsArray.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            primaryFollowsArray.forEach(user => {
+                usersKnown.push(user._id.toString())
+            })
+            usersKnown = [...new Set(usersKnown)];
+
+            // Shows all recently active communities if the user has no friends,
+            // otherwise only recently active communities with a friend in them
+            if (usersKnown.length == 0) {
+                membersQuery = {}
+            }
+            else {
+                membersQuery = { members: { $in: usersKnown } }
+            }
+            popularCommunities = await Community.find({
+                $and: [
+                    { lastUpdated: { $gt: lastWeek } },
+                    { members: { $ne: req.user._id } },
+                    membersQuery
+                ]
+            })
+            .then(communities => {
+                return communities;
+            })
+
+            // Dark sorcery to remove duplicate users across two arrays and merge them
+            // High chance of summoning evil demon - is that a bug or a feature?
+            mergedUserRecommendations = secondaryTrustsArray.concat(secondaryFollowsArray);
+            mergedUserRecommendations = mergedUserRecommendations.filter((obj, pos, arr) => {
+                return arr.map(mapObj => mapObj['username']).indexOf(obj['username']) === pos;
+            });
+
+            return User.findOne({
+                _id: req.user._id
+            })
+            .then(user => {
+                popularCommunities = popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
+
+                if (popularCommunities.length > 10)
+                    popularCommunities.length = 10;
+
+                unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e._id.toString()));
+                unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
+
+                unknownUsers.sort((a,b) => b.lastUpdated - a.lastUpdated);
+
+                if (unknownUsers.length > 10)
+                    unknownUsers.length = 10;
+
+                results = {
+                    popularCommunities: popularCommunities,
+                    userRecommendations: unknownUsers,
+                    popularHashtags: popularHashtags
+                }
+                return results;
+            });
+        }
+
+        recommendations = await getRecommendations();
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        res.setHeader("Expires", "0"); // Proxies.
+        res.render('home', {
+            loggedIn: true,
+            loggedInUserData: req.user,
+            activePage: 'home',
+            popularCommunities: (recommendations.popularCommunities.length > 0 ? recommendations.popularCommunities : false),
+            userRecommendations: (recommendations.userRecommendations.length > 0 ? recommendations.userRecommendations : false),
+            popularHashtags: (recommendations.popularHashtags.length > 0 ? recommendations.popularHashtags : false)
+        });
     });
-  });
 
   //Responds to get requests for the 404 page.
   //Input: user data from req.user
@@ -579,6 +695,24 @@ module.exports = function (app) {
           });
       }
 
+      var myMutedUserEmails = () => {
+        myMutedUserEmails = []
+        return Relationship.find({
+            from: loggedInUserData.email,
+            value: "mute"
+          })
+          .then((mutes) => {
+            for (var key in mutes) {
+              var mute = mutes[key];
+              myMutedUserEmails.push(mute.to);
+            }
+          })
+          .catch((err) => {
+            console.log("Error in profileData.")
+            console.log(err);
+          });
+      }
+
       var usersFlaggedByMyTrustedUsers = () => {
         myTrustedUserEmails = []
         usersFlaggedByMyTrustedUsers = []
@@ -662,7 +796,7 @@ module.exports = function (app) {
         }
       }
 
-      await myFollowedUserEmails().then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
+      await myFollowedUserEmails().then(myMutedUserEmails).then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
 
       myFollowedUserEmails.push(loggedInUserData.email)
       usersWhoTrustMeEmails.push(loggedInUserData.email)
@@ -886,6 +1020,11 @@ module.exports = function (app) {
             }
           }
 
+          // As a final hurrah, just hide all posts and boosts made by users you've muted
+          if (myMutedUserEmails.includes(post.authorEmail)) {
+              canDisplay = false;
+          }
+
           if (!canDisplay) {
             continue;
           }
@@ -935,7 +1074,9 @@ module.exports = function (app) {
                     youBoosted = true;
                   } else {
                     if (myFollowedUserIds.some(following => {
-                        return following.equals(v.booster._id)
+                        if (following) {
+                            return following.equals(v.booster._id)
+                        }
                       })) {
                       followedBoosters.push(v.booster.username);
                     } else {
@@ -990,12 +1131,14 @@ module.exports = function (app) {
             images: imageUrlsArray,
             imageDescriptions: displayContext.imageDescriptions,
             imageIsVertical: displayContext.imageIsVertical,
+            imageIsHorizontal: displayContext.imageIsHorizontal,
             community: displayContext.community,
             headerBoosters: boostsForHeader,
             recentlyCommented: false, // This gets set below
             lastCommentAuthor: "", // As does this
             subscribedUsers: displayContext.subscribedUsers,
             unsubscribedUsers: displayContext.unsubscribedUsers,
+            embeds: displayContext.embeds,
             // linkPreview: displayContext.linkPreview
           }
 
@@ -1017,16 +1160,24 @@ module.exports = function (app) {
           function parseComments(element, level) {
             if (!level) level = 1;
             element.forEach(async function (comment) {
+              comment.canDisplay = true;
+              comment.muted = false;
               // I'm not sure why, but boosts in the home feed don't display
               // comment authors below the top level - this fixes it, but
               // it's kind of a hack - I can't work out what's going on
               if (!comment.author.username) {
                 console.log("Comment did not have author information!")
-
                 function getUser(user) {
                   return User.findById(user);
                 }
                 comment.author = await getUser(comment.author)
+              }
+              if (myMutedUserEmails.includes(comment.author.email)) {
+                  comment.muted = true;
+                  comment.canDisplay = false;
+              }
+              if (comment.deleted) {
+                  comment.canDisplay = false;
               }
               momentifiedTimestamp = moment(comment.timestamp);
               if (momentifiedTimestamp.isSame(today, 'd')) {
@@ -1066,16 +1217,12 @@ module.exports = function (app) {
             }
           }
           parseComments(displayedPost.comments);
-          // if (displayedPost._id.equals('5d04d2b0da26de82313546f3')){
-          //     console.log(displayedPost.comments)
-          // }
-          // });
 
           if (req.isAuthenticated() && req.params.context == "single") {
             // Mark associated notifications read if post is visible
             notifier.markRead(loggedInUserData._id, displayContext._id)
           }
-          
+
           //wow, finally.
           displayedPosts.push(displayedPost);
         }
@@ -1115,7 +1262,6 @@ module.exports = function (app) {
           // if the post was able to be displayed, so this checks to see if we should display
           // our vague error message on the frontend)
           if (typeof displayedPost !== 'undefined') {
-            console.log(displayedPost)
             var canDisplay = true;
             if (displayedPost.images != "") {
               console.log("Post has an image!")
@@ -1529,25 +1675,25 @@ module.exports = function (app) {
       }
     }
 
-    let myBlockedUsers = () => {
+    let myMutedUsers = () => {
       if (req.isAuthenticated()) {
-        myBlockedUserEmails = []
+        myMutedUserEmails = []
         return Relationship.find({
             from: req.user.email,
-            value: "block"
+            value: "mute"
           })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
+          .then((mutes) => {
+            for (var key in mutes) {
+              var mute = mutes[key];
+              myMutedUserEmails.push(mute.to);
             }
             return User.find({
                 email: {
-                  $in: myFlaggedUserEmails
+                  $in: myMutedUserEmails
                 }
               })
               .then((users) => {
-                results.myFlaggedUserData = users
+                results.myMutedUserData = users
               })
           })
           .catch((err) => {
@@ -1667,7 +1813,7 @@ module.exports = function (app) {
         });
     }
 
-    profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
+    profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myMutedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
       var userTrustsYou = false;
       var userFollowsYou = false;
       if (req.isAuthenticated()) {
@@ -1704,6 +1850,13 @@ module.exports = function (app) {
             followed = true;
           }
         })
+        var muted = false;
+        myMutedUserEmails.forEach(function (email) {
+          // Check if logged in user has muted profile user
+          if (email == results.profileData.email) {
+            muted = true;
+          }
+        })
         for (var key in results.flagsOnUser) {
           var flag = results.flagsOnUser[key];
           // Check if logged in user has flagged profile user
@@ -1734,6 +1887,7 @@ module.exports = function (app) {
         profileData: results.profileData,
         trusted: trusted,
         flagged: flagged,
+        muted: muted,
         followed: followed,
         followersData: results.followers,
         usersWhoTrustThemData: results.usersWhoTrustThem,
@@ -1752,6 +1906,10 @@ module.exports = function (app) {
       console.log(err)
     })
   });
+
+  app.get("/api/suggestions/users", isLoggedInOrRedirect, function (req, res){
+
+  })
 
   //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
   //to seen=true

@@ -10,9 +10,7 @@
 
             if((bottom_of_screen > top_of_element) && (top_of_screen < bottom_of_element)){
                 element.addClass('flash')
-                // setTimeout(function(){
-                //     element.removeClass('flash')
-                // }, 2000);
+                console.log("Flash dat comment")
             }
         });
     });
@@ -47,6 +45,24 @@ $(function() {
           $("#notificationsContainer").load( "/api/notification/display" );
       })
   })
+
+  $('#display-recommendations-help').click(function() {
+      $('.recommendations-help-text').slideToggle('fast');
+  })
+
+  $('.hide-recommendation').click(function() {
+      icon = $(this).closest('.user-list-icon');
+      id = $(this).attr('data-target')
+      type = $(this).attr('data-type')
+      bootbox.confirm("Are you sure you want to hide this recommendation? There isn't currently a way to restore hidden recommendations.", function(result){
+          if (result == true) {
+              $.post('/api/recommendations/remove/' + type + '/' + id, function(){
+                  icon.remove();
+              }).fail(function () { console.log("I errored!"); bootbox.alert("Hiding this recommendation failed! Refresh the page and try again."); });
+          }
+      });
+  })
+
 
   $("#darkModeToggle").click(function(e){
     e.preventDefault();
@@ -96,6 +112,13 @@ $(function() {
     })
     {{/eq}}
   }, 60000);
+
+  $('body').on('mouseover', '.link-preview-container', function() {
+      $(this).find('.link-preview-icon').css('color','#eee');
+  });
+  $('body').on('mouseout', '.link-preview-container', function() {
+      $(this).find('.link-preview-icon').css('color','white');
+  });
 
   $('body').on('click', '.show-comments', function() {
     commentsContainer = $(this).closest(".post").find(".comments");
@@ -379,7 +402,7 @@ $(function() {
   })
   $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
-    bootbox.confirm("You are currently receiving notifications when someone comments on this post. Would you like to mute this post to stop receiving these notifications? You will still be notified if someone mentions you.", function(result){
+    bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
           button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
@@ -389,7 +412,7 @@ $(function() {
   })
   $('body').on('click', '.subscribe-post', function(e) {
     var button = $(this);
-    bootbox.confirm("You have muted this post. Would you like to unmute it and start receiving notifications when someone comments?", function(result){
+    bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
           button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");

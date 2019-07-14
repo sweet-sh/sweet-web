@@ -38,6 +38,9 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               case 'boostedPostReply':
                 text = 'replied to a post you boosted.'
                 break;
+              case 'commentReply':
+                text = 'replied to your comment.'
+                break;
               case 'mention':
                 text = 'mentioned you in a ' + context + '.'
                 break;

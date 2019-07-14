@@ -1,6 +1,16 @@
 var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+var embedSchema = new mongoose.Schema({
+    type: String,
+    linkUrl: String,
+    embedUrl: String,
+    title: String,
+    description: String,
+    image: String,
+    domain: String
+})
+
 var commentSchema = new mongoose.Schema({
   authorEmail: String,
   author: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -12,6 +22,7 @@ var commentSchema = new mongoose.Schema({
   images: [String],
   imageDescriptions: [String],
   imageIsVertical: [String],
+  imageIsHorizontal: [String],
   deleted: { type: Boolean, default: false },
 });
 
@@ -66,15 +77,10 @@ var postSchema = new mongoose.Schema({
   images: [String],
   imageDescriptions: [String],
   imageIsVertical: [String], //stores either the string "vertical-image" or an empty string atm
+  imageIsHorizontal: [String],
   subscribedUsers: [String],
   unsubscribedUsers: [String],
-  linkPreview: {
-    url: String,
-    domain: String,
-    title: String,
-    description: String,
-    image: String
-  }
+  embeds: [embedSchema]
 });
 
 //used to select posts to display in feeds

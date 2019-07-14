@@ -13,6 +13,7 @@ const metascraper = require('metascraper')([
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, youtubeEnabled = false) {
+        console.log("Parsing content")
         let splitContent = rawText.split('</p>');
         let parsedContent = [];
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
@@ -68,21 +69,22 @@ module.exports = {
         }
 
         if (youtubeEnabled) {
+            console.log("Embedding!")
             //i mean, handlebars is way overkill for this
-            function renderVideoPreview(embedurl,linkurl,imageurl,title,description,domain){
-                return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
-                    <div style="display:flex;justify-content:center;position:relative;">\
-                        <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
-                        <img src="/images/fa-playbutton-red.svg" style="position:absolute;height:100%;">\
-                    </div>\
-                    <div class="link-preview-text-container">\
-                        <span class="link-preview-title">'+title+'</span>\
-                        <span class="link-preview-description">'+description+'</span>\
-                        <span class="link-preview-domain">'+domain+'</span>\
-                    </div>\
-                </a>';
-            }
-
+            // function renderVideoPreview(embedurl,linkurl,imageurl,title,description,domain){
+            //     return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
+            //         <div style="display:flex;justify-content:center;position:relative;">\
+            //             <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
+            //             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>\
+            //         </div>\
+            //         <div class="link-preview-text-container">\
+            //             <span class="link-preview-title">'+title+'</span>\
+            //             <span class="link-preview-description">'+description+'</span>\
+            //             <span class="link-preview-domain">'+domain+'</span>\
+            //         </div>\
+            //     </a>';
+            // }
+            var embeds = [];
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
             var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)" target="_blank">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
@@ -101,15 +103,17 @@ module.exports = {
                         const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
 
-                        var linkPreviewHtml = renderVideoPreview(
-                            "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
-                            parsedVUrl[0],
-                            metadata.image,
-                            metadata.title,
-                            metadata.description,
-                            "youtube.com"
-                        )
-                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) + linkPreviewHtml + parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
+                        var embed = {
+                            type: 'video',
+                            embedUrl: "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
+                            linkUrl: parsedVUrl[0],
+                            image: metadata.image,
+                            title: metadata.title,
+                            description: metadata.description,
+                            domain: "youtube.com"
+                        }
+                        embeds.push(embed) // 'embed' no longer looks like a word
+                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
                     }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
                         var parsedVUrl = vimeoUrlFindingRegex.exec(r[2]);
@@ -118,15 +122,17 @@ module.exports = {
                         const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
 
-                        var linkPreviewHtml = renderVideoPreview(
-                            'https://player.vimeo.com/video/' + videoid + "?autoplay=1",
-                            parsedVUrl[0],
-                            metadata.image,
-                            metadata.title,
-                            metadata.description,
-                            "vimeo.com"
-                        )
-                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) + linkPreviewHtml + parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
+                        var embed = {
+                            type: 'video',
+                            embedUrl: 'https://player.vimeo.com/video/' + videoid + "?autoplay=1",
+                            linkUrl: parsedVUrl[0],
+                            image: metadata.image,
+                            title: metadata.title,
+                            description: metadata.description,
+                            domain: "vimeo.com"
+                        }
+                        embeds.push(embed)
+                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
                     }
                     r = linkFindingRegex.exec(parsedContent);
@@ -138,7 +144,8 @@ module.exports = {
         return {
             text: parsedContent,
             mentions: trimmedMentions,
-            tags: trimmedTags
+            tags: trimmedTags,
+            embeds: embeds
         };
     },
     isEven: function(n) {

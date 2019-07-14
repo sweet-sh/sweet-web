@@ -13,12 +13,14 @@
             </aside>
         </div>
     </header>
-    <section class="content">
-        {{{content}}}
-        {{#if imagesExist}}
-            {{{image_gallery}}}
-        {{/if}}
-    </section>
+    {{#if content}}
+        <section class="content">
+            {{{content}}}
+        </section>
+    {{/if}}
+    {{#if imagesExist}}
+        {{{image_gallery}}}
+    {{/if}}
     <footer class="toolbar">
         {{#gt depth 4}}{{else}}
         <button type="button" class="button comment-toolbar-button reply-to-comment">

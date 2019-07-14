@@ -354,6 +354,8 @@ module.exports = function (app, passport) {
                     'settings.userTimelineSorting': newSets.userTimelineSorting,
                     'settings.communityTimelineSorting': newSets.communityTimelineSorting,
                     'settings.flashRecentComments': (newSets.flashRecentComments == 'on' ? true : false),
+                    'settings.showRecommendations': (newSets.showRecommendations == 'on' ? true : false),
+                    'settings.showHashtags': (newSets.showHashtags == 'on' ? true : false),
                     'settings.emailTime': newSets.emailTime,
                     'settings.emailDay': newSets.emailDay
                 }
@@ -759,6 +761,25 @@ module.exports = function (app, passport) {
         }
         res.sendStatus(200);
     })
+
+    app.post('/api/recommendations/remove/:type/:id', isLoggedInOrRedirect, function (req, res) {
+        User.findOne({
+            _id: req.user._id
+        })
+        .then(user => {
+            if (req.params.type == "user") {
+                user.hiddenRecommendedUsers.push(req.params.id)
+            }
+            else if (req.params.type == "community") {
+                user.hiddenRecommendedCommunities.push(req.params.id)
+            }
+            user.save()
+            .then(result => {
+                res.sendStatus(200)
+            })
+        })
+    })
+
 };
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
