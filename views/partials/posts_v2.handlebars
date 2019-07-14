@@ -68,10 +68,6 @@
             <div class="abbreviated-content content-warning-content" style="height:0">
         {{/if}}
         {{{this.parsedContent}}}
-        {{#if this.contentWarnings}}
-            </div>
-            <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
-        {{/if}}
         {{#if this.embeds}}
             {{#each this.embeds}}
                 {{> embed }}
@@ -79,6 +75,10 @@
         {{/if}}
         {{#if this.images}}
             {{> imagegallery }}
+        {{/if}}
+        {{#if this.contentWarnings}}
+            </div>
+            <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
         {{/if}}
     </section>
     <footer class="toolbar">

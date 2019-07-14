@@ -1813,7 +1813,7 @@ a.show-more:hover { /* Shim for old show more button element */
   content: "";
   position: absolute;
   z-index: 1;
-  bottom: 1.5rem;
+  top: 4.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;

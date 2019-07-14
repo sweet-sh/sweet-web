@@ -38,6 +38,8 @@ module.exports = {
         parsedContent = parsedContent.join('');
         parsedContent = sanitize(parsedContent);
 
+        parsedContent = this.sanitizeHtmlForSweet(parsedContent);
+
         if (!cwsEnabled) {
             let contentWordCount = wordCount(parsedContent);
             if (contentWordCount > 160) {
@@ -59,8 +61,6 @@ module.exports = {
                 trimmedTags.push(el.replace(/(#|\s)*/i, ''));
             })
         }
-
-        parsedContent = this.sanitizeHtmlForSweet(parsedContent);
 
         //sometimes the editor starts the post content with links that are outside of paragraphs and thus don't look like they're on their own line to the embedding code below, that needs patched for now
         if(parsedContent.substring(0,3) == '<a '){
