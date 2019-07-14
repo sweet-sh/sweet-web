@@ -159,12 +159,20 @@
             </div>
             <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <hr />
-            <h4 id="recommendations-settings">Recommendations</h4>
+            <h4 id="discovery-settings">Discovery</h4>
             <div class="form-group">
                     <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="showRecommendations" id="showRecommendations" {{#if loggedInUserData.settings.showRecommendations}}checked{{/if}}>
                             <label class="form-check-label" for="showRecommendations">
                                     Show recommended people and communities next to the home feed
+                            </label>
+                    </div>
+            </div>
+            <div class="form-group">
+                    <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="showHashtags" id="showHashtags" {{#if loggedInUserData.settings.showHashtags}}checked{{/if}}>
+                            <label class="form-check-label" for="showHashtags">
+                                    Show recent hashtags next to the home feed
                             </label>
                     </div>
             </div>

@@ -6,61 +6,79 @@
         <div class="container commentsList" id="postsContainer"></div>
         {{> infinitescrollrequests}}
     </div>
-    {{#if loggedInUserData.settings.showRecommendations}}
+    {{#or loggedInUserData.settings.showRecommendations loggedInUserData.settings.showHashtags}}
         <div class="col-md-4 d-none d-lg-block">
-            <section class="recommendations">
-                <h4>Recommended</h4>
-                {{#neither userRecommendations popularCommunities}}
-                    <hr />
-                    <p style="font-weight: 300;">
-                        Out of suggestions - invite your friends!
-                    </p>
-                {{else}}
-                    {{#or userRecommendations popularCommunities}}
-                        <hr />
-                    {{/or}}
-                    {{#if userRecommendations}}
-                        <h5>People</h5>
-                        <div class="user-list">
-                          {{#each userRecommendations}}
-                            <div class="user-list-icon">
-                                <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
-                                    <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                                </a>
-                                <a href="#" class="hide-recommendation" data-type="user" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
-                            </div>
-                          {{/each}}
-                        </div>
-                    {{/if}}
-                    {{#if popularCommunities}}
-                        {{#if userRecommendations}}
+            <div class="fixed-container">
+                {{#if loggedInUserData.settings.showRecommendations}}
+                    <section class="recommendations">
+                        <h4>Recommended</h4>
+                        {{#neither userRecommendations popularCommunities}}
                             <hr />
-                        {{/if}}
-                        <h5>Communities</h5>
-                        <div class="user-list">
-                            {{#each popularCommunities}}
-                                <div class="user-list-icon">
-                                    <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
-                                    <a href="#" class="hide-recommendation" data-type="community" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
+                            <p style="font-weight: 300;">
+                                Out of suggestions - invite your friends!
+                            </p>
+                        {{else}}
+                            {{#or userRecommendations popularCommunities}}
+                                <hr />
+                            {{/or}}
+                            {{#if userRecommendations}}
+                                <h5>People</h5>
+                                <div class="user-list">
+                                  {{#each userRecommendations}}
+                                    <div class="user-list-icon">
+                                        <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
+                                            <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                                        </a>
+                                        <a href="#" class="hide-recommendation" data-type="user" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
+                                    </div>
+                                  {{/each}}
                                 </div>
-                            {{/each}}
+                            {{/if}}
+                            {{#if popularCommunities}}
+                                {{#if userRecommendations}}
+                                    <hr />
+                                {{/if}}
+                                <h5>Communities</h5>
+                                <div class="user-list">
+                                    {{#each popularCommunities}}
+                                        <div class="user-list-icon">
+                                            <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
+                                            <a href="#" class="hide-recommendation" data-type="community" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
+                                        </div>
+                                    {{/each}}
+                                </div>
+                            {{/if}}
+                        {{/neither}}
+                        <p class="discovery-help-links">
+                            <a href="#" id="display-recommendations-help">Huh?</a> &middot; <a href="/settings#discovery-settings">Turn off</a>
+                        </p>
+                        <div class="recommendations-help-text">
+                            <p class="small">
+                                The list of recommended people is made up of people <strong>trusted</strong> by the people you trust and people <strong>followed</strong> by the people you trust. The recommended communities are those which have seen activity in the last two weeks and have someone you trust or follow in them.
+                            </p>
+                            <p class="small">
+                                Click the cross next to an icon to hide that person or community from your recommendations.
+                            </p>
                         </div>
-                    {{/if}}
-                {{/neither}}
-                <p class="recommendations-links">
-                    <a href="#" id="display-recommendations-help">Huh?</a> &middot; <a href="/settings#recommendations-settings">Turn off</a>
-                </p>
-                <div class="recommendations-help-text">
-                    <p class="small">
-                        The list of recommended people is made up of people <strong>trusted</strong> by the people you trust and people <strong>followed</strong> by the people you trust. The recommended communities are those which have seen activity in the last two weeks and have someone you trust or follow in them.
-                    </p>
-                    <p class="small">
-                        Click the cross next to an icon to hide that person or community from your recommendations.
-                    </p>
-                </div>
-            </section>
+                    </section>
+                {{/if}}
+                {{#if loggedInUserData.settings.showHashtags}}
+                    <section class="hashtags">
+                        <h4>Recent hashtags</h4>
+                        <hr />
+                        {{#each popularHashtags}}
+                            <p>
+                                <a href="/tag/{{this.name}}">#{{this.name}}</a>
+                            </p>
+                        {{/each}}
+                        <p class="discovery-help-links">
+                            <a href="/settings#discovery-settings">Turn off</a>
+                        </p>
+                    </section>
+                {{/if}}
+            </div>
         </div>
-    {{/if}}
+    {{/or}}
 </section>
 
 {{> filemessage }}

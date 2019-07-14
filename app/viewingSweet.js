@@ -228,6 +228,14 @@ module.exports = function (app) {
                     return usersArray;
                 })
             }
+
+            popularHashtags = await Tag.find()
+                                  .limit(5)
+                                  .sort('-lastUpdated')
+                                  .then(tags => {
+                                      return tags;
+                                  })
+
             primaryTrustsArray = await getRelationships(req.user._id, "trust");
             for (const primaryUser of primaryTrustsArray) {
                 const secondaryTrusts = await getRelationships(primaryUser._id, "trust")
@@ -299,7 +307,8 @@ module.exports = function (app) {
 
                 results = {
                     popularCommunities: popularCommunities,
-                    userRecommendations: unknownUsers
+                    userRecommendations: unknownUsers,
+                    popularHashtags: popularHashtags
                 }
                 return results;
             });
@@ -314,7 +323,8 @@ module.exports = function (app) {
             loggedInUserData: req.user,
             activePage: 'home',
             popularCommunities: (recommendations.popularCommunities.length > 0 ? recommendations.popularCommunities : false),
-            userRecommendations: (recommendations.userRecommendations.length > 0 ? recommendations.userRecommendations : false)
+            userRecommendations: (recommendations.userRecommendations.length > 0 ? recommendations.userRecommendations : false),
+            popularHashtags: (recommendations.popularHashtags.length > 0 ? recommendations.popularHashtags : false)
         });
     });
 

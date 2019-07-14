@@ -1901,15 +1901,19 @@ a.show-more:hover { /* Shim for old show more button element */
     100% { transform: translateY(0); }
 }
 
-.recommendations {
+.fixed-container {
+    position: fixed;
+}
+
+.fixed-container > section {
     border: 1px solid #cecece;
     background: #fffafc;
     padding: 0.5rem 1rem 1rem 1rem;
-    position: fixed;
     width: 350px;
+    margin-bottom: 1rem;
 }
 
-.recommendations-links {
+.discovery-help-links {
     font-size: small;
     margin-top: 0.75rem;
     display: block;
