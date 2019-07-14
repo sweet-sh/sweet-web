@@ -313,16 +313,9 @@ module.exports = function (app) {
                 return User.find({
                     _id: unknownUsers
                 })
+                .sort('-lastUpdated')
+                .limit(10)
                 .then(userData => {
-                    userData.sort((a,b) => b.lastUpdated - a.lastUpdated);
-
-                    userData.forEach(u => {
-                        console.log(u.lastUpdated)
-                    })
-
-                    if (userData.length > 10)
-                        userData.length = 10;
-
                     results = {
                         popularCommunities: popularCommunities,
                         userRecommendations: userData,
