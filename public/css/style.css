@@ -1942,3 +1942,12 @@ a.show-more:hover { /* Shim for old show more button element */
     height: 12px;
     line-height: 12px;
 }
+
+.hashtags-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.hashtags-list > * {
+    margin-right: 0.5rem;
+}

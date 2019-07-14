@@ -66,11 +66,13 @@
                     <section class="hashtags">
                         <h4>Recent hashtags</h4>
                         <hr />
-                        {{#each popularHashtags}}
-                            <p>
-                                <a href="/tag/{{this.name}}">#{{this.name}}</a>
-                            </p>
-                        {{/each}}
+                        <div class="hashtags-list">
+                            {{#each popularHashtags}}
+                                <p>
+                                    <a href="/tag/{{this.name}}">#{{this.name}}</a>
+                                </p>
+                            {{/each}}
+                        </div>
                         <p class="discovery-help-links">
                             <a href="/settings#discovery-settings">Hide</a>
                         </p>
