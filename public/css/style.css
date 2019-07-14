@@ -1913,6 +1913,11 @@ a.show-more:hover { /* Shim for old show more button element */
     margin-bottom: 1rem;
 }
 
+.hashtags p:nth-child(7) {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
 .discovery-help-links {
     font-size: small;
     margin-top: 0.75rem;
