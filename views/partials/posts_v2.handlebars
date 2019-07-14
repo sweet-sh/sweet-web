@@ -121,7 +121,10 @@
         {{/eq}}
         <div class="toolbar-button-container">
             <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
-              <i class="far fa-sticky-note"></i>
+                <span class="fa-layers">
+                  <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
+                  <i class="far fa-sticky-note"></i>
+                </span>
             </a>
         </div>
         {{#contains this.subscribedUsers ../loggedInUserData._id}}
