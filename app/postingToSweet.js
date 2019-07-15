@@ -596,7 +596,7 @@ module.exports = function (app) {
         }
 
         var rawContent = sanitize(req.body.commentContent);
-        var parsedResult = await helper.parseText(rawContent, false, true, true, true, true);
+        var parsedResult = await helper.parseText(rawContent, false, true, true, true, false);
 
         if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');

@@ -176,7 +176,9 @@ module.exports = {
             },
             transformTags: {
                 'a': function(tagName, attribs) {
-                    if (!attribs.href.includes('//')) {
+                    //if a link is not explicitly relative due to an initial / (like mention and hashtag links are) and doesn't already include the // that makes it non-relative
+                    if (attribs.href.substring(0,1) != "/" && !attribs.href.includes('//')) {
+                        //make the link explicitly non-relative
                         attribs.href = "//" + attribs.href;
                     }
                     attribs.target = "_blank";
