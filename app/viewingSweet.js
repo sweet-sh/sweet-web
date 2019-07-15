@@ -211,7 +211,7 @@ module.exports = function (app) {
             secondaryFollows = [];
             secondaryTrustsArray = [];
             secondaryFollowsArray = [];
-            lastWeek = moment(new Date()).subtract(7, 'days');
+            lastFortnight = moment(new Date()).subtract(14, 'days');
             async function getRelationships(id, type) {
                 var usersArray = [];
                 return Relationship.find({
@@ -280,7 +280,7 @@ module.exports = function (app) {
             }
             popularCommunities = await Community.find({
                 $and: [
-                    { lastUpdated: { $gt: lastWeek } },
+                    { lastUpdated: { $gt: lastFortnight } },
                     { members: { $ne: req.user._id } },
                     membersQuery
                 ]
