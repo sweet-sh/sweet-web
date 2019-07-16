@@ -270,9 +270,9 @@ module.exports = function (app) {
             })
             usersKnown = [...new Set(usersKnown)];
 
-            // Shows all recently active communities if the user has no friends,
+            // Shows all recently active communities if the user's only friend is sweetbot,
             // otherwise only recently active communities with a friend in them
-            if (usersKnown.length == 0) {
+            if (usersKnown.length == 1 && usersKnown[0] === "5c962bccf0b0d14286e99b68") {
                 membersQuery = {}
             }
             else {
