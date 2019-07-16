@@ -116,6 +116,8 @@ function(req, email, password, done) {
                   var sweetbotFollow = new Relationship();
                   sweetbotFollow.from = email;
                   sweetbotFollow.to = 'support@sweet.sh';
+                  sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';
+                  sweetbotFollow.fromUser = newUser._id;
                   sweetbotFollow.value = 'follow'
                   sweetbotFollow.save(function(err) {
                     if (err)
