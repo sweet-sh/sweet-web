@@ -81,7 +81,6 @@ function appendToInput(inputElement, appendedText) {
    }
 }
 
-
 function attachQuill(element){
     var quill = new Quill(element, {
         modules: {
@@ -92,6 +91,13 @@ function attachQuill(element){
         },
         placeholder: 'Write something, highlight text to format.',
         theme: 'bubble'
+    });
+    //todo: figure out why adding emojis moves cursor and remove this
+    quill.on('text-change', function(delta, oldDelta, source) {
+        console.log('Text change!');
+        console.log(delta);
+        console.log(oldDelta);
+        console.log(source);
     });
 }
 
@@ -144,7 +150,7 @@ function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
    }
    if (element.html()){
       console.log("haz")
-      element.next('textarea').val(element.html().trim());
+      //element.next('textarea').val(element.html().trim());
    }
 }
 
