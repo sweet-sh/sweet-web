@@ -1007,17 +1007,27 @@ hr {
   margin-bottom: 0;
 }
 
-.medium-editor-element {
-  min-height: 4rem !important;
+.ql-tooltip {
+  z-index: 1000;
 }
-.medium-editor-placeholder::after {
-  font-style: normal !important;
-  color: #6c757d;
+
+.ql-editor {
+  overflow-y: inherit;
+  padding: 0;
 }
-.medium-editor-placeholder-relative::after {
-  font-style: normal !important;
-  padding: 0 !important;
-  color: #6c757d;
+
+.ql-container {
+  min-height: 4rem;
+  font-family:inherit;
+  background-color:#fff;
+}
+
+.ql-editor.ql-blank::before {
+  font-style:normal;
+}
+
+.ql-editor p {
+  margin-bottom: 0.5em;
 }
 
 #postContentWarningsContainer {
@@ -1866,10 +1876,6 @@ a.show-more:hover { /* Shim for old show more button element */
 
 .sl-image {
     box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
-}
-
- {
-    border-top: 1px solid #cecece;
 }
 
 #votesContainer {

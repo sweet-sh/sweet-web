@@ -70,20 +70,6 @@ module.exports = {
 
         if (youtubeEnabled) {
             console.log("Embedding!")
-            //i mean, handlebars is way overkill for this
-            // function renderVideoPreview(embedurl,linkurl,imageurl,title,description,domain){
-            //     return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
-            //         <div style="display:flex;justify-content:center;position:relative;">\
-            //             <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
-            //             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>\
-            //         </div>\
-            //         <div class="link-preview-text-container">\
-            //             <span class="link-preview-title">'+title+'</span>\
-            //             <span class="link-preview-description">'+description+'</span>\
-            //             <span class="link-preview-domain">'+domain+'</span>\
-            //         </div>\
-            //     </a>';
-            // }
             var embeds = [];
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
@@ -170,7 +156,7 @@ module.exports = {
     },
     sanitizeHtmlForSweet: function(parsedContent) {
         return sanitizeHtml(parsedContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p', 'br'],
+            allowedTags: ['blockquote', 'ul', 'li', 'em', 'i', 'b', 'strong', 'a', 'p', 'br'],
             allowedAttributes: {
                 'a': ['href','target']
             },

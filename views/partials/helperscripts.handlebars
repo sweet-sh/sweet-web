@@ -1,7 +1,9 @@
 <script id="new-comment-form-template" type="text/x-handlebars-template">
 <div class="new-comment-form" data-comment-type="\{{comment_type}}" data-post-id="\{{post_id}}" data-comment-id="\{{comment_id}}">
   <div class="form-row">
-    <textarea class="form-control form-control-sm comment-textarea editable-text editable-comment-content" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
+    <div class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
   </div>
   <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
       <button type="button" class="add-emoji">🍬</button>
@@ -78,6 +80,22 @@ function appendToInput(inputElement, appendedText) {
       inputElement.focus();
    }
 }
+
+
+function attachQuill(element){
+    var quill = new Quill(element, {
+        modules: {
+            toolbar: [
+            ['bold', 'italic', { 'list': 'bullet' }, 'link'],
+            ['blockquote']
+            ]
+        },
+        placeholder: 'Write something, highlight text to format.',
+        theme: 'bubble'
+    });
+}
+
+//todo: check emoji stuff functioning w/ quill
 
 // Lightly adapted from http://jsfiddle.net/jwvha/468/
 function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
@@ -169,7 +187,7 @@ $(function() {
                 return '<img class="tribute-image" src="/images/' + item.original.image + '">' + item.string;
             }
         })
-        tribute.attach($(".editable-text")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
+        tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
     });
 
 {{/if}}
@@ -177,9 +195,9 @@ $(function() {
     // Attach scripts to newly loaded posts
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         {{#if loggedIn}}
-        editor.addElements('.editable-text');
+        
         if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
-            tribute.attach($(".editable-comment-content"));
+            tribute.attach($(".ql-editor"));
         }
         {{/if}}
         var newlyLoadedStuff = $(items);
@@ -224,69 +242,18 @@ $(function() {
                 //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
             }
         }
+
+        var commentForms = newlyLoadedStuff.find('.editable-text');
+        commentForms.each(function(){
+            attachQuill(this);
+        })
     });
 
+    
     {{#if loggedIn}}
-    // From https://stackoverflow.com/a/4819886, will undoubtedly break sooner or later
-    function is_touch_device() {
-        var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
-        var mq = function (query) {
-            return window.matchMedia(query).matches;
-        }
-        if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
-            return true;
-        }
 
-        // include the 'heartz' as a way to have a non matching MQ to help terminate the join
-        // https://git.io/vznFH
-        var query = ['(', prefixes.join('touch-enabled),('), 'heartz', ')'].join('');
-        return mq(query);
-    }
+    attachQuill(document.getElementById('editor'))
 
-    function createToolbar(mobileDevice) {
-        if (mobileDevice) {
-            toolbar = {
-                buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
-                static: true,
-            }
-        } else {
-            toolbar = {
-                buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
-                static: false,
-            }
-        }
-        return toolbar;
-    }
-    options = {
-        buttonLabels: 'fontawesome',
-        imageDragging: false,
-        toolbar: createToolbar(is_touch_device()),
-        keyboardCommands: {
-            commands: [{
-                    command: 'bold',
-                    key: 'B',
-                    meta: true,
-                    shift: false,
-                    alt: false
-                },
-                {
-                    command: 'italic',
-                    key: 'I',
-                    meta: true,
-                    shift: false,
-                    alt: false
-                }
-            ],
-        },
-        placeholder: {
-            text: 'Write something, highlight text to format.'
-        },
-        paste: {
-            forcePlainText: true,
-            cleanPastedHTML: true
-        }
-    }
-    editor = new MediumEditor('.editable-text,#communityDescription,#communityRules', options);
     {{/if}}
 });
 </script>

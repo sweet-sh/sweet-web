@@ -1,7 +1,11 @@
 <div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
-  <div class="form-row">
-    <textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>
-  </div>
+  <!--<div class="form-row">-->
+    <div id="editor" class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
+    <!-- todo: put session flash error content handlebars variable in here somewhere. -->
+    <!--<textarea required class="editable-post-content editable-text" id="postContent" name="postContent" style="resize: none;" placeholder="Write something.">{{sessionFlash.errorContent}}</textarea>-->
+  <!--</div>-->
   <div class="form-row my-2" id="postContentWarningsContainer">
     <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
   </div>

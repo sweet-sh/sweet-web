@@ -238,8 +238,8 @@ $(function() {
     var template = Handlebars.compile(source);
     var html = template({post_id: postID, comment_id: commentID, comment_type: 'child'});
     $(html).appendTo(commentContainer);
-    editor.addElements('.editable-text');
-    tribute.attach($(".editable-comment-content"));
+    attachQuill(commentContainer.find('.editable-text')[0]) //todo: quill
+    tribute.attach($(".ql-editor")); //todo: check with quill
     //Scroll to newly created form
     newForm = commentContainer.find('.new-comment-form');
     if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
@@ -289,9 +289,8 @@ $(function() {
     let commentType = commentForm.attr('data-comment-type');
     let postID = commentForm.attr('data-post-id');
     let commentID = commentForm.attr('data-comment-id');
-    let textarea = commentForm.find("textarea.comment-textarea");
-    let contentEditable = commentForm.find("div.comment-textarea");
-    let commentContent = textarea.val();
+    let commentContentContainer = commentForm.find('.ql-editor');
+    let commentContent = commentContentContainer.html();
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
@@ -327,8 +326,7 @@ $(function() {
       },
       function(data) {
         if (data!='nope'){
-          textarea.val("");
-          contentEditable.html("");
+          commentContentContainer.html('');
           var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
           //add the lightbox listener to the newly appended comment images
           var commentimages = appendedComment.find('.post-images a');

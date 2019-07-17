@@ -13,8 +13,10 @@ $(function() {
 
   //NEW POST FORM CODE
 
-  $(".editable-post-content").focus(function () {
-    $(".post-controls").css('display', 'flex');
+  $(".ql-editor").focus(function (e) {
+    if(e.target.parentElement.id == "editor"){
+      $(".post-controls").css('display', 'flex');
+    }
   })
   $("#postContentWarningsButton").click(function () {
     $("#postContentWarningsContainer").removeClass("bounce")
@@ -190,9 +192,10 @@ $(function() {
       return;
     }
     e.preventDefault();
+    let postContent = $('#editor').find(".ql-editor").html();
     let pc = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
     //only do anything if there are no pending uploads and there is some text or image(s) to post
-    if ((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted - pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || $('#postContent').val() != "")) {
+    if ((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted - pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || postContent.trim() != "<p><br></p>")) {
       let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
       let imagedescs = [];
       for (let i = 0; i < $(pc).find('.newimagecont').length; i++) {
@@ -207,7 +210,7 @@ $(function() {
         data: {
           communityId: $('#postForm').attr("communityId"),
           postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
-          postContent: $('#postContent').val(),
+          postContent: postContent,
           postContentWarnings: $('#postContentWarnings').val(),
           postImageDescription: JSON.stringify(imagedescs),
           postImageURL: JSON.stringify(sortedurls),
