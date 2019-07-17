@@ -64,7 +64,8 @@ var userSchema = new mongoose.Schema({
     emailTime: { type: String, default: "17:00" },
     emailDay: { type: String, default: "Sunday" },
     showRecommendations: { type: Boolean, default: true },
-    showHashtags: { type: Boolean, default: true }
+    showHashtags: { type: Boolean, default: true },
+    sendMentionEmails: { type: Boolean, default: true },
   },
   notifications: [notificationSchema],
   pushNotifSubscriptions: [String],

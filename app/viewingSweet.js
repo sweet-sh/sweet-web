@@ -307,7 +307,7 @@ module.exports = function (app) {
 
                 return User.find({
                     _id: unknownUsers
-                })
+                }, {username: 1, image: 1, imageEnabled: 1, displayName: 1})
                 .then(userData => {
                     userData.forEach(user => {
                         user.weight = recommendedUsers[user._id.toString()];

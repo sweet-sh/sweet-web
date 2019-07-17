@@ -43,15 +43,18 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                 break;
               case 'mention':
                 text = 'mentioned you in a ' + context + '.'
+                email = 'mentioned you on sweet 🙌'
                 break;
               case 'relationship':
                 text = 'now ' + context + 's you.'
                 break;
             }
             final = '<strong>' + username + '</strong> ' + text;
+            emailText = username + ' ' + email;
             return {
               image: image,
-              text: final
+              text: final,
+              emailText: emailText
             };
           })
         break;
@@ -119,6 +122,10 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               })
               webpush.sendNotification(pushSubscription, payload, options);
             }
+          }
+          // send the user an email if it's a mention and they have emails for mentions enabled
+          if (notifiedUser.settings.sendMentionEmails == true && cause == "mention") {
+              emailer.sendSingleNotificationEmail(notifiedUser, response, url)
           }
           //if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
           var lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]

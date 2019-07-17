@@ -211,6 +211,41 @@ function emailRescheduler(user) {
     }
 }
 
+async function sendSingleNotificationEmail(user, notification, link){
+    let singleNotification = [{
+        url: link,
+        image: notification.image,
+        text: notification.emailText
+    }];
+    let info = {
+                from: '"sweet 🍬" <updates@sweet.sh>',
+                to: user.email,
+                subject: notification.emailText,
+                template: "update",
+                context: {
+                    title: 'sweet',
+                    content: [
+                        'Hi <strong>@' + user.username + '</strong>!',
+                        '<img style="float:left;width:25px;height:25px;margin-right:5px;border-radius:4px;" src="https://sweet.sh' + notification.image + '"/>' + notification.emailText
+                    ],
+                    action: {
+                        url: 'https://sweet.sh' + link,
+                        text: 'take a look'
+                    },
+                    signoff: '— sweet x'
+                }
+            };
+            await transporter.sendMail(info, function (error, info) {
+                if (error) {
+                    emailLog("could not send email to " + user.username + ": " + error);
+                } else {
+                    emailLog('\n--- single notification email sent to ' + user.username + '! ---');
+                    emailLog("info:\n" + JSON.stringify(info, null, 4) + "\n");
+                }
+            })
+}
+
+module.exports.sendSingleNotificationEmail = sendSingleNotificationEmail;
 module.exports.sendUpdateEmail = sendUpdateEmail;
 //export this so it can be called upon email settings changing
 module.exports.emailRescheduler = emailRescheduler;

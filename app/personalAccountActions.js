@@ -356,6 +356,7 @@ module.exports = function (app, passport) {
                     'settings.flashRecentComments': (newSets.flashRecentComments == 'on' ? true : false),
                     'settings.showRecommendations': (newSets.showRecommendations == 'on' ? true : false),
                     'settings.showHashtags': (newSets.showHashtags == 'on' ? true : false),
+                    'settings.sendMentionEmails': (newSets.sendMentionEmails == 'on' ? true : false),
                     'settings.emailTime': newSets.emailTime,
                     'settings.emailDay': newSets.emailDay
                 }
