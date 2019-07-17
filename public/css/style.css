@@ -1013,12 +1013,12 @@ hr {
 
 .ql-editor {
   overflow-y: inherit;
-  padding: 0;
+  min-height: 4rem;
 }
 
 .ql-container {
-  min-height: 4rem;
   font-family:inherit;
+  padding: 0;
   background-color:#fff;
 }
 
