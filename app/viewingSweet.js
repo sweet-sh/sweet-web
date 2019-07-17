@@ -1029,7 +1029,7 @@ module.exports = function (app) {
           }
 
           // As a final hurrah, just hide all posts and boosts made by users you've muted
-          if (myMutedUserEmails.includes(post.authorEmail)) {
+          if (req.isAuthenticated() && myMutedUserEmails.includes(post.authorEmail)) {
               canDisplay = false;
           }
 
@@ -1180,7 +1180,7 @@ module.exports = function (app) {
                 }
                 comment.author = await getUser(comment.author)
               }
-              if (myMutedUserEmails.includes(comment.author.email)) {
+              if (req.isAuthenticated() && myMutedUserEmails.includes(comment.author.email)) {
                   comment.muted = true;
                   comment.canDisplay = false;
               }
