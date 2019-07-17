@@ -26,7 +26,7 @@
                                 <div class="user-list">
                                   {{#each userRecommendations}}
                                     <div class="user-list-icon">
-                                        <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
+                                        <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}" data-weight="{{this.weight}}">
                                             <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                                         </a>
                                         <a href="#" class="hide-recommendation" data-type="user" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
