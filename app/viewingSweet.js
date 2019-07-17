@@ -207,28 +207,32 @@ module.exports = function (app) {
         async function getRecommendations(){
             console.time('getRecommendationsFunction')
             popularCommunities = [];
-            secondaryTrusts = [];
-            secondaryFollows = [];
-            secondaryTrustsArray = [];
-            secondaryFollowsArray = [];
-            recommendedUsers = [];
-            recommendedUserIds = [];
+            recommendedUsers = {};
+            relationshipWeights = {
+                "trust": 2,
+                "follow": 0.5
+            };
             lastFortnight = moment(new Date()).subtract(14, 'days');
             async function getRelationships(id, type) {
-                var usersArray = [];
+                var users = {};
                 return Relationship.find({
                     fromUser: id,
                     value: type
                 })
-                // .populate('toUser')
-                .sort('-lastUpdated')
-                .then((trusts) => {
-                    trusts.forEach(trust => {
-                        if (!trust.toUser.equals(req.user._id) && usersArray.filter(e => !e.equals(trust.toUser))) {
-                            usersArray.push(trust.toUser);
+                .then((relationships) => {
+                    relationships.forEach(relationship => {
+                        if (!relationship.toUser.equals(req.user._id)) {
+                            let id = relationship.toUser.toString();
+                            let weight = relationshipWeights[relationship.value]
+                            if (!(id in users)) {
+                                users[id] = weight;
+                            }
+                            else {
+                                users[id] += weight;
+                            }
                         }
                     })
-                    return usersArray;
+                    return users;
                 })
             }
             console.time('popularHashtags')
@@ -246,47 +250,25 @@ module.exports = function (app) {
             // score of 2, following gives a score of 0.5.
             // (The scores have been arbitrarily selected.)
 
-            console.time('primaryTrusts')
-            primaryTrustsArray = await getRelationships(req.user._id, "trust");
-            for (const primaryUser of primaryTrustsArray) {
-                const secondaryTrusts = await getRelationships(primaryUser, "trust")
-                for (const secondaryUser of secondaryTrusts) {
-                    u = secondaryUser.toString();
-                    if (!recommendedUserIds.includes(u)) {
-                        recommendedUsers[u] = 2;
-                        recommendedUserIds.push(u)
+            console.time('recommendedUsers')
+            primaryRelationships = await getRelationships(req.user._id, ["trust","follow"]);
+            for (const primaryUser in primaryRelationships) {
+                const secondaryRelationships = await getRelationships(primaryUser, ["trust","follow"])
+                for (const secondaryUser in secondaryRelationships) {
+                    let id = secondaryUser;
+                    let weight = secondaryRelationships[secondaryUser]
+                    if (!(id in recommendedUsers)) {
+                        recommendedUsers[id] = weight;
                     }
                     else {
-                        recommendedUsers[secondaryUser] += 2;
+                        recommendedUsers[id] += weight;
                     }
                 }
             }
-            console.timeEnd('primaryTrusts')
-            console.time('primaryFollows')
-            primaryFollowsArray = await getRelationships(req.user._id, "follow");
-            for (const primaryUser of primaryFollowsArray) {
-                const secondaryFollows = await getRelationships(primaryUser, "follow")
-                for (const secondaryUser of secondaryFollows) {
-                    u = secondaryUser.toString();
-                    if (!recommendedUserIds.includes(u)) {
-                        recommendedUsers[u] = 0.5;
-                        recommendedUserIds.push(u)
-                    }
-                    else {
-                        recommendedUsers[secondaryUser] += 0.5;
-                    }
-                }
-            }
-            console.timeEnd('primaryFollows')
+            recommendedUserIds = Object.keys(recommendedUsers)
+            console.timeEnd('recommendedUsers')
 
-            usersKnown = []
-            primaryTrustsArray.forEach(user => {
-                usersKnown.push(user.toString())
-            })
-            primaryFollowsArray.forEach(user => {
-                usersKnown.push(user.toString())
-            })
-            usersKnown = [...new Set(usersKnown)];
+            usersKnown = Object.keys(primaryRelationships)
 
             // Shows all recently active communities if the user's only friend is sweetbot,
             // otherwise only recently active communities with a friend in them
@@ -314,14 +296,14 @@ module.exports = function (app) {
                 console.time('userFunctions')
                 popularCommunities = popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
 
-                if (popularCommunities.length > 10)
-                    popularCommunities.length = 10;
+                if (popularCommunities.length > 16)
+                    popularCommunities.length = 16;
 
-                unknownUsers = recommendedUserIds.filter(e => !usersKnown.includes(e.toString()));
+                unknownUsers = recommendedUserIds.filter(e => !usersKnown.includes(e));
                 unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e));
 
-                if (unknownUsers.length > 10)
-                    unknownUsers.length = 10;
+                if (unknownUsers.length > 16)
+                    unknownUsers.length = 16;
 
                 return User.find({
                     _id: unknownUsers
