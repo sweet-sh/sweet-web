@@ -1327,10 +1327,6 @@ hr {
     color: #28a745;
 }
 
-.medium-editor-element {
-  height: auto;
-}
-
 .link-preview-container {
     display: flex;
     height: 100px;
@@ -1868,10 +1864,6 @@ a.show-more:hover { /* Shim for old show more button element */
 .infinite-scroll-last,
 .infinite-scroll-error {
     display: none;
-}
-
-.medium-editor-placeholder-relative::after, .medium-editor-placeholder::after {
-    white-space: normal !important;
 }
 
 .sl-image {
