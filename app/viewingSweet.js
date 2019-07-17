@@ -211,6 +211,8 @@ module.exports = function (app) {
             secondaryFollows = [];
             secondaryTrustsArray = [];
             secondaryFollowsArray = [];
+            recommendedUsers = [];
+            recommendedUserIds = [];
             lastFortnight = moment(new Date()).subtract(14, 'days');
             async function getRelationships(id, type) {
                 var usersArray = [];
@@ -238,13 +240,24 @@ module.exports = function (app) {
                                   })
             console.timeEnd('popularHashtags')
 
+            // Trusted and followed users of people the user
+            // trusts or follows are retrieved and placed in
+            // an array with weighted scores - trust gives a
+            // score of 2, following gives a score of 0.5.
+            // (The scores have been arbitrarily selected.)
+
             console.time('primaryTrusts')
             primaryTrustsArray = await getRelationships(req.user._id, "trust");
             for (const primaryUser of primaryTrustsArray) {
                 const secondaryTrusts = await getRelationships(primaryUser, "trust")
                 for (const secondaryUser of secondaryTrusts) {
-                    if (secondaryTrustsArray.filter(e => !e.equals(secondaryUser))) {
-                        secondaryTrustsArray.push(secondaryUser)
+                    u = secondaryUser.toString();
+                    if (!recommendedUserIds.includes(u)) {
+                        recommendedUsers[u] = 2;
+                        recommendedUserIds.push(u)
+                    }
+                    else {
+                        recommendedUsers[secondaryUser] += 2;
                     }
                 }
             }
@@ -252,10 +265,15 @@ module.exports = function (app) {
             console.time('primaryFollows')
             primaryFollowsArray = await getRelationships(req.user._id, "follow");
             for (const primaryUser of primaryFollowsArray) {
-                const secondaryFollows = await getRelationships(primaryUser._id, "follow")
+                const secondaryFollows = await getRelationships(primaryUser, "follow")
                 for (const secondaryUser of secondaryFollows) {
-                    if (secondaryFollowsArray.filter(e => !e._id.equals(secondaryUser._id))) {
-                        secondaryFollowsArray.push(secondaryUser)
+                    u = secondaryUser.toString();
+                    if (!recommendedUserIds.includes(u)) {
+                        recommendedUsers[u] = 0.5;
+                        recommendedUserIds.push(u)
+                    }
+                    else {
+                        recommendedUsers[secondaryUser] += 0.5;
                     }
                 }
             }
@@ -289,14 +307,6 @@ module.exports = function (app) {
                 return communities;
             })
 
-            function dedupeIDs(objectIDs) {
-              const ids = {}
-              objectIDs.forEach(_id => (ids[_id.toString()] = _id))
-              return Object.values(ids)
-            }
-            mergedUserRecommendations = secondaryTrustsArray.concat(secondaryFollowsArray);
-            mergedUserRecommendations = dedupeIDs(mergedUserRecommendations)
-
             return User.findOne({
                 _id: req.user._id
             })
@@ -307,15 +317,20 @@ module.exports = function (app) {
                 if (popularCommunities.length > 10)
                     popularCommunities.length = 10;
 
-                unknownUsers = mergedUserRecommendations.filter(e => !usersKnown.includes(e.toString()));
-                unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e._id.toString()))
+                unknownUsers = recommendedUserIds.filter(e => !usersKnown.includes(e.toString()));
+                unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e));
+
+                if (unknownUsers.length > 10)
+                    unknownUsers.length = 10;
 
                 return User.find({
                     _id: unknownUsers
                 })
-                .sort('-lastUpdated')
-                .limit(10)
                 .then(userData => {
+                    userData.forEach(user => {
+                        user.weight = recommendedUsers[user._id.toString()];
+                    })
+                    userData.sort((a, b) => (a.weight > b.weight) ? -1 : 1)
                     results = {
                         popularCommunities: popularCommunities,
                         userRecommendations: userData,
