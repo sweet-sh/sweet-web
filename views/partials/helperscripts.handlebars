@@ -189,13 +189,11 @@ $(function() {
             attachQuill(this);
         })
         if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
-            console.log(newlyLoadedStuff.find(".ql-editor"))
             tribute.attach(newlyLoadedStuff.find(".ql-editor"));
         }
         {{/if}}
     });
 
-    
     {{#if loggedIn}}
 
     var editor = undefined;
