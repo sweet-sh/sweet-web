@@ -165,7 +165,7 @@ $(function() {
     $(this).closest('.new-comment-form').find('.replyEmojiWindow').slideToggle("fast");
   })
   $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
-    pasteHtmlAtCaret($(this).closest(".new-comment-form").find('.ql-editor'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
+    $(this).closest(".new-comment-form").find('.ql-container')[0].insertEmojiAtCursor(event.target.innerHTML);
   })
 
     $('#boostersModal').on('show.bs.modal', function (event) {

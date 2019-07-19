@@ -46,7 +46,7 @@ $(function() {
     $("#emojiWindow").slideToggle("fast")
   })
   $("#emojiWindow>.add-emoji").click(function () {
-    pasteHtmlAtCaret($("#editor").find('.ql-editor'), '<span class="emoji"> ' + event.target.innerHTML + '</span>');
+    $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
 
   //IMAGE UPLOADER CODE

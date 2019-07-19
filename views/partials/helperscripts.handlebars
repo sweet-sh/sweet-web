@@ -63,23 +63,6 @@
 </script>
 
 <script type="text/javascript">
-function appendToInput(inputElement, appendedText) {
-   if(inputElement.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = inputElement.selectionStart;
-      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
-      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = cursorPos + appendedText.length;
-      inputElement.focus();
-   }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      inputElement.value = appendedText + inputElement.value;
-      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = appendedText.length;
-      inputElement.focus();
-   }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      inputElement.value+=appendedText;
-      inputElement.focus();
-   }
-}
 
 function attachQuill(element){
     var quill = new Quill(element, {
@@ -91,64 +74,22 @@ function attachQuill(element){
         placeholder: 'Write something, highlight text to format.',
         theme: 'bubble'
     });
-    //todo: figure out why adding emojis moves cursor and remove this
-    quill.on('text-change', function(delta, oldDelta, source) {
-        console.log('Text change!');
-        console.log(delta);
-        console.log(oldDelta);
-        console.log(source);
-    });
-}
-
-// Lightly adapted from http://jsfiddle.net/jwvha/468/
-function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
-   element.focus();
-   var sel, range;
-   if (window.getSelection) {
-         // IE9 and non-IE
-         sel = window.getSelection();
-         if (sel.getRangeAt && sel.rangeCount) {
-               range = sel.getRangeAt(0);
-               range.deleteContents();
-
-               // Range.createContextualFragment() would be useful here but is
-               // only relatively recently standardized and is not supported in
-               // some browsers (IE9, for one)
-               var el = document.createElement("div");
-               el.innerHTML = html;
-               var frag = document.createDocumentFragment(), node, lastNode;
-               while ( (node = el.firstChild) ) {
-                     lastNode = frag.appendChild(node);
-               }
-               var firstNode = frag.firstChild;
-               range.insertNode(frag);
-
-               // Preserve the selection
-               if (lastNode) {
-                     range = range.cloneRange();
-                     range.setStartAfter(lastNode);
-                     if (selectPastedContent) {
-                           range.setStartBefore(firstNode);
-                     } else {
-                           range.collapse(true);
-                     }
-                     sel.removeAllRanges();
-                     sel.addRange(range);
-               }
-         }
-   } else if ( (sel = document.selection) && sel.type != "Control") {
-         // IE < 9
-         var originalRange = sel.createRange();
-         originalRange.collapse(true);
-         sel.createRange().pasteHTML(html);
-         var range = sel.createRange();
-         range.setEndPoint("StartToStart", originalRange);
-         range.select();
-   }
-   if (element.html()){
-      console.log("haz")
-      //element.next('textarea').val(element.html().trim());
-   }
+    //save the most recent cursor position when the editor loses focus
+    quill.on('selection-change', function(range,oldRange,source){
+        if(!range){
+            element.lastCursorPos = oldRange.index;
+        }
+    })
+    element.insertEmojiAtCursor = function(emojiString){
+        var range = undefined;
+        if(range = quill.getSelection()){ //if editor has focus
+            quill.insertText(range.index,emojiString)
+        }else if(element.lastCursorPos){ //if editor has had focus and thus an active cursor position previously
+            quill.insertText(element.lastCursorPos,emojiString)
+        }else{ //if the editor has not yet been focused (and so will be empty)
+            quill.insertText(0,emojiString)
+        }
+    }
 }
 
 $(function() {
