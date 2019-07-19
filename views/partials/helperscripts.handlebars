@@ -98,11 +98,16 @@ function attachQuill(element){
     element.insertEmojiAtCursor = function(emojiString){
         var range = undefined;
         if(range = quill.getSelection()){ //if editor has focus
+            if(range.length > 0){ //if there is some text selected
+                quill.deleteText(range.index,range.length);
+            }
             quill.insertText(range.index,emojiString)
         }else if(element.lastCursorPos){ //if editor has had focus and thus an active cursor position previously
             quill.insertText(element.lastCursorPos,emojiString)
-        }else{ //if the editor has not yet been focused (and so will be empty)
+        }else{ //if the editor has not yet been focused (and so will be empty so just put the emoji at the beginning)
             quill.insertText(0,emojiString)
+            quill.focus()
+            quill.setSelection(emojiString.length,0)
         }
     }
     element.hasContent = function(){
