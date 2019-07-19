@@ -231,7 +231,6 @@ $(function() {
         console.log("Form already exists!")
         return;
     }
-    // pasteHtmlAtCaret($(this).closest(".replyContainer").children("#commentForm").find('.editable-comment-content.medium-editor-element'), "@" + $(this).attr("data-username")+"&nbsp;");
 
     // Create new comment form with Handlebars.js
     var source = document.getElementById("new-comment-form-template").innerHTML;
@@ -289,8 +288,9 @@ $(function() {
     let commentType = commentForm.attr('data-comment-type');
     let postID = commentForm.attr('data-post-id');
     let commentID = commentForm.attr('data-comment-id');
-    let commentContentContainer = commentForm.find('.ql-editor');
-    let commentContent = commentContentContainer.html();
+    let commentContainer = commentForm.find(".ql-container");
+    let commentEditor = commentForm.find('.ql-editor');
+    let commentContent = commentEditor.html();
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
@@ -317,7 +317,7 @@ $(function() {
       }
     }
 
-    if (commentContent.replace(/<[^>]*>/g, "") != "" || sortedurls.length > 0) { // Filter out empty comments
+    if (commentContainer[0].hasContent() || sortedurls.length > 0) { // Filter out empty comments
       commentButton.prop('disabled', true);
       $.post("/createcomment/"+postID+"/"+commentID,
       { commentContent: commentContent,
@@ -326,7 +326,7 @@ $(function() {
       },
       function(data) {
         if (data!='nope'){
-          commentContentContainer.html('');
+          commentEditor.html('');
           var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
           //add the lightbox listener to the newly appended comment images
           var commentimages = appendedComment.find('.post-images a');

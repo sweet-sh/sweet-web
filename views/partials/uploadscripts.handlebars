@@ -192,10 +192,11 @@ $(function() {
       return;
     }
     e.preventDefault();
-    let postContent = $('#editor').find(".ql-editor").html();
+    let editor = $('#editor');
+    let postContent = editor.find(".ql-editor").html();
     let pc = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
     //only do anything if there are no pending uploads and there is some text or image(s) to post
-    if ((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted - pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || postContent.trim() != "<p><br></p>")) {
+    if ((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted - pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || editor[0].hasContent())) {
       let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
       let imagedescs = [];
       for (let i = 0; i < $(pc).find('.newimagecont').length; i++) {
