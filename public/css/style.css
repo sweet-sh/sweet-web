@@ -1030,6 +1030,10 @@ hr {
   margin-bottom: 0.5em;
 }
 
+.ql-editor ul {
+  margin-bottom: 0.5em;
+}
+
 #postContentWarningsContainer {
   display: none;
 }

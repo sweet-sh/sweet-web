@@ -74,6 +74,21 @@ function attachQuill(element){
         placeholder: 'Write something, highlight text to format.',
         theme: 'bubble'
     });
+    //remove pasted images
+    quill.clipboard.addMatcher("img", function(node, delta) {
+        return {ops:[]};
+    });
+    //remove pasted formatting that we don't support
+    quill.clipboard.addMatcher("*",function(node, delta){
+        for(var i=0;i<delta.ops.length;i++){
+            for (const key in delta.ops[i].attributes){
+                if(key!="bold" && key!="italic" && key!="link" && key!="blockquote" && key!="list"){
+                    delete delta.ops[i].attributes[key];
+                }
+            }
+        }
+        return delta;
+    })
     //save the most recent cursor position when the editor loses focus
     quill.on('selection-change', function(range,oldRange,source){
         if(!range){
