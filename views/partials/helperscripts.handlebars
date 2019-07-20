@@ -67,9 +67,18 @@
 function attachQuill(element){
     var quill = new Quill(element, {
         modules: {
-            toolbar: [
-            ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
-            ]
+            toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
+            keyboard:{
+                bindings:{
+                    //Addition: if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
+                    blqtBksp:{
+                        key: 'backspace', collapsed: true, format: ['blockquote'], offset: 0,
+                        handler: function(range, context) {
+                            this.quill.format('blockquote', false);
+                        }
+                    }
+                }
+            }
         },
         placeholder: 'Write something, highlight text to format.',
         theme: 'bubble'
