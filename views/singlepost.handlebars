@@ -71,7 +71,7 @@ $(function() {
 {{#if loggedIn}}
     var commentForm = undefined;
     if(commentForm = document.getElementsByClassName('editable-text')[0]){
-        attachQuill(commentForm)
+        attachQuill(commentForm,'Reply to this post with a good reply')
     }
 
   $.post('/api/user/followers', function(data){

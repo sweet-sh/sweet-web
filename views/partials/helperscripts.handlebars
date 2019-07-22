@@ -64,7 +64,7 @@
 
 <script type="text/javascript">
 
-function attachQuill(element){
+function attachQuill(element,placeholder){
     var quill = new Quill(element, {
         modules: {
             toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
@@ -80,7 +80,7 @@ function attachQuill(element){
                 }
             }
         },
-        placeholder: 'Write something, highlight text to format.',
+        placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
         theme: 'bubble'
     });
     //remove pasted images
@@ -215,7 +215,7 @@ $(function() {
         {{#if loggedIn}}
         var commentForms = newlyLoadedStuff.find('.editable-text');
         commentForms.each(function(){
-            attachQuill(this);
+            attachQuill(this,'Reply to this post with a good reply');
         })
         if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
             tribute.attach(newlyLoadedStuff.find(".ql-editor"));
