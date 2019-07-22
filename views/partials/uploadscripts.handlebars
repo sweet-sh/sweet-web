@@ -43,7 +43,8 @@ $(function() {
     }
   });
   $("#emojiWindowButton").click(function () {
-    $("#emojiWindow").slideToggle("fast")
+    $("#emojiWindow").slideToggle("fast");
+    $("#editor").find(".ql-editor").focus()
   })
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
