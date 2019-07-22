@@ -95,8 +95,8 @@ module.exports = {
                         embeds.push(embed) // 'embed' no longer looks like a word
                         parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
-                    }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
-                        var parsedVUrl = vimeoUrlFindingRegex.exec(r[2]);
+                    }else if(r[1].search(vimeoUrlFindingRegex) != -1 && (r[2].substring(0,4)=="http" ? r[2] : "https://"+r[2]).search(vimeoUrlFindingRegex) != -1){
+                        var parsedVUrl = vimeoUrlFindingRegex.exec(r[1]);
                         var videoid = parsedVUrl[4];
 
                         const { body: html, url } = await got(parsedVUrl[0])
