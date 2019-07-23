@@ -642,9 +642,9 @@ module.exports = function (app) {
   //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
   //(posts on a user's profile page), or single (a single post.) The identifier identifies either the user, the
   //community, or the post. I don't believe it's used when the context is home? It appears to be the url of the image
-  //of the logged in user in that case. (??????????????????) Page means page.
+  //of the logged in user in that case. (??????????????????) olderthanthis means we want posts older than this timestamp (milliseconds).
   //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
-  app.get('/showposts/:context/:identifier/:page', async function (req, res) {
+  app.get('/showposts/:context/:identifier/:olderthanthis', async function (req, res) {
     var loggedInUserData = {};
     if (req.isAuthenticated()) {
       loggedInUserData = req.user;
@@ -660,7 +660,7 @@ module.exports = function (app) {
     }
 
     let postsPerPage = 10;
-    let page = req.params.page - 1;
+    let olderthanthis = new Date(parseInt(req.params.olderthanthis))
 
     //build some user lists. only a thing if the user is logged in.
 
@@ -902,10 +902,14 @@ module.exports = function (app) {
       var sortMethod = "-lastUpdated";
     }
 
+    if(req.params.context!="single"){
+      //in feeds, we only want posts older than ("less than") the paramater sent in, with age being judged by the currently active sorting method.
+      matchPosts[sortMethod.substring(1,sortMethod.length)] = {$lt:olderthanthis};
+    }
+
     var query = Post.find(
         matchPosts
       ).sort(sortMethod)
-      .skip(postsPerPage * page)
       .limit(postsPerPage)
       //these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
@@ -932,6 +936,11 @@ module.exports = function (app) {
         })
         return "no posts";
       } else {
+
+        if(req.params.context!="single"){
+          //this gets the timestamp of the last post, this tells the browser to ask for posts older than this next time. used in feeds, not with single posts
+          lastposttimestamp = ""+posts[posts.length-1][sortMethod.substring(1,sortMethod.length)].getTime();
+        }
 
         //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
         displayedPosts = [];
@@ -1331,211 +1340,12 @@ module.exports = function (app) {
             context: req.params.context,
             metadata: metadata,
             canReply: canReply(),
+            lastposttimestamp: lastposttimestamp
           });
         }
       }
     })
   })
-
-  //API method that responds to requests for posts tagged a certain way.
-  //Input: name is the name of the tag, page is the page number of posts we're viewing.
-  //Output: isLoggedInOrRedirect might redirect you. Otherwise, you get 404 if no showable posts are found or
-  //the rendered posts results.
-  /*app.get('/showtag/:name/:page', isLoggedInOrRedirect, function (req, res) {
-    let postsPerPage = 10;
-    let page = req.params.page - 1;
-
-    let myFlaggedUserEmails = () => {
-      myFlaggedUserEmails = []
-      return Relationship.find({
-          from: req.user.email,
-          value: "flag"
-        })
-        .then((flags) => {
-          for (var key in flags) {
-            var flag = flags[key];
-            myFlaggedUserEmails.push(flag.to);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersFlaggedByMyTrustedUsers = () => {
-      myTrustedUserEmails = []
-      usersFlaggedByMyTrustedUsers = []
-      return Relationship.find({
-          from: req.user.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            myTrustedUserEmails.push(trust.to);
-          }
-          return Relationship.find({
-              value: "flag",
-              from: {
-                $in: myTrustedUserEmails
-              }
-            })
-            .then((users) => {
-              usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-            })
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    let usersWhoTrustMe = () => {
-      usersWhoTrustMeEmails = []
-      return Relationship.find({
-          to: req.user.email,
-          value: "trust"
-        })
-        .then((trusts) => {
-          for (var key in trusts) {
-            var trust = trusts[key];
-            usersWhoTrustMeEmails.push(trust.from);
-          }
-        })
-        .catch((err) => {
-          console.log("Error in profileData.")
-          console.log(err);
-        });
-    }
-
-    usersWhoTrustMe().then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then((data) => {
-
-      const today = moment().clone().startOf('day');
-      const thisyear = moment().clone().startOf('year');
-
-      usersWhoTrustMeEmails.push(req.user.email);
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== req.user.email);
-      Tag.findOne({
-          name: req.params.name
-        })
-        .then((tag) => {
-          if (req.user.settings.homeTagTimelineSorting == "fluid") {
-            sortMethod = '-lastUpdated';
-          } else {
-            sortMethod = '-timestamp';
-          }
-          Post.find({
-              _id: {
-                $in: tag.posts
-              }
-            })
-            .sort(sortMethod)
-            .skip(postsPerPage * page)
-            .limit(postsPerPage)
-            .populate('author', '-password')
-            .populate('comments.author', '-password')
-            .populate('comments.replies.author')
-            .populate('comments.replies.replies.author')
-            .populate('comments.replies.replies.replies.author')
-            .populate('comments.replies.replies.replies.replies.author')
-            .populate({
-              path: 'boostTarget',
-              populate: {
-                path: 'author comments.author'
-              }
-            })
-            .then((posts) => {
-              if (!posts.length) {
-                res.status(404)
-                  .send('Not found');
-              } else {
-                displayedPosts = [];
-                posts.forEach(function (post, i) {
-                  if ((post.privacy == "private" && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == "public") {
-                    let canDisplay = true;
-                    if (post.type == "boost") {
-                      displayContext = post.boostTarget;
-                    } else {
-                      displayContext = post;
-                    }
-                    if (moment(displayContext.timestamp).isSame(today, 'd')) {
-                      parsedTimestamp = moment(displayContext.timestamp).fromNow();
-                    } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-                      parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-                    } else {
-                      parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-                    }
-
-                    imageUrlsArray = []
-                    if (displayContext.imageVersion === 2) {
-                      displayContext.images.forEach(image => {
-                        imageUrlsArray.push('/api/image/display/' + image)
-                      })
-                    } else {
-                      displayContext.images.forEach(image => {
-                        imageUrlsArray.push('/images/uploads/' + image)
-                      })
-                    }
-
-                    displayedPost = {
-                      canDisplay: canDisplay,
-                      _id: displayContext._id,
-                      deleteid: post._id,
-                      type: post.type,
-                      owner: post.author.username,
-                      author: {
-                        email: displayContext.author.email,
-                        _id: displayContext.author._id,
-                        username: displayContext.author.username,
-                        displayName: displayContext.author.displayName,
-                        imageEnabled: displayContext.author.imageEnabled,
-                        image: displayContext.author.image,
-                      },
-                      url: displayContext.url,
-                      privacy: displayContext.privacy,
-                      parsedTimestamp: parsedTimestamp,
-                      lastUpdated: post.lastUpdated,  For sorting, get the timestamp of the actual post, not the boosted original
-                      rawContent: displayContext.rawContent,
-                      parsedContent: displayContext.parsedContent,
-                      commentsDisabled: displayContext.commentsDisabled,
-                      comments: displayContext.comments,
-                      numberOfComments: displayContext.numberOfComments,
-                      contentWarnings: displayContext.contentWarnings,
-                      images: imageUrlsArray,
-                      imageDescriptions: displayContext.imageDescriptions,
-                      community: displayContext.community,
-                      boosts: displayContext.boosts,
-                      boostTarget: post.boostTarget,
-                      recentlyCommented: recentlyCommented,
-                      lastCommentAuthor: lastCommentAuthor,
-                      subscribedUsers: displayContext.subscribedUsers,
-                      unsubscribedUsers: displayContext.unsubscribedUsers,
-                       linkPreview: displayContext.linkPreview
-                    }
-                    displayedPost.comments.forEach(function (comment) {
-                      comment.parsedTimestamp = moment(comment.timestamp).fromNow();
-                      for (var i = 0; i < comment.images.length; i++) {
-                        comment.images[i] = '/api/image/display/' + comment.images[i];
-                      }
-                    });
-                    displayedPosts.push(displayedPost);
-                  }
-                })
-                res.render('partials/posts_v2', {
-                  layout: false,
-                  loggedIn: true,
-                  loggedInUserData: req.user,
-                  posts: displayedPosts,
-                  flaggedUsers: flagged,
-                  context: req.params.context
-                });
-              }
-            })
-        })
-    })
-  })
-  */
 
   //Responds to get requests for a user's profile page.
   //Inputs: username is the user's username.

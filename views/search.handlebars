@@ -24,8 +24,7 @@
 <script>
 $('#resultsContainer').infiniteScroll({
   path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showsearch/{{query}}/' + pageNumber;
+    return '/showsearch/{{query}}/' + lastpostloadedtime;
   },
   append: '.content-box',
   prefill: true,
@@ -46,8 +45,7 @@ $('#searchForm').submit(function (e) {
   history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
   $('#resultsContainer').infiniteScroll({
     path: function() {
-      var pageNumber = ( this.loadCount + 1 );
-      return '/showsearch/' + $("#searchQuery").val() + '/' + pageNumber;
+      return '/showsearch/' + $("#searchQuery").val() + '/' + lastpostloadedtime;
     },
     append: '.content-box',
     prefill: true,
@@ -62,8 +60,7 @@ window.onpopstate = function(history) {
   $('#searchTitle').text(history.state.title);
   $('#resultsContainer').infiniteScroll({
     path: function() {
-      var pageNumber = ( this.loadCount + 1 );
-      return history.state.url + '/' + pageNumber;
+      return history.state.url + '/' + lastpostloadedtime;
     },
     append: '.content-box',
     prefill: true,

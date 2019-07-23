@@ -11,8 +11,7 @@
 
 $('#postsContainer').infiniteScroll({
   path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showposts/tag/{{name}}/' + pageNumber;
+    return '/showposts/tag/{{name}}/' + lastpostloadedtime;
   },
   append: '.post',
   prefill: true,

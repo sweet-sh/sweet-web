@@ -319,8 +319,7 @@
 <script>
 $('#postsContainer').infiniteScroll({
   path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showposts/community/{{communityData._id}}/' + pageNumber;
+    return '/showposts/community/{{communityData._id}}/' + lastpostloadedtime;
   },
   append: '.post',
   prefill: true,

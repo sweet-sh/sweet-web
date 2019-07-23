@@ -88,8 +88,7 @@
 <script>
     $('#postsContainer').infiniteScroll({
         path: function() {
-            var pageNumber = ( this.loadCount + 1 );
-            return '/showposts/home/{{loggedInUserData._id}}/' + pageNumber + '?' + (+new Date).toString(36).slice(-8);
+            return '/showposts/home/{{loggedInUserData._id}}/' + lastpostloadedtime;
         },
         append: '.post',
         prefill: true,

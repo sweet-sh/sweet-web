@@ -132,7 +132,6 @@ $("#newCommunityForm").submit(function(e){
       $("#directoryResults").css("display", "inherit");
       $('#directoryResults').infiniteScroll({
         path: function() {
-          console.log("Blarp")
           var pageNumber = ( this.loadCount + 1 );
           return '/api/community/getall/' + pageNumber;
         },
