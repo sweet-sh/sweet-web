@@ -92,11 +92,10 @@ $(function() {
   });
   
   // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
-  var pageloadtime = new Date();
   window.setInterval(function(){
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
-    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/"+pageloadtime.getTime(), function(error, result){
+    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/"+((new Date()).getTime()), function(error, result){
       let latestPost = $("#checkNewPosts").find(".post").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".post").attr("data-post-id");
       if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
