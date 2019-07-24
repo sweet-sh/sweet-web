@@ -665,18 +665,15 @@ module.exports = function (app) {
     //build some user lists. only a thing if the user is logged in.
 
     if (req.isAuthenticated()) {
-      var myFollowedUserEmails = () => {
-        myFollowedUserEmails = []
+      var myFollowedUserIds = () => {
         myFollowedUserIds = [req.user._id]
         return Relationship.find({
             from: loggedInUserData.email,
             value: "follow"
           })
           .then((follows) => {
-            for (var key in follows) {
-              var follow = follows[key];
-              myFollowedUserEmails.push(follow.to);
-              myFollowedUserIds.push(follow.toUser)
+            for (var relationship of follows) {
+              myFollowedUserIds.push(relationship.toUser)
             }
           })
           .catch((err) => {
@@ -804,9 +801,8 @@ module.exports = function (app) {
         }
       }
 
-      await myFollowedUserEmails().then(myMutedUserEmails).then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
+      await myFollowedUserIds().then(myMutedUserEmails).then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
 
-      myFollowedUserEmails.push(loggedInUserData.email)
       usersWhoTrustMeEmails.push(loggedInUserData.email)
       var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
     }
