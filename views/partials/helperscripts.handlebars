@@ -122,6 +122,26 @@ function attachQuill(element,placeholder){
     element.hasContent = function(){
         return $(element).text().trim().length !== 0;
     }
+    //listen for and use pasted image data
+    element.onpaste = function(e){
+        // event.originalEvent.clipboard for newer chrome versions
+        var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
+        // find pasted image among pasted items
+        var imgarray = [];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") === 0) {
+                imgarray.push(items[i].getAsFile());
+            }
+        }
+        var fileInput = $(this).closest('.new-comment-form, .contentForm').find(".file-input");
+        fileInput[0].pastedFiles = imgarray;
+        //we attach that function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+        if (!fileInput[0].changeEventAttached) {
+            fileInput.change(fileselected);
+            fileInput[0].changeEventAttached = true;
+        }
+        fileInput.change();
+    }
 }
 
 //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,

@@ -20,15 +20,17 @@ function restartInfiniteScroll(){
     });
   }
 
-$(function() {
 
-  //NEW POST FORM CODE
 
+//NEW POST FORM CODE
+
+$(function(){
   $(".ql-editor").focus(function (e) {
     if(e.target.parentElement.id == "editor"){
       $(".post-controls").css('display', 'flex');
     }
   })
+
   $("#postContentWarningsButton").click(function () {
     $("#postContentWarningsContainer").removeClass("bounce")
     if ($("#postContentWarningsContainer").is(":hidden")) {
@@ -60,18 +62,24 @@ $(function() {
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
+})
 
   //IMAGE UPLOADER CODE
 
-  //function called right after clicking the add image button on the post and comment forms
+  //function called right after the file input changes for the post and comment forms or after an image is pasted into an editor (with image(s) contained in imgarray) bc that triggers the change event artificially
   function fileselected(e) {
+    if(this.files.length!=0){
+      var fileList = this.files;
+    }else{
+      var fileList = this.pastedFiles;
+    }
     let previewContainer = $(this).parent();
     previewContainer.css('display', 'flex'); //this is where we unhide the preview container if this is a comment image. no need to rehide, it's not obtrusive there while empty (at least to me)
     previewContainer = previewContainer[0];
 
-    for (var i = 0; i < this.files.length; i++) {
+    for (var i = 0; i < fileList.length; i++) {
       //check to make sure it's a supported file type of the correct size
-      if (((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)) {
+      if (((fileList[i].type === "image/jpeg" || fileList[i].type === "image/png") && fileList[i].size < 10485760) || (fileList[i].type === "image/gif" && fileList[i].size < 5242880)) {
 
         if ($(previewContainer).children().length == 5) { //if we already have 4 image previews + the file input, which is also a child of the preview container
           bootbox.alert("We only take four images at once atm, sry");
@@ -107,12 +115,12 @@ $(function() {
             bgRecipient.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
           }
         }
-        fr.fileType = this.files[i].type;
-        fr.readAsDataURL(this.files[i]);
+        fr.fileType = fileList[i].type;
+        fr.readAsDataURL(fileList[i]);
 
         //make the image-uploading ajax request
         var fd = new FormData();
-        fd.append('image', this.files[i]);
+        fd.append('image', fileList[i]);
 
         let imageUploadReq = $.ajax({
           url: '/api/image/v2',
@@ -154,7 +162,7 @@ $(function() {
         previewContainer.imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
         ++previewContainer.uploadsStarted;
       } else {
-        if (!(this.files[i].type === "image/jpeg" || this.files[i].type === "image/gif" || this.files[i].type === "image/png")) {
+        if (!(fileList[i].type === "image/jpeg" || fileList[i].type === "image/gif" || fileList[i].type === "image/png")) {
           bootbox.alert("You appear to have sent us a file of unsupported type! Atm we only take gifs, jpgs, and pngs");
         } else {
           bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
@@ -164,6 +172,7 @@ $(function() {
     $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
   }
 
+$(function(){
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
@@ -241,6 +250,7 @@ $(function() {
       bootbox.alert("This post appears to be... empty");
     }
   });
+});
 
   //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever.
   //um someone rewrite this so it works with comment images. the server's auto-deleter will take care of temp images once they're more than
@@ -340,7 +350,7 @@ $(function() {
   }
 
   //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
-
+$(function(){
   $('body').on('mousedown', '.image-move', function (e) {
     e.preventDefault();
     var selectedImage = $(this).parent().parent();
@@ -361,6 +371,7 @@ $(function() {
       $(document).off('mousemove');
     });
   });
+});
 
   var touchinprogress = false;
 
@@ -414,19 +425,4 @@ $(function() {
       movementEnded();
     });
   }
-
-  //})
-  // document.onpaste = function(event){
-  //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-  //   for (var i = 0 ; i < items.length ; i++) {
-  //     var item = items[i];
-  //     if (item.type.indexOf("image") != -1) {
-  //       var file = item.getAsFile();
-  //       $('#imagePreviewContainer').slideDown('fast');
-  //       upload_file_with_ajax(file);
-  //     }
-  //   }
-  // }
-
-  })
 </script>
