@@ -197,23 +197,26 @@ $(function() {
   //   $('body').on('click', removeBoostListPopUp);
   // })
   $('body').on('click', '.content-warning-show-more', function() {
-    var state = $(this).attr("data-state");
-    var abbrContent = $(this).closest(".post").find(".abbreviated-content");
+    var $this = $(this);
+    var images = $this.closest(".post").find(".content-warning-images");
+    var state = $this.attr("data-state");
+    var abbrContent = $this.closest(".post").find(".abbreviated-content");
     console.log(abbrContent)
     if (state == "contracted") {
-      var h = abbrContent.css('height','100%').height();
+      abbrContent.css('height','100%')
+      images.toggleClass("content-warning-images-shown");
+      var h = abbrContent.height();
       abbrContent.css('height','0');
       abbrContent.animate({height:h},200);
-      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
-      $(this).attr("data-state","expanded");
+      $this.attr("data-state","expanded");
+    } else {
+      abbrContent.animate({height:"0"},200,function(){
+        images.toggleClass("content-warning-images-shown");
+        $this.attr("data-state","contracted");
+      })
     }
-    else {
-      abbrContent.animate({height:"0"},200);
-      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
-      $(this).attr("data-state","contracted");
-    }
-    var text = $(this).text();
-    $(this).text(
+    var text = $this.text();
+    $this.text(
         text == "Show post" ? "Hide post" : "Show post");
   })
   $('body').on('click', '.reply-to-comment', function() {
