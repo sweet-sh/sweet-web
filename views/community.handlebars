@@ -321,7 +321,7 @@
   function startInfiniteScroll(){
     $('#postsContainer').infiniteScroll({
       path: function() {
-        return '/showposts/community/{{communityData._id}}/' + lastpostloadedtime;
+        return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
       },
       append: '.post',
       prefill: true,
@@ -329,7 +329,7 @@
       status: '.page-load-status'
     });
   }
-  startInfiniteScroll()
+  startInfiniteScroll();
 
 {{#if loggedIn}}
 

@@ -2,8 +2,15 @@
   <div class="row">
     <div class="col commentContent">
       <p class="text-center">
-        <i class="fas fa-sync-alt"></i> <a href="#" onclick="window.location.reload()">Refresh to see new posts.</a>
+        <i class="fas fa-sync-alt"></i> <a href="#">Refresh to see new posts.</a>
       </p>
     </div>
   </div>
 </article>
+<script>
+  $("#newPostsAvailable").click(function(e){
+    this.style = "";
+    e.preventDefault();
+    restartInfiniteScroll();
+  })
+</script>

@@ -11,7 +11,7 @@
 
 $('#postsContainer').infiniteScroll({
   path: function() {
-    return '/showposts/tag/{{name}}/' + lastpostloadedtime;
+    return '/showposts/tag/{{name}}/' + needPostsOlderThan;
   },
   append: '.post',
   prefill: true,

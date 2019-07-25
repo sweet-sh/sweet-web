@@ -9,6 +9,17 @@
 </div>
 <script type="text/javascript">
 
+function restartInfiniteScroll(){
+  var postsContainer = $('#postsContainer');
+    postsContainer.infiniteScroll('destroy');
+    postsContainer.fadeOut(100,function(){
+      postsContainer.html("");
+      needPostsOlderThan = new Date().getTime(); //we now want posts just older than the current time, to include the post that was just made
+      startInfiniteScroll();
+      postsContainer.fadeIn(100);
+    });
+  }
+
 $(function() {
 
   //NEW POST FORM CODE
@@ -218,10 +229,12 @@ $(function() {
           postImageURL: JSON.stringify(sortedurls),
         }
       }).done(function (data) {
-        $('#postsContainer').infiniteScroll('destroy');
-        $('#postsContainer').html("");
-        lastpostloadedtime = new Date().getTime(); //we now want posts just older than the current time, to include the post that was just made
-        startInfiniteScroll();
+        $('#postContentWarnings').val("");
+        $("#postContentWarningsContainer").slideUp("fast");
+        editor.find(".ql-editor").html("");
+        $(pc).children('.newimagecont').remove();
+        haveWeSentPost = false;
+        restartInfiniteScroll()
       });
       haveWeSentPost = true;
     } else {

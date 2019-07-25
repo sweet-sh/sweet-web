@@ -90,7 +90,7 @@
   function startInfiniteScroll() {
       $('#postsContainer').infiniteScroll({
           path: function() {
-              return '/showposts/home/{{loggedInUserData._id}}/' + lastpostloadedtime;
+              return '/showposts/home/{{loggedInUserData._id}}/' + needPostsOlderThan;
           },
           append: '.post',
           prefill: true,

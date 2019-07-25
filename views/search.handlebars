@@ -26,12 +26,12 @@
 $(function(){
   $('#resultsContainer').on('load.infiniteScroll', function (event, response, path) {
       var newlyLoadedStuff = $(response);
-      lastpostloadedtime = newlyLoadedStuff.find("#oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
+      needPostsOlderThan = newlyLoadedStuff.find("#oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
   })
 
   $('#resultsContainer').infiniteScroll({
     path: function() {
-      return '/showsearch/{{query}}/' + lastpostloadedtime;
+      return '/showsearch/{{query}}/' + needPostsOlderThan;
     },
     append: '.content-box',
     prefill: true,
@@ -53,7 +53,7 @@ $(function(){
     history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
     $('#resultsContainer').infiniteScroll({
       path: function() {
-        return '/showsearch/' + $("#searchQuery").val() + '/' + lastpostloadedtime;
+        return '/showsearch/' + $("#searchQuery").val() + '/' + needPostsOlderThan;
       },
       append: '.content-box',
       prefill: true,
@@ -68,7 +68,7 @@ $(function(){
     $('#searchTitle').text(history.state.title);
     $('#resultsContainer').infiniteScroll({
       path: function() {
-        return history.state.url + '/' + lastpostloadedtime;
+        return history.state.url + '/' + needPostsOlderThan;
       },
       append: '.content-box',
       prefill: true,

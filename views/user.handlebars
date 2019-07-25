@@ -90,7 +90,7 @@
 <script>
 $('#postsContainer').infiniteScroll({
   path: function() {
-    return '/showposts/user/{{profileData._id}}/' + lastpostloadedtime;
+    return '/showposts/user/{{profileData._id}}/' + needPostsOlderThan;
   },
   append: '.post',
   prefill: true,
