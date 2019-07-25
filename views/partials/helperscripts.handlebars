@@ -175,7 +175,7 @@ $(function() {
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         var newlyLoadedStuff = $(items);
 
-        lastpostloadedtime = newlyLoadedStuff.last().find("#lastposttimestamp").html(); //the new oldest-post-loaded timestamp is provided by the server in this element
+        lastpostloadedtime = newlyLoadedStuff.last().find("#oldesttimestamp").html(); //the new oldest-post-loaded timestamp is provided by the server in this element
 
         if (newlyLoadedStuff.find('.post-images').length > 0) {
             var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;

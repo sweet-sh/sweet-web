@@ -474,12 +474,12 @@ module.exports = function (app) {
   })
 
   //Responds to requests for search queries by page.
-  //Input: query, page number
+  //Input: query, timestamp of oldest result yet loaded (in milliseconds)
   //Output: 404 response if no results, the rendered search results otherwise, unless isLoggedInOrRedirect redirects you
-  app.get('/showsearch/:query/:page', isLoggedInOrRedirect, function (req, res) {
+  app.get('/showsearch/:query/:olderthanthis', isLoggedInOrRedirect, function (req, res) {
 
-    let postsPerPage = 10;
-    let page = req.params.page - 1;
+    let resultsPerPage = 10;
+    let olderthan = new Date(parseInt(req.params.olderthanthis))
 
     let query = req.params.query.trim();
     if (!query.length) {
@@ -490,8 +490,11 @@ module.exports = function (app) {
           name: {
             '$regex': query,
             '$options': 'i'
-          }
+          },
+          lastUpdated:{$lt:olderthan}
         })
+        .sort('-lastUpdated')
+        .limit(resultsPerPage) // this won't completely keep us from getting more than we need, but the point is we'll never need more results than this per page load from any collection
         .then(tagResults => {
           User.find({
               "$or": [{
@@ -512,16 +515,11 @@ module.exports = function (app) {
                     '$options': 'i'
                   }
                 }
-              ]
+              ],
+              lastUpdated:{$lt:olderthan}
             })
-            // User.find(
-            //     { $text : { $search : query } },
-            //     { score : { $meta: "textScore" } }
-            // )
-            // .sort({ score : { $meta : 'textScore' } })
-            // .sort('username')
-            // .skip(postsPerPage * page)
-            // .limit(postsPerPage)
+            .sort('-lastUpdated')
+            .limit(resultsPerPage)
             .then((userResults) => {
               Community.find({
                   "$or": [{
@@ -536,30 +534,19 @@ module.exports = function (app) {
                         '$options': 'i'
                       }
                     }
-                  ]
+                  ],
+                  lastUpdated:{$lt:olderthan}
                 })
-                // .sort('name')
-                // .skip(postsPerPage * page)
-                // .limit(postsPerPage)
+                .sort('-lastUpdated')
+                .limit(resultsPerPage)
                 .then(communityResults => {
                   var combinedResults = userResults.concat(communityResults, tagResults);
-                  var paginatedResults = combinedResults.slice(postsPerPage * page, (postsPerPage * page) + postsPerPage);
-                  if (!paginatedResults.length) {
-                    if (page == 0) {
-                      res.render('partials/searchresults', {
-                        layout: false,
-                        loggedIn: true,
-                        loggedInUserData: req.user,
-                        noResults: true
-                      });
-                    } else {
-                      res.status(404)
-                        .send('Not found');
-                    }
+                  if (!combinedResults.length) {
+                      res.sendStatus(404)
                   } else {
                     var parsedResults = [];
-                    paginatedResults.forEach(result => {
-                      constructedResult = {};
+                    combinedResults.forEach(result => {
+                      var constructedResult = {};
                       if (result.username) {
                         // It's a user
                         constructedResult.type = '<i class="fas fa-user"></i> User'
@@ -607,11 +594,14 @@ module.exports = function (app) {
                         return 1;
                       return 0; //default return value (no sorting)
                     });
+                    parsedResults = parsedResults.slice(0,resultsPerPage);
+                    var oldesttimestamp = parsedResults[parsedResults.length-1].sort;
                     res.render('partials/searchresults', {
                       layout: false,
                       loggedIn: true,
                       loggedInUserData: req.user,
-                      results: parsedResults
+                      oldesttimestamp: oldesttimestamp.getTime(),
+                      results: parsedResults.slice(0,resultsPerPage)
                     });
                   }
                 })
@@ -935,7 +925,7 @@ module.exports = function (app) {
 
         if(req.params.context!="single"){
           //this gets the timestamp of the last post, this tells the browser to ask for posts older than this next time. used in feeds, not with single posts
-          lastposttimestamp = ""+posts[posts.length-1][sortMethod.substring(1,sortMethod.length)].getTime();
+          oldesttimestamp = ""+posts[posts.length-1][sortMethod.substring(1,sortMethod.length)].getTime();
         }
 
         //now we build the array of the posts we can actually display. some that we just retrieved still may not make the cut
@@ -1336,7 +1326,7 @@ module.exports = function (app) {
             context: req.params.context,
             metadata: metadata,
             canReply: canReply(),
-            lastposttimestamp: lastposttimestamp
+            oldesttimestamp: oldesttimestamp
           });
         }
       }
