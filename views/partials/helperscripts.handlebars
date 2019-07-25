@@ -122,6 +122,16 @@ function attachQuill(element,placeholder){
     element.hasContent = function(){
         return $(element).text().trim().length !== 0;
     }
+    element.specialAddImages = function(imgarray){
+        var fileInput = $(this).closest('.new-comment-form, .contentForm').find(".file-input");
+        fileInput[0].pastedFiles = imgarray;
+        //we attach that function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+        if (!fileInput[0].changeEventAttached) {
+            fileInput.change(fileselected);
+            fileInput[0].changeEventAttached = true;
+        }
+        fileInput.change();
+    }
     //listen for and use pasted image data
     element.onpaste = function(e){
         // event.originalEvent.clipboard for newer chrome versions
@@ -133,14 +143,22 @@ function attachQuill(element,placeholder){
                 imgarray.push(items[i].getAsFile());
             }
         }
-        var fileInput = $(this).closest('.new-comment-form, .contentForm').find(".file-input");
-        fileInput[0].pastedFiles = imgarray;
-        //we attach that function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
-        if (!fileInput[0].changeEventAttached) {
-            fileInput.change(fileselected);
-            fileInput[0].changeEventAttached = true;
+        this.specialAddImages(imgarray)
+    }
+    //listen for and use dragged-and-dropped images
+    element.ondrop = function(ev) {
+        ev.preventDefault();
+        if (ev.dataTransfer.items) {
+            var imgarray = [];
+            for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
+                    imgarray.push(ev.dataTransfer.items[i].getAsFile());
+                }
+            }
+            this.specialAddImages(imgarray);
+        } else {
+            this.specialAddImages(ev.dataTransfer.files); //the code in fileselected() will have to make sure they at least have the apparent mime type of supported images
         }
-        fileInput.change();
     }
 }
 
