@@ -86,13 +86,17 @@
 {{> filemessage }}
 
 <script>
-    $('#postsContainer').infiniteScroll({
-        path: function() {
-            return '/showposts/home/{{loggedInUserData._id}}/' + lastpostloadedtime;
-        },
-        append: '.post',
-        prefill: true,
-        history: true,
-        status: '.page-load-status'
-    });
+  //called immediately below and also when a post is made and the feed is reloaded to show it
+  function startInfiniteScroll() {
+      $('#postsContainer').infiniteScroll({
+          path: function() {
+              return '/showposts/home/{{loggedInUserData._id}}/' + lastpostloadedtime;
+          },
+          append: '.post',
+          prefill: true,
+          history: true,
+          status: '.page-load-status'
+      });
+  }
+  startInfiniteScroll();
 </script>

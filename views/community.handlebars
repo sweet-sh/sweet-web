@@ -317,15 +317,19 @@
 
 {{#unless isBanned}}
 <script>
-$('#postsContainer').infiniteScroll({
-  path: function() {
-    return '/showposts/community/{{communityData._id}}/' + lastpostloadedtime;
-  },
-  append: '.post',
-  prefill: true,
-  history: false,
-  status: '.page-load-status'
-});
+  //called immediately below and also when a post is made and the feed is reloaded to show it
+  function startInfiniteScroll(){
+    $('#postsContainer').infiniteScroll({
+      path: function() {
+        return '/showposts/community/{{communityData._id}}/' + lastpostloadedtime;
+      },
+      append: '.post',
+      prefill: true,
+      history: false,
+      status: '.page-load-status'
+    });
+  }
+  startInfiniteScroll()
 
 {{#if loggedIn}}
 

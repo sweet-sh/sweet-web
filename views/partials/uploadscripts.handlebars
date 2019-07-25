@@ -218,7 +218,10 @@ $(function() {
           postImageURL: JSON.stringify(sortedurls),
         }
       }).done(function (data) {
-        window.location.reload(true);
+        $('#postsContainer').infiniteScroll('destroy');
+        $('#postsContainer').html("");
+        lastpostloadedtime = new Date().getTime(); //we now want posts just older than the current time, to include the post that was just made
+        startInfiniteScroll();
       });
       haveWeSentPost = true;
     } else {
