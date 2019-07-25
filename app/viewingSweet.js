@@ -653,147 +653,20 @@ module.exports = function (app) {
     let olderthanthis = new Date(parseInt(req.params.olderthanthis))
 
     //build some user lists. only a thing if the user is logged in.
-
+    //todo: instead of pulling them from the relationships collection, at least the first 4 could be arrays of references to other users in the user document, that would speed things up
     if (req.isAuthenticated()) {
-      var myFollowedUserIds = () => {
-        myFollowedUserIds = [req.user._id]
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "follow"
-          })
-          .then((follows) => {
-            for (var relationship of follows) {
-              myFollowedUserIds.push(relationship.toUser)
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
+      var myFollowedUserIds = ((await Relationship.find({from:loggedInUserData.email,value:"follow"})).map(v=>v.toUser)).concat([req.user._id]);
+      var myFlaggedUserEmails = ((await Relationship.find({from:loggedInUserData.email,value:"flag"})).map(v=>v.to));
+      var myMutedUserEmails = ((await Relationship.find({from:loggedInUserData.email,value:"mute"})).map(v=>v.to));
+      var myTrustedUserEmails = ((await Relationship.find({from:loggedInUserData.email,value:"trust"})).map(v=>v.to));
+      var usersFlaggedByMyTrustedUsers = ((await Relationship.find({from:{$in:myTrustedUserEmails},value:"flag"})).map(v=>v.to));
+      var usersWhoTrustMeEmails = ((await Relationship.find({to:loggedInUserData.email,value:"trust"})).map(v=>v.from)).concat([req.user.email]);
+      var myCommunities = req.user.communities;
+      if(req.params.context=="community" && req.isAuthenticated()){
+        var isMuted = (await Community.findById(req.params.identifier)).mutedMembers.some(v=>v.equals(req.user._id));
+      }else{
+        var isMuted = false;
       }
-
-      var myFlaggedUserEmails = () => {
-        myFlaggedUserEmails = []
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "flag"
-          })
-          .then((flags) => {
-            for (var key in flags) {
-              var flag = flags[key];
-              myFlaggedUserEmails.push(flag.to);
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var myMutedUserEmails = () => {
-        myMutedUserEmails = []
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "mute"
-          })
-          .then((mutes) => {
-            for (var key in mutes) {
-              var mute = mutes[key];
-              myMutedUserEmails.push(mute.to);
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var usersFlaggedByMyTrustedUsers = () => {
-        myTrustedUserEmails = []
-        usersFlaggedByMyTrustedUsers = []
-        return Relationship.find({
-            from: loggedInUserData.email,
-            value: "trust"
-          })
-          .then((trusts) => {
-            for (var key in trusts) {
-              var trust = trusts[key];
-              myTrustedUserEmails.push(trust.to);
-            }
-            return Relationship.find({
-                value: "flag",
-                from: {
-                  $in: myTrustedUserEmails
-                }
-              })
-              .then((users) => {
-                usersFlaggedByMyTrustedUsers = users.map(a => a.to);
-              })
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var usersWhoTrustMe = () => {
-        usersWhoTrustMeEmails = []
-        return Relationship.find({
-            to: loggedInUserData.email,
-            value: "trust"
-          })
-          .then((trusts) => {
-            for (var key in trusts) {
-              var trust = trusts[key];
-              usersWhoTrustMeEmails.push(trust.from);
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var myCommunities = () => {
-        myCommunities = [];
-        myMutedUsers = [];
-        return Community.find({
-            members: loggedInUserData._id
-          })
-          .then((communities) => {
-            for (var key in communities) {
-              var community = communities[key];
-              myCommunities.push(community._id);
-              myMutedUsers.push.apply(myMutedUsers, community.mutedMembers.map(String));
-            }
-          })
-          .catch((err) => {
-            console.log("Error in profileData.")
-            console.log(err);
-          });
-      }
-
-      var isMuted = () => {
-        isMuted = false;
-        if (req.params.context == "community" && req.isAuthenticated()) {
-          return Community.findOne({
-              _id: req.params.identifier
-            })
-            .then(community => {
-              mutedMemberIds = community.mutedMembers.map(a => a.toString());
-              if (mutedMemberIds.includes(loggedInUserData._id.toString()))
-                isMuted = true;
-            })
-            .catch((err) => {
-              console.log("Error in profileData.")
-              console.log(err);
-            });
-        }
-      }
-
-      await myFollowedUserIds().then(myMutedUserEmails).then(usersWhoTrustMe).then(myFlaggedUserEmails).then(usersFlaggedByMyTrustedUsers).then(myCommunities).then(isMuted);
-
-      usersWhoTrustMeEmails.push(loggedInUserData.email)
       var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
     }
 
