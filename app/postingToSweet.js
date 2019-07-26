@@ -337,6 +337,7 @@ module.exports = function (app) {
                                 }
                             });
                         }
+                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send(""+(postCreationTime.getTime()+1));
                     })
                     .catch((err) => {
@@ -440,6 +441,7 @@ module.exports = function (app) {
                         }).then(community => {
                             console.log("Updated community!")
                         })
+                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send(""+(postCreationTime.getTime()+1));
                     })
                     .catch((err) => {
