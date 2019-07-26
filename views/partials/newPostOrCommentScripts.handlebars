@@ -1,6 +1,6 @@
 {{!-- cloned in the script below to make the image previews --}}
 <div class="newimageform">
-  <div class="image-preview"></div>
+  <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
   <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
   <div class="image-preview-controls">
     <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
@@ -13,11 +13,14 @@
 <script type="text/javascript">
 
 //this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
-function restartInfiniteScroll(){
+function restartInfiniteScroll(timestamp){
+  if(!timestamp){
+    timestamp = new Date().getTime();
+  }
   var postsContainer = $('#postsContainer');
     postsContainer.fadeOut(250,function(){
       postsContainer.html("");
-      needPostsOlderThan = new Date().getTime()+1; //we now want posts just older than the current time, to include the post that was just made
+      needPostsOlderThan = timestamp;
       postsContainer.infiniteScroll('loadNextPage');
       postsContainer[0].fadedOut = true;
     });
@@ -130,6 +133,17 @@ $(function(){
         fd.append('image', fileList[i]);
 
         let imageUploadReq = $.ajax({
+          xhr: function(){
+            var uploader = new XMLHttpRequest();
+            var uploadNumber = previewContainer.uploadsStarted;
+            uploader.upload.addEventListener("progress", function(e){
+              var thisImagesWindow = $(previewContainer).find('.newimagecont[uploadnumber="' + uploadNumber + '"]');
+              var percentage = Math.round(e.loaded / e.total * 100);
+              thisImagesWindow.find('progress').attr('value',percentage);
+              thisImagesWindow.find("#percentage").html(percentage+'%')
+            });
+            return uploader;
+          },
           url: '/api/image/v2',
           type: 'POST',
           data: fd,
@@ -138,9 +152,14 @@ $(function(){
         });
         imageUploadReq.uploadNumber = previewContainer.uploadsStarted;
         imageUploadReq.previewContainer = previewContainer;
+        imageUploadReq.fail(function(jqXHR, textStatus, errorThrown){
+          var thisImagesWindow = $(previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
+          thisImagesWindow.find('progress').attr('value',0);
+          thisImagesWindow.find("#percentage").html("Upload error :( Hit the X and try again?")
+        })
         imageUploadReq.done(function (data, textstatus, jqXHR) {
           //find the corresponding preview window
-          thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
+          var thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
 
           var serverResponse = JSON.parse(data);
           //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
@@ -157,8 +176,24 @@ $(function(){
             }
             thisImagesWindow.remove();
           } else {
+            //get the temp image from the server, which will be exif-rotated properly, and put it in the preview area when it's loaded
+            $.get({
+              url:'/api/image/display/temp/'+serverResponse.url,
+              dataType: 'binary',
+              xhr: function() {
+                var downloader = new XMLHttpRequest();
+                downloader.responseType = 'blob';
+                return downloader;
+              },
+              success: function(response){
+                var reader = new FileReader();
+                reader.onload = function(e){
+                  thisImagesWindow.find('.image-preview').css('background-image',"url(" + e.target.result + ")");
+                  thisImagesWindow.find('.fader').remove();
+                }
+                reader.readAsDataURL(response);
+            }})
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
-            thisImagesWindow.find('.image-preview').css('background-image','url("/api/image/display/temp/'+serverResponse.url+'")');
             thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {
               let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
@@ -244,13 +279,13 @@ $(function(){
           postImageDescription: JSON.stringify(imagedescs),
           postImageURL: JSON.stringify(sortedurls),
         }
-      }).done(function (data) {
+      }).done(function (postTimestamp) { //actually this should be a string set to the 1 millisecond later than the new post's timestamp.
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
         editor.find(".ql-editor").html("");
         $(pc).children('.newimagecont').remove();
         haveWeSentPost = false;
-        restartInfiniteScroll()
+        restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
       });
       haveWeSentPost = true;
     } else {

@@ -337,7 +337,7 @@ module.exports = function (app) {
                                 }
                             });
                         }
-                        res.redirect('back');
+                        res.status(200).send(""+(postCreationTime.getTime()+1));
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -440,7 +440,7 @@ module.exports = function (app) {
                         }).then(community => {
                             console.log("Updated community!")
                         })
-                        res.redirect('back');
+                        res.status(200).send(""+(postCreationTime.getTime()+1));
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
