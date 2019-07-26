@@ -86,6 +86,7 @@ function attachQuill(element, placeholder) {
     //listen for and use dragged-and-dropped images
     element.ondrop = function(ev) {
         ev.preventDefault();
+        $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
         if (ev.dataTransfer.items) {
             var imgarray = [];
             for (var i = 0; i < ev.dataTransfer.items.length; i++) {
