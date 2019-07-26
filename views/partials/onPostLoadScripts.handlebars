@@ -117,24 +117,25 @@ $(function() {
     //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
     document.body.ondragover = function(e){
         e.preventDefault();
-        if(!document.getElementById("bodyFader")){
-            $('body').append('<div id="bodyFader"></div>');
-            $("#bodyFader").fadeIn(100);
+        var dt = e.dataTransfer;
+        //so it won't react if just some text or image from the page is being dragged around
+        if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))){
+            if(!document.getElementById("bodyFader")){
+                $('body').append('<div id="bodyFader"></div>');
+                $("#bodyFader").fadeIn(100);
+            }
         }
     }
+    function removeBodyFader(e){
+        e.preventDefault();
+        $("#bodyFader").fadeOut(100,function(){
+            $("#bodyFader").remove();
+            dragcounter = 0;
+        });
+    }
     //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
-    document.body.ondragend = function(e){
-        e.preventDefault();
-        $("#bodyFader").fadeOut(100,function(){
-            $("#bodyFader").remove();
-        });
-    }
-    document.body.ondrop = function(e){
-        e.preventDefault();
-        $("#bodyFader").fadeOut(100,function(){
-            $("#bodyFader").remove();
-        });
-    }
+    document.body.ondragend = removeBodyFader;
+    document.body.ondrop = removeBodyFader
     //some byzantine logic required to detect when the dragged thing leaves our window entirely:
     window.ondragenter = function(e){
         e.preventDefault();
@@ -142,10 +143,8 @@ $(function() {
     }
     window.ondragleave = function(e){
         dragcounter--;
-        if(dragcounter===0){
-            $("#bodyFader").fadeOut(100,function(){
-                $("#bodyFader").remove();
-            });
+        if(dragcounter<1){
+            removeBodyFader(e);
         }
     }
         
