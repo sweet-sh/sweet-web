@@ -222,8 +222,8 @@ $(function() {
     var template = Handlebars.compile(source);
     var html = template({post_id: postID, comment_id: commentID, comment_type: 'child'});
     $(html).appendTo(commentContainer);
-    attachQuill(commentContainer.find('.editable-text')[0]) //todo: quill
-    tribute.attach($(".ql-editor")); //todo: check with quill
+    attachQuill(commentContainer.find('.editable-text')[0],"Reply to this post with a good reply")
+    tribute.attach($(".ql-editor"));
     //Scroll to newly created form
     newForm = commentContainer.find('.new-comment-form');
     if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){

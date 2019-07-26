@@ -97,15 +97,60 @@ function attachQuill(element, placeholder) {
         } else {
             this.specialAddImages(ev.dataTransfer.files); //the code in fileselected() will have to make sure they at least have the apparent mime type of supported images
         }
+        $("#bodyFader").fadeOut(100,function(){
+            $("#bodyFader").remove();
+        });
+        dragcounter = 0;
     }
 }
+//incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
+var dragcounter = 0;
 
 //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
 //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
 needPostsOlderThan = new Date().getTime();
 
 $(function() {
-    
+
+    //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
+    //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
+    document.body.ondragover = function(e){
+        console.log(e);
+        e.preventDefault();
+        if(!document.getElementById("bodyFader")){
+            $('body').append('<div id="bodyFader"></div>');
+            $("#bodyFader").fadeIn(100);
+        }
+    }
+    //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
+    document.body.ondragend = function(e){
+        console.log("dragend");
+        e.preventDefault();
+        $("#bodyFader").fadeOut(100,function(){
+            $("#bodyFader").remove();
+        });
+    }
+    document.body.ondrop = function(e){
+        console.log("drop");
+        e.preventDefault();
+        $("#bodyFader").fadeOut(100,function(){
+            $("#bodyFader").remove();
+        });
+    }
+    //some byzantine logic required to detect when the dragged thing leaves our window entirely:
+    window.ondragenter = function(e){
+        e.preventDefault();
+        dragcounter++;
+    }
+    window.ondragleave = function(e){
+        dragcounter--;
+        if(dragcounter===0){
+            $("#bodyFader").fadeOut(100,function(){
+                $("#bodyFader").remove();
+            });
+        }
+    }
+        
 {{#if loggedIn}}
     // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
     // Init tribute

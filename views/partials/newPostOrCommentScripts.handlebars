@@ -72,9 +72,11 @@ $(function(){
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
-
+})
 
   //IMAGE UPLOADER CODE
+
+  //the main functions are placed outside of the jQuery $(function(){}) document.onready thing because they need to be globally available to the image pasting + dragging and dropping code, not just the event listeners they're attached to directly below.
 
   //function called right after the file input changes for the post and comment forms or after an image is pasted into an editor (with image(s) contained in imgarray) bc that triggers the change event artificially
   function fileselected(e) {
@@ -214,7 +216,7 @@ $(function(){
     $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
   }
 
-
+$(function(){
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
@@ -418,7 +420,7 @@ $(function(){
     })
   });
   */
-
+})
   //IMAGE DRAG-AND-DROP ORDERING STUFF
 
   //PART 1: THE FUNCTIONS THAT DO THE WORK
@@ -577,5 +579,5 @@ $(function(){
       movementEnded();
     });
   }
-  })
+  
 </script>
