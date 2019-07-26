@@ -50,7 +50,9 @@
 
   <script src="/js/handlebars-v4.1.2.min.js" crossorigin="anonymous"></script>
 
-  {{> helperscripts }}
+  {{> clientSideCodeErrorReporter }}
+
+  {{> onPostLoadScripts }}
 
 </head>
 
@@ -80,10 +82,8 @@
 
 </body>
 
+{{> miscInteractivityScripts }}
 
-
-{{> scripts}}
-
-{{> uploadscripts}}
+{{> newPostOrCommentScripts }}
 
 </html>

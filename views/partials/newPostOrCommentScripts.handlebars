@@ -1,4 +1,4 @@
-<!-- cloned in the script below to make the image previews -->
+{{!-- cloned in the script below to make the image previews --}}
 <div class="newimageform">
   <div class="image-preview"></div>
   <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
@@ -7,8 +7,12 @@
     <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
   </div>
 </div>
+
+{{> newCommentFormTemplate}}
+
 <script type="text/javascript">
 
+//this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
 function restartInfiniteScroll(){
   var postsContainer = $('#postsContainer');
     postsContainer.fadeOut(250,function(){
@@ -59,7 +63,7 @@ $(function(){
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
-})
+
 
   //IMAGE UPLOADER CODE
 
@@ -169,7 +173,7 @@ $(function(){
     $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
   }
 
-$(function(){
+
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
@@ -247,7 +251,117 @@ $(function(){
       bootbox.alert("This post appears to be... empty");
     }
   });
-});
+
+  //function for sumbitting a comment and then placing the new comment on the page
+  $('body').on('click', '.create-comment', function() {
+    let commentButton = $(this);
+    let commentForm = commentButton.closest('.new-comment-form');
+    let commentType = commentForm.attr('data-comment-type');
+    let postID = commentForm.attr('data-post-id');
+    let commentID = commentForm.attr('data-comment-id');
+    let commentContainer = commentForm.find(".ql-container");
+    let commentEditor = commentForm.find('.ql-editor');
+    let commentContent = commentEditor.html();
+    if (commentType == "primary") {
+        commentsContainer = commentButton.closest('.comments').find('.comments-container');
+    }
+    else if (commentType == "child") {
+        commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
+    }
+    let emojiWindow = commentForm.find('.replyEmojiWindow');
+
+    let pc = commentForm.find('#image-preview-holder')[0];
+
+    var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
+    var imagedescs = [];
+
+    if(pc.uploadsCompleted){
+      if(pc.uploadsCompleted != pc.uploadsStarted-pc.uploadsCancelled){
+        bootbox.alert("You have image uploads in progress.");
+        return;
+      }else{
+        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
+          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there probably exists a cleaner way to do this than $($())?
+          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
+          imagedescs.push(imageWindow.find('#postImageDescription').val());
+        }
+      }
+    }
+
+    if (commentContainer[0].hasContent() || sortedurls.length > 0) { // Filter out empty comments
+      commentButton.prop('disabled', true);
+      $.post("/createcomment/"+postID+"/"+commentID,
+      { commentContent: commentContent,
+        imageUrls: JSON.stringify(sortedurls),
+        imageDescs: JSON.stringify(imagedescs)
+      },
+      function(data) {
+        if (data!='nope'){
+          commentEditor.html('');
+          var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          //add the lightbox listener to the newly appended comment images
+          var commentimages = appendedComment.find('.post-images a');
+          if (commentimages.length > 0) {
+            var $images = commentimages;
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+              // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+              $(element).simpleLightbox(params);
+            });
+
+            // Handle grouped imags
+            if ($imagesGrouped.length > 0) {
+              // Select all groups
+              var groupNames = $imagesGrouped.map(function () {
+                return $(this).data('group');
+              }).get();
+              groupNames = $.unique(groupNames);
+
+              // Apply on each group
+              $.each(groupNames, function (key, value) {
+                $imagesGrouped.filter(function () {
+                    return $(this).data('group') == value;
+                  })
+                  .simpleLightbox(params);
+              });
+            }
+          }
+
+          let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
+          if(counterToChange.textContent === ""){
+            counterToChange.innerHTML = "1";
+          } else {
+            let newCommentCount = parseInt(counterToChange.textContent)+1;
+            counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
+          }
+          // Reset (or DESTROY) comment form
+          if (commentType == "primary") {
+              commentButton.prop('disabled', false);
+              emojiWindow.hide();
+              $(pc).children('.newimagecont').remove(); //removes all image preview windows
+          }
+          else if (commentType == "child") {
+              commentForm.remove();
+          }
+          pc.uploadsStarted = 0;
+          pc.uploadsCompleted = 0;
+          pc.uploadsCancelled = 0;
+          pc.uploadedImageUrls = [];
+          pc.imageUploadRequests = [];
+        } else {
+          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
+          $(html).hide().appendTo(commentsContainer).fadeIn();
+          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
+        }
+      });
+    }
+  })
+
 
   //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever.
   //um someone rewrite this so it works with comment images. the server's auto-deleter will take care of temp images once they're more than
@@ -422,4 +536,5 @@ $(function(){
       movementEnded();
     });
   }
+  })
 </script>
