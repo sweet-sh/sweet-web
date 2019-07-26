@@ -26,6 +26,12 @@ function restartInfiniteScroll(){
 //NEW POST FORM CODE
 
 $(function(){
+
+  var editor = undefined;
+  if(editor = document.getElementById('editor')){
+    attachQuill(editor)
+  }
+
   $(".ql-editor").focus(function (e) {
     if(e.target.parentElement.id == "editor"){
       $(".post-controls").css('display', 'flex');
