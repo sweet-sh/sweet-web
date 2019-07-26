@@ -220,9 +220,9 @@ $(function() {
     // Create new comment form with Handlebars.js
     var source = document.getElementById("new-comment-form-template").innerHTML;
     var template = Handlebars.compile(source);
-    var html = template({post_id: postID, comment_id: commentID, comment_type: 'child'});
-    $(html).appendTo(commentContainer);
-    attachQuill(commentContainer.find('.editable-text')[0],"Reply to this post with a good reply")
+    var html = $(template({post_id: postID, comment_id: commentID, comment_type: 'child'}));
+    html.appendTo(commentContainer);
+    attachQuill(html.find('.editable-text')[0],"Reply to this post with a good reply")
     tribute.attach($(".ql-editor"));
     //Scroll to newly created form
     newForm = commentContainer.find('.new-comment-form');

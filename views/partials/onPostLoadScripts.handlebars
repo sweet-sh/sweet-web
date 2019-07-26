@@ -115,7 +115,6 @@ $(function() {
     //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
     //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
     document.body.ondragover = function(e){
-        console.log(e);
         e.preventDefault();
         if(!document.getElementById("bodyFader")){
             $('body').append('<div id="bodyFader"></div>');
@@ -124,14 +123,12 @@ $(function() {
     }
     //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
     document.body.ondragend = function(e){
-        console.log("dragend");
         e.preventDefault();
         $("#bodyFader").fadeOut(100,function(){
             $("#bodyFader").remove();
         });
     }
     document.body.ondrop = function(e){
-        console.log("drop");
         e.preventDefault();
         $("#bodyFader").fadeOut(100,function(){
             $("#bodyFader").remove();
