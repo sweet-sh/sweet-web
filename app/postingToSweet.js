@@ -94,7 +94,7 @@ module.exports = function(app) {
                                 return console.log(err);
                             }
                             res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({ url: imageUrl + '.gif', thumbnail: "data:image/gif;base64,"+ req.files.image.data.toString('base64') }));
+                            res.end(JSON.stringify({ url: imageUrl + '.gif' }));
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
@@ -115,19 +115,27 @@ module.exports = function(app) {
                         sharpImage = sharpImage.png();
                         var finalFormat = "png";
                     }
-                    
-                    //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
-                    var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
-                    thumbnail = await (finalFormat=="jpeg" ? thumbnail.flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.png()).toBuffer();
+
+                    //if the image is being rotated according to exif data or a is png with transparency being removed, send the client a thumbnail showing these changes
+                    if ((imageMeta.orientation && imageMeta.orientation !== 1) || (imageFormat == "png" && imageMeta.hasAlpha && finalFormat == "jpeg")) {
+                        //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                        var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                        thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                    } else {
+                        var thumbnail = undefined;
+                    }
 
                     await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
-                    .catch(err => {
-                        console.error("could not temp save uploaded image:")
-                        console.error(err);
-                    });
-
+                        .catch(err => {
+                            console.error("could not temp save uploaded image:")
+                            console.error(err);
+                        });
+                    var response = { url: imageUrl + '.' + imageFormat }
+                    if (thumbnail) {
+                        response.thumbnail = "data:image/" + finalFormat + ";base64," + thumbnail.toString('base64');
+                    }
                     res.setHeader('content-type', 'text/plain');
-                    res.end(JSON.stringify({ url: imageUrl + '.' + imageFormat, thumbnail: "data:image/"+finalFormat+";base64,"+thumbnail.toString('base64') }));
+                    res.end(JSON.stringify(response));
                 } else {
                     console.log("image not a gif or a png or a jpg according to sharp!");
                     res.setHeader('content-type', 'text/plain');

@@ -179,7 +179,9 @@ $(function(){
             thisImagesWindow.remove();
           } else {
 
-            thisImagesWindow.find('.image-preview').css('background-image',"url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated properly
+            if(serverResponse.thumbnail){
+              thisImagesWindow.find('.image-preview').css('background-image',"url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+            }
             thisImagesWindow.find('.fader').remove();
 
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
