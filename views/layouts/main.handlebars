@@ -52,6 +52,10 @@
 
   {{> clientSideCodeErrorReporter }}
 
+  {{#if loggedIn}}
+  {{> textEditorScripts}}
+  {{/if}}
+
   {{> onPostLoadScripts }}
 
 </head>
