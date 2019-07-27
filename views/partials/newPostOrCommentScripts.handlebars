@@ -142,7 +142,7 @@ $(function(){
               var thisImagesWindow = $(previewContainer).find('.newimagecont[uploadnumber="' + uploadNumber + '"]');
               var percentage = Math.round(e.loaded / e.total * 100);
               thisImagesWindow.find('progress').attr('value',percentage);
-              thisImagesWindow.find("#percentage").html(percentage+'%')
+              thisImagesWindow.find("#percentage").html(percentage==100 ? percentage+'%!!!' : percentage+'%')
             });
             return uploader;
           },
@@ -178,23 +178,10 @@ $(function(){
             }
             thisImagesWindow.remove();
           } else {
-            //get the temp image from the server, which will be exif-rotated properly, and put it in the preview area when it's loaded
-            $.get({
-              url:'/api/image/display/temp/'+serverResponse.url,
-              dataType: 'binary',
-              xhr: function() {
-                var downloader = new XMLHttpRequest();
-                downloader.responseType = 'blob';
-                return downloader;
-              },
-              success: function(response){
-                var reader = new FileReader();
-                reader.onload = function(e){
-                  thisImagesWindow.find('.image-preview').css('background-image',"url(" + e.target.result + ")");
-                  thisImagesWindow.find('.fader').remove();
-                }
-                reader.readAsDataURL(response);
-            }})
+
+            thisImagesWindow.find('.image-preview').css('background-image',"url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated properly
+            thisImagesWindow.find('.fader').remove();
+
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
             thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {

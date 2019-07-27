@@ -124,35 +124,6 @@ module.exports = function(app) {
             })
     })
 
-    //Very like the above, but responds to requests for images still in the temp folder, which will only be viewed in the image preview windows
-    //by the poster before their post is actually made. We don't need any security checks because the only person with access to the urls of
-    //these images in the first place is the person who just uploaded them. Sends them in thumbnail size (don't need to save this version as it's
-    //only retrieved once, here).
-    //Input: filename of an image
-    //Output: Either the image file they requested or a 404 error
-    app.get('/api/image/display/temp/:filename', async function(req, res) {
-        var imagePath = global.appRoot + '/cdn/images/temp/' + req.params.filename;
-        try {
-            if (fs.existsSync(imagePath)) {
-                if (imagePath.substring(imagePath.length - 3, imagePath.length) != "gif") {
-                    res.send((await sharp(imagePath).resize({ height: 200, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer()));
-                } else {
-                    res.sendFile(imagePath);
-                }
-            } else {
-                // Image file doesn't exist on server
-                console.log("Image " + req.params.filename + " doesn't exist on server!")
-                console.log(err)
-                //in theory we should probably have an image to send that has the text 'sorry' or something
-                res.status('404').send('could not find requested temp image')
-            }
-        } catch (err) {
-            console.log("Temp image " + req.params.filename + " could not be thumbnailed and sent as preview!")
-            console.log(err)
-            res.status('404').send('could not process requested temp image');
-        }
-    })
-
     //Responds to get requests for '/'.
     //Input: none
     //Output: redirect to '/home' if logged in, render of the index page if logged out.

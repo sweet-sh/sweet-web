@@ -81,9 +81,7 @@ module.exports = function(app) {
                 } catch (err) {
                     console.log("image failed to be loaded by sharp for format determination");
                     res.setHeader('content-type', 'text/plain');
-                    res.end(JSON.stringify({
-                        error: "filetype"
-                    }));
+                    res.end(JSON.stringify({ error: "filetype" }));
                     return;
                 }
                 var imageFormat = imageMeta.format;
@@ -91,13 +89,12 @@ module.exports = function(app) {
                 if (imageFormat == "gif") {
                     if (req.files.image.size <= 5242880) {
                         var imageData = req.files.image.data;
-                        console.log(imageUrl + '.gif');
                         fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function(err) { //to temp
                             if (err) {
                                 return console.log(err);
                             }
                             res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({ url: imageUrl + '.gif' }));
+                            res.end(JSON.stringify({ url: imageUrl + '.gif', thumbnail: "data:image/gif;base64,"+ req.files.image.data.toString('base64') }));
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
@@ -112,37 +109,34 @@ module.exports = function(app) {
                         sharpImage = sharpImage.flatten({ background: { r: 255, g: 255, b: 255 } });
                     }
                     if (imageFormat == "jpeg" || req.user.settings.imageQuality == "standard") {
-                        sharpImage = sharpImage.jpeg({
-                            quality: imageQualitySettings.jpegQuality
-                        })
+                        sharpImage = sharpImage.jpeg({ quality: imageQualitySettings.jpegQuality })
+                        var finalFormat = "jpeg";
                     } else {
                         sharpImage = sharpImage.png();
+                        var finalFormat = "png";
                     }
-                    sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
-                        .then(image => {
-                            res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.' + imageFormat,
-                            }));
-                        })
-                        .catch(err => {
-                            console.error("could not temp save uploaded image:")
-                            console.error(err);
-                        });
+                    
+                    //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                    var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                    thumbnail = await (finalFormat=="jpeg" ? thumbnail.flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.png()).toBuffer();
 
+                    await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
+                    .catch(err => {
+                        console.error("could not temp save uploaded image:")
+                        console.error(err);
+                    });
+
+                    res.setHeader('content-type', 'text/plain');
+                    res.end(JSON.stringify({ url: imageUrl + '.' + imageFormat, thumbnail: "data:image/"+finalFormat+";base64,"+thumbnail.toString('base64') }));
                 } else {
                     console.log("image not a gif or a png or a jpg according to sharp!");
                     res.setHeader('content-type', 'text/plain');
-                    res.end(JSON.stringify({
-                        error: "filetype"
-                    }));
+                    res.end(JSON.stringify({ error: "filetype" }));
                     return;
                 }
             } else {
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filesize"
-                }));
+                res.end(JSON.stringify({ error: "filesize" }));
             }
         }
     })
