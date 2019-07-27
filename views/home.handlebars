@@ -4,7 +4,7 @@
         <div id="checkNewPosts"></div>
         {{> newpostsavailable}}
         <div class="container commentsList" id="postsContainer"></div>
-        {{> infinitescrollrequests}}
+        {{> infiniteScrollLoadingSpinner}}
     </div>
     {{#or loggedInUserData.settings.showRecommendations loggedInUserData.settings.showHashtags}}
         <div class="col-md-4 d-none d-lg-block">
