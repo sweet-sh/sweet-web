@@ -97,30 +97,19 @@ module.exports = function (app) {
                                 return console.log(err);
                             }
                             res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.gif',
-                            }));
+                            res.end(JSON.stringify({url: imageUrl + '.gif'}));
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({
-                            error: "filesize"
-                        }));
+                        res.end(JSON.stringify({error: "filesize"}));
                     }
                 } else if (imageFormat == "jpeg" || imageFormat == "png") {
                     sharpImage = sharpImage.resize({
                             width: imageQualitySettings.resize,
                             withoutEnlargement: true
-                        })
-                        .rotate();
+                        }).rotate();
                     if (imageFormat == "png" && req.user.settings.imageQuality == "standard") {
-                        sharpImage = sharpImage.flatten({
-                            background: {
-                                r: 255,
-                                g: 255,
-                                b: 255
-                            }
-                        });
+                        sharpImage = sharpImage.flatten({background: {r: 255, g: 255, b: 255}});
                     }
                     if (imageFormat == "jpeg" || req.user.settings.imageQuality == "standard") {
                         sharpImage = sharpImage.jpeg({
