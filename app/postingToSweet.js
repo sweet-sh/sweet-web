@@ -45,14 +45,14 @@ var apiConfig = require('../config/apis.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
 
-module.exports = function (app) {
+module.exports = function(app) {
 
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
     //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
-    app.post("/api/image/v2", isLoggedInOrRedirect, async function (req, res) {
+    app.post("/api/image/v2", isLoggedInOrRedirect, async function(req, res) {
         var imageQualitySettingsArray = {
             'standard': {
                 resize: 1200,
@@ -92,24 +92,24 @@ module.exports = function (app) {
                     if (req.files.image.size <= 5242880) {
                         var imageData = req.files.image.data;
                         console.log(imageUrl + '.gif');
-                        fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function (err) { //to temp
+                        fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function(err) { //to temp
                             if (err) {
                                 return console.log(err);
                             }
                             res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({url: imageUrl + '.gif'}));
+                            res.end(JSON.stringify({ url: imageUrl + '.gif' }));
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({error: "filesize"}));
+                        res.end(JSON.stringify({ error: "filesize" }));
                     }
                 } else if (imageFormat == "jpeg" || imageFormat == "png") {
                     sharpImage = sharpImage.resize({
-                            width: imageQualitySettings.resize,
-                            withoutEnlargement: true
-                        }).rotate();
+                        width: imageQualitySettings.resize,
+                        withoutEnlargement: true
+                    }).rotate();
                     if (imageFormat == "png" && req.user.settings.imageQuality == "standard") {
-                        sharpImage = sharpImage.flatten({background: {r: 255, g: 255, b: 255}});
+                        sharpImage = sharpImage.flatten({ background: { r: 255, g: 255, b: 255 } });
                     }
                     if (imageFormat == "jpeg" || req.user.settings.imageQuality == "standard") {
                         sharpImage = sharpImage.jpeg({
@@ -150,9 +150,9 @@ module.exports = function (app) {
     //Responds to post requests that inform the server that a post that images were uploaded for will not be posted by deleting those images.
     //Inputs: image file name
     //Outputs: the image presumably in the temp folder with that filename is deleted
-    app.post("/cleartempimage", isLoggedInOrErrorResponse, function (req, res) {
+    app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
         if (req.body.imageURL != "" && !req.body.imageURL.includes("/")) {
-            fs.unlink("./cdn/images/temp/" + req.body.imageURL, function (e) {
+            fs.unlink("./cdn/images/temp/" + req.body.imageURL, function(e) {
                 if (e) {
                     console.log("could not delete image " + "./cdn/images/temp/" + req.body.imageURL);
                     console.log(e);
@@ -166,7 +166,7 @@ module.exports = function (app) {
     //if it's a community post.
     //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
     //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, async function (req, res) {
+    app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
@@ -241,9 +241,9 @@ module.exports = function (app) {
 
                 // Parse images
                 if (postImages) {
-                    postImages.forEach(function (imageFileName) {
+                    postImages.forEach(function(imageFileName) {
                         if (imageFileName) {
-                            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
                                 if (e) {
                                     console.log("could not move " + imageFileName + " out of temp");
                                     console.log(e);
@@ -280,7 +280,7 @@ module.exports = function (app) {
                             }, {
                                 upsert: true,
                                 new: true
-                            }, function (error, result) {
+                            }, function(error, result) {
                                 if (error) return
                             });
                         });
@@ -297,7 +297,7 @@ module.exports = function (app) {
                                     let emailsArray = emails.map(({
                                         to
                                     }) => to)
-                                    parsedResult.mentions.forEach(function (mention) {
+                                    parsedResult.mentions.forEach(function(mention) {
                                         User.findOne({
                                                 username: mention
                                             })
@@ -315,11 +315,11 @@ module.exports = function (app) {
                         } else if (postPrivacy == "public") {
                             console.log("This post is public!")
                             // This is a public post, notify everyone
-                            parsedResult.mentions.forEach(function (mention) {
+                            parsedResult.mentions.forEach(function(mention) {
                                 if (mention != req.user.username) { //don't get notified from mentioning yourself
                                     User.findOne({ username: mention })
                                         .then((user) => {
-                                            if(user){
+                                            if (user) {
                                                 notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                                             }
                                         })
@@ -327,7 +327,7 @@ module.exports = function (app) {
                             });
                         }
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send(""+(postCreationTime.getTime()+1));
+                        res.status(200).send("" + (postCreationTime.getTime() + 1));
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -368,16 +368,14 @@ module.exports = function (app) {
 
                 // Parse images
                 if (postImages) {
-                    postImages.forEach(function (imageFileName) {
-                        fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                    postImages.forEach(function(imageFileName) {
+                        fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
                             if (e) {
                                 console.log("could not move " + imageFileName + " out of temp");
                                 console.log(e);
                             }
                         }) //move images out of temp storage
-                        Community.findOne({
-                                _id: communityId
-                            })
+                        Community.findOne({ _id: communityId })
                             .then(community => {
                                 image = new Image({
                                     context: "community",
@@ -403,12 +401,12 @@ module.exports = function (app) {
                             }, {
                                 upsert: true,
                                 new: true
-                            }, function (error, result) {
+                            }, function(error, result) {
                                 if (error) return
                             });
                         });
                         // Notify everyone mentioned that belongs to this community
-                        parsedResult.mentions.forEach(function (mention) {
+                        parsedResult.mentions.forEach(function(mention) {
                             if (mention != req.user.username) { //don't get notified from mentioning yourself
                                 User.findOne({
                                         username: mention,
@@ -431,7 +429,7 @@ module.exports = function (app) {
                             console.log("Updated community!")
                         })
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send(""+(postCreationTime.getTime()+1));
+                        res.status(200).send("" + (postCreationTime.getTime() + 1));
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -459,7 +457,7 @@ module.exports = function (app) {
     //Responds to requests that delete posts.
     //Inputs: id of post to delete (in req.params)
     //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it caused, delete the post document.
-    app.post("/deletepost/:postid", isLoggedInOrRedirect, function (req, res) {
+    app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
         Post.findOne({
                 "_id": req.params.postid
             })
@@ -519,6 +517,7 @@ module.exports = function (app) {
                 }
 
                 //delete comment images
+                //TODO: also delete images for threaded comments
                 post.comments.forEach((comment) => {
                     if (comment.images) {
                         comment.images.forEach((image) => {
@@ -566,7 +565,7 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function (req, res) {
+    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function(req, res) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
@@ -642,6 +641,7 @@ module.exports = function (app) {
                     // This is a child level comment so we have to drill through the comments
                     // until we find it
                     commentParent = undefined;
+
                     function findNested(array, id, depthSoFar = 2) {
                         var foundElement = false;
                         array.forEach((element) => {
@@ -689,9 +689,9 @@ module.exports = function (app) {
                     .then(async () => {
                         // Parse images
                         if (postImages) {
-                            postImages.forEach(function (imageFileName) {
+                            postImages.forEach(function(imageFileName) {
                                 if (imageFileName) {
-                                    fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
+                                    fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
                                         if (e) {
                                             console.log("could not move " + imageFileName + " out of temp");
                                             console.log(e);
@@ -723,7 +723,7 @@ module.exports = function (app) {
                                 workingMentions = parsedResult.mentions.filter(m => m != req.user.username);
 
                                 if (post.type == "community") {
-                                    workingMentions.forEach(function (mentionedUsername) {
+                                    workingMentions.forEach(function(mentionedUsername) {
                                         User.findOne({
                                             username: mentionedUsername
                                         }).then((mentionedUser) => {
@@ -765,7 +765,7 @@ module.exports = function (app) {
                                             })
                                         })
                                     } else if (postPrivacy == "public") {
-                                        workingMentions.forEach(function (mention) {
+                                        workingMentions.forEach(function(mention) {
                                             User.findOne({
                                                     username: mention
                                                 })
@@ -902,7 +902,7 @@ module.exports = function (app) {
                         }
 
                         classNames = ['one-image', 'two-images', 'three-images', 'four-images'];
-                        let commentImageGallery = function () {
+                        let commentImageGallery = function() {
                             html = '<div class="post-images ' + classNames[postImages.length - 1] + '">';
                             for (let i = 0; i < postImages.length; i++) {
                                 html += ('<a href="/api/image/display/' + postImages[i] + '">') + '<img alt="' + imageDescriptions[i] + ' (posted by ' + req.user.username + ')" class="post-single-image" src="/api/image/display/' + postImages[i] + '" ' + '</a>';
@@ -955,7 +955,7 @@ module.exports = function (app) {
     //Output: deletes each of the comment's images and removes the comment's document from the post. Then, updates the post's lastUpdated field to be
     //that of the new most recent comment's (or the time of the post's creation if there are no comments left) with the relocatePost function. Also
     //updates numberOfComments.
-    app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function (req, res) {
+    app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
         Post.findOne({
                 "_id": req.params.postid
             })
@@ -1072,7 +1072,7 @@ module.exports = function (app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/createboost/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/createboost/:postid', isLoggedInOrRedirect, function(req, res) {
         boostedTimestamp = new Date();
         Post.findOne({
                 '_id': req.params.postid
@@ -1129,7 +1129,7 @@ module.exports = function (app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
         Post.findOne({
                 '_id': req.params.postid
             }, {
@@ -1148,7 +1148,7 @@ module.exports = function (app) {
                 })
                 Post.deleteOne({
                     _id: boost.boost
-                }, function () {
+                }, function() {
                     console.log('delete')
                 });
                 boostedPost.save().then(() => {
@@ -1159,12 +1159,12 @@ module.exports = function (app) {
 };
 
 function cleanTempFolder() {
-    fs.readdir("./cdn/images/temp", function (err, files) {
+    fs.readdir("./cdn/images/temp", function(err, files) {
         files.forEach(file => {
             if (file != ".gitkeep" && file != "") {
-                fs.stat("./cdn/images/temp/" + file, function (err, s) {
+                fs.stat("./cdn/images/temp/" + file, function(err, s) {
                     if (Date.now() - s.mtimeMs > 3600000) {
-                        fs.unlink("./cdn/images/temp/" + file, function (e) {
+                        fs.unlink("./cdn/images/temp/" + file, function(e) {
                             if (e) {
                                 console.log("couldn't clean temp file " + file);
                                 console.log(e);
