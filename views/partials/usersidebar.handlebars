@@ -136,7 +136,7 @@
 {{/and}}
 {{#if followedUserData}}
   <h5>Follows{{#gt followedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-  <div id="followedUsersList" class="user-list{{#gt followedUserData.length 2}} collapse{{else}} d-flex{{/gt}}">
+  <div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
     {{/each}}
