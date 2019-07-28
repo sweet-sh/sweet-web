@@ -74,21 +74,19 @@ module.exports = function(app) {
                         sendImageFile()
                     } else if (image.privacy === "private") {
                         if (req.isAuthenticated()) {
-                            if (image.context === "user") {
-                                if (image.user == req.user._id.toString()) {
-                                    sendImageFile()
-                                } else {
-                                    Relationship.findOne({ toUser: req.user._id, value: "trust", fromUser: image.user }).then(rel => {
-                                        if (rel) {
-                                            sendImageFile()
-                                        } else {
-                                            // User not trusted by image's uploader
-                                            console.log("User not trusted!")
-                                            res.status('404')
-                                            res.redirect('/404');
-                                        }
-                                    })
-                                }
+                            if (image.user == req.user._id.toString()) {
+                                sendImageFile()
+                            } else if (image.context === "user") {
+                                Relationship.findOne({ toUser: req.user._id, value: "trust", fromUser: image.user }).then(rel => {
+                                    if (rel) {
+                                        sendImageFile()
+                                    } else {
+                                        // User not trusted by image's uploader
+                                        console.log("User not trusted!")
+                                        res.status('404')
+                                        res.redirect('/404');
+                                    }
+                                })
                             } else if (image.context === "community") {
                                 Community.findOne({ _id: image.community, members: req.user._id }).then(comm => {
                                     if (comm) {
@@ -539,7 +537,7 @@ module.exports = function(app) {
                                                 return -1;
                                             if (timestampA < timestampB)
                                                 return 1;
-                                            return 0; //default return value (no sorting)
+                                            return 0;
                                         });
                                         parsedResults = parsedResults.slice(0, resultsPerPage);
                                         var oldesttimestamp = parsedResults[parsedResults.length - 1].sort;
@@ -1134,379 +1132,115 @@ module.exports = function(app) {
     //Responds to get requests for a user's profile page.
     //Inputs: username is the user's username.
     //Outputs: a 404 if the user isn't found
-    app.get('/:username', function(req, res) {
+    app.get('/:username', async function(req, res) {
+
+        function c(e) {
+            console.error("error in query in /:username user list builders");
+            console.error(e);
+        }
+
+        var profileData = await User.findOne({ username: req.params.username }).catch(err => {
+            console.error("error in username query in /:username");
+            console.error(err)
+        });
+        if (!profileData) {
+            console.log("user " + req.params.username + " not found");
+            res.status(404).redirect('/404');
+        }
+        //todo: check how many of these are strictly necessary. 
+        var communitiesData = await Community.find({ members: profileData._id }).catch(c);
+        var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c);
+        var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: "trust" }).catch(c)).map(v => v.to);
+        var myTrustedUserData = await User.find({ email: { $in: myTrustedUserEmails } }).catch(c);
+        var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: "trust" }).catch(c)).map(v => v.to);
+        var theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c);
+        var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: "flag" }).catch(c)).map(v => v.to);
+        var myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c);
+        var myMutedUserEmails = (await Relationship.find({ from: req.user.email, value: "mute" }).catch(c)).map(v => v.to);
+        var myMutedUserEmails = await User.find({ email: { $in: myMutedUserEmails } }).catch(c);
+        var myFollowedUserEmails = (await Relationship.find({ from: req.user.email, value: "follow" }).catch(c)).map(v => v.to);
+        var myFollowedUserData = await User.find({ email: { $in: myFollowedUserEmails } }).catch(c);
+        var followersArray = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from);
+        var followers = await User.find({ email: { $in: followersArray } }).catch(c);
+        var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: "follow" }, { to: 1 }).catch(c)).map(v => v.to);
+        var theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } });
+        var usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: "trust" }).catch(c)).map(v => v.from)
+        var usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c);
+
+        var userTrustsYou = false;
+        var userFollowsYou = false;
         if (req.isAuthenticated()) {
-            isLoggedIn = true;
-        } else {
-            isLoggedIn = false;
-        }
-
-        let results = {};
-
-        let profileData = () => {
-            return User.findOne({
-                    username: req.params.username
-                })
-                .then((user) => {
-                    if (!user) {
-                        console.log("no such user!");
-                        res.status(404).redirect('/404');
-                    } else {
-                        results.profileData = user
-                        return user;
-                    }
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        let communitiesData = (user) => {
-            return Community.find({
-                    members: results.profileData._id
-                })
-                .then((communities) => {
-                    results.communitiesData = communities
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        let flagsOnUser = (user) => {
-            if (req.isAuthenticated()) {
-                return Relationship.find({
-                        to: user.email,
-                        value: "flag"
-                    })
-                    .then((flags) => {
-                        results.flagsOnUser = flags
-                        return flags;
-                    })
-                    .catch((err) => {
-                        console.log("Error in profileData.")
-                        console.log(err);
-                    });
-            }
-        }
-
-        let myTrustedUsers = () => {
-            if (req.isAuthenticated()) {
-                myTrustedUserEmails = []
-                myTrustedUserData = []
-                return Relationship.find({
-                        from: req.user.email,
-                        value: "trust"
-                    })
-                    .then((trusts) => {
-                        for (var key in trusts) {
-                            var trust = trusts[key];
-                            myTrustedUserEmails.push(trust.to);
-                        }
-                        return User.find({
-                                email: {
-                                    $in: myTrustedUserEmails
-                                }
-                            })
-                            .then((users) => {
-                                results.myTrustedUserData = users
-                            })
-                    })
-                    .catch((err) => {
-                        console.log("Error in profileData.")
-                        console.log(err);
-                    });
-            }
-        }
-
-        let theirTrustedUsers = () => {
-            theirTrustedUserEmails = []
-            theirTrustedUserData = []
-            return Relationship.find({
-                    from: results.profileData.email,
-                    value: "trust"
-                })
-                .then((trusts) => {
-                    for (var key in trusts) {
-                        var trust = trusts[key];
-                        theirTrustedUserEmails.push(trust.to);
-                    }
-                    return User.find({
-                            email: {
-                                $in: theirTrustedUserEmails
-                            }
-                        })
-                        .then((users) => {
-                            results.theirTrustedUserData = users
-                        })
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        let myFlaggedUsers = () => {
-            if (req.isAuthenticated()) {
-                myFlaggedUserEmails = []
-                myFlaggedUserData = []
-                return Relationship.find({
-                        from: req.user.email,
-                        value: "flag"
-                    })
-                    .then((flags) => {
-                        for (var key in flags) {
-                            var flag = flags[key];
-                            myFlaggedUserEmails.push(flag.to);
-                        }
-                        return User.find({
-                                email: {
-                                    $in: myFlaggedUserEmails
-                                }
-                            })
-                            .then((users) => {
-                                results.myFlaggedUserData = users
-                            })
-                    })
-                    .catch((err) => {
-                        console.log("Error in profileData.")
-                        console.log(err);
-                    });
-            }
-        }
-
-        let myMutedUsers = () => {
-            if (req.isAuthenticated()) {
-                myMutedUserEmails = []
-                return Relationship.find({
-                        from: req.user.email,
-                        value: "mute"
-                    })
-                    .then((mutes) => {
-                        for (var key in mutes) {
-                            var mute = mutes[key];
-                            myMutedUserEmails.push(mute.to);
-                        }
-                        return User.find({
-                                email: {
-                                    $in: myMutedUserEmails
-                                }
-                            })
-                            .then((users) => {
-                                results.myMutedUserData = users
-                            })
-                    })
-                    .catch((err) => {
-                        console.log("Error in profileData.")
-                        console.log(err);
-                    });
-            }
-        }
-
-        let myFollowedUsers = () => {
-            if (req.isAuthenticated()) {
-                myFollowedUserEmails = []
-                myFollowedUserData = []
-                return Relationship.find({
-                        from: req.user.email,
-                        value: "follow"
-                    })
-                    .then((follows) => {
-                        for (var key in follows) {
-                            var follow = follows[key];
-                            myFollowedUserEmails.push(follow.to);
-                        }
-                        return User.find({
-                                email: {
-                                    $in: myFollowedUserEmails
-                                }
-                            })
-                            .then((users) => {
-                                results.myFollowedUserData = users
-                            })
-                    })
-                    .catch((err) => {
-                        console.log("Error in profileData.")
-                        console.log(err);
-                    });
-            }
-        }
-
-        let followers = () => {
-            followersArray = [];
-            return Relationship.find({
-                    to: results.profileData.email,
-                    value: "follow"
-                }, {
-                    'from': 1
-                })
-                .then((followers) => {
-                    let followersArray = followers.map(({
-                        from
-                    }) => from)
-                    return User.find({
-                            email: {
-                                $in: followersArray
-                            }
-                        })
-                        .then((users) => {
-                            results.followers = users
-                        })
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        let theirFollowedUsers = () => {
-            theirFollowedUserEmails = []
-            theirFollowedUserData = []
-            return Relationship.find({
-                    from: results.profileData.email,
-                    value: "follow"
-                })
-                .then((follows) => {
-                    for (var key in follows) {
-                        var follow = follows[key];
-                        theirFollowedUserEmails.push(follow.to);
-                    }
-                    return User.find({
-                            email: {
-                                $in: theirFollowedUserEmails
-                            }
-                        })
-                        .then((users) => {
-                            results.theirFollowedUserData = users
-                        })
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        let usersWhoTrustThem = () => {
-            usersWhoTrustThemArray = [];
-            return Relationship.find({
-                    to: results.profileData.email,
-                    value: "trust"
-                }, {
-                    'from': 1
-                })
-                .then((usersWhoTrustThem) => {
-                    let usersWhoTrustThemArray = usersWhoTrustThem.map(({
-                        from
-                    }) => from)
-                    return User.find({
-                            email: {
-                                $in: usersWhoTrustThemArray
-                            }
-                        })
-                        .then((users) => {
-                            results.usersWhoTrustThem = users
-                        })
-                })
-                .catch((err) => {
-                    console.log("Error in profileData.")
-                    console.log(err);
-                });
-        }
-
-        profileData().then(flagsOnUser).then(myTrustedUsers).then(theirTrustedUsers).then(myFlaggedUsers).then(myMutedUsers).then(myFollowedUsers).then(theirFollowedUsers).then(followers).then(usersWhoTrustThem).then(communitiesData).then((data) => {
-            var userTrustsYou = false;
-            var userFollowsYou = false;
-            if (req.isAuthenticated()) {
-                // Is this the logged in user's own profile?
-                if (results.profileData.email == req.user.email) {
-                    isOwnProfile = true;
-                    trustedUserData = results.myTrustedUserData
-                    followedUserData = results.myFollowedUserData
-                } else {
-                    isOwnProfile = false;
-                    trustedUserData = results.theirTrustedUserData
-                    followedUserData = results.theirFollowedUserData
-                    // Check if profile user trusts logged in user
-                    if (theirTrustedUserEmails.includes(req.user.email)) {
-                        userTrustsYou = true;
-                    }
-                    // Check if profile user follows logged in user
-                    if (theirFollowedUserEmails.includes(req.user.email)) {
-                        userFollowsYou = true;
-                    }
-                }
-                flagsFromTrustedUsers = [];
+            // Is this the logged in user's own profile?
+            if (profileData.email == req.user.email) {
+                var isOwnProfile = true;
+                var trustedUserData = myTrustedUserData;
+                var followedUserData = myFollowedUserData;
+                var userTrustsYou = false;
+                var userFollowsYou = false;
                 var trusted = false;
-                myTrustedUserEmails.forEach(function(email) {
-                    // Check if logged in user trusts profile user
-                    if (email == results.profileData.email) {
-                        trusted = true;
-                    }
-                })
                 var followed = false;
-                myFollowedUserEmails.forEach(function(email) {
-                    // Check if logged in user follows profile user
-                    if (email == results.profileData.email) {
-                        followed = true;
-                    }
-                })
                 var muted = false;
-                myMutedUserEmails.forEach(function(email) {
-                    // Check if logged in user has muted profile user
-                    if (email == results.profileData.email) {
-                        muted = true;
-                    }
-                })
-                for (var key in results.flagsOnUser) {
-                    var flag = results.flagsOnUser[key];
+                var flagged = false;
+                var flagsFromTrustedUsers = 0;
+            } else {
+                var isOwnProfile = false;
+                var trustedUserData = theirTrustedUserData;
+                var followedUserData = theirFollowedUserData;
+
+                // Check if profile user follows and/or trusts logged in user
+                var userTrustsYou = theirTrustedUserEmails.includes(req.user.email)
+                var userFollowsYou = theirFollowedUserEmails.includes(req.user.email)
+
+                // Check if logged in user follows and/or trusts and/or has muted profile user
+                var trusted = myTrustedUserEmails.includes(profileData.email);
+                var followed = myFollowedUserEmails.includes(profileData.email);
+                var muted = myMutedUserEmails.includes(profileData.email);
+
+                var flagsFromTrustedUsers = 0;
+                var flagged = false;
+                for (var flag of flagsOnUser) {
                     // Check if logged in user has flagged profile user
                     if (flag.from == req.user.email) {
                         var flagged = true;
                     }
                     // Check if any of the logged in user's trusted users have flagged profile user
                     if (myTrustedUserEmails.includes(flag.from)) {
-                        flagsFromTrustedUsers.push(flag.from)
+                        flagsFromTrustedUsers++;
                     }
                 }
-                numberOfFlagsFromTrustedUsers = flagsFromTrustedUsers.length;
-            } else {
-                isOwnProfile = false;
-                trustedUserData = results.theirTrustedUserData
-                followedUserData = results.theirFollowedUserData
-                flagsFromTrustedUsers = [];
-                var trusted = false;
-                var followed = false;
-                var flagged = false;
-                numberOfFlagsFromTrustedUsers = 0;
             }
 
-            res.render('user', {
-                loggedIn: isLoggedIn,
-                isOwnProfile: isOwnProfile,
-                loggedInUserData: req.user,
-                profileData: results.profileData,
-                trusted: trusted,
-                flagged: flagged,
-                muted: muted,
-                followed: followed,
-                followersData: results.followers,
-                usersWhoTrustThemData: results.usersWhoTrustThem,
-                userFollowsYou: userFollowsYou,
-                userTrustsYou: userTrustsYou,
-                trustedUserData: trustedUserData,
-                followedUserData: followedUserData,
-                communitiesData: results.communitiesData,
-                flaggedUserData: results.myFlaggedUserData,
-                numberOfFlagsFromTrustedUsers: numberOfFlagsFromTrustedUsers,
-                activePage: results.profileData.username,
-                visibleSidebarArray: ['profileOnly', 'profileAndPosts']
-            });
-        }).catch((err) => {
-            console.log("Error in chain.")
-            console.log(err)
-        })
+        } else {
+            var isOwnProfile = false;
+            var trustedUserData = theirTrustedUserData;
+            var followedUserData = theirFollowedUserData;
+            var flagsFromTrustedUsers = 0;
+            var trusted = false;
+            var followed = false;
+            var flagged = false;
+        }
+
+        res.render('user', {
+            loggedIn: req.isAuthenticated(),
+            isOwnProfile: isOwnProfile,
+            loggedInUserData: req.user,
+            profileData: profileData,
+            trusted: trusted,
+            flagged: flagged,
+            muted: muted,
+            followed: followed,
+            followersData: followers,
+            usersWhoTrustThemData: usersWhoTrustThem,
+            userFollowsYou: userFollowsYou,
+            userTrustsYou: userTrustsYou,
+            trustedUserData: trustedUserData,
+            followedUserData: followedUserData,
+            communitiesData: communitiesData,
+            flaggedUserData: myFlaggedUserData,
+            flagsFromTrustedUsers: flagsFromTrustedUsers,
+            activePage: profileData.username,
+            visibleSidebarArray: ['profileOnly', 'profileAndPosts']
+        });
     });
 
     app.get("/api/suggestions/users", isLoggedInOrRedirect, function(req, res) {
