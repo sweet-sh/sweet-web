@@ -203,33 +203,6 @@ $(function() {
     $this.text(
         text == "Show post" ? "Hide post" : "Show post");
   })
-  $('body').on('click', '.reply-to-comment', function() {
-    // First, check if the reply form is already open - if it is, just scroll to it
-    var commentContainer = $(this).closest('.comment');
-    var postID = commentContainer.closest('.post').attr("data-post-id");
-    var commentID = commentContainer.attr("data-comment-id");
-    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
-    if (checkFormExists.length) {
-        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
-            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
-        }
-        console.log("Form already exists!")
-        return;
-    }
-
-    // Create new comment form with Handlebars.js
-    var source = document.getElementById("new-comment-form-template").innerHTML;
-    var template = Handlebars.compile(source);
-    var html = $(template({post_id: postID, comment_id: commentID, comment_type: 'child'}));
-    html.appendTo(commentContainer);
-    attachQuill(html.find('.editable-text')[0],"Reply to this post with a good reply")
-    tribute.attach($(".ql-editor"));
-    //Scroll to newly created form
-    newForm = commentContainer.find('.new-comment-form');
-    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
-        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
-    }
-  })
   $('body').on('click', '.delete-post', function() {
     var element = $(this);
     bootbox.confirm("Are you sure you want to delete this post?", function(result){

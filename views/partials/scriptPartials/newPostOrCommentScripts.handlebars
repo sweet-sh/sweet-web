@@ -72,6 +72,31 @@ $(function(){
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
+  $('body').on('click', '.reply-to-comment', function() {
+    // First, check if the reply form is already open - if it is, just scroll to it
+    var commentContainer = $(this).closest('.comment');
+    var postID = commentContainer.closest('.post').attr("data-post-id");
+    var commentID = commentContainer.attr("data-comment-id");
+    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
+    if (checkFormExists.length) {
+        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
+            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
+        }
+        console.log("Form already exists!")
+        return;
+    }
+
+    // Create new comment form
+    var newForm = $(document.getElementById("new-comment-form-template").innerHTML);
+    newForm.attr('data-comment-type','child').attr('data-post-id',postID).attr('data-comment-id',commentID);
+    newForm.appendTo(commentContainer);
+    attachQuill(newForm.find('.editable-text')[0],"Reply to this post with a good reply")
+    tribute.attach($(".ql-editor"));
+    //Scroll to newly created form
+    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
+        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
+    }
+  })
 })
 
   //IMAGE UPLOADER CODE
