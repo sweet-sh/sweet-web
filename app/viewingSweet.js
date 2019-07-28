@@ -1148,24 +1148,23 @@ module.exports = function(app) {
             res.status(404).redirect('/404');
         }
         //todo: check how many of these are strictly necessary. 
-        var communitiesData = await Community.find({ members: profileData._id }).catch(c);
-        var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c);
-        var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: "trust" }).catch(c)).map(v => v.to);
-        var myTrustedUserData = await User.find({ email: { $in: myTrustedUserEmails } }).catch(c);
-        var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: "trust" }).catch(c)).map(v => v.to);
-        var theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c);
-        var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: "flag" }).catch(c)).map(v => v.to);
-        var myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c);
-        var myMutedUserEmails = (await Relationship.find({ from: req.user.email, value: "mute" }).catch(c)).map(v => v.to);
-        var myMutedUserEmails = await User.find({ email: { $in: myMutedUserEmails } }).catch(c);
-        var myFollowedUserEmails = (await Relationship.find({ from: req.user.email, value: "follow" }).catch(c)).map(v => v.to);
-        var myFollowedUserData = await User.find({ email: { $in: myFollowedUserEmails } }).catch(c);
-        var followersArray = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from);
-        var followers = await User.find({ email: { $in: followersArray } }).catch(c);
-        var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: "follow" }, { to: 1 }).catch(c)).map(v => v.to);
-        var theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } });
-        var usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: "trust" }).catch(c)).map(v => v.from)
-        var usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c);
+        var communitiesData = await Community.find({ members: profileData._id }).catch(c); //passed to handlebars at the end
+        var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c); //check if the logged in user or their trusted users are among the flaggers (only used when not isOwnProfile)
+        var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: "trust" }).catch(c)).map(v => v.to); //used for the above and the below and to see if the logged in user trusts this user
+        var myTrustedUserData = await User.find({ email: { $in: myTrustedUserEmails } }).catch(c); //given to the renderer if isOwnProfile... in which case it should be identical to theirTrustedUserData
+        var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: "trust" }).catch(c)).map(v => v.to); //used to see if the profile user trusts the logged in user (if not isOwnProfile) and the below
+        var theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c); //given to the renderer if not isOwnProfile, only used in that case
+        var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: "flag" }).catch(c)).map(v => v.to); //only used in the below line
+        var myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c); //passed directly to the renderer
+        var myMutedUserEmails = (await Relationship.find({ from: req.user.email, value: "mute" }).catch(c)).map(v => v.to); //used if not own profile to see if the logged in user has muted the profile user
+        var myFollowedUserEmails = (await Relationship.find({ from: req.user.email, value: "follow" }).catch(c)).map(v => v.to); //used for the below and to see if the logged in user follows the profile user
+        var myFollowedUserData = await User.find({ email: { $in: myFollowedUserEmails } }).catch(c); //passed to the renderer if isOwnProfile, not used otherwise
+        var followersArray = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from); //only used for the below
+        var followers = await User.find({ email: { $in: followersArray } }).catch(c); //passed directly to the renderer
+        var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: "follow" }, { to: 1 }).catch(c)).map(v => v.to); //used in the below and to see if the profile user follows you
+        var theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } }); //passed to the renderer if not isOwnProfile
+        var usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: "trust" }).catch(c)).map(v => v.from) //only used for the below
+        var usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c); //passed directly to the renderer
 
         var userTrustsYou = false;
         var userFollowsYou = false;
