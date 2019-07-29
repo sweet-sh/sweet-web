@@ -1,7 +1,9 @@
 <script id="new-comment-form-template" type="text/x-handlebars-template">
 <div class="new-comment-form" data-comment-type="\{{comment_type}}" data-post-id="\{{post_id}}" data-comment-id="\{{comment_id}}">
   <div class="form-row">
-    <textarea class="form-control form-control-sm comment-textarea editable-text editable-comment-content" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
+    <div class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
   </div>
   <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
       <button type="button" class="add-emoji">🍬</button>
@@ -61,73 +63,65 @@
 </script>
 
 <script type="text/javascript">
-function appendToInput(inputElement, appendedText) {
-   if(inputElement.selectionStart){ //if the cursor has a position in the box
-      var cursorPos = inputElement.selectionStart;
-      inputElement.value = inputElement.value.substring(0,cursorPos) + appendedText + inputElement.value.substring(cursorPos);
-      inputElement.selectionStart = cursorPos + appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = cursorPos + appendedText.length;
-      inputElement.focus();
-   }else if(inputElement.selectionStart===0){ //special case: when the cursor is at position 0, the above condition won't work, we need to handle that better
-      inputElement.value = appendedText + inputElement.value;
-      inputElement.selectionStart = appendedText.length; //this maintains the cursor position so adding multiple appendedTexts at once will put them in the same place
-      inputElement.selectionEnd = appendedText.length;
-      inputElement.focus();
-   }else{ //if there is no cursor, just add it on the end. this is also the only way this will work on IE8 and below.
-      inputElement.value+=appendedText;
-      inputElement.focus();
-   }
-}
 
-// Lightly adapted from http://jsfiddle.net/jwvha/468/
-function pasteHtmlAtCaret(element, html, selectPastedContent = false) {
-   element.focus();
-   var sel, range;
-   if (window.getSelection) {
-         // IE9 and non-IE
-         sel = window.getSelection();
-         if (sel.getRangeAt && sel.rangeCount) {
-               range = sel.getRangeAt(0);
-               range.deleteContents();
-
-               // Range.createContextualFragment() would be useful here but is
-               // only relatively recently standardized and is not supported in
-               // some browsers (IE9, for one)
-               var el = document.createElement("div");
-               el.innerHTML = html;
-               var frag = document.createDocumentFragment(), node, lastNode;
-               while ( (node = el.firstChild) ) {
-                     lastNode = frag.appendChild(node);
-               }
-               var firstNode = frag.firstChild;
-               range.insertNode(frag);
-
-               // Preserve the selection
-               if (lastNode) {
-                     range = range.cloneRange();
-                     range.setStartAfter(lastNode);
-                     if (selectPastedContent) {
-                           range.setStartBefore(firstNode);
-                     } else {
-                           range.collapse(true);
-                     }
-                     sel.removeAllRanges();
-                     sel.addRange(range);
-               }
-         }
-   } else if ( (sel = document.selection) && sel.type != "Control") {
-         // IE < 9
-         var originalRange = sel.createRange();
-         originalRange.collapse(true);
-         sel.createRange().pasteHTML(html);
-         var range = sel.createRange();
-         range.setEndPoint("StartToStart", originalRange);
-         range.select();
-   }
-   if (element.html()){
-      console.log("haz")
-      element.next('textarea').val(element.html().trim());
-   }
+function attachQuill(element,placeholder){
+    var quill = new Quill(element, {
+        modules: {
+            toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
+            keyboard:{
+                bindings:{
+                    //Addition: if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
+                    blqtBksp:{
+                        key: 'backspace', collapsed: true, format: ['blockquote'], offset: 0,
+                        handler: function(range, context) {
+                            this.quill.format('blockquote', false);
+                        }
+                    }
+                }
+            }
+        },
+        placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
+        theme: 'bubble'
+    });
+    //remove pasted images
+    quill.clipboard.addMatcher("img", function(node, delta) {
+        return {ops:[]};
+    });
+    //remove pasted formatting that we don't support
+    quill.clipboard.addMatcher("*",function(node, delta){
+        for(var i=0;i<delta.ops.length;i++){
+            for (const key in delta.ops[i].attributes){
+                if(key!="bold" && key!="italic" && key!="link" && key!="blockquote" && key!="list"){
+                    delete delta.ops[i].attributes[key];
+                }
+            }
+        }
+        return delta;
+    })
+    //save the most recent cursor position when the editor loses focus
+    quill.on('selection-change', function(range,oldRange,source){
+        if(!range){
+            element.lastCursorPos = oldRange.index;
+        }
+    })
+    element.insertEmojiAtCursor = function(emojiString){
+        var range = undefined;
+        if(range = quill.getSelection()){ //if editor has focus
+            if(range.length > 0){ //if there is some text selected
+                quill.deleteText(range.index,range.length);
+            }
+            quill.insertText(range.index,emojiString)
+        }else if(element.lastCursorPos){ //if editor has had focus and thus an active cursor position previously
+            quill.insertText(element.lastCursorPos,emojiString)
+        }else{ //if the editor has not yet been focused (and so will be empty so just put the emoji at the beginning)
+            quill.insertText(0,emojiString)
+            quill.focus()
+            quill.setSelection(emojiString.length,0)
+        }
+    }
+    element.hasContent = function(){
+        return $(element).text().trim().length !== 0;
+    }
 }
 
 $(function() {
@@ -169,19 +163,13 @@ $(function() {
                 return '<img class="tribute-image" src="/images/' + item.original.image + '">' + item.string;
             }
         })
-        tribute.attach($(".editable-text")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
+        tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
     });
 
 {{/if}}
 
     // Attach scripts to newly loaded posts
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
-        {{#if loggedIn}}
-        editor.addElements('.editable-text');
-        if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
-            tribute.attach($(".editable-comment-content"));
-        }
-        {{/if}}
         var newlyLoadedStuff = $(items);
         if (newlyLoadedStuff.find('.post-images').length > 0) {
             var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;
@@ -224,69 +212,24 @@ $(function() {
                 //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
             }
         }
+        {{#if loggedIn}}
+        var commentForms = newlyLoadedStuff.find('.editable-text');
+        commentForms.each(function(){
+            attachQuill(this,'Reply to this post with a good reply');
+        })
+        if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
+            tribute.attach(newlyLoadedStuff.find(".ql-editor"));
+        }
+        {{/if}}
     });
 
     {{#if loggedIn}}
-    // From https://stackoverflow.com/a/4819886, will undoubtedly break sooner or later
-    function is_touch_device() {
-        var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
-        var mq = function (query) {
-            return window.matchMedia(query).matches;
-        }
-        if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
-            return true;
-        }
 
-        // include the 'heartz' as a way to have a non matching MQ to help terminate the join
-        // https://git.io/vznFH
-        var query = ['(', prefixes.join('touch-enabled),('), 'heartz', ')'].join('');
-        return mq(query);
+    var editor = undefined;
+    if(editor = document.getElementById('editor')){
+        attachQuill(editor)
     }
 
-    function createToolbar(mobileDevice) {
-        if (mobileDevice) {
-            toolbar = {
-                buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
-                static: true,
-            }
-        } else {
-            toolbar = {
-                buttons: ['bold', 'italic', 'quote', 'unorderedlist', 'anchor'],
-                static: false,
-            }
-        }
-        return toolbar;
-    }
-    options = {
-        buttonLabels: 'fontawesome',
-        imageDragging: false,
-        toolbar: createToolbar(is_touch_device()),
-        keyboardCommands: {
-            commands: [{
-                    command: 'bold',
-                    key: 'B',
-                    meta: true,
-                    shift: false,
-                    alt: false
-                },
-                {
-                    command: 'italic',
-                    key: 'I',
-                    meta: true,
-                    shift: false,
-                    alt: false
-                }
-            ],
-        },
-        placeholder: {
-            text: 'Write something, highlight text to format.'
-        },
-        paste: {
-            forcePlainText: true,
-            cleanPastedHTML: true
-        }
-    }
-    editor = new MediumEditor('.editable-text,#communityDescription,#communityRules', options);
     {{/if}}
 });
 </script>

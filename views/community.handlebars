@@ -125,21 +125,23 @@
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
-                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                <form id="descriptionForm" action="/api/community/vote/create/{{communityData._id}}" method="post">
                   <input type="hidden" name="reference" value="description" />
                   <div class="form-group">
                     <label for="communityDescription">Description</label>
-                    <textarea class="form-control" id="communityDescription" name="proposedValue" rows="3">{{communityData.descriptionRaw}}</textarea>
+                    <div class="form-control" style="height:auto;" id="communityDescriptionHtml">{{{communityData.descriptionRaw}}}</div>
+                    <input type="hidden" name="proposedValue" id="communityDescription">
                   </div>
                   <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
-                <form action="/api/community/vote/create/{{communityData._id}}" method="post">
+                <form id="rulesForm" action="/api/community/vote/create/{{communityData._id}}" method="post">
                   <input type="hidden" name="reference" value="rules" />
                   <div class="form-group">
                     <label for="communityRules">Rules</label>
-                    <textarea class="form-control" id="communityRules" name="proposedValue" rows="3">{{communityData.rulesRaw}}</textarea>
+                    <div class="form-control" style="height:auto;" id="communityRulesHtml">{{{communityData.rulesRaw}}}</div>
+                    <input type="hidden" name="proposedValue" id="communityRules">
                   </div>
                   <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
                 </form>
@@ -327,6 +329,19 @@ $('#postsContainer').infiniteScroll({
 });
 
 {{#if loggedIn}}
+
+attachQuill("#communityRulesHtml");
+attachQuill("#communityDescriptionHtml");
+
+$("#rulesForm").submit(function(e){
+  $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());
+  return true;
+})
+
+$("#descriptionForm").submit(function(e){
+  $(this).find("#communityDescription").val($(this).find("#communityDescriptionHtml").find(".ql-editor").html());
+  return true;
+})
 
 $('#community-image-button').click(function(e) {
   let button = $(this);

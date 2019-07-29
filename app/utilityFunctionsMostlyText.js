@@ -62,32 +62,12 @@ module.exports = {
             })
         }
 
-        //sometimes the editor starts the post content with links that are outside of paragraphs and thus don't look like they're on their own line to the embedding code below, that needs patched for now
-        if(parsedContent.substring(0,3) == '<a '){
-            parsedContent = "<p>" + parsedContent;
-            parsedContent = parsedContent.replace(/<\/a>/,'</a></p>');
-        }
-
         if (youtubeEnabled) {
             console.log("Embedding!")
-            //i mean, handlebars is way overkill for this
-            // function renderVideoPreview(embedurl,linkurl,imageurl,title,description,domain){
-            //     return '<a class="link-preview-container embedded-video-preview" target="_blank" rel="noopener noreferrer" embedurl="'+embedurl+'" href="'+linkurl+'">\
-            //         <div style="display:flex;justify-content:center;position:relative;">\
-            //             <img class="link-preview-image embedded-video-preview-image" src="'+imageurl+'" />\
-            //             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>\
-            //         </div>\
-            //         <div class="link-preview-text-container">\
-            //             <span class="link-preview-title">'+title+'</span>\
-            //             <span class="link-preview-description">'+description+'</span>\
-            //             <span class="link-preview-domain">'+domain+'</span>\
-            //         </div>\
-            //     </a>';
-            // }
             var embeds = [];
             var embedsAllowed = 1; //harsh, i know
             var embedsAdded = 0;
-            var linkFindingRegex = /<p>(<br \/>)*<a href="(.*?)" target="_blank">(.*?)<\/a>(<br \/>)*<\/p>/g //matches all links with a line to themselves. the <br /> only in there bc mediumeditor is being naughty >:(
+            var linkFindingRegex = /<p><a href="(.*?)" target="_blank">(.*?)<\/a><\/p>/g //matches all links with a line to themselves.
             //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
             var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
             //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
@@ -97,8 +77,8 @@ module.exports = {
                 var r = linkFindingRegex.exec(parsedContent);
                 var parsedContentWEmbeds = parsedContent.slice(); //need a copy of parsedContent that we can modify without throwing off lastIndex in RegExp.exec
                 while (r && embedsAdded < embedsAllowed) {
-                    if (r[2].search(youtubeUrlFindingRegex) != -1 && r[3].search(youtubeUrlFindingRegex) != -1) {
-                        var parsedVUrl = youtubeUrlFindingRegex.exec(r[2])
+                    if (r[1].search(youtubeUrlFindingRegex) != -1 && r[2].search(youtubeUrlFindingRegex) != -1) {
+                        var parsedVUrl = youtubeUrlFindingRegex.exec(r[1])
                         var videoid = parsedVUrl[5];
                         const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
@@ -115,8 +95,8 @@ module.exports = {
                         embeds.push(embed) // 'embed' no longer looks like a word
                         parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
                         ++embedsAdded;
-                    }else if(r[2].search(vimeoUrlFindingRegex) != -1 && (r[3].substring(0,4)=="http" ? r[3] : "https://"+r[3]).search(vimeoUrlFindingRegex) != -1){
-                        var parsedVUrl = vimeoUrlFindingRegex.exec(r[2]);
+                    }else if(r[1].search(vimeoUrlFindingRegex) != -1 && (r[2].substring(0,4)=="http" ? r[2] : "https://"+r[2]).search(vimeoUrlFindingRegex) != -1){
+                        var parsedVUrl = vimeoUrlFindingRegex.exec(r[1]);
                         var videoid = parsedVUrl[4];
 
                         const { body: html, url } = await got(parsedVUrl[0])
@@ -170,7 +150,7 @@ module.exports = {
     },
     sanitizeHtmlForSweet: function(parsedContent) {
         return sanitizeHtml(parsedContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'i', 'b', 'strong', 'a', 'p', 'br'],
+            allowedTags: ['blockquote', 'ul', 'li', 'em', 'i', 'b', 'strong', 'a', 'p', 'br'],
             allowedAttributes: {
                 'a': ['href','target']
             },

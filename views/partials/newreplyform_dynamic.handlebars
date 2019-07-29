@@ -1,6 +1,8 @@
 <div class="new-comment-form" data-comment-type="{{comment_type}}" data-post-id="{{post_id}}" data-comment-id="{{comment_id}}">
   <div class="form-row">
-    <textarea class="form-control form-control-sm comment-textarea editable-text editable-comment-content" id="commentContent" name="commentContent" style="resize: none;" placeholder="Write a comment." maxlength="9000"></textarea>
+    <div class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
   </div>
   <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
     {{> emojilist }}
