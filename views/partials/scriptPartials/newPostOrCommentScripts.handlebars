@@ -1,23 +1,46 @@
-<!-- cloned in the script below to make the image previews -->
+{{!-- cloned in the script below to make the image previews --}}
 <div class="newimageform">
-  <div class="image-preview"></div>
+  <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
   <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
   <div class="image-preview-controls">
     <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
     <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
   </div>
 </div>
+
+{{> newCommentFormTemplate}}
+
 <script type="text/javascript">
 
-$(function() {
+//this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
+function restartInfiniteScroll(timestamp){
+  if(!timestamp){
+    timestamp = new Date().getTime();
+  }
+  var postsContainer = $('#postsContainer');
+    postsContainer.fadeOut(250,function(){
+      postsContainer.html("");
+      needPostsOlderThan = timestamp;
+      postsContainer.infiniteScroll('loadNextPage');
+      postsContainer[0].fadedOut = true;
+    });
+  }
 
-  //NEW POST FORM CODE
+//NEW POST FORM CODE
+
+$(function(){
+
+  var editor = undefined;
+  if(editor = document.getElementById('editor')){
+    attachQuill(editor)
+  }
 
   $(".ql-editor").focus(function (e) {
     if(e.target.parentElement.id == "editor"){
       $(".post-controls").css('display', 'flex');
     }
   })
+
   $("#postContentWarningsButton").click(function () {
     $("#postContentWarningsContainer").removeClass("bounce")
     if ($("#postContentWarningsContainer").is(":hidden")) {
@@ -49,18 +72,51 @@ $(function() {
   $("#emojiWindow>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
+  $('body').on('click', '.reply-to-comment', function() {
+    // First, check if the reply form is already open - if it is, just scroll to it
+    var commentContainer = $(this).closest('.comment');
+    var postID = commentContainer.closest('.post').attr("data-post-id");
+    var commentID = commentContainer.attr("data-comment-id");
+    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
+    if (checkFormExists.length) {
+        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
+            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
+        }
+        console.log("Form already exists!")
+        return;
+    }
+
+    // Create new comment form
+    var newForm = $(document.getElementById("new-comment-form-template").innerHTML);
+    newForm.attr('data-comment-type','child').attr('data-post-id',postID).attr('data-comment-id',commentID);
+    newForm.appendTo(commentContainer);
+    attachQuill(newForm.find('.editable-text')[0],"Reply to this post with a good reply")
+    tribute.attach($(".ql-editor"));
+    //Scroll to newly created form
+    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
+        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
+    }
+  })
+})
 
   //IMAGE UPLOADER CODE
 
-  //function called right after clicking the add image button on the post and comment forms
+  //the main functions are placed outside of the jQuery $(function(){}) document.onready thing because they need to be globally available to the image pasting + dragging and dropping code, not just the event listeners they're attached to directly below.
+
+  //function called right after the file input changes for the post and comment forms or after an image is pasted into an editor (with image(s) contained in imgarray) bc that triggers the change event artificially
   function fileselected(e) {
+    if(this.files.length!=0){
+      var fileList = this.files;
+    }else{
+      var fileList = this.pastedFiles;
+    }
     let previewContainer = $(this).parent();
     previewContainer.css('display', 'flex'); //this is where we unhide the preview container if this is a comment image. no need to rehide, it's not obtrusive there while empty (at least to me)
     previewContainer = previewContainer[0];
 
-    for (var i = 0; i < this.files.length; i++) {
+    for (var i = 0; i < fileList.length; i++) {
       //check to make sure it's a supported file type of the correct size
-      if (((this.files[i].type === "image/jpeg" || this.files[i].type === "image/png") && this.files[i].size < 10485760) || (this.files[i].type === "image/gif" && this.files[i].size < 5242880)) {
+      if (((fileList[i].type === "image/jpeg" || fileList[i].type === "image/png") && fileList[i].size < 10485760) || (fileList[i].type === "image/gif" && fileList[i].size < 5242880)) {
 
         if ($(previewContainer).children().length == 5) { //if we already have 4 image previews + the file input, which is also a child of the preview container
           bootbox.alert("We only take four images at once atm, sry");
@@ -96,14 +152,25 @@ $(function() {
             bgRecipient.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
           }
         }
-        fr.fileType = this.files[i].type;
-        fr.readAsDataURL(this.files[i]);
+        fr.fileType = fileList[i].type;
+        fr.readAsDataURL(fileList[i]);
 
         //make the image-uploading ajax request
         var fd = new FormData();
-        fd.append('image', this.files[i]);
+        fd.append('image', fileList[i]);
 
         let imageUploadReq = $.ajax({
+          xhr: function(){
+            var uploader = new XMLHttpRequest();
+            var uploadNumber = previewContainer.uploadsStarted;
+            uploader.upload.addEventListener("progress", function(e){
+              var thisImagesWindow = $(previewContainer).find('.newimagecont[uploadnumber="' + uploadNumber + '"]');
+              var percentage = Math.round(e.loaded / e.total * 100);
+              thisImagesWindow.find('progress').attr('value',percentage);
+              thisImagesWindow.find("#percentage").html(percentage==100 ? percentage+'%!!!' : percentage+'%')
+            });
+            return uploader;
+          },
           url: '/api/image/v2',
           type: 'POST',
           data: fd,
@@ -112,9 +179,14 @@ $(function() {
         });
         imageUploadReq.uploadNumber = previewContainer.uploadsStarted;
         imageUploadReq.previewContainer = previewContainer;
+        imageUploadReq.fail(function(jqXHR, textStatus, errorThrown){
+          var thisImagesWindow = $(previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
+          thisImagesWindow.find('progress').attr('value',0);
+          thisImagesWindow.find("#percentage").html("Upload error :( Hit the X and try again?")
+        })
         imageUploadReq.done(function (data, textstatus, jqXHR) {
           //find the corresponding preview window
-          thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
+          var thisImagesWindow = $(jqXHR.previewContainer).find('.newimagecont[uploadnumber="' + jqXHR.uploadNumber + '"]');
 
           var serverResponse = JSON.parse(data);
           //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
@@ -131,8 +203,13 @@ $(function() {
             }
             thisImagesWindow.remove();
           } else {
+
+            if(serverResponse.thumbnail){
+              thisImagesWindow.find('.image-preview').css('background-image',"url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+            }
+            thisImagesWindow.find('.fader').remove();
+
             jqXHR.previewContainer.uploadedImageUrls.push(serverResponse.url); //will be at position given by uploadsCompleted
-            thisImagesWindow.find('.image-preview').css('background-image','url("/api/image/display/temp/'+serverResponse.url+'")');
             thisImagesWindow.attr('urlpos', jqXHR.previewContainer.uploadsCompleted++); //so we can figure out which url to remove when that window's delete button is hit
             if (jqXHR.previewContainer.uploadsStarted - jqXHR.previewContainer.uploadsCancelled == jqXHR.previewContainer.uploadsCompleted) {
               let submitbutton = thisImagesWindow.closest(".contentForm").find('button[type="submit"]');
@@ -143,7 +220,7 @@ $(function() {
         previewContainer.imageUploadRequests.push(imageUploadReq); //will be positioned at the preview window's uploadnumber
         ++previewContainer.uploadsStarted;
       } else {
-        if (!(this.files[i].type === "image/jpeg" || this.files[i].type === "image/gif" || this.files[i].type === "image/png")) {
+        if (!(fileList[i].type === "image/jpeg" || fileList[i].type === "image/gif" || fileList[i].type === "image/png")) {
           bootbox.alert("You appear to have sent us a file of unsupported type! Atm we only take gifs, jpgs, and pngs");
         } else {
           bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
@@ -153,6 +230,7 @@ $(function() {
     $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
   }
 
+$(function(){
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
@@ -217,14 +295,130 @@ $(function() {
           postImageDescription: JSON.stringify(imagedescs),
           postImageURL: JSON.stringify(sortedurls),
         }
-      }).done(function (data) {
-        window.location.reload(true);
+      }).done(function (postTimestamp) { //actually this should be a string set to the 1 millisecond later than the new post's timestamp.
+        $('#postContentWarnings').val("");
+        $("#postContentWarningsContainer").slideUp("fast");
+        editor.find(".ql-editor").html("");
+        $(pc).children('.newimagecont').remove();
+        haveWeSentPost = false;
+        restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
       });
       haveWeSentPost = true;
     } else {
       bootbox.alert("This post appears to be... empty");
     }
   });
+
+  //function for sumbitting a comment and then placing the new comment on the page
+  $('body').on('click', '.create-comment', function() {
+    let commentButton = $(this);
+    let commentForm = commentButton.closest('.new-comment-form');
+    let commentType = commentForm.attr('data-comment-type');
+    let postID = commentForm.attr('data-post-id');
+    let commentID = commentForm.attr('data-comment-id');
+    let commentContainer = commentForm.find(".ql-container");
+    let commentEditor = commentForm.find('.ql-editor');
+    let commentContent = commentEditor.html();
+    if (commentType == "primary") {
+        commentsContainer = commentButton.closest('.comments').find('.comments-container');
+    }
+    else if (commentType == "child") {
+        commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
+    }
+    let emojiWindow = commentForm.find('.replyEmojiWindow');
+
+    let pc = commentForm.find('#image-preview-holder')[0];
+
+    var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
+    var imagedescs = [];
+
+    if(pc.uploadsCompleted){
+      if(pc.uploadsCompleted != pc.uploadsStarted-pc.uploadsCancelled){
+        bootbox.alert("You have image uploads in progress.");
+        return;
+      }else{
+        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
+          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there probably exists a cleaner way to do this than $($())?
+          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
+          imagedescs.push(imageWindow.find('#postImageDescription').val());
+        }
+      }
+    }
+
+    if (commentContainer[0].hasContent() || sortedurls.length > 0) { // Filter out empty comments
+      commentButton.prop('disabled', true);
+      $.post("/createcomment/"+postID+"/"+commentID,
+      { commentContent: commentContent,
+        imageUrls: JSON.stringify(sortedurls),
+        imageDescs: JSON.stringify(imagedescs)
+      },
+      function(data) {
+        if (data!='nope'){
+          commentEditor.html('');
+          var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          //add the lightbox listener to the newly appended comment images
+          var commentimages = appendedComment.find('.post-images a');
+          if (commentimages.length > 0) {
+            var $images = commentimages;
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+              // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+              $(element).simpleLightbox(params);
+            });
+
+            // Handle grouped imags
+            if ($imagesGrouped.length > 0) {
+              // Select all groups
+              var groupNames = $imagesGrouped.map(function () {
+                return $(this).data('group');
+              }).get();
+              groupNames = $.unique(groupNames);
+
+              // Apply on each group
+              $.each(groupNames, function (key, value) {
+                $imagesGrouped.filter(function () {
+                    return $(this).data('group') == value;
+                  })
+                  .simpleLightbox(params);
+              });
+            }
+          }
+
+          let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
+          if(counterToChange.textContent === ""){
+            counterToChange.innerHTML = "1";
+          } else {
+            let newCommentCount = parseInt(counterToChange.textContent)+1;
+            counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
+          }
+          // Reset (or DESTROY) comment form
+          if (commentType == "primary") {
+              commentButton.prop('disabled', false);
+              emojiWindow.hide();
+              $(pc).children('.newimagecont').remove(); //removes all image preview windows
+          }
+          else if (commentType == "child") {
+              commentForm.remove();
+          }
+          pc.uploadsStarted = 0;
+          pc.uploadsCompleted = 0;
+          pc.uploadsCancelled = 0;
+          pc.uploadedImageUrls = [];
+          pc.imageUploadRequests = [];
+        } else {
+          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
+          $(html).hide().appendTo(commentsContainer).fadeIn();
+          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
+        }
+      });
+    }
+  })
+
 
   //tell the server not to keep any images that are in limbo when the tab they're in is closed/refreshed/whatever.
   //um someone rewrite this so it works with comment images. the server's auto-deleter will take care of temp images once they're more than
@@ -240,7 +434,7 @@ $(function() {
     })
   });
   */
-
+})
   //IMAGE DRAG-AND-DROP ORDERING STUFF
 
   //PART 1: THE FUNCTIONS THAT DO THE WORK
@@ -324,7 +518,7 @@ $(function() {
   }
 
   //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
-
+$(function(){
   $('body').on('mousedown', '.image-move', function (e) {
     e.preventDefault();
     var selectedImage = $(this).parent().parent();
@@ -345,6 +539,7 @@ $(function() {
       $(document).off('mousemove');
     });
   });
+});
 
   var touchinprogress = false;
 
@@ -398,19 +593,5 @@ $(function() {
       movementEnded();
     });
   }
-
-  //})
-  // document.onpaste = function(event){
-  //   var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-  //   for (var i = 0 ; i < items.length ; i++) {
-  //     var item = items[i];
-  //     if (item.type.indexOf("image") != -1) {
-  //       var file = item.getAsFile();
-  //       $('#imagePreviewContainer').slideDown('fast');
-  //       upload_file_with_ajax(file);
-  //     }
-  //   }
-  // }
-
-  })
+  
 </script>

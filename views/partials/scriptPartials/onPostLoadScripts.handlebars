@@ -1,0 +1,80 @@
+<script type="text/javascript">
+$(function(){
+{{#if loggedIn}}
+    // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
+    // Init tribute
+    $.post('/api/user/followers', function (data) {
+        followers = JSON.parse(data).followers;
+        tribute = new Tribute({
+            values: followers,
+            menuItemTemplate: function (item) {
+                return '<img class="tribute-image" src="/images/' + item.original.image + '">' + item.string;
+            }
+        })
+        tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
+    });
+
+{{/if}}
+    // Attach scripts to newly loaded posts
+    $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
+        var newlyLoadedStuff = $(items);
+
+        if(this.fadedOut){
+            $(this).fadeIn(250);
+        }
+
+        needPostsOlderThan = newlyLoadedStuff.last().find("#oldesttimestamp").html(); //the new oldest-post-loaded timestamp is provided by the server in this element
+
+        if (newlyLoadedStuff.find('.post-images').length > 0) {
+            var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;
+            console.log("images loaded: " + imagesLoaded);
+            var imagesLightboxed = 0;
+
+            var $images = newlyLoadedStuff.find('.post-images a');
+            var $imagesGrouped = $images.filter('[data-group]');
+            var $imagesAlone = $images.not($imagesGrouped);
+            var params = {
+                // your params
+            };
+
+            // Handle standalone images
+            $imagesAlone.each(function (index, element) {
+                $(element).simpleLightbox(params);
+                imagesLightboxed++;
+            });
+
+            // Handle grouped images
+            if ($imagesGrouped.length > 0) {
+                // Select all groups
+                var groupNames = $imagesGrouped.map(function () {
+                    return $(this).data('group');
+                }).get();
+                groupNames = $.unique(groupNames);
+
+                // Apply on each group
+                $.each(groupNames, function (key, value) {
+                    var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
+                        return $(this).data('group') == value;
+                    })
+                    filteredGroup.simpleLightbox(params);
+                    imagesLightboxed += filteredGroup.length;
+                });
+                console.log("images lightboxed: " + imagesLightboxed)
+                if (imagesLightboxed != imagesLoaded) {
+                    console.log("not all images lightboxed!!!!!!");
+                }
+                //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
+            }
+        }
+        {{#if loggedIn}}
+        var commentForms = newlyLoadedStuff.find('.editable-text');
+        commentForms.each(function(){
+            attachQuill(this,'Reply to this post with a good reply');
+        })
+        if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
+            tribute.attach(newlyLoadedStuff.find(".ql-editor"));
+        }
+        {{/if}}
+    });
+});
+</script>

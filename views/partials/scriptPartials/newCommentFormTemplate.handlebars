@@ -1,0 +1,64 @@
+{{!-- embedded at the top of newPostOrCommentScripts.handlebars --}}
+<script id="new-comment-form-template" type="text/custom-template">
+<div class="new-comment-form" data-comment-type="\{{comment_type}}" data-post-id="\{{post_id}}" data-comment-id="\{{comment_id}}">
+  <div class="form-row">
+    <div class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
+  </div>
+  <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
+      <button type="button" class="add-emoji">🍬</button>
+      <button type="button" class="add-emoji">🍭</button>
+      <button type="button" class="add-emoji">🍡</button>
+      <button type="button" class="add-emoji">🍩</button>
+      <button type="button" class="add-emoji">🍪</button>
+      <button type="button" class="add-emoji">🍫</button>
+      <button type="button" class="add-emoji">🎂</button>
+      <button type="button" class="add-emoji">🍯</button>
+      <button type="button" class="add-emoji">🍎</button>
+      <button type="button" class="add-emoji">🍑</button>
+      <button type="button" class="add-emoji">🍌</button>
+      <button type="button" class="add-emoji">🍓</button>
+      <button type="button" class="add-emoji">🍇</button>
+      <button type="button" class="add-emoji">🍉</button>
+      <button type="button" class="add-emoji">🐝</button>
+      <button type="button" class="add-emoji">😊</button>
+      <button type="button" class="add-emoji">🙃</button>
+      <button type="button" class="add-emoji">😍</button>
+      <button type="button" class="add-emoji">😂</button>
+      <button type="button" class="add-emoji">😭</button>
+      <button type="button" class="add-emoji">😬</button>
+      <button type="button" class="add-emoji">😆</button>
+      <button type="button" class="add-emoji">😩</button>
+      <button type="button" class="add-emoji">😱</button>
+      <button type="button" class="add-emoji">😒</button>
+      <button type="button" class="add-emoji">🖖</button>
+      <button type="button" class="add-emoji">🙌</button>
+      <button type="button" class="add-emoji">👏</button>
+      <button type="button" class="add-emoji">👌</button>
+      <button type="button" class="add-emoji">💪</button>
+      <button type="button" class="add-emoji">🤦</button>
+      <button type="button" class="add-emoji">🌱</button>
+      <button type="button" class="add-emoji">🌞</button>
+      <button type="button" class="add-emoji">🌝</button>
+      <button type="button" class="add-emoji">❤️</button>
+      <button type="button" class="add-emoji">💕</button>
+      <button type="button" class="add-emoji">💖</button>
+      <button type="button" class="add-emoji">🔥</button>
+      <button type="button" class="add-emoji">🎉</button>
+      <button type="button" class="add-emoji">💯</button>
+      <button type="button" class="add-emoji">🏳️‍🌈</button>
+  </div>
+  <div id="image-preview-holder" class="form-row post-controls image-preview-holder">
+    <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
+  </div>
+  <div id="replyControlsRow" class="form-row mt-2 post-controls">
+    <div class="leftSideControls">
+      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button><button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
+    </div>
+    <div class="rightSideControls">
+      <button type="submit" class="btn btn-primary btn-fade create-comment">Reply <i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</div>
+</script>

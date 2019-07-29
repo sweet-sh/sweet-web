@@ -15,7 +15,7 @@ var relationshipSchema = new mongoose.Schema({
   toUser: { type: Schema.Types.ObjectId, ref: 'User' },
   value: {
 		type: String,
-		required: true
+		required: true //currently implemented possible values: follow, trust, flag, mute
 	},
   note: {
     type: String

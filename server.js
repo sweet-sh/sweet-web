@@ -56,6 +56,7 @@ app.use(bodyParser()); // get information from html forms
 // View engine (Handlebars)
 hbs = handlebars.create({
   defaultLayout: 'main',
+  partialsDir:['views/partials/','views/partials/scriptPartials/'],
   helpers: {
     plural: function (number, text) {
       var singular = number === 1;

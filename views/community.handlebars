@@ -62,7 +62,7 @@
             </div>
           {{/gt}}
           <div class="container commentsList" id="postsContainer"></div>
-          {{> infinitescrollrequests}}
+          {{> infiniteScrollLoadingSpinner}}
         {{/unless}}
       </div>
       {{#if loggedIn}}
@@ -317,16 +317,19 @@
 
 {{#unless isBanned}}
 <script>
-$('#postsContainer').infiniteScroll({
-  path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showposts/community/{{communityData._id}}/' + pageNumber;
-  },
-  append: '.post',
-  prefill: true,
-  history: false,
-  status: '.page-load-status'
-});
+  //called immediately below only atm
+  function startInfiniteScroll(){
+    $('#postsContainer').infiniteScroll({
+      path: function() {
+        return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
+      },
+      append: '.post',
+      prefill: true,
+      history: true, //to be clear, this should not work
+      status: '.page-load-status'
+    });
+  }
+  startInfiniteScroll();
 
 {{#if loggedIn}}
 

@@ -162,6 +162,9 @@
             {{/if}}
         </section>
     {{/unless}}
+    {{#if @last}}
+    <div id="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
+    {{/if}}
 </article>
 {{/if}}
 {{/each}}

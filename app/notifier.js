@@ -16,9 +16,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
     function buildNotification() {
         switch (type) {
             case 'user':
-                return User.findOne({
-                        _id: sourceId
-                    })
+                return User.findOne({ _id: sourceId })
                     .then(user => {
                         image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg');
                         username = '@' + user.username;
@@ -50,7 +48,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                                 break;
                         }
                         final = '<strong>' + username + '</strong> ' + text;
-                        emailText = username + ' ' + email;
+                        if (email) { emailText = username + ' ' + email; }
                         return {
                             image: image,
                             text: final,
@@ -59,9 +57,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                     })
                 break;
             case 'community':
-                return User.findOne({
-                        _id: sourceId
-                    })
+                return User.findOne({ _id: sourceId })
                     .then(user => {
                         return Community.findOne({
                                 _id: subjectId
@@ -121,10 +117,10 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                                 link: url
                             })
                             webpush.sendNotification(pushSubscription, payload, options).catch(async err => {
-                              console.log("push notification subscription not working, will be removed:")
-                              console.log(err);
-                              notifiedUser.pushNotifSubscriptions = notifiedUser.pushNotifSubscriptions.filter(v => v != subbed);
-                              notifiedUser = await notifiedUser.save();
+                                console.log("push notification subscription not working, will be removed:")
+                                console.log(err);
+                                notifiedUser.pushNotifSubscriptions = notifiedUser.pushNotifSubscriptions.filter(v => v != subbed);
+                                notifiedUser = await notifiedUser.save();
                             });
                         }
                     }
