@@ -573,6 +573,96 @@ module.exports = function(app) {
         return;
     })
 
+    //this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date 
+    //in the post and all of its comments.
+    async function keepCachedHTMLUpToDate(post) {
+
+        //only runs if images' cached html is out of date
+        async function updateImages(displayContext) {
+            if (displayContext.images && displayContext.images.length > 0) {
+                displayContext.cachedHTML.imageGalleryHTML = await hbs.render(galleryTemplatePath, {
+                    images: imageUrlsArray,
+                    imageDescriptions: displayContext.imageDescriptions,
+                    post_id: displayContext._id,
+                    imageIsVertical: displayContext.imageIsVertical,
+                    imageIsHorizontal: displayContext.imageIsHorizontal,
+                    author: displayContext.author,
+                    contentWarnings: displayContext.contentWarnings
+                })
+            }
+            if (displayContext.comments) {
+                for (comment of displayContext.comments) {
+                    if (comment.timestamp < galleryTemplateMTime) { //comments are provided with cached html when they're created, which might be up to date even if the post's isn't
+                        await updateImages(comment);
+                    }
+                }
+            } else if (displayContext.replies) {
+                for (reply of displayContext.replies) {
+                    if (comment.timestamp < galleryTemplateMTime) {
+                        await updateImages(reply);
+                    }
+                }
+            }
+        }
+
+        //only runs if embeds' cached html is out of date
+        async function updateEmbeds(displayContext) {
+            if (displayContext.embeds && displayContext.embeds.length > 0) {
+                displayContext.cachedHTML.embedsHTML = [];
+                for (embed of displayContext.embeds) {
+                    displayContext.cachedHTML.embedsHTML.push(await hbs.render(embedsTemplatePath, { embed: embed }))
+                }
+            }
+            if (displayContext.comments) {
+                for (comment of displayContext.comments) {
+                    if (comment.timestamp < embedTemplateMTime) {
+                        await updateEmbeds(comment);
+                    }
+                }
+            } else if (displayContext.replies) {
+                for (reply of displayContext.replies) {
+                    if (comment.timestamp < embedTemplateMTime) {
+                        await updateEmbeds(reply);
+                    }
+                }
+            }
+        }
+
+        //get the full url for all images in the displayContext
+        var imageUrlsArray = []
+        if (post.imageVersion === 2) {
+            post.images.forEach(image => {
+                imageUrlsArray.push('/api/image/display/' + image)
+            })
+        } else {
+            post.images.forEach(image => {
+                imageUrlsArray.push('/images/uploads/' + image)
+            })
+        }
+
+        var cacheModified = false;
+
+        var galleryTemplatePath = "./views/partials/imagegallery.handlebars";
+        var galleryTemplateMTime = fs.statSync(galleryTemplatePath).mtime; //would probably be better asynchronous
+        if (!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) {
+            console.log("post image gallery html not up to date, updating")
+            await updateImages(post);
+            post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
+            cacheModified = true;
+        }
+        var embedsTemplatePath = "./views/partials/embed.handlebars";
+        var embedTemplateMTime = fs.statSync(embedsTemplatePath).mtime;
+        if (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime) {
+            console.log("post embeds html not up to date, updating")
+            await updateEmbeds(post)
+            post.cachedHTML.embedsMTime = embedTemplateMTime;
+            cacheModified = true;
+        }
+        if (cacheModified) {
+            await post.save();
+        }
+    }
+
     //Responds to requests for posts for feeds. API method, used within the public pages.
     //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
     //(posts on a user's profile page), or single (a single post.) The identifier identifies either the user, the
@@ -849,6 +939,8 @@ module.exports = function(app) {
                         }
                     }
 
+                    await keepCachedHTMLUpToDate(displayContext);
+
                     if (moment(displayContext.timestamp).isSame(today, 'd')) {
                         parsedTimestamp = moment(displayContext.timestamp).fromNow();
                     } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
@@ -857,17 +949,6 @@ module.exports = function(app) {
                         parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
                     }
 
-                    //get the full url for all images in the displayContext
-                    imageUrlsArray = []
-                    if (displayContext.imageVersion === 2) {
-                        displayContext.images.forEach(image => {
-                            imageUrlsArray.push('/api/image/display/' + image)
-                        })
-                    } else {
-                        displayContext.images.forEach(image => {
-                            imageUrlsArray.push('/images/uploads/' + image)
-                        })
-                    }
                     if (req.isAuthenticated()) {
                         // Used to check if you can delete a post
                         var isYourPost = displayContext.author._id.equals(req.user._id);
@@ -930,22 +1011,19 @@ module.exports = function(app) {
                         parsedTimestamp: parsedTimestamp,
                         lastUpdated: displayContext.lastUpdated,
                         rawContent: displayContext.rawContent,
-                        parsedContent: displayContext.parsedContent,
+                        parsedContent: helper.mixInEmbeds(displayContext),
                         commentsDisabled: displayContext.commentsDisabled,
                         comments: displayContext.comments,
                         numberOfComments: displayContext.numberOfComments,
                         contentWarnings: displayContext.contentWarnings,
-                        images: imageUrlsArray,
-                        imageDescriptions: displayContext.imageDescriptions,
-                        imageIsVertical: displayContext.imageIsVertical,
-                        imageIsHorizontal: displayContext.imageIsHorizontal,
                         community: displayContext.community,
                         headerBoosters: boostsForHeader,
                         recentlyCommented: false, // This gets set below
                         lastCommentAuthor: "", // As does this
                         subscribedUsers: displayContext.subscribedUsers,
                         unsubscribedUsers: displayContext.unsubscribedUsers,
-                        embeds: displayContext.embeds,
+                        embedsHTML: displayContext.cachedHTML.embedsHTML,
+                        galleryHTML: displayContext.cachedHTML.imageGalleryHTML
                         // linkPreview: displayContext.linkPreview
                     }
 
@@ -967,6 +1045,8 @@ module.exports = function(app) {
                     function parseComments(element, level) {
                         if (!level) level = 1;
                         element.forEach(async function(comment) {
+
+                            comment.parsedContentWithEmbeds = helper.mixInEmbeds(comment); //this isn't saved in the database
                             comment.canDisplay = true;
                             comment.muted = false;
                             // I'm not sure why, but boosts in the home feed don't display
@@ -1183,8 +1263,8 @@ module.exports = function(app) {
 
                 // Check if logged in user follows and/or trusts and/or has muted profile user
                 var trusted = myTrustedUserEmails.includes(profileData.email);
-                var followed = !!(await Relationship.findOne({from:req.user.email,to:profileData.email,value:"follow"}).catch(c));
-                var muted = !!(await Relationship.findOne({from:req.user.email,to:profileData.email,value:"mute"}).catch(c));
+                var followed = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "follow" }).catch(c));
+                var muted = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "mute" }).catch(c));
 
                 var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c);
                 var flagsFromTrustedUsers = 0;

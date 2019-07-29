@@ -75,14 +75,13 @@ module.exports = {
 
             if (parsedContent.search(linkFindingRegex) != -1) {
                 var r = linkFindingRegex.exec(parsedContent);
-                var parsedContentWEmbeds = parsedContent.slice(); //need a copy of parsedContent that we can modify without throwing off lastIndex in RegExp.exec
+                var parsedContentNoEmbeds = parsedContent.slice(); //need a copy of parsedContent that we can modify without throwing off lastIndex in RegExp.exec
                 while (r && embedsAdded < embedsAllowed) {
                     if (r[1].search(youtubeUrlFindingRegex) != -1 && r[2].search(youtubeUrlFindingRegex) != -1) {
                         var parsedVUrl = youtubeUrlFindingRegex.exec(r[1])
                         var videoid = parsedVUrl[5];
                         const { body: html, url } = await got(parsedVUrl[0])
                         const metadata = await metascraper({ html, url })
-
                         var embed = {
                             type: 'video',
                             embedUrl: "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
@@ -90,10 +89,11 @@ module.exports = {
                             image: metadata.image,
                             title: metadata.title,
                             description: metadata.description,
-                            domain: "youtube.com"
+                            domain: "youtube.com",
+                            position: r.index //relative to the start of the final version of parsedContent (the version with all the embed-causing stuff scraped out)
                         }
                         embeds.push(embed) // 'embed' no longer looks like a word
-                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
+                        parsedContentNoEmbeds = parsedContentNoEmbeds.substring(0,r.index) +  parsedContentNoEmbeds.substring(linkFindingRegex.lastIndex,parsedContentNoEmbeds.length);
                         ++embedsAdded;
                     }else if(r[1].search(vimeoUrlFindingRegex) != -1 && (r[2].substring(0,4)=="http" ? r[2] : "https://"+r[2]).search(vimeoUrlFindingRegex) != -1){
                         var parsedVUrl = vimeoUrlFindingRegex.exec(r[1]);
@@ -109,15 +109,16 @@ module.exports = {
                             image: metadata.image,
                             title: metadata.title,
                             description: metadata.description,
-                            domain: "vimeo.com"
+                            domain: "vimeo.com",
+                            position: r.index //relative to start of parsedContent
                         }
                         embeds.push(embed)
-                        parsedContentWEmbeds = parsedContentWEmbeds.substring(0,r.index) +  parsedContentWEmbeds.substring(linkFindingRegex.lastIndex,parsedContentWEmbeds.length);
+                        parsedContentNoEmbeds = parsedContentNoEmbeds.substring(0,r.index) +  parsedContentNoEmbeds.substring(linkFindingRegex.lastIndex,parsedContentNoEmbeds.length);
                         ++embedsAdded;
                     }
                     r = linkFindingRegex.exec(parsedContent);
                 }
-                parsedContent = parsedContentWEmbeds
+                parsedContent = parsedContentNoEmbeds
             }
         }
 
@@ -169,6 +170,24 @@ module.exports = {
                 }
             }
         });
+    },
+    //takes a post or comment documents and returns its parsedText with the embed html placed at its position according to the embeds array. never actually tested with more than one embed.
+    mixInEmbeds: function(post) { //actually, can also be a comment
+        if (post.embeds && post.embeds.length > 0) {
+            var index = 0;
+            var withEmbeds = "";
+            if (post.embeds.length == 1 && typeof post.embeds[0].position == "undefined") { //old, positionless single embed scheme
+                return post.parsedContent + post.cachedHTML.embedsHTML[0];
+            } else {
+                for (var i = 0; i < post.embeds.length; i++) { //new, positioned embed scheme
+                    withEmbeds += post.parsedContent.substring(index, post.embeds[i].position);
+                    withEmbeds += post.cachedHTML.embedsHTML[i];
+                    index = post.embeds[i].position;
+                }
+                withEmbeds += post.parsedContent.substring(post.embeds[post.embeds.length - 1].position, post.parsedContent.length - 1);
+                return withEmbeds;
+            }
+        }
     }
 }
 

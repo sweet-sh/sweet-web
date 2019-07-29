@@ -1,13 +1,13 @@
-<a class="link-preview-container{{#eq this.type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer" embedurl="{{this.embedUrl}}" href="{{this.linkUrl}}">
+<a class="link-preview-container{{#eq embed.type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer" embedurl="{{embed.embedUrl}}" href="{{embed.linkUrl}}">
     <div style="display:flex;justify-content:center;position:relative;">
-        <img class="link-preview-image {{#eq type "video"}}embedded-video-preview-image{{/eq}}" src="{{image}}" />
-        {{#eq this.type "video"}}
+        <img class="link-preview-image {{#eq type "video"}}embedded-video-preview-image{{/eq}}" src="{{embed.image}}" />
+        {{#eq embed.type "video"}}
             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>
         {{/eq}}
     </div>
         <div class="link-preview-text-container">
-            <span class="link-preview-title">{{this.title}}</span>
-            <span class="link-preview-description">{{{this.description}}}</span>
-            <span class="link-preview-domain">{{this.domain}}</span>
+            <span class="link-preview-title">{{embed.title}}</span>
+            <span class="link-preview-description">{{{embed.description}}}</span>
+            <span class="link-preview-domain">{{embed.domain}}</span>
         </div>
 </a>

@@ -8,7 +8,8 @@ var embedSchema = new mongoose.Schema({
     title: String,
     description: String,
     image: String,
-    domain: String
+    domain: String,
+    position: Number
 })
 
 var commentSchema = new mongoose.Schema({
@@ -24,6 +25,11 @@ var commentSchema = new mongoose.Schema({
   imageIsVertical: [String],
   imageIsHorizontal: [String],
   deleted: { type: Boolean, default: false },
+  embeds: [embedSchema],
+  cachedHTML:{ //each was rendered with either the version of the template indicated by the post's corresponding cachedHTML MTime or the version that was available when the comment was made, whichever is newer
+    imageGalleryHTML: String,
+    embedsHTML: [String]
+  }
 });
 
 commentSchema.add({ replies: [commentSchema] });
@@ -80,7 +86,13 @@ var postSchema = new mongoose.Schema({
   imageIsHorizontal: [String],
   subscribedUsers: [String],
   unsubscribedUsers: [String],
-  embeds: [embedSchema]
+  embeds: [embedSchema],
+  cachedHTML:{ //the below MTimes also set a floor for the rendering date of the cached comment html (none will have older cached html, newer comments may have newer cached html, either way it'll all be brought up to date when the post is displayed)
+    imageGalleryHTML: String,
+    imageGalleryMTime: Date, //the last modified date of the imagegallery template when the html was rendered
+    embedsHTML: [String],
+    embedsMTime: Date //the last modified date of the embeds template when the html was rendered, also goes for the comment embeds
+  }
 });
 
 //used to select posts to display in feeds

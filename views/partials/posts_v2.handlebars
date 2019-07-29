@@ -68,13 +68,8 @@
             <div class="abbreviated-content content-warning-content" style="height:0">
         {{/if}}
         {{{this.parsedContent}}}
-        {{#if this.embeds}}
-            {{#each this.embeds}}
-                {{> embed }}
-            {{/each}}
-        {{/if}}
-        {{#if this.images}}
-            {{> imagegallery }}
+        {{#if this.galleryHTML}}
+            {{{galleryHTML}}}
         {{/if}}
         {{#if this.contentWarnings}}
             </div>

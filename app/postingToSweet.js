@@ -588,12 +588,31 @@ module.exports = function(app) {
         }
 
         var rawContent = sanitize(req.body.commentContent);
-        var parsedResult = await helper.parseText(rawContent, false, true, true, true, false);
+        var parsedResult = await helper.parseText(rawContent, false, true, true, true, true);
 
         if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
             return;
         }
+
+        var fullImageUrls = []
+        for (img of postImages) {
+            fullImageUrls.push("/api/image/display/" + img);
+        }
+        var embedsHTML = []
+        for (embed of parsedResult.embeds){
+            embedsHTML.push(await hbs.render('./views/partials/embed.handlebars',{embed:embed}));
+        }
+       var imageGalleryHTML =  await hbs.render('./views/partials/imagegallery.handlebars', {
+            images: fullImageUrls,
+            post_id: commentId.toString(),
+            imageDescriptions: imageDescriptions,
+            imageIsVertical: imageIsVertical,
+            imageIsHorizontal: imageIsHorizontal,
+            author: {
+                username: req.user.username
+            }
+        });
 
         const comment = {
             _id: commentId,
@@ -605,14 +624,17 @@ module.exports = function(app) {
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,
             images: postImages,
+            embeds: parsedResult.embeds,
             imageDescriptions: imageDescriptions,
             imageIsVertical: imageIsVertical,
-            imageIsHorizontal: imageIsHorizontal
+            imageIsHorizontal: imageIsHorizontal,
+            cachedHTML: {
+                imageGalleryHTML: imageGalleryHTML,
+                embedsHTML: embedsHTML
+            }
         };
 
-        Post.findOne({
-                "_id": req.params.postid
-            })
+        Post.findOne({ "_id": req.params.postid })
             .populate('author')
             .then((post) => {
                 numberOfComments = 0;
@@ -903,39 +925,18 @@ module.exports = function(app) {
                             name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        classNames = ['one-image', 'two-images', 'three-images', 'four-images'];
-                        let commentImageGallery = function() {
-                            html = '<div class="post-images ' + classNames[postImages.length - 1] + '">';
-                            for (let i = 0; i < postImages.length; i++) {
-                                html += ('<a href="/api/image/display/' + postImages[i] + '">') + '<img alt="' + imageDescriptions[i] + ' (posted by ' + req.user.username + ')" class="post-single-image" src="/api/image/display/' + postImages[i] + '" ' + '</a>';
-                            }
-                            html += (postImages.length > 0 ? '</div>' : '');
-                            html += '</div></div>';
-                            return html;
-                        }
-                        var fullImageUrls = []
-                        for (img of postImages) {
-                            fullImageUrls.push("/api/image/display/" + img);
-                        }
                         commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
                                 image: image,
                                 name: name,
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
-                                content: parsedResult.text,
+                                content: helper.mixInEmbeds(comment),
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
+                                embedsExist: !!parsedResult.embeds,
+                                embedsHTML: embedsHTML,
                                 imagesExist: (fullImageUrls.length > 0 ? true : false),
-                                image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
-                                    images: fullImageUrls,
-                                    post_id: commentId.toString(),
-                                    imageDescriptions: imageDescriptions,
-                                    imageIsVertical: imageIsVertical,
-                                    imageIsHorizontal: imageIsHorizontal,
-                                    author: {
-                                        username: req.user.username
-                                    }
-                                }),
+                                galleryHTML: imageGalleryHTML,
                                 depth: depth
                             })
                             .then(html => {
