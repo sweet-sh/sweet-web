@@ -184,7 +184,7 @@ module.exports = {
                     withEmbeds += post.cachedHTML.embedsHTML[i];
                     index = post.embeds[i].position;
                 }
-                withEmbeds += post.parsedContent.substring(post.embeds[post.embeds.length - 1].position, post.parsedContent.length - 1);
+                withEmbeds += post.parsedContent.substring(post.embeds[post.embeds.length - 1].position, post.parsedContent.length);
                 return withEmbeds;
             }
         }

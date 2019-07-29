@@ -1023,6 +1023,7 @@ module.exports = function(app) {
                         subscribedUsers: displayContext.subscribedUsers,
                         unsubscribedUsers: displayContext.unsubscribedUsers,
                         embedsHTML: displayContext.cachedHTML.embedsHTML,
+                        hasImages: (displayContext.images && displayContext.images.length > 0),
                         galleryHTML: displayContext.cachedHTML.imageGalleryHTML
                         // linkPreview: displayContext.linkPreview
                     }
