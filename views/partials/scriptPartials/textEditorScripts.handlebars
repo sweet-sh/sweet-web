@@ -14,15 +14,12 @@
 </script>
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
-
   <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
   <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
   <div class="image-preview-controls">
     <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
     <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
   </div>
-
-
 </script>
 
 <script>
@@ -43,7 +40,8 @@
             node.request = $.post("/api/newpostform/linkpreviewdata",{url:url},function(data,status,jqXHR){
                 if(data=="invalid url i guess"){
                     bootbox.alert("Sorry, we couldn't connnect to that url ("+url+") to obtain a preview :(")
-                    $(node).remove();
+                    n.remove();
+                    node.linkPreviewsAdded--;
                 }else{
                     var linkInfo = JSON.parse(data);
                     n.find(".link-preview-image").attr('src',linkInfo.image)
@@ -57,6 +55,7 @@
                     node.request.abort();
                 }
                 n.remove();
+                node.linkPreviewsAdded--;
             })
             return node;
         }
@@ -123,6 +122,7 @@
                             bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
                         }
                         n.remove();
+                        node.imagesAdded--;
                     } else {
                         if (serverResponse.thumbnail) {
                             n.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
@@ -136,10 +136,14 @@
             n.find('.image-clear').click(function(e) {
                 if (node.request && node.request.readyState != 4) {
                     node.request.abort();
+                }else if(n.attr('image-url') != 'loading...'){
+                    $.post("/cleartempimage", {
+                        imageURL: n.attr('image-url')
+                    });
                 }
                 n.remove();
+                node.imagesAdded--;
             });
-            
             return node;
         }
 
@@ -179,6 +183,9 @@
         theme: 'bubble'
     });
     //remove pasted formatting that we don't support
+    quill.clipboard.addMatcher("img", function(node, delta) {
+        return { ops: [] };
+    });
     quill.clipboard.addMatcher("*", function(node, delta) {
         for (var i = 0; i < delta.ops.length; i++) {
             for (const key in delta.ops[i].attributes) {
@@ -215,6 +222,7 @@
     }
     //listen for and use pasted image data
     element.onpaste = function(e) {
+        var imagesAdded = false;
         // event.originalEvent.clipboard for newer chrome versions
         var items = (event.clipboardData || event.originalEvent.clipboardData).items;
         for (var i = 0; i < items.length; i++) {
@@ -224,9 +232,13 @@
             }else{
                 if (items[i].type.indexOf("image") === 0) {
                     element.addImage(items[i].getAsFile());
-                    element.imagesAdded++;
+                    imagesAdded = true;
                 }
             }
+        }
+        if(imagesAdded){
+            e.preventDefault();
+            return false; //no idea if this actually does anything but just in case
         }
     }
     //listen for and use dragged-and-dropped images
@@ -262,13 +274,16 @@
 
     element.addLinkPreview = function(url){
         quill.insertEmbed(quill.getSelection(true).index, 'LinkPreview', url, Quill.sources.USER);
+        element.linkPreviewsAdded++;
     }
 
     element.addImage = function(file){
         quill.insertEmbed(quill.getSelection(true).index, 'PostImage', file, Quill.sources.USER);
+        element.imagesAdded++;
     }
 
     element.imagesAdded = 0;
+    element.linkPreviewsAdded = 0;
 }
 //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
 var dragcounter = 0;

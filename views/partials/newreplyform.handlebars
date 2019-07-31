@@ -1,4 +1,5 @@
 <div class="new-comment-form" data-comment-type="primary" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">
+<input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
   <div class="form-row">
     <div class="editable-post-content editable-text" id="postContent">
       <p><br></p>
@@ -6,9 +7,6 @@
   </div>
   <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
     {{> emojilist }}
-  </div>
-  <div id="image-preview-holder" class="form-row post-controls image-preview-holder">
-    <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
   </div>
   <div id="replyControlsRow" class="form-row mt-2 post-controls">
     <div class="leftSideControls">

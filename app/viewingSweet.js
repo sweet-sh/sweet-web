@@ -1390,7 +1390,7 @@ module.exports = function(app) {
                 image: metadata.image,
                 title: metadata.title,
                 description: metadata.description,
-                domain: urlparse.parse(req.body.url).hostname
+                domain: urlparse.parse(url).hostname
             }
             res.setHeader('content-type', 'text/plain');
             res.send(JSON.stringify(response))
