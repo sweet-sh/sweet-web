@@ -1051,6 +1051,21 @@ hr {
   display: none;
 }
 
+.link-form-cont {
+  display: none;
+  overflow: hidden; /* this mysteriously smooths out the jquery slide down animation, which happens to this element */
+}
+
+.linkPreviewAddingForm {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.link-add {
+  white-space:nowrap;
+}
+
 #emojiWindow,
 .replyEmojiWindow {
   display: flex;
@@ -1111,6 +1126,7 @@ hr {
   height: 100px;
   width: 100%;
   margin-bottom: 0.5rem !important;
+  cursor: default;
  }
 
 .image-preview {
@@ -1354,6 +1370,22 @@ hr {
     border-radius: 4px;
     margin: 0.5em 0;
     background-color: #ffffff;
+}
+
+.link-preview-container::before {
+  display:none;
+}
+.link-preview-container::after {
+  display:none;
+}
+
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::before, .ql-container.ql-bubble:not(.ql-disabled) a:hover::after {
+  visibility:hidden;
+  display:none;
+}
+
+.ql-bubble .ql-editor img {
+  max-width: fit-content;
 }
 
 .link-preview-container:hover {

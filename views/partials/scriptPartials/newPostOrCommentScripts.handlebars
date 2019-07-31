@@ -1,12 +1,3 @@
-{{!-- cloned in the script below to make the image previews --}}
-<div class="newimageform">
-  <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
-  <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
-  <div class="image-preview-controls">
-    <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
-    <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
-  </div>
-</div>
 
 {{> newCommentFormTemplate}}
 
@@ -232,17 +223,44 @@ $(function(){
 
 $(function(){
   $("body").on('click', '#postImageButton', function (e) {
-    let ourFileInputGuy = $(this).closest('.post-controls').siblings('#image-preview-holder').children('.file-input'); //bit sketchy! oh well
+    let ourFileInputGuy = $(this).closest('.contentForm').children('.file-input'); //bit sketchy! oh well
     //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
     if (!ourFileInputGuy[0].changeEventAttached) {
-      ourFileInputGuy.change(fileselected);
+      ourFileInputGuy.change(function(e){
+        var n = $(this).parent().find('.ql-container')[0];
+        for(var i=0; i < this.files.length; i++){
+          if(n.imagesAdded > 3){
+            bootbox.alert("we only take 4 images at a time right now, sorry");
+            break;
+          }else{
+            n.addImage(this.files[i]);
+            n.imagesAdded++;
+          }
+        }
+      }); //basically, i think this should call an addImage function on the relevant ql-container instead, which inserts the image preview into the quill... area
       ourFileInputGuy[0].changeEventAttached = true;
     }
     ourFileInputGuy.click();
   })
 
+$("body").on('click', '#postLinkButton', function(e) {
+    var urlEntry = $(this).closest('.contentForm, .new-comment-form').children('.link-form-cont');
+    if(urlEntry.is(':hidden')){
+      urlEntry.slideDown();
+    }else{
+      urlEntry.slideUp();
+    }
+})
+
+$("body").on('click', ".link-add", function(e){
+  var input = $(this).siblings('input')
+  var url = input.val();
+  input.val('');
+  $(this).closest('.contentForm, .new-comment-form').children('.ql-container')[0].addLinkPreview(url);
+})
+
   //function for removing an image from a post or comment
-  $("body").on('click', '.image-clear', function (e) {
+  $("body").on('click', '.image-clearnotused', function (e) { //not currently in use,
     let thisPreviewWindow = $(this).parent().parent();
     let previewContainer = thisPreviewWindow.parent()[0];
     let reqid = thisPreviewWindow.attr('uploadnumber');

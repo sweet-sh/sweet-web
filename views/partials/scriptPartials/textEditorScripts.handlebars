@@ -1,4 +1,156 @@
+<script type="text/custom-template" id="new-post-link-preview-contents">
+    <div style="display:flex;justify-content:center;position:relative;">
+        <img class="link-preview-image" src="/images/spinner-stolen.gif" />
+    </div>
+    <div class="link-preview-text-container" style="width:100%;">
+        <span class="link-preview-title">...loading...</span>
+        <span class="link-preview-description">...loading...</span>
+        <span class="link-preview-domain">...loading...</span>
+    </div>
+<div class="image-preview-controls">
+    <a href="javascript:void(0)" class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></a>
+    <a href="javascript:void(0)" class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+  </div>
+</script>
+
+<script type="text/custom-template" id="new-post-image-preview-contents">
+
+  <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
+  <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
+  <div class="image-preview-controls">
+    <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
+    <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+  </div>
+
+
+</script>
+
 <script>
+    //register embed types!
+    let BlockEmbed = Quill.import('blots/block/embed');
+    class LinkPreview extends BlockEmbed {
+        static create(url) {
+            let node = super.create();
+            node.setAttribute('data-url', url);
+            node.setAttribute('contenteditable',false);
+            node.innerHTML = $("#new-post-link-preview-contents")[0].innerHTML;
+            var n = $(node);
+            node.request = $.post("/api/newpostform/linkpreviewdata",{url:url},function(data,status,jqXHR){
+                if(data=="invalid url i guess"){
+                    bootbox.alert("Sorry, we couldn't connnect to that url ("+url+") to obtain a preview :(")
+                    $(node).remove();
+                }else{
+                    var linkInfo = JSON.parse(data);
+                    n.find(".link-preview-image").attr('src',linkInfo.image)
+                    n.find('.link-preview-title').html(linkInfo.title);
+                    n.find('.link-preview-description').html(linkInfo.description);
+                    n.find('.link-preview-domain').html(linkInfo.domain);
+                }
+            })
+            n.find('.image-clear').click(function(e){
+                if(node.request && node.request.readyState!=4){
+                    node.request.abort();
+                }
+                n.remove();
+            })
+            return node;
+        }
+
+        static value(node) {
+            return node.getAttribute('data-url');
+        }
+    }
+
+    LinkPreview.blotName = 'LinkPreview';
+    LinkPreview.tagName = 'a';
+    LinkPreview.className = 'link-preview-container';
+    Quill.register(LinkPreview);
+    class PostImage extends BlockEmbed {
+        static create(file) {
+            let node = super.create();
+            node.setAttribute('contenteditable', false);
+            node.setAttribute('image-url', 'loading...')
+            node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
+            var n = $(node);
+
+            //create filereader that will obtain us the preview
+            var fr = new FileReader();
+            fr.onload = function(e) {
+                if (n) { //our preview window might have already been eliminated by a cancel operation
+                    n.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
+                }
+            }
+            fr.fileType = file.type;
+            fr.readAsDataURL(file);
+
+            //make the image-uploading ajax request
+            var fd = new FormData();
+            fd.append('image', file);
+
+            node.request = $.ajax({
+                xhr: function() {
+                    var uploader = new XMLHttpRequest();
+                    uploader.upload.addEventListener("progress", function(e) {
+                        var percentage = Math.round(e.loaded / e.total * 100);
+                        n.find('progress').attr('value', percentage);
+                        n.find("#percentage").html(percentage == 100 ? percentage + '%!!!' : percentage + '%')
+                    });
+                    return uploader;
+                },
+                url: '/api/image/v2',
+                type: 'POST',
+                data: fd,
+                processData: false,
+                contentType: false,
+                error: function(jqxhr,status,error) {
+                    n.find('progress').attr('value', 0);
+                    n.find("#percentage").html("Upload error :( Hit the X and try again?");
+                    console.log(status);
+                    console.log(error);
+                },
+                success: function(data, status, jqXHR) {
+                    var serverResponse = JSON.parse(data);
+                    //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
+                    if (serverResponse.error) {
+                        if (serverResponse.error == "filesize") {
+                            bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+                        } else if (serverResponse.error == "filetype") {
+                            bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
+                        }
+                        n.remove();
+                    } else {
+                        if (serverResponse.thumbnail) {
+                            n.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+                        }
+                        n.find('.fader').remove();
+                        n.attr('image-url', serverResponse.url);
+                    }
+                }
+            });
+
+            n.find('.image-clear').click(function(e) {
+                if (node.request && node.request.readyState != 4) {
+                    node.request.abort();
+                }
+                n.remove();
+            });
+            
+            return node;
+        }
+
+        static value(node) {
+            return node.getAttribute('image-url');
+        }
+
+        static formats(node) {
+            return { description: $(node).find('#postImageDescription').val() };
+        }
+    }
+    PostImage.blotName = 'PostImage';
+    PostImage.tagName = 'div';
+    PostImage.className = 'newimagecont';
+    Quill.register(PostImage);
+
     function attachQuill(element, placeholder) {
     var quill = new Quill(element, {
         modules: {
@@ -101,8 +253,26 @@
         $("#bodyFader").fadeOut(100,function(){
             $("#bodyFader").remove();
         });
+
         dragcounter = 0;
     }
+    //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
+
+    element.addLinkPreview = function(url){
+        quill.insertEmbed(quill.getSelection(true).index, 'LinkPreview', url, Quill.sources.USER);
+    }
+
+    element.addImage = function(file){
+        quill.insertEmbed(quill.getSelection(true).index, 'PostImage', file, Quill.sources.USER);
+    }
+
+    element.imagesAdded = 0;
+
+
+
+
+
+
 }
 //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
 var dragcounter = 0;

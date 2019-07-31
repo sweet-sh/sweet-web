@@ -4,6 +4,14 @@ const notifier = require('./notifier.js');
 const sanitize = require('mongo-sanitize');
 const fs = require('fs');
 const sharp = require('sharp')
+var got = require('got');
+var urlparse = require('url')
+const metascraper = require('metascraper')([
+    require('metascraper-description')(),
+    require('metascraper-image')(),
+    require('metascraper-title')(),
+    require('metascraper-url')()
+])
 
 var auth = require('../config/auth.js'); //used on the settings page to set up push notifications
 
@@ -1371,6 +1379,25 @@ module.exports = function(app) {
                 layout: false,
                 loggedIn: false
             });
+        }
+    })
+
+    app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
+        try {
+            const { body: html, url } = await got(req.body.url)
+            const metadata = await metascraper({ html, url })
+            var response = {
+                image: metadata.image,
+                title: metadata.title,
+                description: metadata.description,
+                domain: urlparse.parse(req.body.url).hostname
+            }
+            res.setHeader('content-type', 'text/plain');
+            res.send(JSON.stringify(response))
+        } catch (err) {
+            console.log("could not get link preview information for url "+req.body.url)
+            console.log(err);
+            res.send("invalid url i guess");
         }
     })
 
