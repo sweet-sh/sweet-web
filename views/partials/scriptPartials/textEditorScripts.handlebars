@@ -30,6 +30,11 @@
     let BlockEmbed = Quill.import('blots/block/embed');
     class LinkPreview extends BlockEmbed {
         static create(url) {
+            //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+            var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+            //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+            var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+            var isVideo = (youtubeUrlFindingRegex.test(url) || vimeoUrlFindingRegex.test(url));
             let node = super.create();
             node.setAttribute('data-url', url);
             node.setAttribute('contenteditable',false);
@@ -44,7 +49,7 @@
                     n.find(".link-preview-image").attr('src',linkInfo.image)
                     n.find('.link-preview-title').html(linkInfo.title);
                     n.find('.link-preview-description').html(linkInfo.description);
-                    n.find('.link-preview-domain').html(linkInfo.domain);
+                    n.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
                 }
             })
             n.find('.image-clear').click(function(e){

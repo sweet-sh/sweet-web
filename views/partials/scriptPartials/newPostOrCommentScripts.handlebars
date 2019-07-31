@@ -537,7 +537,7 @@ $("body").on('click', ".link-add", function(e){
 
   //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
 $(function(){
-  $('body').on('mousedown', '.image-move', function (e) {
+  $('body').on('mousedown', '.image-movenotused', function (e) {
     e.preventDefault();
     var selectedImage = $(this).parent().parent();
     //only do something if there's at least one other image container to switch positions with
