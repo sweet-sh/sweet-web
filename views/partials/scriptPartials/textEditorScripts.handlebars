@@ -26,13 +26,8 @@
 
     //within-editor embeds utility functions:
 
-    function disableButton(postForm){
+    function updateSubmitButtonState(postForm){
         var button = postForm.find('.create-comment, #postSubmit');
-        button.attr('disabled',true);
-        button.html("<i class='fas fa-spinner fa-spin'></i> Uploading");
-    }
-
-    function maybeEnableButton(postForm){
         if(postForm.find('.still-loading').length == 0){
             var button = postForm.find('.create-comment, #postSubmit');
             button.attr('disabled',false);
@@ -41,6 +36,9 @@
             }else if(button.attr('id')=="postSubmit"){
                 button.html('Send <i class="fas fa-chevron-right"></i>');
             }
+        }else{
+            button.attr('disabled',true);
+            button.html("<i class='fas fa-spinner fa-spin'></i> Uploading");
         }
     }
 
@@ -56,7 +54,7 @@
             m.parent()[0].linkPreviewsAdded--;
         }
         m.remove();
-        maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+        updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
     }
 
     var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and forms part of their ids so they can all be uniquely identified
@@ -98,7 +96,7 @@
                     m.find('.link-preview-description').html(linkInfo.description);
                     m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
                 }
-                maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+                updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
             })
             node.request.fail(function(){
                 var m = $("#embed" + id);
@@ -110,7 +108,7 @@
                 }
                 m.parent()[0].linkPreviewsAdded--;
                 m.remove();
-                maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+                updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
             })
 
             n.find('.image-clear').click(clearEmbed);
@@ -188,7 +186,7 @@
                     console.log(status);
                     console.log(error);
                     $.post("/admin/reporterror", { errorstring: error });
-                    maybeEnableButton(m.closest('.new-comment-form, .contentForm'));                    
+                    updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));                    
                 },
                 success: function(data, status, jqXHR) {
                     var m = $("#embed" + id)
@@ -212,7 +210,7 @@
                         }
                         m.find('.fader').remove();
                         m.attr('image-url', serverResponse.url);
-                        maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+                        updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                     }
                 }
             });
@@ -342,7 +340,6 @@
         //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
         //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
         element.addLinkPreview = function(url) {
-            disableButton($(element).closest('.contentForm, .new-comment-form'));
             var sel = quill.getSelection(true);
             var range = sel.index;
             if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
@@ -353,10 +350,10 @@
             }
             quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
             element.linkPreviewsAdded++;
+            updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
         }
 
         element.addImage = function(file) {
-            disableButton($(element).closest('.contentForm, .new-comment-form'));
             var sel = quill.getSelection(true);
             var range = sel.index;
             if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
@@ -367,6 +364,7 @@
             }
             quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
             element.imagesAdded++;
+            updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
         }
         element.imagesAdded = 0;
         element.linkPreviewsAdded = 0;
