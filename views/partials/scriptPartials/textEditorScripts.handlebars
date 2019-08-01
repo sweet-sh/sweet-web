@@ -66,14 +66,7 @@
                     m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
                 }
             })
-            n.find('.image-clear').click(function(e) {
-                var m = $("#embed" + id);
-                if (m[0].request && m[0].request.readyState != 4) {
-                    m[0].request.abort();
-                }
-                m.parent()[0].linkPreviewsAdded--;
-                m.remove();
-            })
+            n.find('.image-clear').click(clearEmbed);
             n.find('.image-move').on('mousedown', mousedownOnHandle);
             n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
 
@@ -201,6 +194,20 @@
     PostImage.tagName = 'div';
     PostImage.className = 'newimagecont';
     Quill.register(PostImage);
+
+    //attached to the x of the embeds above and below when a new one is created after a rearrangement
+    function clearEmbed(e) {
+        var m = $(this).parent().parent();
+        if (m[0].request && m[0].request.readyState != 4) {
+            m[0].request.abort();
+        }
+        if (m.hasClass('newimagecont')) {
+            m.parent(0).linkPreviewAdded--;
+        } else if (m.hasClass('link-preview-container')) {
+            m.parent()[0].linkPreviewsAdded--;
+        }
+        m.remove();
+    }
 
     function attachQuill(element, placeholder) {
         var quill = new Quill(element, {
@@ -451,7 +458,7 @@
         var imagecont = spacer.clone(false);
         imagecont.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
         imagecont.find('.image-move').on('mousedown', mousedownOnHandle);
-        //todo: attach image-clear event listener
+        imagecont.find('.image-clear').click(clearEmbed);
 
         spacer.addClass("imagecontspacer");
         spacer.attr('id', '');
@@ -485,11 +492,11 @@
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
         var newYPos = Math.min(Math.max(imageconttop + deltaY, spacer.parent().offset().top), spacer.parent().offset().top + (spacer.parent().height() - spacer.outerHeight(true))); //beauty
-        console.log("spacerparenttop"+spacer.parent().offset().top);
-        console.log("spacerparentheight"+spacer.parent().height())
-        console.log("oldtop"+imageconttop);
-        console.log("sum"+(imageconttop+deltaY))
-        console.log("newy"+newYPos);
+        console.log("spacerparenttop" + spacer.parent().offset().top);
+        console.log("spacerparentheight" + spacer.parent().height())
+        console.log("oldtop" + imageconttop);
+        console.log("sum" + (imageconttop + deltaY))
+        console.log("newy" + newYPos);
         imagecont.css("top", newYPos + "px");
 
         //move the spacer (maybe):
@@ -518,7 +525,7 @@
                     spacer.insertBefore(elementAbove);
                     console.log("move up");
                 }
-            }else{
+            } else {
                 ;;; //maybe add a newline at the top if the first element is dragged down just a little
             }
         }
@@ -527,10 +534,10 @@
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
     function movementEnded() {
         $('.imagecontspacer').before($('.onthemove'));
-        $('.onthemove').css("position", "").css("border", "").css('width','').css('left','').css('top','').css('height','').css("z-index", 10); //seems like a good number
+        $('.onthemove').css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
         $('.onthemove').removeClass("onthemove");
         var spacer = $('.imagecontspacer');
-        if(!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim()==-"")){
+        if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == -"")) {
             spacer.after("<p></p>")
         }
         spacer.remove();
