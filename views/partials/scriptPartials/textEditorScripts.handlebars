@@ -491,7 +491,7 @@
         var imageconttop = imagecont.offset().top;
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-        var newYPos = Math.min(Math.max(imageconttop + deltaY, spacer.parent().offset().top), spacer.parent().offset().top + (spacer.parent().height() - spacer.outerHeight(true))); //beauty
+        var newYPos = Math.min(Math.max(imageconttop + deltaY, spacer.parent().offset().top), spacer.parent().offset().top + (spacer.parent().outerHeight() - spacer.outerHeight())); //beauty
         console.log("spacerparenttop" + spacer.parent().offset().top);
         console.log("spacerparentheight" + spacer.parent().height())
         console.log("oldtop" + imageconttop);
@@ -533,7 +533,7 @@
 
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
     function movementEnded() {
-        $('.imagecontspacer').before($('.onthemove'));
+        $('.imagecontspacer').after($('.onthemove'));
         $('.onthemove').css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
         $('.onthemove').removeClass("onthemove");
         var spacer = $('.imagecontspacer');
