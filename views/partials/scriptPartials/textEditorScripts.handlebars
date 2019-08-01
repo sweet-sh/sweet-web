@@ -263,7 +263,7 @@
                                 this.quill.format('blockquote', false);
                             }
                         },
-                        //also, if the user hits backspace with the cursor on a newline between two embeds, delete the newline (instead of the embed before it)
+                        //also, if the user hits backspace with the cursor on a newline after an embed, delete the newline (instead of the embed before it)
                         embedBksp: {
                             key: 'backspace',
                             collapsed: true,
@@ -271,12 +271,9 @@
                             handler: function(range, context){
                                 if(this.quill.getText(range.index,1)=="\n"){
                                     var before = this.quill.getContents(range.index-1,1);
-                                    var after = this.quill.getContents(range.index+1,1)
-                                        if(before.ops.length && before.ops[0].insert && (before.ops[0].insert.LinkPreview || before.ops[0].insert.PostImage)){
-                                            if(after.ops.length && after.ops[0].insert && (after.ops[0].insert.LinkPreview || after.ops[0].insert.PostImage)){
-                                                this.quill.deleteText(range.index,1);
-                                                return false;
-                                        }
+                                    if(before.ops.length && before.ops[0].insert && (before.ops[0].insert.LinkPreview || before.ops[0].insert.PostImage)){
+                                        this.quill.deleteText(range.index,1);
+                                        return false;
                                     }
                                 }
                                 return true;
@@ -386,8 +383,9 @@
         //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
         element.addLinkPreview = function(url) {
             disableButton($(element).closest('.contentForm, .new-comment-form'));
-            var range = quill.getSelection(true).index;
-            if(quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+            var sel = quill.getSelection(true);
+            var range = sel.index;
+            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
                 quill.deleteText(range,1);
                 var addEmbedAt = range;
             }else{
@@ -399,8 +397,9 @@
 
         element.addImage = function(file) {
             disableButton($(element).closest('.contentForm, .new-comment-form'));
-            var range = quill.getSelection(true).index;
-            if(quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+            var sel = quill.getSelection(true);
+            var range = sel.index;
+            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
                 quill.deleteText(range,1);
                 var addEmbedAt = range;
             }else{
@@ -596,8 +595,6 @@
                 if (imageconttop < line) {
                     spacer.insertBefore(elementAbove);
                 }
-            } else {
-                ;;; //maybe add a newline at the top if the first element is dragged down just a little
             }
         }
     }
@@ -608,7 +605,7 @@
         $('.onthemove').css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
         $('.onthemove').removeClass("onthemove");
         var spacer = $('.imagecontspacer');
-        if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == -"")) {
+        if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == "")) {
             spacer.after("<p></p>")
         }
         spacer.remove();
