@@ -1,5 +1,5 @@
 <script type="text/custom-template" id="new-post-link-preview-contents">
-    <div style="display:flex;justify-content:center;position:relative;">
+    <div style="display:flex;justify-content:center;position:relative;width:79px;overflow:hidden;">
         <img class="link-preview-image" src="/images/spinner-stolen.gif" />
     </div>
     <div class="link-preview-text-container" style="width:100%;">
@@ -14,8 +14,8 @@
 </script>
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
-  <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
-  <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers." {{#if sessionFlash.errorImageDescription }}value="{{sessionFlash.errorImageDescription}}" {{/if}}></textarea>
+    <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
+  <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers."></textarea>
   <div class="image-preview-controls">
     <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
     <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
@@ -23,6 +23,9 @@
 </script>
 
 <script>
+    var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and forms part of their ids so they can all be uniquely identified
+    //in callbacks that affect embeds, they should be selected by their ids that are formed from this instead of using the existing node variable, bc the re-arranger may have removed the original element
+
     //register embed types!
     let BlockEmbed = Quill.import('blots/block/embed');
     class LinkPreview extends BlockEmbed {
@@ -33,30 +36,47 @@
             var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
             var isVideo = (youtubeUrlFindingRegex.test(url) || vimeoUrlFindingRegex.test(url));
             let node = super.create();
+            node.setAttribute('id', 'embed' + newEmbedId);
+            var id = newEmbedId;
+            newEmbedId++;
             node.setAttribute('data-url', url);
-            node.setAttribute('contenteditable',false);
+            node.setAttribute('contenteditable', false);
             node.innerHTML = $("#new-post-link-preview-contents")[0].innerHTML;
             var n = $(node);
-            node.request = $.post("/api/newpostform/linkpreviewdata",{url:url},function(data,status,jqXHR){
-                if(data=="invalid url i guess"){
-                    bootbox.alert("Sorry, we couldn't connnect to that url ("+url+") to obtain a preview :(")
-                    n.remove();
-                    node.linkPreviewsAdded--;
-                }else{
+            n.addClass('still-loading');
+            node.request = $.post("/api/newpostform/linkpreviewdata", { url: url }, function(data, status, jqXHR) {
+                var m = $("#embed" + id);
+                if (!m) { return; }
+                m.removeClass('still-loading');
+                if (data == "invalid url i guess") {
+                    if ($(".onthemove")) {
+                        movementEnded();
+                    }
+                    bootbox.alert("Sorry, we couldn't connnect to that url (" + url + ") to obtain a preview :(")
+                    if ($(".onthemove")) {
+                        movementEnded()
+                    }
+                    m.parent()[0].linkPreviewsAdded--;
+                    m.remove();
+                } else {
                     var linkInfo = JSON.parse(data);
-                    n.find(".link-preview-image").attr('src',linkInfo.image)
-                    n.find('.link-preview-title').html(linkInfo.title);
-                    n.find('.link-preview-description').html(linkInfo.description);
-                    n.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
+                    m.find(".link-preview-image").attr('src', linkInfo.image)
+                    m.find('.link-preview-title').html(linkInfo.title);
+                    m.find('.link-preview-description').html(linkInfo.description);
+                    m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
                 }
             })
-            n.find('.image-clear').click(function(e){
-                if(node.request && node.request.readyState!=4){
-                    node.request.abort();
+            n.find('.image-clear').click(function(e) {
+                var m = $("#embed" + id);
+                if (m[0].request && m[0].request.readyState != 4) {
+                    m[0].request.abort();
                 }
-                n.remove();
-                node.linkPreviewsAdded--;
+                m.parent()[0].linkPreviewsAdded--;
+                m.remove();
             })
+            n.find('.image-move').on('mousedown', mousedownOnHandle);
+            n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
+
             return node;
         }
 
@@ -71,17 +91,22 @@
     Quill.register(LinkPreview);
     class PostImage extends BlockEmbed {
         static create(file) {
+            //TODO: check mime type and size of file in advance
             let node = super.create();
+            node.setAttribute('id', 'embed' + newEmbedId);
+            var id = newEmbedId;
+            newEmbedId++;
             node.setAttribute('contenteditable', false);
             node.setAttribute('image-url', 'loading...')
             node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
             var n = $(node);
-
+            n.addClass("still-loading");
             //create filereader that will obtain us the preview
             var fr = new FileReader();
             fr.onload = function(e) {
-                if (n) { //our preview window might have already been eliminated by a cancel operation
-                    n.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
+                var m = $("#embed" + id)
+                if (m) { //our preview window might have already been eliminated by a cancel operation
+                    m.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
                 }
             }
             fr.fileType = file.type;
@@ -96,8 +121,9 @@
                     var uploader = new XMLHttpRequest();
                     uploader.upload.addEventListener("progress", function(e) {
                         var percentage = Math.round(e.loaded / e.total * 100);
-                        n.find('progress').attr('value', percentage);
-                        n.find("#percentage").html(percentage == 100 ? percentage + '%!!!' : percentage + '%')
+                        var m = $("#embed" + id)
+                        m.find('progress').attr('value', percentage);
+                        m.find("#percentage").html(percentage == 100 ? percentage + '%!!!' : percentage + '%')
                     });
                     return uploader;
                 },
@@ -106,13 +132,18 @@
                 data: fd,
                 processData: false,
                 contentType: false,
-                error: function(jqxhr,status,error) {
-                    n.find('progress').attr('value', 0);
-                    n.find("#percentage").html("Upload error :( Hit the X and try again?");
+                error: function(jqxhr, status, error) {
+                    var m = $("#embed" + id)
+                    m.find('progress').attr('value', 0);
+                    m.find("#percentage").html("Upload error :( Hit the X and try again?");
                     console.log(status);
                     console.log(error);
+                    $.post("/admin/reporterror", { errorstring: error });
+                    //todo: check if the upload button can go back to normal
                 },
                 success: function(data, status, jqXHR) {
+                    var m = $("#embed" + id)
+                    m.removeClass("still-loading");
                     var serverResponse = JSON.parse(data);
                     //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
                     if (serverResponse.error) {
@@ -121,29 +152,40 @@
                         } else if (serverResponse.error == "filetype") {
                             bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
                         }
-                        n.remove();
-                        node.imagesAdded--;
+                        if ($(".onthemove")) {
+                            movementEnded()
+                        }
+                        m.parent()[0].imagesAdded--;
+                        m.remove(); //test this maybe
                     } else {
                         if (serverResponse.thumbnail) {
-                            n.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+                            m.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
                         }
-                        n.find('.fader').remove();
-                        n.attr('image-url', serverResponse.url);
+                        m.find('.fader').remove();
+                        m.attr('image-url', serverResponse.url);
+                        //todo: check if the upload button can go back to normal
                     }
                 }
             });
 
             n.find('.image-clear').click(function(e) {
-                if (node.request && node.request.readyState != 4) {
-                    node.request.abort();
-                }else if(n.attr('image-url') != 'loading...'){
+                var m = $("#embed" + id);
+                console.log(m)
+                console.log("#embed" + id);
+                if (m[0].request && m[0].request.readyState != 4) {
+                    m[0].request.abort();
+                } else if (m.attr('image-url') != 'loading...') {
                     $.post("/cleartempimage", {
-                        imageURL: n.attr('image-url')
+                        imageURL: m.attr('image-url')
                     });
                 }
-                n.remove();
-                node.imagesAdded--;
+                m.parent()[0].imagesAdded--;
+                m.remove();
             });
+
+            n.find('.image-move').on('mousedown', mousedownOnHandle);
+            n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
+
             return node;
         }
 
@@ -161,171 +203,336 @@
     Quill.register(PostImage);
 
     function attachQuill(element, placeholder) {
-    var quill = new Quill(element, {
-        modules: {
-            toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
-            keyboard: {
-                bindings: {
-                    //Addition: if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
-                    blqtBksp: {
-                        key: 'backspace',
-                        collapsed: true,
-                        format: ['blockquote'],
-                        offset: 0,
-                        handler: function(range, context) {
-                            this.quill.format('blockquote', false);
+        var quill = new Quill(element, {
+            modules: {
+                toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
+                keyboard: {
+                    bindings: {
+                        //Addition: if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
+                        blqtBksp: {
+                            key: 'backspace',
+                            collapsed: true,
+                            format: ['blockquote'],
+                            offset: 0,
+                            handler: function(range, context) {
+                                this.quill.format('blockquote', false);
+                            }
                         }
                     }
                 }
-            }
-        },
-        placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
-        theme: 'bubble'
-    });
-    //remove pasted formatting that we don't support
-    quill.clipboard.addMatcher("img", function(node, delta) {
-        return { ops: [] };
-    });
-    quill.clipboard.addMatcher("*", function(node, delta) {
-        for (var i = 0; i < delta.ops.length; i++) {
-            for (const key in delta.ops[i].attributes) {
-                if (key != "bold" && key != "italic" && key != "link" && key != "blockquote" && key != "list") {
-                    delete delta.ops[i].attributes[key];
-                }
-            }
-        }
-        return delta;
-    })
-    //save the most recent cursor position when the editor loses focus
-    quill.on('selection-change', function(range, oldRange, source) {
-        if (!range) {
-            element.lastCursorPos = oldRange.index;
-        }
-    })
-    element.insertEmojiAtCursor = function(emojiString) {
-        var range = undefined;
-        if (range = quill.getSelection()) { //if editor has focus
-            if (range.length > 0) { //if there is some text selected
-                quill.deleteText(range.index, range.length);
-            }
-            quill.insertText(range.index, emojiString)
-        } else if (element.lastCursorPos) { //if editor has had focus and thus an active cursor position previously
-            quill.insertText(element.lastCursorPos, emojiString)
-        } else { //if the editor has not yet been focused (and so will be empty so just put the emoji at the beginning)
-            quill.insertText(0, emojiString)
-            quill.focus()
-            quill.setSelection(emojiString.length, 0)
-        }
-    }
-    element.hasContent = function() {
-        return $(element).text().trim().length !== 0;
-    }
-    //listen for and use pasted image data
-    element.onpaste = function(e) {
-        var imagesAdded = false;
-        // event.originalEvent.clipboard for newer chrome versions
-        var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-        for (var i = 0; i < items.length; i++) {
-            if(element.imagesAdded > 3){
-                bootbox.alert("sorry, we only take 4 images at once atm");
-                break;
-            }else{
-                if (items[i].type.indexOf("image") === 0) {
-                    element.addImage(items[i].getAsFile());
-                    imagesAdded = true;
-                }
-            }
-        }
-        if(imagesAdded){
-            e.preventDefault();
-            return false; //no idea if this actually does anything but just in case
-        }
-    }
-    //listen for and use dragged-and-dropped images
-    element.ondrop = function(ev) {
-        ev.preventDefault();
-        $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
-        if (ev.dataTransfer.items) {
-            for (var i = 0; i < ev.dataTransfer.items.length; i++) {
-                if(element.imagesAdded > 3){
-                    bootbox.alert("sorry, we only take 4 images at once atm");
-                    break;
-                }else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
-                    element.addImage(ev.dataTransfer.items[i].getAsFile());
-                }
-            }
-        } else {
-            for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-                if(element.imagesAdded > 3){
-                    bootbox.alert("sorry, we only take 4 images at once atm");
-                    break;
-                }else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {
-                    element.addImage(ev.dataTransfer.files[i]);
-                }
-            }
-        }
-        $("#bodyFader").fadeOut(100,function(){
-            $("#bodyFader").remove();
+            },
+            placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
+            theme: 'bubble'
         });
-
-        dragcounter = 0;
-    }
-    //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
-
-    element.addLinkPreview = function(url){
-        quill.insertEmbed(quill.getSelection(true).index, 'LinkPreview', url, Quill.sources.USER);
-        element.linkPreviewsAdded++;
-    }
-
-    element.addImage = function(file){
-        quill.insertEmbed(quill.getSelection(true).index, 'PostImage', file, Quill.sources.USER);
-        element.imagesAdded++;
-    }
-
-    element.imagesAdded = 0;
-    element.linkPreviewsAdded = 0;
-}
-//incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
-var dragcounter = 0;
-
-//this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
-//it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
-needPostsOlderThan = new Date().getTime();
-
-$(function() {
-    //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
-    //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
-    document.body.ondragover = function(e){
-        e.preventDefault();
-        var dt = e.dataTransfer;
-        //so it won't react if just some text or image from the page is being dragged around
-        if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))){
-            if(!document.getElementById("bodyFader")){
-                $('body').append('<div id="bodyFader"></div>');
-                $("#bodyFader").fadeIn(100);
+        //remove pasted formatting that we don't support
+        quill.clipboard.addMatcher("img", function(node, delta) {
+            return { ops: [] };
+        });
+        quill.clipboard.addMatcher("*", function(node, delta) {
+            for (var i = 0; i < delta.ops.length; i++) {
+                for (const key in delta.ops[i].attributes) {
+                    if (key != "bold" && key != "italic" && key != "link" && key != "blockquote" && key != "list") {
+                        delete delta.ops[i].attributes[key];
+                    }
+                }
+            }
+            return delta;
+        })
+        //save the most recent cursor position when the editor loses focus
+        quill.on('selection-change', function(range, oldRange, source) {
+            if (!range) {
+                element.lastCursorPos = oldRange.index;
+            }
+        })
+        element.insertEmojiAtCursor = function(emojiString) {
+            var range = undefined;
+            if (range = quill.getSelection()) { //if editor has focus
+                if (range.length > 0) { //if there is some text selected
+                    quill.deleteText(range.index, range.length);
+                }
+                quill.insertText(range.index, emojiString)
+            } else if (element.lastCursorPos) { //if editor has had focus and thus an active cursor position previously
+                quill.insertText(element.lastCursorPos, emojiString)
+            } else { //if the editor has not yet been focused (and so will be empty so just put the emoji at the beginning)
+                quill.insertText(0, emojiString)
+                quill.focus()
+                quill.setSelection(emojiString.length, 0)
             }
         }
-    }
-    function removeBodyFader(e){
-        e.preventDefault();
-        $("#bodyFader").fadeOut(100,function(){
-            $("#bodyFader").remove();
+        element.hasContent = function() {
+            return $(element).text().trim().length !== 0;
+        }
+        //listen for and use pasted image data
+        element.onpaste = function(e) {
+            var imagesAdded = false;
+            // event.originalEvent.clipboard for newer chrome versions
+            var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (var i = 0; i < items.length; i++) {
+                if (element.imagesAdded > 3) {
+                    bootbox.alert("sorry, we only take 4 images at once atm");
+                    break;
+                } else {
+                    if (items[i].type.indexOf("image") === 0) {
+                        element.addImage(items[i].getAsFile());
+                        imagesAdded = true;
+                    }
+                }
+            }
+            if (imagesAdded) {
+                e.preventDefault();
+                return false; //no idea if this actually does anything but just in case
+            }
+        }
+        //listen for and use dragged-and-dropped images
+        element.ondrop = function(ev) {
+            ev.preventDefault();
+            $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
+            if (ev.dataTransfer.items) {
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                    if (element.imagesAdded > 3) {
+                        bootbox.alert("sorry, we only take 4 images at once atm");
+                        break;
+                    } else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
+                        element.addImage(ev.dataTransfer.items[i].getAsFile());
+                    }
+                }
+            } else {
+                for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+                    if (element.imagesAdded > 3) {
+                        bootbox.alert("sorry, we only take 4 images at once atm");
+                        break;
+                    } else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {
+                        element.addImage(ev.dataTransfer.files[i]);
+                    }
+                }
+            }
+            $("#bodyFader").fadeOut(100, function() {
+                $("#bodyFader").remove();
+            });
+
             dragcounter = 0;
+        }
+        //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
+
+        element.addLinkPreview = function(url) {
+            quill.insertEmbed(quill.getSelection(true).index, 'LinkPreview', url, Quill.sources.USER);
+            element.linkPreviewsAdded++;
+        }
+
+        element.addImage = function(file) {
+            quill.insertEmbed(quill.getSelection(true).index, 'PostImage', file, Quill.sources.USER);
+            element.imagesAdded++;
+        }
+
+        element.imagesAdded = 0;
+        element.linkPreviewsAdded = 0;
+    }
+    //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
+    var dragcounter = 0;
+
+    //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
+    //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
+    needPostsOlderThan = new Date().getTime();
+
+    $(function() {
+        //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
+        //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
+        document.body.ondragover = function(e) {
+            e.preventDefault();
+            var dt = e.dataTransfer;
+            //so it won't react if just some text or image from the page is being dragged around
+            if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))) {
+                if (!document.getElementById("bodyFader")) {
+                    $('body').append('<div id="bodyFader"></div>');
+                    $("#bodyFader").fadeIn(100);
+                }
+            }
+        }
+
+        function removeBodyFader(e) {
+            e.preventDefault();
+            $("#bodyFader").fadeOut(100, function() {
+                $("#bodyFader").remove();
+                dragcounter = 0;
+            });
+        }
+        //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
+        document.body.ondragend = removeBodyFader;
+        document.body.ondrop = removeBodyFader
+        //some byzantine logic required to detect when the dragged thing leaves our window entirely:
+        window.ondragenter = function(e) {
+            e.preventDefault();
+            dragcounter++;
+        }
+        window.ondragleave = function(e) {
+            dragcounter--;
+            if (dragcounter < 1) {
+                removeBodyFader(e);
+            }
+        }
+    })
+
+    //scripts for rearranging the embeds within the text editor
+
+    //these event listener functions are initially attached to the embeds' movement handles,when they're created, above
+
+    function mousedownOnHandle(e) {
+        e.preventDefault();
+        var selectedImage = $(this).parent().parent();
+
+        //turms selectedImage into a selectedImage element. floatyImageCont is going to contain the image now instead.
+        var floatyImageCont = prepareImageForMoving(selectedImage);
+
+        $(document).mousemove(function(e) {
+            e.preventDefault();
+            moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
+            return false;
+        });
+
+        $(document).on('mouseup', function(e) {
+            movementEnded();
+            $(document).off('mousemove');
         });
     }
-    //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
-    document.body.ondragend = removeBodyFader;
-    document.body.ondrop = removeBodyFader
-    //some byzantine logic required to detect when the dragged thing leaves our window entirely:
-    window.ondragenter = function(e){
-        e.preventDefault();
-        dragcounter++;
+
+    var touchinprogress = false;
+
+    function touchStartOnHandle(e) {
+
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
+        if (touchinprogress) {
+            return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
+        }
+        touchinprogress = true;
+
+        var selectedImage = $(this).parent().parent();
+
+        var floatyImageCont = prepareImageForMoving(selectedImage);
+
+        var previousY = e.changedTouches[0].screenY;
+
+        //function to be passed to the touchmove handler and then later removed from it
+        function touchmoveevent(event) {
+            //this should always be true, if it's not preventDefault raises an error instead of preventing page scrolling and we have Problems
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+
+            moveimagecont(-1 * (previousY - event.changedTouches[0].screenY), floatyImageCont, selectedImage);
+            previousY = event.changedTouches[0].screenY;
+        }
+
+        //for some reason jQuery Did Not Want to work with these touch events. Possibly they would like us to be using jQuery Mobile. But, this is pretty simple, we don't need it.
+        this.addEventListener("touchmove", touchmoveevent, { passive: false });
+
+        this.addEventListener('touchend', function(e) {
+            touchinprogress = false;
+            this.removeEventListener('touchmove', touchmoveevent);
+            movementEnded();
+        });
+
+        this.addEventListener('touchcancel', function(e) {
+            touchinprogress = false;
+            this.removeEventListener('touchmove', touchmoveevent);
+            movementEnded();
+        });
     }
-    window.ondragleave = function(e){
-        dragcounter--;
-        if(dragcounter<1){
-            removeBodyFader(e);
+
+    //called as soon as movement is initiated:
+    //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
+    function prepareImageForMoving(selectedImage) {
+        var spacer = selectedImage;
+        //spacer.css("width", spacer.width() + "px");
+        //spacer.css("height", spacer.height() + "px");
+
+        var imagecont = spacer.clone(false);
+        imagecont.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
+        imagecont.find('.image-move').on('mousedown', mousedownOnHandle);
+        //todo: attach image-clear event listener
+
+        spacer.addClass("imagecontspacer");
+        spacer.attr('id', '');
+
+        var imagecontpos = spacer.offset();
+
+        imagecont.css("width", spacer.outerWidth(true) + "px");
+        imagecont.css("left", imagecontpos.left + "px");
+        imagecont.css("top", imagecontpos.top + "px");
+
+        spacer.closest('.ql-container').append(imagecont);
+
+        //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
+        imagecont.css("position", "fixed");
+        imagecont.css("z-index", 2147483647); // over 9000
+        imagecont.css("background-color", "white");
+
+        imagecont.addClass("onthemove");
+
+        spacer.css("border", "dashed")
+        spacer.empty();
+
+        return imagecont;
+    }
+
+    //this function is called when the user moves either their mouse or finger to reposition the embed.
+    function moveimagecont(deltaY, imagecont, spacer) {
+        console.log(deltaY)
+        //move the floaty element:
+        var imageconttop = imagecont.offset().top;
+        var imageconth = imagecont.outerHeight(true);
+        //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
+        var newYPos = Math.min(Math.max(imageconttop + deltaY, spacer.parent().offset().top), spacer.parent().offset().top + (spacer.parent().height() - spacer.outerHeight(true))); //beauty
+        console.log("spacerparenttop"+spacer.parent().offset().top);
+        console.log("spacerparentheight"+spacer.parent().height())
+        console.log("oldtop"+imageconttop);
+        console.log("sum"+(imageconttop+deltaY))
+        console.log("newy"+newYPos);
+        imagecont.css("top", newYPos + "px");
+
+        //move the spacer (maybe):
+
+        if (deltaY > 0) { //moving down
+            var elementBelow = spacer.next();
+            while (elementBelow.length && elementBelow.next().length && (imageconttop + imageconth) > (elementBelow.offset().top + elementBelow.outerHeight(true))) {
+                elementBelow = elementBelow.next();
+            }
+            if (elementBelow.length) {
+                var ebt = elementBelow.offset().top;
+                var line = Math.max(ebt + (0.5 * elementBelow.outerHeight(true)), ebt + elementBelow.outerHeight(true) - 70);
+                if ((imageconttop + imageconth) > line) {
+                    spacer.insertAfter(elementBelow);
+                    console.log("move down");
+                }
+            }
+        } else if (deltaY < 0) { //moving up
+            var elementAbove = spacer.prev();
+            while (elementAbove.length && elementAbove.prev().length && imageconttop < elementAbove.offset().top) {
+                elementAbove = elementAbove.prev();
+            }
+            if (elementAbove.length) {
+                var line = Math.min(elementAbove.offset().top + (0.5 * elementAbove.outerHeight(true)), elementAbove.offset().top + 70);
+                if (imageconttop < line) {
+                    spacer.insertBefore(elementAbove);
+                    console.log("move up");
+                }
+            }else{
+                ;;; //maybe add a newline at the top if the first element is dragged down just a little
+            }
         }
     }
-})
+
+    //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
+    function movementEnded() {
+        $('.imagecontspacer').before($('.onthemove'));
+        $('.onthemove').css("position", "").css("border", "").css('width','').css('left','').css('top','').css('height','').css("z-index", 10); //seems like a good number
+        $('.onthemove').removeClass("onthemove");
+        var spacer = $('.imagecontspacer');
+        if(!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim()==-"")){
+            spacer.after("<p></p>")
+        }
+        spacer.remove();
+    }
 </script>

@@ -93,7 +93,7 @@ $(function(){
   //IMAGE UPLOADER CODE
 
   //the main functions are placed outside of the jQuery $(function(){}) document.onready thing because they need to be globally available to the image pasting + dragging and dropping code, not just the event listeners they're attached to directly below.
-
+/*
   //function called right after the file input changes for the post and comment forms or after an image is pasted into an editor (with image(s) contained in imgarray) bc that triggers the change event artificially
   function fileselected(e) {
     if(this.files.length!=0){
@@ -220,7 +220,7 @@ $(function(){
     }
     $(previewContainer).children('input').val(''); //we need to reset this so that file selection consistently registers as a 'change' event
   }
-
+*/
 $(function(){
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.contentForm, .new-comment-form').children('.file-input');
@@ -240,6 +240,7 @@ $(function(){
       ourFileInputGuy[0].changeEventAttached = true;
     }
     ourFileInputGuy.click();
+    //todo: disable post sumbit button, give it the uploading text and spinner
   })
 
 $("body").on('click', '#postLinkButton', function(e) {
@@ -262,6 +263,13 @@ $("body").on('click', ".link-add", function(e){
     bootbox.alert("we only take 10000 link previews per post, sorry");
   }
 })
+
+$("body").on('keyup',"#linkPreviewUrlEntry", function(e){
+  if(e.keyCode==13){ //activate on pressing enter
+    $(this).siblings('.link-add').click();
+  }
+})
+
 
   //function for removing an image from a post or comment
   $("body").on('click', '.image-clearnotused', function (e) { //not currently in use,
@@ -441,95 +449,19 @@ $("body").on('click', ".link-add", function(e){
     }
   })
 })
-  //IMAGE DRAG-AND-DROP ORDERING STUFF
+
+
+//IMAGE DRAG-AND-DROP ORDERING STUFF
 
   //PART 1: THE FUNCTIONS THAT DO THE WORK
 
-  //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
-  function prepareImageForMoving(selectedImage) {
-    selectedImage.css("width", selectedImage.width() + "px");
-    selectedImage.css("height", selectedImage.height() + "px");
-
-    var imagecont = selectedImage.clone();
-    imagecont.find('.image-move')[0].addEventListener('touchstart', touchstartforimagemove, {
-      passive: false
-    });
-
-    selectedImage.addClass("imagecontspacer");
-
-    var imagecontpos = selectedImage.position();
-
-    selectedImage.prev().after(imagecont);
-
-    imagecont.css("width", imagecont.width() + "px");
-    imagecont.css("left", imagecontpos.left + "px");
-    imagecont.css("top", imagecontpos.top + "px");
-
-    //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
-    imagecont.css("position", "absolute");
-    imagecont.css("z-index", 2147483647); // over 9000
-    imagecont.css("background-color", "white");
-
-    imagecont.addClass("onthemove");
-
-    selectedImage.css("border", "dashed")
-    selectedImage.attr('urlpos','');
-    selectedImage.attr('uploadNumber','');
-    selectedImage.empty();
-
-    return imagecont;
-  }
-
-  //this function is called when the user moves either their mouse or finger to reposition the image.
-  function moveimagecont(deltaY, imagecont, spacer) {
-    //move the floaty element:
-    var imageconttop = imagecont.position().top;
-    //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-    var newYPos = Math.min(Math.max(imageconttop + deltaY, imagecont.parent().position().top), imagecont.parent().position().top + (imagecont.parent().height() - imagecont.height())); //beauty
-    imagecont.css("top", newYPos + "px");
-
-    //move the spacer (maybe):
-
-    //Calculate how many spaces the image has moved (might be more or less than one)
-    //This moves the spacer if the image's horizontal center line has gone above the bottom of the image above it or below the top of the image below it
-    var spacertop = spacer.position().top;
-    var sHeight = imagecont.outerHeight(true);
-    var movementOfMiddleLine = imageconttop + 0.5 * sHeight > spacertop ? (imageconttop + 0.5 * sHeight - spacertop) : (imageconttop - 0.5 * sHeight - spacertop);
-    var deltaImageIndex = Math.floor(movementOfMiddleLine/sHeight);
-    if((movementOfMiddleLine % sHeight > sHeight-5 || movementOfMiddleLine % sHeight < 5) && deltaImageIndex != 0){ //10 pixels deadzone on either side of the imaginary line
-      deltaImageIndex -= deltaImageIndex > 0 ? 1 : -1;
-    }
-
-    //Move the spacer (in other words, set the future destination of the image) according to deltaImageIndex
-    while (deltaImageIndex < 0) {
-      if (spacer.prev().prev()) {
-        spacer.prev().prev().after(spacer);
-      }
-      deltaImageIndex += 1;
-    }
-    while (deltaImageIndex > 0) {
-      if (spacer.next()) {
-        spacer.next().after(spacer);
-      }
-      deltaImageIndex -= 1;
-    }
-  }
-
-  //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
-  function movementEnded() {
-    $('.imagecontspacer').prev().after($('.onthemove'));
-    $('.onthemove').css("position", "unset").css("border", "none").css("z-index", 10); //seems like a good number
-    $('.onthemove').removeClass("onthemove");
-    $('.imagecontspacer').remove();
-  }
-
-  //PART 2: THE EVENT LISTENERS THAT CALL THE FUNCTIONS THAT DO THE WORK
+/*
 $(function(){
-  $('body').on('mousedown', '.image-movenotused', function (e) {
+  $('body').on('mousedown', '.image-move', function (e) {
     e.preventDefault();
     var selectedImage = $(this).parent().parent();
-    //only do something if there's at least one other image container to switch positions with
-    if (selectedImage.parent().children().length <= 2) { //2 = one image container and the file input element.
+    //only do something if there's at least one other element to switch positions with
+    if (selectedImage.parent().children().length <= 1) {
       return;
     }
 
@@ -598,6 +530,6 @@ $(function(){
       this.removeEventListener('touchmove', touchmoveevent);
       movementEnded();
     });
-  }
+  }*/
   
 </script>
