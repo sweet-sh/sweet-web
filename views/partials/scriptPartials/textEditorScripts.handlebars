@@ -327,8 +327,49 @@
             }
         }
         element.hasContent = function() {
-            return $(element).text().trim().length !== 0;
+            //if there is some text the first will be true; if there are > 0 embeds, the second will be true
+            return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
+        element.getContents = function() {
+            var c = quill.getContents();
+            if(c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string"){
+                c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
+            }else if(c.ops && c.ops.length > 1 && typeof c.ops[c.ops.length-1].insert == "string"){
+                c.ops[c.ops.length-1] = c.ops[c.ops.length-1].insert.replace(/\s+$/, ''); //remove ending whitespace
+            }
+            return c;
+        }
+        //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
+        //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
+        element.addLinkPreview = function(url) {
+            disableButton($(element).closest('.contentForm, .new-comment-form'));
+            var sel = quill.getSelection(true);
+            var range = sel.index;
+            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+                quill.deleteText(range,1);
+                var addEmbedAt = range;
+            }else{
+                var addEmbedAt = quill.getLength();
+            }
+            quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
+            element.linkPreviewsAdded++;
+        }
+
+        element.addImage = function(file) {
+            disableButton($(element).closest('.contentForm, .new-comment-form'));
+            var sel = quill.getSelection(true);
+            var range = sel.index;
+            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+                quill.deleteText(range,1);
+                var addEmbedAt = range;
+            }else{
+                var addEmbedAt = quill.getLength();
+            }
+            quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+            element.imagesAdded++;
+        }
+        element.imagesAdded = 0;
+        element.linkPreviewsAdded = 0;
         //listen for and use pasted image data
         element.onpaste = function(e) {
             var imagesAdded = false;
@@ -373,47 +414,23 @@
                     }
                 }
             }
-            $("#bodyFader").fadeOut(100, function() {
-                $("#bodyFader").remove();
-            });
-
-            dragcounter = 0;
+            removeBodyFader();
         }
-        //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
-        //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
-        element.addLinkPreview = function(url) {
-            disableButton($(element).closest('.contentForm, .new-comment-form'));
-            var sel = quill.getSelection(true);
-            var range = sel.index;
-            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
-                quill.deleteText(range,1);
-                var addEmbedAt = range;
-            }else{
-                var addEmbedAt = quill.getLength();
-            }
-            quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
-            element.linkPreviewsAdded++;
-        }
-
-        element.addImage = function(file) {
-            disableButton($(element).closest('.contentForm, .new-comment-form'));
-            var sel = quill.getSelection(true);
-            var range = sel.index;
-            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
-                quill.deleteText(range,1);
-                var addEmbedAt = range;
-            }else{
-                var addEmbedAt = quill.getLength();
-            }
-            quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
-            element.imagesAdded++;
-        }
-
-        element.imagesAdded = 0;
-        element.linkPreviewsAdded = 0;
     }
+
+    
     //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
     var dragcounter = 0;
+    var faded = false;
+
+    function removeBodyFader(e) {
+        e.preventDefault();
+        $("#bodyFader").fadeOut(100, function() {
+            $("#bodyFader").remove();
+            dragcounter = 0;
+            faded = false;
+        });
+    }
 
     //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
     //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
@@ -427,20 +444,14 @@
             var dt = e.dataTransfer;
             //so it won't react if just some text or image from the page is being dragged around
             if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))) {
-                if (!document.getElementById("bodyFader")) {
+                if (!faded) {
                     $('body').append('<div id="bodyFader"></div>');
                     $("#bodyFader").fadeIn(100);
+                    var faded = true;
                 }
             }
         }
 
-        function removeBodyFader(e) {
-            e.preventDefault();
-            $("#bodyFader").fadeOut(100, function() {
-                $("#bodyFader").remove();
-                dragcounter = 0;
-            });
-        }
         //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
         document.body.ondragend = removeBodyFader;
         document.body.ondrop = removeBodyFader

@@ -146,17 +146,8 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     }
     e.preventDefault();
     let editor = $('#editor');
-    let postContent = editor.find(".ql-editor").html();
-    let pc = $(this).closest('.post-controls').siblings('#image-preview-holder')[0]; //bit sketchy! oh well
-    //only do anything if there are no pending uploads and there is some text or image(s) to post
-    if ((!pc.uploadsStarted || pc.uploadsCompleted == pc.uploadsStarted - pc.uploadsCancelled) && ($(pc).find('.newimagecont').length != 0 || editor[0].hasContent())) {
-      let sortedurls = []; //putting urls in preview-window order, instead of the order in which they were recieved from the server
-      let imagedescs = [];
-      for (let i = 0; i < $(pc).find('.newimagecont').length; i++) {
-        let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there's a cleaner way to do this than $($())
-        sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
-        imagedescs.push(imageWindow.find('#postImageDescription').val());
-      }
+    let postContent = editor[0].getContents(); //delta object
+    if (editor[0].hasContent()) {
       $(this).attr('disabled');
       $.ajax({
         url: '/createpost',
@@ -172,8 +163,9 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
       }).done(function (postTimestamp) { //actually this should be a string set to the 1 millisecond later than the new post's timestamp.
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
+        $("#emojiWindow").slideUp("fast");
+        $(".linkPreviewAddingForm").slideUp("fast");
         editor.find(".ql-editor").html("");
-        $(pc).children('.newimagecont').remove();
         haveWeSentPost = false;
         restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
       });
@@ -192,7 +184,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     let commentID = commentForm.attr('data-comment-id');
     let commentContainer = commentForm.find(".ql-container");
     let commentEditor = commentForm.find('.ql-editor');
-    let commentContent = commentEditor.html();
+    let commentContent = commentEditor.getContents(); //delta object
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
@@ -201,31 +193,9 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     }
     let emojiWindow = commentForm.find('.replyEmojiWindow');
 
-    let pc = commentForm.find('#image-preview-holder')[0];
-
-    var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
-    var imagedescs = [];
-
-    if(pc.uploadsCompleted){
-      if(pc.uploadsCompleted != pc.uploadsStarted-pc.uploadsCancelled){
-        bootbox.alert("You have image uploads in progress.");
-        return;
-      }else{
-        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
-          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there probably exists a cleaner way to do this than $($())?
-          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
-          imagedescs.push(imageWindow.find('#postImageDescription').val());
-        }
-      }
-    }
-
-    if (commentContainer[0].hasContent() || sortedurls.length > 0) { // Filter out empty comments
+    if (commentContainer[0].hasContent()) {
       commentButton.prop('disabled', true);
-      $.post("/createcomment/"+postID+"/"+commentID,
-      { commentContent: commentContent,
-        imageUrls: JSON.stringify(sortedurls),
-        imageDescs: JSON.stringify(imagedescs)
-      },
+      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: commentContent },
       function(data) {
         if (data!='nope'){
           commentEditor.html('');
@@ -236,9 +206,6 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
             var $images = commentimages;
             var $imagesGrouped = $images.filter('[data-group]');
             var $imagesAlone = $images.not($imagesGrouped);
-            var params = {
-              // your params
-            };
 
             // Handle standalone images
             $imagesAlone.each(function (index, element) {
@@ -248,17 +215,12 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
             // Handle grouped imags
             if ($imagesGrouped.length > 0) {
               // Select all groups
-              var groupNames = $imagesGrouped.map(function () {
-                return $(this).data('group');
-              }).get();
+              var groupNames = $imagesGrouped.map(function () { return $(this).data('group'); }).get();
               groupNames = $.unique(groupNames);
 
               // Apply on each group
               $.each(groupNames, function (key, value) {
-                $imagesGrouped.filter(function () {
-                    return $(this).data('group') == value;
-                  })
-                  .simpleLightbox(params);
+                $imagesGrouped.filter(function () { return $(this).data('group') == value; }).simpleLightbox(params);
               });
             }
           }
@@ -279,11 +241,6 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
           else if (commentType == "child") {
               commentForm.remove();
           }
-          pc.uploadsStarted = 0;
-          pc.uploadsCompleted = 0;
-          pc.uploadsCancelled = 0;
-          pc.uploadedImageUrls = [];
-          pc.imageUploadRequests = [];
         } else {
           let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
           $(html).hide().appendTo(commentsContainer).fadeIn();
