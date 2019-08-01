@@ -298,12 +298,6 @@ div.post-images > 1 or more (a > img.post-single-image)
 .comment.post-images.one-image.vertical-image {
   max-height: 350px;
 }
-
-
-.image-clear {
-  background-color: #ffffff99;
-  color: #000000;
-}
 .image-preview {
   background-color: #f6f6f6 !important;
 }
@@ -1060,6 +1054,7 @@ hr {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+  padding: 0 3px;
 }
 
 .link-add {
@@ -1370,6 +1365,7 @@ hr {
     border-radius: 4px;
     margin: 0 0 0.5em 0;
     background-color: #ffffff;
+    align-items:center;
 }
 
 .link-preview-container::before {
@@ -1409,13 +1405,14 @@ hr {
     white-space: nowrap;
 }
 
+
 .link-preview-image {
-    flex: 1;
+    /*flex: 1; this is breaking the images in the preview in the text editor, let's see if removing breaks the images in the actual link previews on the page */
     border-radius: 2px;
     align-self: center;
     max-height:100%;
     margin-right:auto;
-    max-width: 140px;
+    max-width: 140px !important;
 }
 
 .link-preview-description {

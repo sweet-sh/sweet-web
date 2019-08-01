@@ -236,11 +236,10 @@ $(function(){
             n.addImage(this.files[i]);
           }
         }
-      }); //basically, i think this should call an addImage function on the relevant ql-container instead, which inserts the image preview into the quill... area
+      });
       ourFileInputGuy[0].changeEventAttached = true;
     }
     ourFileInputGuy.click();
-    //todo: disable post sumbit button, give it the uploading text and spinner
   })
 
 $("body").on('click', '#postLinkButton', function(e) {

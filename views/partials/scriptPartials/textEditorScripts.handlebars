@@ -1,7 +1,7 @@
 <script type="text/custom-template" id="new-post-link-preview-contents">
-    <div style="display:flex;justify-content:center;position:relative;width:79px;overflow:hidden;">
+    
         <img class="link-preview-image" src="/images/spinner-stolen.gif" />
-    </div>
+
     <div class="link-preview-text-container" style="width:100%;">
         <span class="link-preview-title">...loading...</span>
         <span class="link-preview-description">...loading...</span>
@@ -23,6 +23,42 @@
 </script>
 
 <script>
+
+    //within-editor embeds utility functions:
+
+    function disableButton(postForm){
+        var button = postForm.find('.create-comment, #postSubmit');
+        button.attr('disabled',true);
+        button.html("<i class='fas fa-spinner fa-spin'></i> Uploading");
+    }
+
+    function maybeEnableButton(postForm){
+        if(postForm.find('.still-loading').length == 0){
+            var button = postForm.find('.create-comment, #postSubmit');
+            button.attr('disabled',false);
+            if(button.hasClass('create-comment')){
+                button.html("Reply");
+            }else if(button.attr('id')=="postSubmit"){
+                button.html('Send <i class="fas fa-chevron-right"></i>');
+            }
+        }
+    }
+
+    //attached to the x of the embeds above and below when a new one is created after a rearrangement
+    function clearEmbed(e) {
+        var m = $(this).parent().parent();
+        if (m[0].request && m[0].request.readyState != 4) {
+            m[0].request.abort();
+        }
+        if (m.hasClass('newimagecont')) {
+            m.parent(0).linkPreviewAdded--;
+        } else if (m.hasClass('link-preview-container')) {
+            m.parent()[0].linkPreviewsAdded--;
+        }
+        m.remove();
+        maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+    }
+
     var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and forms part of their ids so they can all be uniquely identified
     //in callbacks that affect embeds, they should be selected by their ids that are formed from this instead of using the existing node variable, bc the re-arranger may have removed the original element
 
@@ -49,9 +85,6 @@
                 if (!m) { return; }
                 m.removeClass('still-loading');
                 if (data == "invalid url i guess") {
-                    if ($(".onthemove")) {
-                        movementEnded();
-                    }
                     bootbox.alert("Sorry, we couldn't connnect to that url (" + url + ") to obtain a preview :(")
                     if ($(".onthemove")) {
                         movementEnded()
@@ -65,7 +98,21 @@
                     m.find('.link-preview-description').html(linkInfo.description);
                     m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
                 }
+                maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
             })
+            node.request.fail(function(){
+                var m = $("#embed" + id);
+                if (!m) { return; }
+                m.removeClass('still-loading');
+                bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(")
+                if ($(".onthemove")) {
+                    movementEnded();
+                }
+                m.parent()[0].linkPreviewsAdded--;
+                m.remove();
+                maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
+            })
+
             n.find('.image-clear').click(clearEmbed);
             n.find('.image-move').on('mousedown', mousedownOnHandle);
             n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
@@ -82,11 +129,20 @@
     LinkPreview.tagName = 'a';
     LinkPreview.className = 'link-preview-container';
     Quill.register(LinkPreview);
+
+    var files = {}; //each file object is stored in this object under the container's id so that if a user deletes an image embed and then undoes that action, quill can find the file in here and reconstitute the embed from it.
     class PostImage extends BlockEmbed {
         static create(file) {
-            //TODO: check mime type and size of file in advance
+            if(file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif"){
+                bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
+                return null;
+            }else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
+                bootbox.alert("Sorry, but this file appears to be too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
+                return null;
+            }
             let node = super.create();
             node.setAttribute('id', 'embed' + newEmbedId);
+            files[node.getAttribute('id')] = file;
             var id = newEmbedId;
             newEmbedId++;
             node.setAttribute('contenteditable', false);
@@ -132,7 +188,7 @@
                     console.log(status);
                     console.log(error);
                     $.post("/admin/reporterror", { errorstring: error });
-                    //todo: check if the upload button can go back to normal
+                    maybeEnableButton(m.closest('.new-comment-form, .contentForm'));                    
                 },
                 success: function(data, status, jqXHR) {
                     var m = $("#embed" + id)
@@ -156,21 +212,17 @@
                         }
                         m.find('.fader').remove();
                         m.attr('image-url', serverResponse.url);
-                        //todo: check if the upload button can go back to normal
+                        maybeEnableButton(m.closest('.new-comment-form, .contentForm'));
                     }
                 }
             });
 
             n.find('.image-clear').click(function(e) {
                 var m = $("#embed" + id);
-                console.log(m)
-                console.log("#embed" + id);
                 if (m[0].request && m[0].request.readyState != 4) {
                     m[0].request.abort();
                 } else if (m.attr('image-url') != 'loading...') {
-                    $.post("/cleartempimage", {
-                        imageURL: m.attr('image-url')
-                    });
+                    $.post("/cleartempimage", { imageURL: m.attr('image-url') });
                 }
                 m.parent()[0].imagesAdded--;
                 m.remove();
@@ -183,31 +235,17 @@
         }
 
         static value(node) {
-            return node.getAttribute('image-url');
+            return files[node.getAttribute('id')];
         }
 
         static formats(node) {
-            return { description: $(node).find('#postImageDescription').val() };
+            return { description: $(node).find('#postImageDescription').val(), imageURL: node.getAttribute('image-url') };
         }
     }
     PostImage.blotName = 'PostImage';
     PostImage.tagName = 'div';
     PostImage.className = 'newimagecont';
     Quill.register(PostImage);
-
-    //attached to the x of the embeds above and below when a new one is created after a rearrangement
-    function clearEmbed(e) {
-        var m = $(this).parent().parent();
-        if (m[0].request && m[0].request.readyState != 4) {
-            m[0].request.abort();
-        }
-        if (m.hasClass('newimagecont')) {
-            m.parent(0).linkPreviewAdded--;
-        } else if (m.hasClass('link-preview-container')) {
-            m.parent()[0].linkPreviewsAdded--;
-        }
-        m.remove();
-    }
 
     function attachQuill(element, placeholder) {
         var quill = new Quill(element, {
@@ -223,6 +261,25 @@
                             offset: 0,
                             handler: function(range, context) {
                                 this.quill.format('blockquote', false);
+                            }
+                        },
+                        //also, if the user hits backspace with the cursor on a newline between two embeds, delete the newline (instead of the embed before it)
+                        embedBksp: {
+                            key: 'backspace',
+                            collapsed: true,
+                            offset: 0,
+                            handler: function(range, context){
+                                if(this.quill.getText(range.index,1)=="\n"){
+                                    var before = this.quill.getContents(range.index-1,1);
+                                    var after = this.quill.getContents(range.index+1,1)
+                                        if(before.ops.length && before.ops[0].insert && (before.ops[0].insert.LinkPreview || before.ops[0].insert.PostImage)){
+                                            if(after.ops.length && after.ops[0].insert && (after.ops[0].insert.LinkPreview || after.ops[0].insert.PostImage)){
+                                                this.quill.deleteText(range.index,1);
+                                                return false;
+                                        }
+                                    }
+                                }
+                                return true;
                             }
                         }
                     }
@@ -249,6 +306,12 @@
         quill.on('selection-change', function(range, oldRange, source) {
             if (!range) {
                 element.lastCursorPos = oldRange.index;
+            }
+        })
+        //prevent there from ever being embeds with no new lines to type text on
+        quill.on('text-change',function(range,oldRange,source){
+            if(quill.getText()==""){
+                quill.insertText(quill.getLength(),"\n");
             }
         })
         element.insertEmojiAtCursor = function(emojiString) {
@@ -320,14 +383,30 @@
             dragcounter = 0;
         }
         //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
-
+        //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
         element.addLinkPreview = function(url) {
-            quill.insertEmbed(quill.getSelection(true).index, 'LinkPreview', url, Quill.sources.USER);
+            disableButton($(element).closest('.contentForm, .new-comment-form'));
+            var range = quill.getSelection(true).index;
+            if(quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+                quill.deleteText(range,1);
+                var addEmbedAt = range;
+            }else{
+                var addEmbedAt = quill.getLength();
+            }
+            quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
             element.linkPreviewsAdded++;
         }
 
         element.addImage = function(file) {
-            quill.insertEmbed(quill.getSelection(true).index, 'PostImage', file, Quill.sources.USER);
+            disableButton($(element).closest('.contentForm, .new-comment-form'));
+            var range = quill.getSelection(true).index;
+            if(quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
+                quill.deleteText(range,1);
+                var addEmbedAt = range;
+            }else{
+                var addEmbedAt = quill.getLength();
+            }
+            quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
             element.imagesAdded++;
         }
 
@@ -486,17 +565,11 @@
 
     //this function is called when the user moves either their mouse or finger to reposition the embed.
     function moveimagecont(deltaY, imagecont, spacer) {
-        console.log(deltaY)
         //move the floaty element:
         var imageconttop = imagecont.offset().top;
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
         var newYPos = Math.min(Math.max(imageconttop + deltaY, spacer.parent().offset().top), spacer.parent().offset().top + (spacer.parent().outerHeight() - spacer.outerHeight())); //beauty
-        console.log("spacerparenttop" + spacer.parent().offset().top);
-        console.log("spacerparentheight" + spacer.parent().height())
-        console.log("oldtop" + imageconttop);
-        console.log("sum" + (imageconttop + deltaY))
-        console.log("newy" + newYPos);
         imagecont.css("top", newYPos + "px");
 
         //move the spacer (maybe):
@@ -511,7 +584,6 @@
                 var line = Math.max(ebt + (0.5 * elementBelow.outerHeight(true)), ebt + elementBelow.outerHeight(true) - 70);
                 if ((imageconttop + imageconth) > line) {
                     spacer.insertAfter(elementBelow);
-                    console.log("move down");
                 }
             }
         } else if (deltaY < 0) { //moving up
@@ -523,7 +595,6 @@
                 var line = Math.min(elementAbove.offset().top + (0.5 * elementAbove.outerHeight(true)), elementAbove.offset().top + 70);
                 if (imageconttop < line) {
                     spacer.insertBefore(elementAbove);
-                    console.log("move up");
                 }
             } else {
                 ;;; //maybe add a newline at the top if the first element is dragged down just a little

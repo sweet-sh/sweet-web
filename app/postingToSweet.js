@@ -130,7 +130,7 @@ module.exports = function(app) {
                             console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-                    var response = { url: imageUrl + '.' + imageFormat }
+                    var response = { url: imageUrl + '.' + finalFormat }
                     if (thumbnail) {
                         response.thumbnail = "data:image/" + finalFormat + ";base64," + thumbnail.toString('base64');
                     }
