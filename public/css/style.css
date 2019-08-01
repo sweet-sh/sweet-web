@@ -677,8 +677,8 @@ hr {
   align-items: center;
 }
 
-#replyControlsRow button:first-child {
-    margin-right: 5px;
+#replyControlsRow button {
+    margin-right: 3px;
 }
 
 #resultsContainer,

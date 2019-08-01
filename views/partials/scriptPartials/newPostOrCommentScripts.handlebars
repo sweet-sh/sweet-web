@@ -256,7 +256,7 @@ $("body").on('click', ".link-add", function(e){
   var input = $(this).siblings('input')
   var url = input.val();
   input.val('');
-  var subject = $(this).closest('.contentForm, .new-comment-form').children('.ql-container')[0];
+  var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
   if(subject.linkPreviewsAdded < 10000){ //this could probably be changed to something lower
     subject.addLinkPreview(url);
   }else{
