@@ -114,9 +114,9 @@ $(function(){
 $("body").on('click', '#postLinkButton', function(e) {
     var urlEntry = $(this).closest('.contentForm, .new-comment-form').children('.link-form-cont');
     if(urlEntry.is(':hidden')){
-      urlEntry.slideDown();
+      urlEntry.slideDown('fast',function(){urlEntry.find('input').focus()});
     }else{
-      urlEntry.slideUp();
+      urlEntry.slideUp('fast');
     }
 })
 
