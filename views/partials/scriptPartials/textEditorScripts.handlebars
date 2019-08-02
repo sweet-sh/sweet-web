@@ -51,7 +51,7 @@
             m[0].request.abort();
         }
         if (m.hasClass('newimagecont')) {
-            m.parent(0).linkPreviewAdded--;
+            m.parent()[0].imagesAdded--;
         } else if (m.hasClass('link-preview-container')) {
             m.parent()[0].linkPreviewsAdded--;
         }
@@ -194,7 +194,7 @@
                     var m = $("#embed" + id)
                     m.removeClass("still-loading");
                     var serverResponse = JSON.parse(data);
-                    //check for filesize error. shouldn't ever happen bc of the check around this whole function, but we need server-side checking still anyway, so...
+                    //check for file errors. shouldn't ever happen bc of the check at the beginning of this function, but we need server-side checking still anyway, so...
                     if (serverResponse.error) {
                         if (serverResponse.error == "filesize") {
                             bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
@@ -205,7 +205,7 @@
                             movementEnded()
                         }
                         m.parent()[0].imagesAdded--;
-                        m.remove(); //test this maybe
+                        m.remove(); //todo: test this maybe
                     } else {
                         if (serverResponse.thumbnail) {
                             m.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
@@ -572,12 +572,19 @@
         spacer.css("border", "dashed")
         spacer.empty();
 
+        imagecont[0].scrollListenerId = setInterval(function(){scrollListener(imagecont)},50);
+
         return imagecont;
     }
 
-    //todo: add function that checks if the floating element is within a certain distance of the top or bottom of the screen, and scrolls if so.
-    //it should check every 200ms or so i guess. it'll have to be started by a call from the above function, that passes imagecont to it. then, it should
-    //be cancelled in movementEnded.
+    function scrollListener(imagecont){
+        var t = getTop(imagecont);
+        if(t < 150){
+            $(window).scrollTop($(window).scrollTop()-5);
+        }else if(t > window.innerHeight-150){
+            $(window).scrollTop($(window).scrollTop()+5);
+        }
+    }
 
     //this function is called when the user moves either their mouse or finger to reposition the embed.
     function moveimagecont(deltaY, imagecont, spacer) {
@@ -619,9 +626,11 @@
 
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
     function movementEnded() {
+        var imagecont = $('.onthemove');
+        clearInterval(imagecont[0].scrollListenerId)
         $('.imagecontspacer').after($('.onthemove'));
-        $('.onthemove').css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
-        $('.onthemove').removeClass("onthemove");
+        imagecont.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
+        imagecont.removeClass("onthemove");
         var spacer = $('.imagecontspacer');
         if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == "")) {
             spacer.after("<p></p>")
