@@ -88,95 +88,78 @@ module.exports = {
         var withinList = false;
         var lineOpen = true;
         for (op of delta.ops) {
-            if (op.insert) { // otherwise something is badly wrong
-                if (typeof op.insert == "string" && op.insert !== "") {
-                    lineOpen = true;
-                    var formattingStartTags = "";
-                    var formattingEndTags = "";
-                    if (op.attributes) {
-                        if (op.attributes.bold) {
-                            formattingStartTags = "<strong>" + formattingStartTags;
-                            formattingEndTags = formattingEndTags + "</strong>";
-                        } else if (op.attributes.italic) {
-                            formattingStartTags = "<em>" + formattingStartTags;
-                            formattingEndTags = formattingEndTags + "</em>";
-                        } else if (op.attributes.link) {
-                            formattingStartTags = '<a href="' + op.attributes.link + '" target="_blank">' + formattingStartTags;
-                            formattingEndTags = formattingEndTags + "</a>";
-                        } else if (op.attributes.blockquote) {
-                            if (withinList) {
-                                //if we were within a list, run the list end code on the previous line and make the current line a blockquote line (it will be starting with <li> right now) and then start the next line with <p>
-                            } else {
-                                //if we weren't within a list, this line will be starting with a <p>, replace that with a blockquote, end this line with a blockquote, start the next line with a <p> for now 
-                                linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
-                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                                linesOfParsedString.push("<p>");
-                            }
+            if (typeof op.insert == "string" && (op.insert !== "" || op.attributes)) {
+                op.insert = this.escapeHTMLChars(op.insert);
+                lineOpen = true;
+                var formattingStartTags = "";
+                var formattingEndTags = "";
+                if (op.attributes) {
+                    // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are
+                    if (op.attributes.blockquote) {
+                        if (withinList) {
+                            withinList = false;
+                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                            resultLengthSoFar += 5;
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
+                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesOfParsedString.push("<p>");
+                        } else {
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
+                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesOfParsedString.push("<p>");
+                        }
+                        continue;
+                    } else if (op.attributes.list == "bullet") {
+                        if (!withinList) {
+                            withinList = true;
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
+                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesOfParsedString.push("<li>");
                             continue;
-                        } else if (op.attributes.list == "bullet") {
-                            if (!withinList) {
-                                withinList = true;
-                                linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
-                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                                linesOfParsedString.push("<li>");
-                                continue;
-                            } else {
-                                linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
-                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                                linesOfParsedString.push("<li>");
-                                continue;
-                            }
+                        } else {
+                            linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
+                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesOfParsedString.push("<li>");
+                            continue;
                         }
                     }
-                    var lines = op.insert.split('\n');
-                    linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
-                    for (var i = 1; i < lines.length; i++) {
-                        if (withinList) {
-                            withinList = false;
-                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                            resultLengthSoFar += 5;
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
-                        }
-                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                        linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
+                    //other formatting is attached directly to the text it applies to
+                    if (op.attributes.bold) {
+                        formattingStartTags = "<strong>" + formattingStartTags;
+                        formattingEndTags = formattingEndTags + "</strong>";
                     }
-
-                } else if (op.insert.LinkPreview) {
-                    /*
-                    yeah i don't think we need this actually, it should always have a newline between text and an embed in the first place
-                    if (lineOpen) {
-                        if (withinList) {
-                            withinList = false;
-                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                            resultLengthSoFar += 5;
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
-                        }
-                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                        linesOfParsedString.push("<p>");
-                        lineOpen = false;
-                    }*/
-                    console.log("link preview at position " + resultLengthSoFar);
-                    //add link preview object to embeds array, if the url matches the vimeo or youtube regexes make it a video embed.
-                } else if (op.insert.PostImage) {
-                    /*
-                    if (lineOpen) {
-                        if (withinList) {
-                            withinList = false;
-                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                            resultLengthSoFar += 5;
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
-                        }
-                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
-                        linesOfParsedString.push("<p>");
-                        lineOpen = false;
+                    if (op.attributes.italic) {
+                        formattingStartTags = "<em>" + formattingStartTags;
+                        formattingEndTags = formattingEndTags + "</em>";
                     }
-                    */
-                    console.log("image at position " + resultLengthSoFar);
-                    //add post image object to embeds array. if it has the same position as the last one (resultLengthSoFar hasn't changed) they're grouped into a single object. figure out if they're horizontal and vertical and stuff
+                    if (op.attributes.link) {
+                        formattingStartTags = '<a href="' + op.attributes.link + '" target="_blank">' + formattingStartTags;
+                        formattingEndTags = formattingEndTags + "</a>";
+                    }
                 }
+                var lines = op.insert.split('\n');
+                linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
+                for (var i = 1; i < lines.length; i++) {
+                    if (withinList) {
+                        withinList = false;
+                        linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                        resultLengthSoFar += 5;
+                        linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length);
+                    }
+                    linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                    resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                    linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
+                }
+            } else if (op.insert.LinkPreview) {
+                //i'm assuming that there will always be a newline text insert in the text right before an inline embed
+                console.log("link preview at position " + resultLengthSoFar);
+                console.log("it is to " + op.insert.LinkPreview);
+                //add link preview object to embeds array, if the url matches the vimeo or youtube regexes make it a video embed.
+            } else if (op.insert.PostImage) {
+                console.log("image at position " + resultLengthSoFar);
+                console.log("its file name will be " + op.attributes.imageURL);
+                console.log("its description is " + op.attributes.description);
+                //add post image object to embeds array. if it has the same position as the last one (resultLengthSoFar hasn't changed) they're grouped into a single object. figure out if they're horizontal and vertical and stuff
             }
         }
         if (withinList) {
@@ -184,12 +167,19 @@ module.exports = {
                 linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
                 linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</p>";
             } else {
-                linesOfParsedString[linesOfParsedString.length - 1] += "</li></ul>"
+                linesOfParsedString[linesOfParsedString.length - 2] += "</li></ul>";
+                linesOfParsedString.pop();
             }
         } else {
-            linesOfParsedString[linesOfParsedString.length - 1] += "</p>"
+            if ((typeof delta.ops[delta.ops.length - 1].insert != "string")) {
+                linesOfParsedString.pop();
+            } else {
+                linesOfParsedString[linesOfParsedString.length - 1] += "</p>"
+            }
         }
-        return { text: linesOfParsedString.join(""), embeds: embeds }; // \n not strictly necessary but will make the resulting html easier to look at
+        console.log("finished html:");
+        console.log(linesOfParsedString.join("\n"));
+        return { text: linesOfParsedString.join(""), embeds: embeds };
     },
     //maybe just have the metascaper function in here (will also be used directly above) and have that route in viewingsweet or whatever just call it and send back the result
     isEven: function(n) {
@@ -197,6 +187,23 @@ module.exports = {
     },
     isOdd: function(n) {
         return Math.abs(n % 2) == 1;
+    },
+    //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
+    escapeHTMLChars: function(string) {
+        var entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;',
+            '\t': '&emsp;' //this one is my idea
+        };
+        return String(string).replace(/[&<>"'`=\/\t]/g, function(s) {
+            return entityMap[s];
+        });
     },
     slugify: function(string) {
         const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
