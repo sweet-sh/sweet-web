@@ -167,7 +167,7 @@ module.exports = {
                 linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
                 linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</p>";
             } else {
-                linesOfParsedString[linesOfParsedString.length - 2] += "</li></ul>";
+                linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
                 linesOfParsedString.pop();
             }
         } else {
