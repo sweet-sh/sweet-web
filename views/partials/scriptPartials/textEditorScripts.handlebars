@@ -1,25 +1,27 @@
 <script type="text/custom-template" id="new-post-link-preview-contents">
-    
-        <img class="link-preview-image" src="/images/spinner-stolen.gif" />
-
+    <img class="link-preview-image" src="/images/spinner-stolen.gif" />
     <div class="link-preview-text-container" style="width:100%;">
         <span class="link-preview-title">...loading...</span>
         <span class="link-preview-description">...loading...</span>
         <span class="link-preview-domain">...loading...</span>
     </div>
-<div class="image-preview-controls">
-    <a href="javascript:void(0)" class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></a>
-    <a href="javascript:void(0)" class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
-  </div>
+    <div class="image-preview-controls">
+        <a href="javascript:void(0)" class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></a>
+        <a href="javascript:void(0)" class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+    </div>
 </script>
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
-    <div class="image-preview"><div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;"><div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress></div></div>
-  <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers."></textarea>
-  <div class="image-preview-controls">
-    <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
-    <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
-  </div>
+    <div class="image-preview">
+        <div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;">
+            <div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress>
+        </div>
+    </div>
+    <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers."></textarea>
+    <div class="image-preview-controls">
+        <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
+        <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+    </div>
 </script>
 
 <script>
@@ -332,8 +334,9 @@
             var c = quill.getContents();
             if(c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string"){
                 c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
-            }else if(c.ops && c.ops.length > 1 && typeof c.ops[c.ops.length-1].insert == "string"){
-                c.ops[c.ops.length-1] = c.ops[c.ops.length-1].insert.replace(/\s+$/, ''); //remove ending whitespace
+            }
+            if(c.ops && c.ops[c.ops.length-1] && typeof c.ops[c.ops.length-1].insert == "string"){
+                c.ops[c.ops.length-1].insert = c.ops[c.ops.length-1].insert.replace(/\s+$/, ''); //remove ending whitespace
             }
             return c;
         }
@@ -539,8 +542,6 @@
     //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
     function prepareImageForMoving(selectedImage) {
         var spacer = selectedImage;
-        //spacer.css("width", spacer.width() + "px");
-        //spacer.css("height", spacer.height() + "px");
 
         var imagecont = spacer.clone(false);
         imagecont.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });

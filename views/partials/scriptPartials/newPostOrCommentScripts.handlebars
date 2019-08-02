@@ -155,10 +155,8 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         data: {
           communityId: $('#postForm').attr("communityId"),
           postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
-          postContent: postContent,
+          postContent: JSON.stringify(postContent),
           postContentWarnings: $('#postContentWarnings').val(),
-          postImageDescription: JSON.stringify(imagedescs),
-          postImageURL: JSON.stringify(sortedurls),
         }
       }).done(function (postTimestamp) { //actually this should be a string set to the 1 millisecond later than the new post's timestamp.
         $('#postContentWarnings').val("");
