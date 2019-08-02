@@ -1152,6 +1152,7 @@ hr {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  height: 100%;
 }
 
 .image-preview-controls > a {
@@ -1403,6 +1404,7 @@ hr {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    line-height: 27px;
 }
 
 
@@ -1412,7 +1414,8 @@ hr {
     align-self: center;
     max-height:100%;
     margin-right:auto;
-    max-width: 140px !important;
+    width: 140px !important;
+    object-fit: contain;
 }
 
 .link-preview-description {
