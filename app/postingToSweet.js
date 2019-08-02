@@ -170,10 +170,14 @@ module.exports = function(app) {
     //if not logged in.
     app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
 
+        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true, true);
+
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
-        var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
+        var postImages = [];
+        var postImageDescriptions = [];
+        /*var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
         var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
         var postImageQuality = req.user.settings.imageQuality;
 
@@ -194,10 +198,7 @@ module.exports = function(app) {
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
-        }
-
-        var rawContent = sanitize(req.body.postContent);
-        var parsedResult = await helper.parseText(rawContent, req.body.postContentWarnings, true, true, true, true);
+        }*/
 
         function savePost(linkPreviewEnabled, linkPreviewMetadata) {
             // if (linkPreviewEnabled) {
@@ -221,17 +222,17 @@ module.exports = function(app) {
                     privacy: postPrivacy,
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: rawContent,
+                    rawContent: req.body.postContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                    imageVersion: 2,
+                    /*imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,
+                    imageIsHorizontal: imageIsHorizontal,*/
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
@@ -348,17 +349,17 @@ module.exports = function(app) {
                     privacy: 'public',
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: rawContent,
+                    rawContent: req.body.postContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(req.body.postContentWarnings),
-                    imageVersion: 2,
+                    /*imageVersion: 2,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,
+                    imageIsHorizontal: imageIsHorizontal,*/
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
