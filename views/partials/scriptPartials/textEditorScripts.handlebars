@@ -477,8 +477,10 @@
         e.preventDefault();
         var selectedImage = $(this).parent().parent();
 
-        //turms selectedImage into a selectedImage element. floatyImageCont is going to contain the image now instead.
+        //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
         var floatyImageCont = prepareImageForMoving(selectedImage);
+
+
 
         $(document).mousemove(function(e) {
             e.preventDefault();
@@ -572,33 +574,43 @@
         spacer.css("border", "dashed")
         spacer.empty();
 
-        imagecont[0].scrollListenerId = setInterval(function(){scrollListener(imagecont)},50);
+        imagecont[0].scrollPrompterId = setInterval(function(){scrollPrompter(imagecont, spacer)},50);
+
+        lastWindowPos = window.scrollY;
+        $(window).on('scroll',function(e){
+            if(window.scrollY > lastWindowPos){
+                moveimagecont(0, imagecont, spacer, "down")
+            }else if(window.scrollY < lastWindowPos){
+                moveimagecont(0, imagecont, spacer, "up")                
+            }
+            lastWindowPos = window.scrollY;
+        })
 
         return imagecont;
     }
 
-    function scrollListener(imagecont){
+    function scrollPrompter(imagecont, spacer){
         var t = getTop(imagecont);
-        if(t < 150){
-            $(window).scrollTop($(window).scrollTop()-5);
-        }else if(t > window.innerHeight-150){
-            $(window).scrollTop($(window).scrollTop()+5);
+        if(t < 100){
+            $(window).scrollTop($(window).scrollTop()-10);
+        }else if(t > window.innerHeight-200){
+            $(window).scrollTop($(window).scrollTop()+10);
         }
     }
 
-    //this function is called when the user moves either their mouse or finger to reposition the embed.
-    function moveimagecont(deltaY, imagecont, spacer) {
+    //this function is called when the user moves either their mouse or finger to reposition the embed by deltaY or the screen scrolls in a direction
+    function moveimagecont(deltaY, imagecont, spacer, direction) {
         //move the floaty element:
         var imageconttop = getTop(imagecont);
         var spacertop = getTop(spacer);
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-        var newYPos = Math.min(Math.max(imageconttop + deltaY, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight() - spacer.outerHeight())); //beauty
+        var newYPos = Math.min(Math.max(imageconttop + deltaY, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
         imagecont.css("top", newYPos + "px");
 
         //move the spacer (maybe):
 
-        if (deltaY > 0) { //moving down
+        if (deltaY > 0 || direction=="down") { //moving down
             var elementBelow = spacer.next();
             while (elementBelow.length && elementBelow.next().length && (imageconttop + imageconth) > (getTop(elementBelow) + elementBelow.outerHeight(true))) {
                 elementBelow = elementBelow.next();
@@ -610,7 +622,7 @@
                     spacer.insertAfter(elementBelow);
                 }
             }
-        } else if (deltaY < 0) { //moving up
+        } else if (deltaY < 0 || direction == "up") { //moving up
             var elementAbove = spacer.prev();
             while (elementAbove.length && elementAbove.prev().length && imageconttop < getTop(elementAbove)) {
                 elementAbove = elementAbove.prev();
@@ -627,7 +639,8 @@
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
     function movementEnded() {
         var imagecont = $('.onthemove');
-        clearInterval(imagecont[0].scrollListenerId)
+        clearInterval(imagecont[0].scrollPrompterId);
+        $(window).off('scroll');
         $('.imagecontspacer').after($('.onthemove'));
         imagecont.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
         imagecont.removeClass("onthemove");
