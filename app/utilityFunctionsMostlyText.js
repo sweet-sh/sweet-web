@@ -8,12 +8,19 @@ const metascraper = require('metascraper')([
     require('metascraper-image')(),
     require('metascraper-title')(),
     require('metascraper-url')()
-  ])
+])
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
-    parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true, youtubeEnabled = false) {
+    parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
+        if (rawText.ops) {
+            var parsedDelta = await this.parseDelta(rawText);
+            rawText = parsedDelta.text;
+            var embeds = parsedDelta.embeds;
+        } else {
+            var embeds = [];
+        }
         let splitContent = rawText.split('</p>');
         let parsedContent = [];
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
@@ -62,73 +69,129 @@ module.exports = {
             })
         }
 
-        if (youtubeEnabled) {
-            console.log("Embedding!")
-            var embeds = [];
-            var embedsAllowed = 1; //harsh, i know
-            var embedsAdded = 0;
-            var linkFindingRegex = /<p><a href="(.*?)" target="_blank">(.*?)<\/a><\/p>/g //matches all links with a line to themselves.
-            //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
-            var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
-            //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
-            var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
-
-            if (parsedContent.search(linkFindingRegex) != -1) {
-                var r = linkFindingRegex.exec(parsedContent);
-                var parsedContentNoEmbeds = parsedContent.slice(); //need a copy of parsedContent that we can modify without throwing off lastIndex in RegExp.exec
-                while (r && embedsAdded < embedsAllowed) {
-                    if (r[1].search(youtubeUrlFindingRegex) != -1 && r[2].search(youtubeUrlFindingRegex) != -1) {
-                        var parsedVUrl = youtubeUrlFindingRegex.exec(r[1])
-                        var videoid = parsedVUrl[5];
-                        const { body: html, url } = await got(parsedVUrl[0])
-                        const metadata = await metascraper({ html, url })
-                        var embed = {
-                            type: 'video',
-                            embedUrl: "https://www.youtube.com/embed/" + videoid + "?autoplay=1", //won't actually autoplay until link preview is clicked
-                            linkUrl: parsedVUrl[0],
-                            image: metadata.image,
-                            title: metadata.title,
-                            description: metadata.description,
-                            domain: "youtube.com",
-                            position: r.index //relative to the start of the final version of parsedContent (the version with all the embed-causing stuff scraped out)
-                        }
-                        embeds.push(embed) // 'embed' no longer looks like a word
-                        parsedContentNoEmbeds = parsedContentNoEmbeds.substring(0,r.index) +  parsedContentNoEmbeds.substring(linkFindingRegex.lastIndex,parsedContentNoEmbeds.length);
-                        ++embedsAdded;
-                    }else if(r[1].search(vimeoUrlFindingRegex) != -1 && (r[2].substring(0,4)=="http" ? r[2] : "https://"+r[2]).search(vimeoUrlFindingRegex) != -1){
-                        var parsedVUrl = vimeoUrlFindingRegex.exec(r[1]);
-                        var videoid = parsedVUrl[4];
-
-                        const { body: html, url } = await got(parsedVUrl[0])
-                        const metadata = await metascraper({ html, url })
-
-                        var embed = {
-                            type: 'video',
-                            embedUrl: 'https://player.vimeo.com/video/' + videoid + "?autoplay=1",
-                            linkUrl: parsedVUrl[0],
-                            image: metadata.image,
-                            title: metadata.title,
-                            description: metadata.description,
-                            domain: "vimeo.com",
-                            position: r.index //relative to start of parsedContent
-                        }
-                        embeds.push(embed)
-                        parsedContentNoEmbeds = parsedContentNoEmbeds.substring(0,r.index) +  parsedContentNoEmbeds.substring(linkFindingRegex.lastIndex,parsedContentNoEmbeds.length);
-                        ++embedsAdded;
-                    }
-                    r = linkFindingRegex.exec(parsedContent);
-                }
-                parsedContent = parsedContentNoEmbeds
-            }
-        }
-
         return {
             text: parsedContent,
             mentions: trimmedMentions,
             tags: trimmedTags,
-            embeds: embeds
+            embeds: [] //replace this when these are working
         };
     },
+    //i'm gonna keep it real, i did not expect this to get this complicated
+    parseDelta: async function(delta) {
+        //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+        var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+        //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+        var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+        var linesOfParsedString = ["<p>"];
+        var embeds = [];
+        var resultLengthSoFar = 0;
+        var withinList = false;
+        var lineOpen = true;
+        for (op of delta.ops) {
+            if (op.insert) { // otherwise something is badly wrong
+                if (typeof op.insert == "string" && op.insert !== "") {
+                    lineOpen = true;
+                    var formattingStartTags = "";
+                    var formattingEndTags = "";
+                    if (op.attributes) {
+                        if (op.attributes.bold) {
+                            formattingStartTags = "<strong>" + formattingStartTags;
+                            formattingEndTags = formattingEndTags + "</strong>";
+                        } else if (op.attributes.italic) {
+                            formattingStartTags = "<em>" + formattingStartTags;
+                            formattingEndTags = formattingEndTags + "</em>";
+                        } else if (op.attributes.link) {
+                            formattingStartTags = '<a href="' + op.attributes.link + '" target="_blank">' + formattingStartTags;
+                            formattingEndTags = formattingEndTags + "</a>";
+                        } else if (op.attributes.blockquote) {
+                            if (withinList) {
+                                //if we were within a list, run the list end code on the previous line and make the current line a blockquote line (it will be starting with <li> right now) and then start the next line with <p>
+                            } else {
+                                //if we weren't within a list, this line will be starting with a <p>, replace that with a blockquote, end this line with a blockquote, start the next line with a <p> for now 
+                                linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
+                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                                linesOfParsedString.push("<p>");
+                            }
+                            continue;
+                        } else if (op.attributes.list == "bullet") {
+                            if (!withinList) {
+                                withinList = true;
+                                linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
+                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                                linesOfParsedString.push("<li>");
+                                continue;
+                            } else {
+                                linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
+                                resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                                linesOfParsedString.push("<li>");
+                                continue;
+                            }
+                        }
+                    }
+                    var lines = op.insert.split('\n');
+                    linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
+                    for (var i = 1; i < lines.length; i++) {
+                        if (withinList) {
+                            withinList = false;
+                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                            resultLengthSoFar += 5;
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
+                        }
+                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                        linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
+                    }
+
+                } else if (op.insert.LinkPreview) {
+                    /*
+                    yeah i don't think we need this actually, it should always have a newline between text and an embed in the first place
+                    if (lineOpen) {
+                        if (withinList) {
+                            withinList = false;
+                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                            resultLengthSoFar += 5;
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
+                        }
+                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                        linesOfParsedString.push("<p>");
+                        lineOpen = false;
+                    }*/
+                    console.log("link preview at position " + resultLengthSoFar);
+                    //add link preview object to embeds array, if the url matches the vimeo or youtube regexes make it a video embed.
+                } else if (op.insert.PostImage) {
+                    /*
+                    if (lineOpen) {
+                        if (withinList) {
+                            withinList = false;
+                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                            resultLengthSoFar += 5;
+                            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1]);
+                        }
+                        linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                        resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                        linesOfParsedString.push("<p>");
+                        lineOpen = false;
+                    }
+                    */
+                    console.log("image at position " + resultLengthSoFar);
+                    //add post image object to embeds array. if it has the same position as the last one (resultLengthSoFar hasn't changed) they're grouped into a single object. figure out if they're horizontal and vertical and stuff
+                }
+            }
+        }
+        if (withinList) {
+            if (typeof delta.ops[delta.ops.length - 1].insert == "string" && (!delta.ops[delta.ops.length - 1].attributes || !delta.ops[delta.ops.length - 1].attributes.list)) {
+                linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</p>";
+            } else {
+                linesOfParsedString[linesOfParsedString.length - 1] += "</li></ul>"
+            }
+        } else {
+            linesOfParsedString[linesOfParsedString.length - 1] += "</p>"
+        }
+        return { text: linesOfParsedString.join(""), embeds: embeds }; // \n not strictly necessary but will make the resulting html easier to look at
+    },
+    //maybe just have the metascaper function in here (will also be used directly above) and have that route in viewingsweet or whatever just call it and send back the result
     isEven: function(n) {
         return n % 2 == 0;
     },
@@ -153,12 +216,12 @@ module.exports = {
         return sanitizeHtml(parsedContent, {
             allowedTags: ['blockquote', 'ul', 'li', 'em', 'i', 'b', 'strong', 'a', 'p', 'br'],
             allowedAttributes: {
-                'a': ['href','target']
+                'a': ['href', 'target']
             },
             transformTags: {
                 'a': function(tagName, attribs) {
                     //if a link is not explicitly relative due to an initial / (like mention and hashtag links are) and doesn't already include the // that makes it non-relative
-                    if (attribs.href.substring(0,1) != "/" && !attribs.href.includes('//')) {
+                    if (attribs.href.substring(0, 1) != "/" && !attribs.href.includes('//')) {
                         //make the link explicitly non-relative
                         attribs.href = "//" + attribs.href;
                     }

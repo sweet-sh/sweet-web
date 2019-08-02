@@ -1018,8 +1018,8 @@ module.exports = function(app) {
                         privacy: displayContext.privacy,
                         parsedTimestamp: parsedTimestamp,
                         lastUpdated: displayContext.lastUpdated,
-                        rawContent: displayContext.rawContent,
-                        parsedContent: helper.mixInEmbeds(displayContext),
+                        rawContent: displayContext.rawContent, //todo: check if this is this used 'cause it's going to be different now, also replace this with cached html with inlines eventually
+                        parsedContent: displayContext.parsedContent,
                         commentsDisabled: displayContext.commentsDisabled,
                         comments: displayContext.comments,
                         numberOfComments: displayContext.numberOfComments,
