@@ -13,7 +13,7 @@
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
     <div class="image-preview">
-        <div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-direction:column;">
+        <div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-scrollDirection:column;">
             <div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress>
         </div>
     </div>
@@ -55,8 +55,9 @@
         } else if (m.hasClass('link-preview-container')) {
             m.parent()[0].linkPreviewsAdded--;
         }
+        var postform = m.closest('.new-comment-form, .contentForm');
         m.remove();
-        updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
+        updateSubmitButtonState(postform);
     }
 
     var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and forms part of their ids so they can all be uniquely identified
@@ -82,35 +83,26 @@
             n.addClass('still-loading');
             node.request = $.post("/api/newpostform/linkpreviewdata", { url: url }, function(data, status, jqXHR) {
                 var m = $("#embed" + id);
-                if (!m) { return; }
+                if (!m.length) { return; }
                 m.removeClass('still-loading');
                 if (data == "invalid url i guess") {
                     bootbox.alert("Sorry, we couldn't connnect to that url (" + url + ") to obtain a preview :(")
-                    if ($(".onthemove")) {
-                        movementEnded()
-                    }
-                    m.parent()[0].linkPreviewsAdded--;
-                    m.remove();
+                    m.find('.image-clear').click();
                 } else {
                     var linkInfo = JSON.parse(data);
                     m.find(".link-preview-image").attr('src', linkInfo.image)
                     m.find('.link-preview-title').html(linkInfo.title);
                     m.find('.link-preview-description').html(linkInfo.description);
                     m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
+                    updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                 }
-                updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
             })
             node.request.fail(function(){
                 var m = $("#embed" + id);
-                if (!m) { return; }
+                if (!m.length) { return; }
                 m.removeClass('still-loading');
                 bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(")
-                if ($(".onthemove")) {
-                    movementEnded();
-                }
-                m.parent()[0].linkPreviewsAdded--;
-                m.remove();
-                updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
+                m.find('.image-clear').click();
             })
 
             n.find('.image-clear').click(clearEmbed);
@@ -188,6 +180,7 @@
                     console.log(status);
                     console.log(error);
                     $.post("/admin/reporterror", { errorstring: error });
+                    m.removeClass('still-loading');
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));                    
                 },
                 success: function(data, status, jqXHR) {
@@ -217,16 +210,7 @@
                 }
             });
 
-            n.find('.image-clear').click(function(e) {
-                var m = $("#embed" + id);
-                if (m[0].request && m[0].request.readyState != 4) {
-                    m[0].request.abort();
-                } else if (m.attr('image-url') != 'loading...') {
-                    $.post("/cleartempimage", { imageURL: m.attr('image-url') });
-                }
-                m.parent()[0].imagesAdded--;
-                m.remove();
-            });
+            n.find('.image-clear').click(clearEmbed);
 
             n.find('.image-move').on('mousedown', mousedownOnHandle);
             n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
@@ -473,24 +457,27 @@
 
     //these event listener functions are initially attached to the embeds' movement handles,when they're created, above
 
-    function mousedownOnHandle(e) {
-        e.preventDefault();
+    function mousedownOnHandle(mouseDownEvent) {
+        mouseDownEvent.preventDefault();
         var selectedImage = $(this).parent().parent();
 
         //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
         var floatyImageCont = prepareImageForMoving(selectedImage);
 
+        floatyImageCont[0].pointerOffset = mouseDownEvent.originalEvent.clientY-getTop(floatyImageCont);
 
+        prevPointerY = mouseDownEvent.originalEvent.clientY;
 
         $(document).mousemove(function(e) {
             e.preventDefault();
-            moveimagecont(e.originalEvent.movementY, floatyImageCont, selectedImage);
+            moveimagecont(e.originalEvent.clientY, floatyImageCont, selectedImage);
             return false;
         });
 
         $(document).on('mouseup', function(e) {
             movementEnded();
             $(document).off('mousemove');
+            $(document).off('mouseup');
         });
     }
 
@@ -511,7 +498,9 @@
 
         var floatyImageCont = prepareImageForMoving(selectedImage);
 
-        var previousY = e.changedTouches[0].screenY;
+        floatyImageCont[0].pointerOffset = e.changedTouches[0].clientY-getTop(floatyImageCont);
+
+        prevPointerY = e.changedTouches[0].clientY;
 
         //function to be passed to the touchmove handler and then later removed from it
         function touchmoveevent(event) {
@@ -519,9 +508,7 @@
             if (event.cancelable) {
                 event.preventDefault();
             }
-
-            moveimagecont(-1 * (previousY - event.changedTouches[0].screenY), floatyImageCont, selectedImage);
-            previousY = event.changedTouches[0].screenY;
+            moveimagecont(event.changedTouches[0].clientY, floatyImageCont, selectedImage);
         }
 
         //for some reason jQuery Did Not Want to work with these touch events. Possibly they would like us to be using jQuery Mobile. But, this is pretty simple, we don't need it.
@@ -579,9 +566,9 @@
         lastWindowPos = window.scrollY;
         $(window).on('scroll',function(e){
             if(window.scrollY > lastWindowPos){
-                moveimagecont(0, imagecont, spacer, "down")
+                moveimagecont(prevPointerY, imagecont, spacer, "down")
             }else if(window.scrollY < lastWindowPos){
-                moveimagecont(0, imagecont, spacer, "up")                
+                moveimagecont(prevPointerY, imagecont, spacer, "up")                
             }
             lastWindowPos = window.scrollY;
         })
@@ -589,6 +576,7 @@
         return imagecont;
     }
 
+    //assumes a window that's at least 300px tall
     function scrollPrompter(imagecont, spacer){
         var t = getTop(imagecont);
         if(t < 100){
@@ -598,19 +586,21 @@
         }
     }
 
-    //this function is called when the user moves either their mouse or finger to reposition the embed by deltaY or the screen scrolls in a direction
-    function moveimagecont(deltaY, imagecont, spacer, direction) {
+    //this function is called when the user moves either their mouse or finger to reposition the embed or the screen scrolls in a scrollDirection
+    function moveimagecont(pointerY, imagecont, spacer, scrollDirection) {
+        var deltaY = pointerY-prevPointerY;
+        prevPointerY = pointerY;
         //move the floaty element:
         var imageconttop = getTop(imagecont);
         var spacertop = getTop(spacer);
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-        var newYPos = Math.min(Math.max(imageconttop + deltaY, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
+        var newYPos = Math.min(Math.max(pointerY-imagecont[0].pointerOffset, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
         imagecont.css("top", newYPos + "px");
 
         //move the spacer (maybe):
 
-        if (deltaY > 0 || direction=="down") { //moving down
+        if (scrollDirection=="down" || deltaY > 0) { //moving down
             var elementBelow = spacer.next();
             while (elementBelow.length && elementBelow.next().length && (imageconttop + imageconth) > (getTop(elementBelow) + elementBelow.outerHeight(true))) {
                 elementBelow = elementBelow.next();
@@ -622,7 +612,7 @@
                     spacer.insertAfter(elementBelow);
                 }
             }
-        } else if (deltaY < 0 || direction == "up") { //moving up
+        } else if (scrollDirection == "up" || deltaY < 0) { //moving up
             var elementAbove = spacer.prev();
             while (elementAbove.length && elementAbove.prev().length && imageconttop < getTop(elementAbove)) {
                 elementAbove = elementAbove.prev();
@@ -636,18 +626,21 @@
         }
     }
 
-    //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot.
+    //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot. it's all called to just
+    //generally cancel drag and dropping when an alert has to be displayed about an upload, just in case drag and dropping is going on
     function movementEnded() {
         var imagecont = $('.onthemove');
-        clearInterval(imagecont[0].scrollPrompterId);
-        $(window).off('scroll');
-        $('.imagecontspacer').after($('.onthemove'));
-        imagecont.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
-        imagecont.removeClass("onthemove");
-        var spacer = $('.imagecontspacer');
-        if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == "")) {
-            spacer.after("<p></p>")
+        if(imagecont.length){
+            clearInterval(imagecont[0].scrollPrompterId);
+            $(window).off('scroll');
+            $('.imagecontspacer').after($('.onthemove'));
+            imagecont.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
+            imagecont.removeClass("onthemove");
+            var spacer = $('.imagecontspacer');
+            if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == "")) {
+                spacer.after("<p></p>")
+            }
+            spacer.remove();
         }
-        spacer.remove();
     }
 </script>
