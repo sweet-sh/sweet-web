@@ -315,6 +315,7 @@
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
         element.getContents = function() {
+            quill.updateContents();
             var c = quill.getContents();
             if(c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string"){
                 c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
