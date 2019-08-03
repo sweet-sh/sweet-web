@@ -105,6 +105,7 @@ $(function(){
             n.addImage(this.files[i]);
           }
         }
+        $(this).val(''); //ensures change event will fire, even if the user picks the same image again
       });
       ourFileInputGuy[0].changeEventAttached = true;
     }
