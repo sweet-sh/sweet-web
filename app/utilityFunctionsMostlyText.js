@@ -159,14 +159,31 @@ module.exports = {
                 }
             } else if (op.insert.LinkPreview) {
                 //i'm assuming that there will always be a newline text insert in the text right before an inline embed
+                var embed = await this.getLinkMetadata(op.insert.LinkPreview);
+                embed.position = resultLengthSoFar;
+                embed.linkUrl = (op.insert.LinkPreview.contains("//") ? "" : "//") +op.insert.LinkPreview;
+                if(youtubeUrlFindingRegex.test(op.LinkPreview)){
+                    embed.type="video";
+                    embed.domain += "(will open as embed)";
+                    embed.embedUrl = "https://www.youtube.com/embed/"+youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5]+"?autoplay=1";
+                }else if(vimeoUrlFindingRegex.test(op.insert.LinkPreview)){
+                    embed.type="video";
+                    embed.domain += "(will open as embed)";
+                    embed.embedUrl = "https://www.youtube.com/embed/"+vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4]+"?autoplay=1";
+                }else{
+                    embed.type = "link-preview";
+                }
+                embeds.push(embed);
+
                 console.log("link preview at position " + resultLengthSoFar);
                 console.log("it is to " + op.insert.LinkPreview);
-                //add link preview object to embeds array, if the url matches the vimeo or youtube regexes make it a video embed.
             } else if (op.insert.PostImage) {
+                images.push(op.attributes.imageURL);
+                imageDescriptions.push(op.attributes.description)
+                imagePositions.push(resultLengthSoFar);
                 console.log("image at position " + resultLengthSoFar);
                 console.log("its file name will be " + op.attributes.imageURL);
                 console.log("its description is " + op.attributes.description);
-                //add post image object to embeds array. if it has the same position as the last one (resultLengthSoFar hasn't changed) they're grouped into a single object. figure out if they're horizontal and vertical and stuff
             }
         }
         if (withinList) {
@@ -186,7 +203,7 @@ module.exports = {
         }
         console.log("finished html:");
         console.log(linesOfParsedString.join("\n"));
-        return { text: linesOfParsedString.join(""), embeds: embeds };
+        return { text: linesOfParsedString.join(""), embeds: embeds, images:images, imagePositions: imagePositions, imageDescriptions:imageDescriptions, isHorizontal: isHorizontal, isVertical:isVertical };
     },
     //maybe just have the metascaper function in here (will also be used directly above) and have that route in viewingsweet or whatever just call it and send back the result
     isEven: function(n) {

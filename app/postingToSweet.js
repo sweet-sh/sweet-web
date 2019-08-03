@@ -175,10 +175,11 @@ module.exports = function(app) {
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
-        var postImages = [];
-        var postImageDescriptions = [];
-        /*var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
-        var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
+        var postImages = parsedResult.images.slice(0, 4);
+        var postImageDescriptions = parsedResult.imageDescriptions.slice(0, 4);
+        var postImagePositions = parsedResult.imagePositions.slice(0, 4);
+        var embeds = parsedResult.embeds.slice(0, 10000); //todo: set embeds limits
+
         var postImageQuality = req.user.settings.imageQuality;
 
         var imageIsVertical = [];
@@ -198,20 +199,9 @@ module.exports = function(app) {
         if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
-        }*/
+        }
 
-        function savePost(linkPreviewEnabled, linkPreviewMetadata) {
-            // if (linkPreviewEnabled) {
-            //     linkPreview = {
-            //         url: linkPreviewMetadata.url,
-            //         domain: url.parse(linkPreviewMetadata.url).hostname,
-            //         title: linkPreviewMetadata.title,
-            //         description: linkPreviewMetadata.description,
-            //         image: linkPreviewMetadata.image,
-            //     }
-            // } else {
-            //     linkPreview = {};
-            // }
+        function savePost() {
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -228,18 +218,18 @@ module.exports = function(app) {
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                    /*imageVersion: 2,
+                    imageVersion: 3,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,*/
+                    imageIsHorizontal: imageIsHorizontal,
+                    imagePositions: postImagePositions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    embeds: parsedResult.embeds
-                    // linkPreview: linkPreview
+                    embeds: embeds
                 });
 
                 // Parse images
@@ -271,21 +261,7 @@ module.exports = function(app) {
                 post.save()
                     .then(() => {
                         parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({
-                                name: tag
-                            }, {
-                                "$push": {
-                                    "posts": newPostId
-                                },
-                                "$set": {
-                                    "lastUpdated": postCreationTime
-                                }
-                            }, {
-                                upsert: true,
-                                new: true
-                            }, function(error, result) {
-                                if (error) return
-                            });
+                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
                         });
                         if (postPrivacy == "private") {
                             console.log("This post is private!")
@@ -293,17 +269,13 @@ module.exports = function(app) {
                             Relationship.find({
                                     from: req.user.email,
                                     value: "trust"
-                                }, {
-                                    'to': 1
-                                })
+                                }, { 'to': 1 })
                                 .then((emails) => {
                                     let emailsArray = emails.map(({
                                         to
                                     }) => to)
                                     parsedResult.mentions.forEach(function(mention) {
-                                        User.findOne({
-                                                username: mention
-                                            })
+                                        User.findOne({ username: mention })
                                             .then((user) => {
                                                 if (emailsArray.includes(user.email)) {
                                                     notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
@@ -355,18 +327,18 @@ module.exports = function(app) {
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(req.body.postContentWarnings),
-                    /*imageVersion: 2,
+                    imageVersion: 3,
                     images: postImages,
                     imageDescriptions: postImageDescriptions,
                     imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,*/
+                    imageIsHorizontal: imageIsHorizontal,
+                    imagePositions: postImagePositions,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    embeds: parsedResult.embeds,
-                    // linkPreview: linkPreview
+                    embeds: embeds,
                 });
 
                 // Parse images
@@ -395,16 +367,7 @@ module.exports = function(app) {
                 post.save()
                     .then(() => {
                         parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({
-                                name: tag
-                            }, {
-                                "$push": {
-                                    "posts": newPostId
-                                }
-                            }, {
-                                upsert: true,
-                                new: true
-                            }, function(error, result) {
+                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
                                 if (error) return
                             });
                         });
@@ -439,21 +402,6 @@ module.exports = function(app) {
                     });
             }
         }
-
-        //get link preview for first link in content
-        // contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
-        // if (contentURLMatch) {
-        //     contentURL = contentURLMatch[2]
-        //     got(contentURL)
-        //     .then(({ body: html, url }) => {
-        //         metascraper({ html, url })
-        //             .then(metadata => {
-        //                 savePost(true, metadata);
-        //         })
-        //     })
-        // } else {
-        //     savePost(false);
-        // }
         savePost();
     });
 
@@ -461,9 +409,7 @@ module.exports = function(app) {
     //Inputs: id of post to delete (in req.params)
     //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it caused, delete the post document.
     app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
-        Post.findOne({
-                "_id": req.params.postid
-            })
+        Post.findOne({                "_id": req.params.postid            })
             .then((post) => {
 
                 if (!post.author._id.equals(req.user._id)) {
@@ -601,10 +547,10 @@ module.exports = function(app) {
             fullImageUrls.push("/api/image/display/" + img);
         }
         var embedsHTML = []
-        for (embed of parsedResult.embeds){
-            embedsHTML.push(await hbs.render('./views/partials/embed.handlebars',{embed:embed}));
+        for (embed of parsedResult.embeds) {
+            embedsHTML.push(await hbs.render('./views/partials/embed.handlebars', { embed: embed }));
         }
-       var imageGalleryHTML =  await hbs.render('./views/partials/imagegallery.handlebars', {
+        var imageGalleryHTML = await hbs.render('./views/partials/imagegallery.handlebars', {
             images: fullImageUrls,
             post_id: commentId.toString(),
             imageDescriptions: imageDescriptions,
