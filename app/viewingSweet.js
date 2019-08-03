@@ -3,15 +3,6 @@ const sanitizeHtml = require('sanitize-html');
 const notifier = require('./notifier.js');
 const sanitize = require('mongo-sanitize');
 const fs = require('fs');
-const sharp = require('sharp')
-var got = require('got');
-var urlparse = require('url')
-const metascraper = require('metascraper')([
-    require('metascraper-description')(),
-    require('metascraper-image')(),
-    require('metascraper-title')(),
-    require('metascraper-url')()
-])
 
 var auth = require('../config/auth.js'); //used on the settings page to set up push notifications
 
@@ -1384,16 +1375,9 @@ module.exports = function(app) {
 
     app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
         try {
-            const { body: html, url } = await got(req.body.url)
-            const metadata = await metascraper({ html, url })
-            var response = {
-                image: metadata.image,
-                title: metadata.title,
-                description: metadata.description,
-                domain: urlparse.parse(url).hostname
-            }
+            const metadata = await helper.getLinkMetadata(req.body.url);
             res.setHeader('content-type', 'text/plain');
-            res.send(JSON.stringify(response))
+            res.send(JSON.stringify(metadata))
         } catch (err) {
             console.log("could not get link preview information for url "+req.body.url)
             console.log(err);

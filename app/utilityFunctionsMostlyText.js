@@ -1,14 +1,14 @@
 const Autolinker = require('autolinker');
 var sanitize = require('mongo-sanitize');
 var sanitizeHtml = require('sanitize-html');
-var got = require('got');
 const urlp = require('url');
 const metascraper = require('metascraper')([
     require('metascraper-description')(),
     require('metascraper-image')(),
     require('metascraper-title')(),
     require('metascraper-url')()
-])
+]);
+const request = require('request');
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
@@ -83,7 +83,14 @@ module.exports = {
         //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
         var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
         var linesOfParsedString = ["<p>"];
+
         var embeds = [];
+        var images = [];
+        var isHorizontal = [];
+        var isVertical = [];
+        var imageDescriptions = [];
+        var imagePositions = [];
+
         var resultLengthSoFar = 0;
         var withinList = false;
         var lineOpen = true;
@@ -241,7 +248,29 @@ module.exports = {
             }
         });
     },
-    //takes a post or comment documents and returns its parsedText with the embed html placed at its position according to the embeds array. never actually tested with more than one embed.
+    getLinkMetadata: async function(url){
+        if(!url.includes('//')){
+            url = 'http://'+url;
+        }
+        var urlreq = new Promise(function(resolve, reject){
+            request({url:url,gzip:true}, function (error, response, body) {
+                if(error){
+                    reject();
+                }else{
+                    resolve(body);
+                }
+            });
+        })
+        const html = await urlreq;
+        const metadata = await metascraper({ html, url })
+        return {
+            image: metadata.image,
+            title: metadata.title,
+            description: metadata.description,
+            domain: urlp.parse(url).hostname
+        }
+    },
+    //DEPRECATED
     mixInEmbeds: function(post) { //actually, can also be a comment
         if (post.embeds && post.embeds.length > 0) {
             var index = 0;
@@ -262,9 +291,5 @@ module.exports = {
 }
 
 function wordCount(str) {
-    return str.split(' ')
-        .filter(function(n) {
-            return n != ''
-        })
-        .length;
+    return str.split(' ').filter(function(n) {return n != ''}).length;
 }
