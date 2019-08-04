@@ -578,42 +578,29 @@ module.exports = function(app) {
 
         //only runs if cached html is out of date
         async function updateHTMLRecursive(displayContext) {
-            helper.updateHTMLCache(displayContext);
+            displayContext = await helper.updateHTMLCache(displayContext);
             if (displayContext.comments) {
                 for (comment of displayContext.comments) {
                     if (comment.timestamp < galleryTemplateMTime && comment.timestamp < embedTemplateMTime) { //comments are provided with cached html when they're created, which might be up to date even if the post's isn't
-                        await updateHtmlRecursive(comment);
+                        await updateHTMLRecursive(comment);
                     }
                 }
             } else if (displayContext.replies) {
                 for (reply of displayContext.replies) {
                     if (reply.timestamp < galleryTemplateMTime && reply.timestamp < embedTemplateMTime) {
-                        await updateHtmlRecursive(reply);
+                        await updateHTMLRecursive(reply);
                     }
                 }
             }
         }
 
-/*
-        //get the full url for all images in the displayContext
-        var imageUrlsArray = []
-        if (post.imageVersion === 2) {
-            post.images.forEach(image => {
-                imageUrlsArray.push('/api/image/display/' + image)
-            })
-        } else {
-            post.images.forEach(image => {
-                imageUrlsArray.push('/images/uploads/' + image)
-            })
-        }
-*/
         var galleryTemplatePath = "./views/partials/imagegallery.handlebars";
         var galleryTemplateMTime = fs.statSync(galleryTemplatePath).mtime; //would probably be better asynchronous
         var embedsTemplatePath = "./views/partials/embed.handlebars";
         var embedTemplateMTime = fs.statSync(embedsTemplatePath).mtime;
 
-        if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) ||(!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
-            console.log("post image gallery html not up to date, updating")
+        if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) || (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
+            console.log("post html cache not up to date, updating")
             await updateHTMLRecursive(post);
             post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
             post.cachedHTML.embedsMTime = embedTemplateMTime;
@@ -968,8 +955,7 @@ module.exports = function(app) {
                         privacy: displayContext.privacy,
                         parsedTimestamp: parsedTimestamp,
                         lastUpdated: displayContext.lastUpdated,
-                        rawContent: displayContext.rawContent, //todo: check if this is this used 'cause it's going to be different now
-                        parsedContent: displayContext.cachedHTML.fullHTML, //todo: rename key here and in the template to like fullPostHTML or something
+                        internalPostHTML: displayContext.cachedHTML.fullHTML,
                         commentsDisabled: displayContext.commentsDisabled,
                         comments: displayContext.comments,
                         numberOfComments: displayContext.numberOfComments,

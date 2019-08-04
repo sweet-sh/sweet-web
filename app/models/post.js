@@ -103,8 +103,8 @@ var postSchema = new mongoose.Schema({
   contentWarnings: String,
   commentsDisabled: Boolean,
 
-  imageVersion: Number, //1: array of filenames accessible through /public/images/uploads/[filename]; 2=array of filenames accessible through /api/images/display/[filename] (which checks the user's permissions and the image's privacy;) and 3: image data stored in inlineElements instead
-  //image parallel arrays (no positions, they were all put at the end):
+  imageVersion: Number, //1: array of filenames accessible through /public/images/uploads/[filename]; 2=array of filenames accessible through /api/image/display/[filename] (which checks the user's permissions and the image's privacy;) and 3: image data stored in inlineElements instead
+  //image parallel arrays (no positions, images were all put at the end):
   images: [String],
   imageDescriptions: [String],
   imageIsVertical: [String],

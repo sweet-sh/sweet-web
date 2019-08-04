@@ -9,13 +9,16 @@ const metascraper = require('metascraper')([
     require('metascraper-url')()
 ]);
 const request = require('request');
+const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path')
 
 //todo: put these in a sensible order
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
-        
+
         if (rawText.ops) { //
             var parsedDelta = await this.parseDelta(rawText);
             rawText = parsedDelta.text;
@@ -87,6 +90,10 @@ module.exports = {
         var linesOfParsedString = ["<p>"];
 
         var inlineElements = [];
+        var imagesAdded = 0;
+        var linkPreviewsAdded = 0;
+        const imagesAllowed = 4;
+        const linkPreviewsAllowed = 4;
 
         var linesFinished = 0; // the assumption is that the rest of the text parsing (in parseText) will not add or remove any lines
         var withinList = false;
@@ -152,12 +159,12 @@ module.exports = {
                     linesFinished++;
                     linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
                 }
-            } else if (op.insert.LinkPreview) {
+            } else if (op.insert.LinkPreview && linkPreviewsAdded <= linkPreviewsAllowed) {
                 //i'm assuming that there will always be a newline text insert in the text right before an inline embed
                 var embed = op.attributes;
                 embed.type = "link-preview";
                 embed.position = linesFinished;
-                embed.linkUrl = (op.insert.LinkPreview.contains("//") ? "" : "//") + op.insert.LinkPreview;
+                embed.linkUrl = (op.insert.LinkPreview.includes("//") ? "" : "//") + op.insert.LinkPreview;
                 if (youtubeUrlFindingRegex.test(op.LinkPreview)) {
                     embed.isEmbeddableVideo = true;
                     embed.embedUrl = "https://www.youtube.com/embed/" + youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5] + "?autoplay=1";
@@ -168,18 +175,21 @@ module.exports = {
                     embed.isEmbeddableVideo = false;
                 }
                 inlineElements.push(embed);
+                linkPreviewsAdded++;
 
                 console.log("link preview on line: " + linesFinished);
                 console.log("it is to " + op.insert.LinkPreview);
-            } else if (op.insert.PostImage) {
-                if (inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
+            } else if (op.insert.PostImage && imagesAdded <= imagesAllowed && op.attributes.imageURL != "loading...") {
+                if (imagesAdded>0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
                     var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
                 } else {
                     var image = { images: [], imageDescriptions: [], position: linesFinished, type: "image(s)" };
+                    inlineElements.push(image);
                 }
                 image.images.push(op.attributes.imageURL);
-                image.imageDescriptions.push(op.attributes.description)
-                //todo: move code for isHorizontal and isVertical here
+                image.imageDescriptions.push(op.attributes.description);
+                imagesAdded++;
+
                 console.log("image on line: " + linesFinished);
                 console.log("its file name will be " + op.attributes.imageURL);
                 console.log("its description is " + op.attributes.description);
@@ -202,7 +212,7 @@ module.exports = {
         }
         console.log("finished html:");
         console.log(linesOfParsedString.join("\n"));
-        return { text: linesOfParsedString.join(""), inlineElements:inlineElements };
+        return { text: linesOfParsedString.join(""), inlineElements: inlineElements };
     },
     isEven: function(n) {
         return n % 2 == 0;
@@ -210,23 +220,36 @@ module.exports = {
     isOdd: function(n) {
         return Math.abs(n % 2) == 1;
     },
-    checkLinkPreviews: async function(postOrComment, saveTarget) { //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
+    //takes a post or comment, returns the version with updated inlineElements array and cache if needed or nothing if not
+    checkLinkPreviews: async function(postOrComment) {
+        var changed = false;
         function compareProp(prop) {
             if (l[prop] != meta[prop]) {
                 console.log("link preview in document " + postOrComment._id.toString() + " had " + prop + " " + l[prop] + " but the live page for url " + l.linkUrl + " had " + prop + " " + meta[prop]);
                 l[prop] = meta[prop];
+                changed = true;
                 return true;
             }
             return false;
         }
-        for (var l of postOrComment.inlineElements) {
+        for (var i = 0; i < postOrComment.inlineElements.length; i++) {
+            var l = postOrComment.inlineElements[i];
             if (l.type == "link-preview") {
-                //todo: put the below line in a try catch and remove the embed if it throws an exception. that may require using a regular for loop in order to remove the element by index
-                var meta = await this.getLinkMetadata(l.linkUrl);
-                if (compareProp('description') || compareProp('title') || compareProp('image') || compareProp('domain')) {
-                    saveTarget.save();
-                    //this.updateHTMLCache(postOrComment,saveTarget); //not implemented yet
+                try {
+                    var meta = await this.getLinkMetadata(l.linkUrl);
+                    compareProp('description');
+                    compareProp('title');
+                    compareProp('image');
+                    compareProp('domain');
+                } catch (e) {
+                    changed = true;
+                    postOrComment.inlineElements.splice(i, 1); //remove link preview if metadata cannot be confirmed
                 }
+            }
+            if(changed){
+                return (await this.updateHTMLCache(postOrComment));
+            }else{
+                return;
             }
         }
     },
@@ -326,22 +349,90 @@ module.exports = {
             }
         }
     },
-    updateHTMLCache: function(postOrComment, saveTarget) { //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
-        //todo: split postOrComment.parsedText into lines (which can end with </p> or </li> or </li></ul> and can start similarly). maybe a regex that grabs lines and then add each subsequent match to a lines array
-        if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
-            for (const il of postOrComment.inlineElements) {
-                //todo: write this, put the rendered inline elements right before the line given by position (e. g. position==0 means put it before lines[0], at the beginning.)
-                //if it's an image(s) have to get full url
-                //join the result and put it in the result in postOrComment.cachedHTML.fullHTML, save saveTarget
+    //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
+    //the non-first arguments are just stored in the image documents in the database. postType is "user" or "community"
+    finalizeImages: async function(imageFileNames, postType, posterID, privacy, postImageQuality) {
+        var imageIsVertical = [];
+        var imageIsHorizontal = [];
+        for (const imageFileName of imageFileNames) {
+            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
+                if (e) {
+                    console.log("could not move " + imageFileName + " out of temp");
+                    console.log(e);
+                }
+            })
+            var metadata = await sharp('./cdn/images/' + imageFileName).metadata()
+            image = new Image({
+                context: postType,
+                filename: imageFileName,
+                privacy: privacy,
+                user: posterID,
+                quality: postImageQuality,
+                height: metadata.height,
+                width: metadata.width
+            })
+            await image.save();
+
+            if (fs.existsSync(path.resolve('./cdn/images/' + imageFileName))) {
+                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
+                imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
+            } else {
+                console.log("image " + './cdn/images/' + imageFileName + " not found! Oh no")
+                imageIsVertical.push("");
+                imageIsHorizontal.push("");
             }
+
+        }
+        return { imageIsHorizontal: imageIsHorizontal, imageIsVertical: imageIsVertical };
+    },
+    //returns the postOrComment with the cachedHTML.fullHTML field set to its final HTML. also, some extra info in the inlineElements, but that hopefully won't get saved 'cause it's not in the inlineElement schema
+    updateHTMLCache: async function(postOrComment) {
+        if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
+            var lines = [];
+            const lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
+            while(line = lineFinder.exec(postOrComment.parsedContent)){
+                lines.push(line);
+            }
+            var addedLines = 0;
+            for (const il of postOrComment.inlineElements) {
+                if(il.type=="link-preview"){
+                    if(il.isEmbeddableVideo){
+                        il.type = "video"; //the template looks for "video" in this field, like what older posts with embeds have
+                    }
+                    var html = await hbs.render('./views/partials/embed.handlebars',il);
+                    il.type="link-preview"; //yes, this is dumb. the alternative is to list all the different variables the template expects in the rendering options with type: (isEmbeddableVideo ? "video" : "asdj;lfkfdsajkfl;") or something
+                }else if(il.type=="image(s)"){
+                    il.contentWarnings = postOrComment.contentWarnings;
+                    il.author = {username: (await User.findById(postOrComment.author,{username:1})).username};
+                    var filenames = il.images;
+                    il.images = il.images.map(v=>"/api/image/display/"+v);
+                    var html = await hbs.render('./views/partials/imagegallery.handlebars',il);
+                    il.images = filenames; //yes, this is dumb. the alternative is to specify each variable the template expects individually in the rendering options with like images: fullImagePaths
+                }
+                lines.splice(il.position+addedLines,0,html);
+                addedLines++;
+            }
+            postOrComment.cachedHTML.fullHTML = lines.join('\n') //\n just makes the result easier to read in case someone wants to look at it;
+            return postOrComment;
         } else {
-            var html = postOrComment.parsedContent.slice(); // i think that'll clone it so we're not modifying the original parsedContent? todo: check that
+            var endHTML = "";
             if (postOrComment.embeds && postOrComment.embeds.length) {
                 //this is a post from before the inlineElements array, render its embed (mandated to be just one) and put it at the end of html
-            } else if (postOrComment.images && postOrComment.images.length) {
+                endHTML+= await hbs.render('./views/partials/embed.handlebars',postOrComment.embeds[0])
+            } 
+            if (postOrComment.images && postOrComment.images.length) {
                 //this is a post or comment from before the inlineElements array, render its images (with determined full urls) with the parallel arrays and put that at the end of html
+                var filenames = postOrComment.images;
+                if(!postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2 )){ //if it's not a comment it won't have .parent
+                    postOrComment.images = postOrComment.images.map(v=>"/public/images/uploads/"+v);
+                }else{
+                    postOrComment.images = postOrComment.images.map(v=>"/api/image/display/"+v);
+                }
+                endHTML += await hbs.render('./views/partials/imagegallery.handlebars',postOrComment)
+                postOrComment.images = filenames; //yes, this is dumb
             }
-            //put html in fullHTML, save saveTarget
+            postOrComment.cachedHTML.fullHTML = postOrComment.parsedContent + endHTML;
+            return postOrComment;
         }
     }
 }
