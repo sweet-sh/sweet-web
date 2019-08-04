@@ -596,7 +596,7 @@ module.exports = function(app) {
         var embedTemplateMTime = fs.statSync(embedsTemplatePath).mtime;
 
         if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) || (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
-            console.log("post html cache not up to date, updating")
+
             await updateHTMLRecursive(post);
             post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
             post.cachedHTML.embedsMTime = embedTemplateMTime;

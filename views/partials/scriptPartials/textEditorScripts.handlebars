@@ -289,8 +289,6 @@
             if ((!e.target.className.includes("link-preview")) && e.target.id != "postImageDescription") {
                 //if the user is copying from the editor directly we just need to set the clipboard contents to the selected plain text
                 var s = quill.getSelection();
-                console.log("copied: " + quill.getText(s.index, s.length) + " (range was " + s.index + " " + s.length + ")")
-                console.log(e);
                 e.clipboardData.setData('text/plain', quill.getText(s.index, s.length));
             } else {
                 //if the user is copying from link preview text or the image description that they just wrote we need to set the clipboard to the selected plain text from that element.

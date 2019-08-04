@@ -1,6 +1,10 @@
 <a class="link-preview-container{{#eq type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer"{{#eq type "video"}} embedurl="{{embedUrl}}"{{/eq}} href="{{linkUrl}}">
     {{#eq type "video"}}<div style="display:flex;justify-content:center;position:relative;">{{/eq}}
+        {{#if image}}
         <img class="link-preview-image{{#eq type "video"}} embedded-video-preview-image{{/eq}}" src="{{image}}" />
+        {{else}}
+        <div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>
+        {{/if}}
         {{#eq type "video"}}
             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>
     </div>
