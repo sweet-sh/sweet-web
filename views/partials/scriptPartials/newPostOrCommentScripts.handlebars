@@ -98,7 +98,7 @@ $(function(){
       ourFileInputGuy.change(function(e){
         var n = $(this).parent().find('.ql-container')[0];
         for(var i=0; i < this.files.length; i++){
-          if(n.imagesAdded > 3){
+          if(n.imagesAdded() > 3){
             bootbox.alert("we only take 4 images at a time right now, sorry");
             break;
           }else{
@@ -126,7 +126,7 @@ $("body").on('click', ".link-add", function(e){
   var url = input.val();
   input.val('');
   var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
-  if(subject.linkPreviewsAdded < 4){
+  if(subject.linkPreviewsAdded() < 4){
     subject.addLinkPreview(url);
   }else{
     bootbox.alert("we only take 4 link previews per post, sorry");

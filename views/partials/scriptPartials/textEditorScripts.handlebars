@@ -49,11 +49,6 @@
         if (m[0].request && m[0].request.readyState != 4) {
             m[0].request.abort();
         }
-        if (m.hasClass('newimagecont')) {
-            m.closest('.ql-container')[0].imagesAdded--;
-        } else if (m.hasClass('link-preview-container')) {
-            m.closest('.ql-container')[0].linkPreviewsAdded--;
-        }
         var postform = m.closest('.new-comment-form, .contentForm');
         m.remove();
         updateSubmitButtonState(postform);
@@ -120,7 +115,7 @@
 
         static formats(node) {
             var n = $(node);
-            return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html(), image: n.find('.link-preview-image').attr('src') }
+            return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html().replace(' (will open as embed)',''), image: n.find('.link-preview-image').attr('src') }
         }
     }
 
@@ -374,7 +369,6 @@
                     var addEmbedAt = quill.getLength();
                 }
                 quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
-                element.linkPreviewsAdded++;
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
 
@@ -388,17 +382,20 @@
                     var addEmbedAt = quill.getLength();
                 }
                 quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
-                element.imagesAdded++;
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
-            element.imagesAdded = 0;
-            element.linkPreviewsAdded = 0;
+            element.imagesAdded = function(){
+                return $(element).children('.ql-editor').children('.newimagecont').length;
+            }
+            element.linkPreviewsAdded = function(){
+                return $(element).children('.ql-editor').children('.link-preview-container').length;
+            }
             //listen for and use pasted image data
             element.onpaste = function(e) {
                 // event.originalEvent.clipboard for newer chrome versions
                 var items = (event.clipboardData || event.originalEvent.clipboardData).items;
                 for (var i = 0; i < items.length; i++) {
-                    if (element.imagesAdded > 3) {
+                    if (element.imagesAdded() > 3) {
                         bootbox.alert("sorry, we only take 4 images at once atm");
                         break;
                     } else {
@@ -415,7 +412,7 @@
                 $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
                 if (ev.dataTransfer.items) {
                     for (var i = 0; i < ev.dataTransfer.items.length; i++) {
-                        if (element.imagesAdded > 3) {
+                        if (element.imagesAdded() > 3) {
                             bootbox.alert("sorry, we only take 4 images at once atm");
                             break;
                         } else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
@@ -424,7 +421,7 @@
                     }
                 } else {
                     for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-                        if (element.imagesAdded > 3) {
+                        if (element.imagesAdded() > 3) {
                             bootbox.alert("sorry, we only take 4 images at once atm");
                             break;
                         } else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {

@@ -165,7 +165,7 @@ module.exports = {
                 embed.type = "link-preview";
                 embed.position = linesFinished;
                 embed.linkUrl = (op.insert.LinkPreview.includes("//") ? "" : "//") + op.insert.LinkPreview;
-                if (youtubeUrlFindingRegex.test(op.LinkPreview)) {
+                if (youtubeUrlFindingRegex.test(op.insert.LinkPreview)) {
                     embed.isEmbeddableVideo = true;
                     embed.embedUrl = "https://www.youtube.com/embed/" + youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5] + "?autoplay=1";
                 } else if (vimeoUrlFindingRegex.test(op.insert.LinkPreview)) {
@@ -179,6 +179,9 @@ module.exports = {
 
                 console.log("link preview on line: " + linesFinished);
                 console.log("it is to " + op.insert.LinkPreview);
+                if(embed.isEmbeddableVideo){
+                    console.log("it is an embeddable video");
+                }
             } else if (op.insert.PostImage && imagesAdded <= imagesAllowed && op.attributes.imageURL != "loading...") {
                 if (imagesAdded>0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
                     var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
@@ -397,6 +400,7 @@ module.exports = {
             for (const il of postOrComment.inlineElements) {
                 if(il.type=="link-preview"){
                     if(il.isEmbeddableVideo){
+                        console.log("embed!!!!");
                         il.type = "video"; //the template looks for "video" in this field, like what older posts with embeds have
                     }
                     var html = await hbs.render('./views/partials/embed.handlebars',il);
