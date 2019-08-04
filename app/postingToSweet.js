@@ -501,8 +501,6 @@ module.exports = function(app) {
             tags: parsedResult.tags,
         };
 
-        //todo: pass comment to helper.updateCachedHTML or whatever, maybe then put comment.cachedHTML.fullContentHTML in a variable for putting in res.send below
-
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
             .then(async (post) => {
@@ -812,7 +810,7 @@ module.exports = function(app) {
                                 res.send(JSON.stringify(result));
                                 var check = await helper.checkLinkPreviews(comment);
                                 if (check) {
-                                    ; //todo: replace the comment with the result from check
+                                    //todo: check contains the newly verified link metadata and cachedHTML.fullContentHTML, that needs to be placed in the comment we just made and the post saved
                                 }
                             })
                     })

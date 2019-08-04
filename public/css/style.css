@@ -1410,11 +1410,9 @@ hr {
 
 
 .link-preview-image {
-    /*flex: 1; this is breaking the images in the preview in the text editor, let's see if removing breaks the images in the actual link previews on the page */
     border-radius: 2px;
     align-self: center;
     max-height:100%;
-    margin-right:auto;
     width: 140px !important;
     object-fit: contain;
 }
