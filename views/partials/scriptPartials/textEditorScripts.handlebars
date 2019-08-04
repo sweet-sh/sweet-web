@@ -115,7 +115,7 @@
 
         static formats(node) {
             var n = $(node);
-            return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html().replace(' (will open as embed)',''), image: n.find('.link-preview-image').attr('src') }
+            return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html().replace(' (will open as embed)', ''), image: n.find('.link-preview-image').attr('src') }
         }
     }
 
@@ -179,7 +179,7 @@
                     var m = $("#embed" + id)
                     m.find('progress').attr('value', 0);
                     m.find("#percentage").html("Upload error :( Hit the X and try again?");
-                    console.log("image upload error: "+error);
+                    console.log("image upload error: " + error);
                     m.removeClass('still-loading');
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                     if (error != "abort") {
@@ -302,7 +302,7 @@
                     (typeof activeEl.selectionStart == "number")
                 ) {
                     text = activeEl.value.slice(activeEl.selectionStart, activeEl.selectionEnd);
-                //and this is for copying out of anything else:
+                    //and this is for copying out of anything else:
                 } else if (window.getSelection) {
                     text = window.getSelection().toString();
                 }
@@ -350,7 +350,7 @@
             }
             //prevent there from ever being embeds at the end of the content with no new lines after to type text on
             quill.on('text-change', function(range, oldRange, source) {
-                if (quill.getText()==="") {
+                if (quill.getText() === "") {
                     quill.insertText(quill.getLength(), "\n");
                 }
             })
@@ -381,10 +381,10 @@
                 quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
-            element.imagesAdded = function(){
+            element.imagesAdded = function() {
                 return $(element).children('.ql-editor').children('.newimagecont').length;
             }
-            element.linkPreviewsAdded = function(){
+            element.linkPreviewsAdded = function() {
                 return $(element).children('.ql-editor').children('.link-preview-container').length;
             }
             //listen for and use pasted image data
@@ -428,6 +428,40 @@
                 }
                 removeBodyFader(ev);
             }
+            if (!dragFaderActivated) {
+                $(function() {
+                    //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
+                    //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
+                    document.body.ondragover = function(e) {
+                        e.preventDefault();
+                        var dt = e.dataTransfer;
+                        //so it won't react if just some text or image from the page is being dragged around
+                        if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))) {
+                            if (!faded) {
+                                $('body').append('<div id="bodyFader"></div>');
+                                $("#bodyFader").fadeIn(100);
+                                faded = true;
+                            }
+                        }
+                    }
+
+                    //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
+                    document.body.ondragend = removeBodyFader;
+                    document.body.ondrop = removeBodyFader
+                    //some byzantine logic required to detect when the dragged thing leaves our window entirely:
+                    window.ondragenter = function(e) {
+                        e.preventDefault();
+                        dragcounter++;
+                    }
+                    window.ondragleave = function(e) {
+                        dragcounter--;
+                        if (dragcounter < 1) {
+                            removeBodyFader(e);
+                        }
+                    }
+                })
+                dragFaderActivated = true;
+            }
         }
     }
 
@@ -435,6 +469,7 @@
     //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
     var dragcounter = 0;
     var faded = false;
+    dragFaderActivated = false;
 
     function removeBodyFader(e) {
         e.preventDefault();
@@ -448,38 +483,6 @@
     //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
     //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
     needPostsOlderThan = new Date().getTime();
-
-    $(function() {
-        //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
-        //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
-        document.body.ondragover = function(e) {
-            e.preventDefault();
-            var dt = e.dataTransfer;
-            //so it won't react if just some text or image from the page is being dragged around
-            if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))) {
-                if (!faded) {
-                    $('body').append('<div id="bodyFader"></div>');
-                    $("#bodyFader").fadeIn(100);
-                    faded = true;
-                }
-            }
-        }
-
-        //neutralize a drag-and-drop if it doesn't hit a specific text entry area - assume they just missed
-        document.body.ondragend = removeBodyFader;
-        document.body.ondrop = removeBodyFader
-        //some byzantine logic required to detect when the dragged thing leaves our window entirely:
-        window.ondragenter = function(e) {
-            e.preventDefault();
-            dragcounter++;
-        }
-        window.ondragleave = function(e) {
-            dragcounter--;
-            if (dragcounter < 1) {
-                removeBodyFader(e);
-            }
-        }
-    })
 
     //scripts for rearranging the embeds within the text editor
 
