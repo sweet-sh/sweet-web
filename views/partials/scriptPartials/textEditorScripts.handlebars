@@ -353,7 +353,7 @@
             }
             //prevent there from ever being embeds at the end of the content with no new lines after to type text on
             quill.on('text-change', function(range, oldRange, source) {
-                if (typeof quill.getContents(quill.getLength()-1).ops[0].insert != "string") {
+                if (quill.getText()==="") {
                     quill.insertText(quill.getLength(), "\n");
                 }
             })

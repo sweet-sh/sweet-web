@@ -179,11 +179,11 @@ module.exports = {
 
                 console.log("link preview on line: " + linesFinished);
                 console.log("it is to " + op.insert.LinkPreview);
-                if(embed.isEmbeddableVideo){
+                if (embed.isEmbeddableVideo) {
                     console.log("it is an embeddable video");
                 }
             } else if (op.insert.PostImage && imagesAdded <= imagesAllowed && op.attributes.imageURL != "loading...") {
-                if (imagesAdded>0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
+                if (imagesAdded > 0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
                     var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
                 } else {
                     var image = { images: [], imageDescriptions: [], position: linesFinished, type: "image(s)" };
@@ -226,6 +226,7 @@ module.exports = {
     //takes a post or comment, returns the version with updated inlineElements array and cache if needed or nothing if not
     checkLinkPreviews: async function(postOrComment) {
         var changed = false;
+
         function compareProp(prop) {
             if (l[prop] != meta[prop]) {
                 console.log("link preview in document " + postOrComment._id.toString() + " had " + prop + " " + l[prop] + " but the live page for url " + l.linkUrl + " had " + prop + " " + meta[prop]);
@@ -249,9 +250,9 @@ module.exports = {
                     postOrComment.inlineElements.splice(i, 1); //remove link preview if metadata cannot be confirmed
                 }
             }
-            if(changed){
+            if (changed) {
                 return (await this.updateHTMLCache(postOrComment));
-            }else{
+            } else {
                 return;
             }
         }
@@ -388,54 +389,69 @@ module.exports = {
         }
         return { imageIsHorizontal: imageIsHorizontal, imageIsVertical: imageIsVertical };
     },
-    //returns the postOrComment with the cachedHTML.fullHTML field set to its final HTML. also, some extra info in the inlineElements, but that hopefully won't get saved 'cause it's not in the inlineElement schema
+    //returns the postOrComment with the cachedHTML.fullContentHTML field set to its final HTML. also, some extra info in the inlineElements, but that hopefully won't get saved 'cause it's not in the inlineElement schema
     updateHTMLCache: async function(postOrComment) {
         if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
             var lines = [];
             const lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
-            while(line = lineFinder.exec(postOrComment.parsedContent)){
+            while (line = lineFinder.exec(postOrComment.parsedContent)) {
                 lines.push(line);
             }
             var addedLines = 0;
             for (const il of postOrComment.inlineElements) {
-                if(il.type=="link-preview"){
-                    if(il.isEmbeddableVideo){
+                if (il.type == "link-preview") {
+                    if (il.isEmbeddableVideo) {
                         console.log("embed!!!!");
                         il.type = "video"; //the template looks for "video" in this field, like what older posts with embeds have
                     }
-                    var html = await hbs.render('./views/partials/embed.handlebars',il);
-                    il.type="link-preview"; //yes, this is dumb. the alternative is to list all the different variables the template expects in the rendering options with type: (isEmbeddableVideo ? "video" : "asdj;lfkfdsajkfl;") or something
-                }else if(il.type=="image(s)"){
+                    var html = await hbs.render('./views/partials/embed.handlebars', il);
+                    il.type = "link-preview"; //yes, this is dumb. the alternative is to list all the different variables the template expects in the rendering options with type: (isEmbeddableVideo ? "video" : "asdj;lfkfdsajkfl;") or something
+                } else if (il.type == "image(s)") {
                     il.contentWarnings = postOrComment.contentWarnings;
-                    il.author = {username: (await User.findById(postOrComment.author,{username:1})).username};
+                    il.author = { username: (await User.findById(postOrComment.author, { username: 1 })).username };
                     var filenames = il.images;
-                    il.images = il.images.map(v=>"/api/image/display/"+v);
-                    var html = await hbs.render('./views/partials/imagegallery.handlebars',il);
+                    il.images = il.images.map(v => "/api/image/display/" + v);
+                    var html = await hbs.render('./views/partials/imagegallery.handlebars', il);
                     il.images = filenames; //yes, this is dumb. the alternative is to specify each variable the template expects individually in the rendering options with like images: fullImagePaths
                 }
-                lines.splice(il.position+addedLines,0,html);
+                lines.splice(il.position + addedLines, 0, html);
                 addedLines++;
             }
-            postOrComment.cachedHTML.fullHTML = lines.join('\n') //\n just makes the result easier to read in case someone wants to look at it;
+            if (postOrComment.cachedHTML) {
+                postOrComment.cachedHTML.fullContentHTML = lines.join('\n') //\n just makes the result easier to read in case someone wants to look at it;
+            } else {
+                postOrComment.cachedHTML = { fullContentHTML: lines.join('\n') };
+            }
             return postOrComment;
-        } else {
+        } else if ((postOrComment.images && postOrComment.images.length) || (postOrComment.embeds && postOrComment.embeds.length)) {
             var endHTML = "";
             if (postOrComment.embeds && postOrComment.embeds.length) {
                 //this is a post from before the inlineElements array, render its embed (mandated to be just one) and put it at the end of html
-                endHTML+= await hbs.render('./views/partials/embed.handlebars',postOrComment.embeds[0])
-            } 
+                endHTML += await hbs.render('./views/partials/embed.handlebars', postOrComment.embeds[0])
+            }
             if (postOrComment.images && postOrComment.images.length) {
                 //this is a post or comment from before the inlineElements array, render its images (with determined full urls) with the parallel arrays and put that at the end of html
                 var filenames = postOrComment.images;
-                if(!postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2 )){ //if it's not a comment it won't have .parent
-                    postOrComment.images = postOrComment.images.map(v=>"/public/images/uploads/"+v);
-                }else{
-                    postOrComment.images = postOrComment.images.map(v=>"/api/image/display/"+v);
+                if (!postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2)) { //if it's not a comment it won't have .parent
+                    postOrComment.images = postOrComment.images.map(v => "/public/images/uploads/" + v);
+                } else {
+                    postOrComment.images = postOrComment.images.map(v => "/api/image/display/" + v);
                 }
-                endHTML += await hbs.render('./views/partials/imagegallery.handlebars',postOrComment)
+                endHTML += await hbs.render('./views/partials/imagegallery.handlebars', postOrComment)
                 postOrComment.images = filenames; //yes, this is dumb
             }
-            postOrComment.cachedHTML.fullHTML = postOrComment.parsedContent + endHTML;
+            if (postOrComment.cachedHTML) {
+                postOrComment.cachedHTML.fullContentHTML = postOrComment.parsedContent + endHTML;
+            } else {
+                postOrComment.cachedHTML = { fullContentHTML: postOrComment.parsedContent + endHTML };
+            }
+            return postOrComment;
+        } else {
+            if (postOrComment.cachedHTML) {
+                postOrComment.cachedHTML.fullContentHTML = postOrComment.parsedContent;
+            } else {
+                postOrComment.cachedHTML = { fullContentHTML: postOrComment.parsedContent };
+            }
             return postOrComment;
         }
     }

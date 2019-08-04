@@ -581,15 +581,11 @@ module.exports = function(app) {
             displayContext = await helper.updateHTMLCache(displayContext);
             if (displayContext.comments) {
                 for (comment of displayContext.comments) {
-                    if (comment.timestamp < galleryTemplateMTime && comment.timestamp < embedTemplateMTime) { //comments are provided with cached html when they're created, which might be up to date even if the post's isn't
-                        await updateHTMLRecursive(comment);
-                    }
+                    await updateHTMLRecursive(comment);
                 }
             } else if (displayContext.replies) {
                 for (reply of displayContext.replies) {
-                    if (reply.timestamp < galleryTemplateMTime && reply.timestamp < embedTemplateMTime) {
-                        await updateHTMLRecursive(reply);
-                    }
+                    await updateHTMLRecursive(reply);
                 }
             }
         }
@@ -955,7 +951,7 @@ module.exports = function(app) {
                         privacy: displayContext.privacy,
                         parsedTimestamp: parsedTimestamp,
                         lastUpdated: displayContext.lastUpdated,
-                        internalPostHTML: displayContext.cachedHTML.fullHTML,
+                        internalPostHTML: displayContext.cachedHTML.fullContentHTML,
                         commentsDisabled: displayContext.commentsDisabled,
                         comments: displayContext.comments,
                         numberOfComments: displayContext.numberOfComments,
@@ -988,7 +984,6 @@ module.exports = function(app) {
                         if (!level) level = 1;
                         element.forEach(async function(comment) {
 
-                            comment.parsedContentWithEmbeds = helper.mixInEmbeds(comment); //this isn't saved in the database
                             comment.canDisplay = true;
                             comment.muted = false;
                             // I'm not sure why, but boosts in the home feed don't display

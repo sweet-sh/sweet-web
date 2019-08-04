@@ -33,13 +33,10 @@ $(function(){
             var $images = newlyLoadedStuff.find('.post-images a');
             var $imagesGrouped = $images.filter('[data-group]');
             var $imagesAlone = $images.not($imagesGrouped);
-            var params = {
-                // your params
-            };
 
             // Handle standalone images
             $imagesAlone.each(function (index, element) {
-                $(element).simpleLightbox(params);
+                $(element).simpleLightbox();
                 imagesLightboxed++;
             });
 
@@ -56,7 +53,7 @@ $(function(){
                     var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
                         return $(this).data('group') == value;
                     })
-                    filteredGroup.simpleLightbox(params);
+                    filteredGroup.simpleLightbox();
                     imagesLightboxed += filteredGroup.length;
                 });
                 console.log("images lightboxed: " + imagesLightboxed)

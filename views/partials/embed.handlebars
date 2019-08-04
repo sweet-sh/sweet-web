@@ -1,4 +1,3 @@
-{{log this}}
 <a class="link-preview-container{{#eq type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer"{{#eq type "video"}} embedurl="{{embedUrl}}"{{/eq}} href="{{linkUrl}}">
     {{#eq type "video"}}<div style="display:flex;justify-content:center;position:relative;">{{/eq}}
         <img class="link-preview-image{{#eq type "video"}} embedded-video-preview-image{{/eq}}" src="{{image}}" />
@@ -11,4 +10,4 @@
         <span class="link-preview-description">{{{description}}}</span>
         <span class="link-preview-domain">{{domain}}{{#eq type "video"}} (will open as an embed){{/eq}}</span>
     </div>
-</a> 
+</a>

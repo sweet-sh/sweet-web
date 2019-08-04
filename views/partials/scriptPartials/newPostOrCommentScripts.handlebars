@@ -183,7 +183,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     let commentID = commentForm.attr('data-comment-id');
     let commentContainer = commentForm.find(".ql-container");
     let commentEditor = commentForm.find('.ql-editor');
-    let commentContent = commentEditor.getContents(); //delta object
+    let commentContent = commentContainer[0].getContents(); //delta object
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
@@ -208,7 +208,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
 
             // Handle standalone images
             $imagesAlone.each(function (index, element) {
-              $(element).simpleLightbox(params);
+              $(element).simpleLightbox();
             });
 
             // Handle grouped imags
@@ -219,7 +219,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
 
               // Apply on each group
               $.each(groupNames, function (key, value) {
-                $imagesGrouped.filter(function () { return $(this).data('group') == value; }).simpleLightbox(params);
+                $imagesGrouped.filter(function () { return $(this).data('group') == value; }).simpleLightbox();
               });
             }
           }
@@ -235,7 +235,6 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
           if (commentType == "primary") {
               commentButton.prop('disabled', false);
               emojiWindow.hide();
-              $(pc).children('.newimagecont').remove(); //removes all image preview windows
           }
           else if (commentType == "child") {
               commentForm.remove();

@@ -24,9 +24,9 @@
                 </aside>
             </div>
         </header>
-        {{#if this.cachedHTML.fullHTML}} {{! sure hope that's in there }}
+        {{#if this.cachedHTML.fullContentHTML}} {{! sure hope that's in there }}
             <section class="content{{#if isRecent}} recent-comment-content{{/if}}">
-                {{{this.cachedHTML.fullHTML}}}
+                {{{this.cachedHTML.fullContentHTML}}}
             </section>
         {{/if}}
         <footer class="toolbar">

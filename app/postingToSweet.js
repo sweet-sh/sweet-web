@@ -272,7 +272,7 @@ module.exports = function(app) {
                         //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
                         //if link preview info is found to be inaccurate)
                         var check = await helper.checkLinkPreviews(post);
-                        if(check){ //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
+                        if (check) { //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
                             check.save();
                         }
                     })
@@ -339,7 +339,7 @@ module.exports = function(app) {
                         //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
                         //if link preview info is found to be inaccurate)
                         var check = await helper.checkLinkPreviews(post);
-                        if(check){ //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
+                        if (check) { //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
                             check.save();
                         }
                     })
@@ -391,18 +391,20 @@ module.exports = function(app) {
                 }
 
                 // Delete tags (does not currently fix tag last updated time)
-                post.tags.forEach((tag) => {
-                    Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
-                        .then((tag) => {
-                            console.log("Deleted tag: " + tag)
-                        })
-                        .catch((err) => {
-                            console.log("Database error: " + err)
-                        })
-                })
+                if (post.tags) {
+                    post.tags.forEach((tag) => {
+                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
+                            .then((tag) => {
+                                console.log("Deleted tag: " + tag)
+                            })
+                            .catch((err) => {
+                                console.log("Database error: " + err)
+                            })
+                    })
+                }
 
                 // Delete boosts
-                if (post.type == "original") {
+                if (post.type == "original" && post.boosts) {
                     post.boosts.forEach((boost) => {
                         Post.deleteOne({ "_id": boost })
                             .then((boost) => {
@@ -414,18 +416,40 @@ module.exports = function(app) {
                     })
                 }
 
-                //delete comment images
-                //TODO: delete inlineElements images if they're there, also delete images for nested comments. nested comment images have been not being deleted for a while
-                post.comments.forEach((comment) => {
-                    if (comment.images) {
-                        comment.images.forEach((image) => {
+                function deleteImagesRecursive(postOrComment) {
+                    if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
+                        for (const il of postOrComment.inlineElements) {
+                            if (il.type == "image(s)") {
+                                for (const image of il.images) {
+                                    fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                                        if (err) console.log("Image deletion error " + err)
+                                    });
+                                    Image.deleteOne({ "filename": image });
+                                }
+                            }
+                        }
+                    } else if (postOrComment.images && postOrComment.images.length) {
+                        for (const image of postOrComment.images) {
                             fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                                 if (err) console.log("Image deletion error " + err)
                             });
                             Image.deleteOne({ "filename": image });
-                        })
+                        }
                     }
-                });
+
+                    if (postOrComment.comments && postOrComment.comments.length) {
+                        for (var comment of postOrComment.comments) {
+                            deleteImagesRecursive(comment);
+                        }
+                    }
+                    if (postOrComment.replies && postOrComment.replies.length) {
+                        for (var reply of postOrComment.replies) {
+                            deleteImagesRecursive(reply);
+                        }
+                    }
+                }
+
+                deleteImagesRecursive(post);
 
                 // Delete notifications
                 User.update({}, {
@@ -438,9 +462,6 @@ module.exports = function(app) {
                     .then(response => {
                         console.log(response)
                     })
-            })
-            .catch((err) => {
-                console.log("Database error: " + err)
             })
             .then(() => {
                 Post.deleteOne({ "_id": req.params.postid })
@@ -480,16 +501,16 @@ module.exports = function(app) {
             tags: parsedResult.tags,
         };
 
-        //todo: pass comment to helper.updateCachedHTML or whatever, maybe then put comment.cachedHTML.fullHTML in a variable for putting in res.send below
+        //todo: pass comment to helper.updateCachedHTML or whatever, maybe then put comment.cachedHTML.fullContentHTML in a variable for putting in res.send below
 
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
             .then(async (post) => {
 
-                if(post.communityId){
+                if (post.communityId) {
                     var postType = "community";
                     var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
-                }else{
+                } else {
                     var postType = "user";
                     var postPrivacy = post.privacy;
                 }
@@ -504,8 +525,8 @@ module.exports = function(app) {
                 }
 
                 comment.inlineElements = parsedResult.inlineElements;
-                comment = await updateHTMLCache(comment);
-                var fullHTML = comment.cachedHTML.fullHTML;
+                comment = await helper.updateHTMLCache(comment);
+                var contentHTML = comment.cachedHTML.fullContentHTML;
 
                 numberOfComments = 0;
                 var depth = undefined;
@@ -773,25 +794,25 @@ module.exports = function(app) {
                             var name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
+                        hbs.render('./views/partials/comment_dynamic.handlebars', {
                                 image: image,
                                 name: name,
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
-                                content: fullHTML,
+                                content: contentHTML,
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
                                 depth: depth
                             })
                             .then(async html => {
-                                result = {
-                                    comment: fullHTML
+                                var result = {
+                                    comment: html
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
                                 var check = await helper.checkLinkPreviews(comment);
-                                if(check){
-                                    ;//todo: replace the comment with the result from check
+                                if (check) {
+                                    ; //todo: replace the comment with the result from check
                                 }
                             })
                     })
