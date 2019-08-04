@@ -50,9 +50,9 @@
             m[0].request.abort();
         }
         if (m.hasClass('newimagecont')) {
-            m.parent()[0].imagesAdded--;
+            m.closest('.ql-container')[0].imagesAdded--;
         } else if (m.hasClass('link-preview-container')) {
-            m.parent()[0].linkPreviewsAdded--;
+            m.closest('.ql-container')[0].linkPreviewsAdded--;
         }
         var postform = m.closest('.new-comment-form, .contentForm');
         m.remove();
@@ -203,11 +203,8 @@
                         } else if (serverResponse.error == "filetype") {
                             bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
                         }
-                        if ($(".onthemove")) {
-                            movementEnded()
-                        }
-                        m.parent()[0].imagesAdded--;
-                        m.remove(); //todo: test this maybe
+                        endMovement()
+                        m.find('.image-clear').click();
                     } else {
                         if (serverResponse.thumbnail) {
                             m.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
@@ -359,9 +356,9 @@
                 }
                 return c;
             }
-            //prevent there from ever being embeds with no new lines to type text on
+            //prevent there from ever being embeds at the end of the content with no new lines after to type text on
             quill.on('text-change', function(range, oldRange, source) {
-                if (quill.getText() == "") {
+                if (typeof quill.getContents(quill.getLength()-1).ops[0].insert != "string") {
                     quill.insertText(quill.getLength(), "\n");
                 }
             })
@@ -398,7 +395,6 @@
             element.linkPreviewsAdded = 0;
             //listen for and use pasted image data
             element.onpaste = function(e) {
-                var imagesAdded = false;
                 // event.originalEvent.clipboard for newer chrome versions
                 var items = (event.clipboardData || event.originalEvent.clipboardData).items;
                 for (var i = 0; i < items.length; i++) {
@@ -408,13 +404,9 @@
                     } else {
                         if (items[i].type.indexOf("image") === 0) {
                             element.addImage(items[i].getAsFile());
-                            imagesAdded = true;
+                            e.preventDefault();
                         }
                     }
-                }
-                if (imagesAdded) {
-                    e.preventDefault();
-                    return false; //no idea if this actually does anything but just in case
                 }
             }
             //listen for and use dragged-and-dropped images
@@ -474,7 +466,7 @@
                 if (!faded) {
                     $('body').append('<div id="bodyFader"></div>');
                     $("#bodyFader").fadeIn(100);
-                    var faded = true;
+                    faded = true;
                 }
             }
         }
@@ -517,7 +509,7 @@
         });
 
         $(document).on('mouseup', function(e) {
-            movementEnded();
+            endMovement();
             $(document).off('mousemove');
             $(document).off('mouseup');
         });
@@ -559,13 +551,13 @@
         this.addEventListener('touchend', function(e) {
             touchinprogress = false;
             this.removeEventListener('touchmove', touchmoveevent);
-            movementEnded();
+            endMovement();
         });
 
         this.addEventListener('touchcancel', function(e) {
             touchinprogress = false;
             this.removeEventListener('touchmove', touchmoveevent);
-            movementEnded();
+            endMovement();
         });
     }
 
@@ -670,7 +662,7 @@
 
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot. it's all called to just
     //generally cancel drag and dropping when an alert has to be displayed about an upload, just in case drag and dropping is going on
-    function movementEnded() {
+    function endMovement() {
         var imagecont = $('.onthemove');
         if (imagecont.length) {
             clearInterval(imagecont[0].scrollPrompterId);

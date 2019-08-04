@@ -126,10 +126,10 @@ $("body").on('click', ".link-add", function(e){
   var url = input.val();
   input.val('');
   var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
-  if(subject.linkPreviewsAdded < 10000){ //this could probably be changed to something lower
+  if(subject.linkPreviewsAdded < 4){
     subject.addLinkPreview(url);
   }else{
-    bootbox.alert("we only take 10000 link previews per post, sorry");
+    bootbox.alert("we only take 4 link previews per post, sorry");
   }
 })
 
@@ -163,7 +163,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
         $("#emojiWindow").slideUp("fast");
-        $(".linkPreviewAddingForm").slideUp("fast");
+        $(".link-form-cont").slideUp("fast");
         editor.find(".ql-editor").html("");
         haveWeSentPost = false;
         restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
@@ -194,7 +194,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
 
     if (commentContainer[0].hasContent()) {
       commentButton.prop('disabled', true);
-      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: commentContent },
+      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: JSON.stringify(commentContent) },
       function(data) {
         if (data!='nope'){
           commentEditor.html('');

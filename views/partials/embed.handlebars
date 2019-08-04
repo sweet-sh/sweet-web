@@ -1,13 +1,14 @@
-<a class="link-preview-container{{#eq embed.type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer" embedurl="{{embed.embedUrl}}" href="{{embed.linkUrl}}">
-    <div style="display:flex;justify-content:center;position:relative;">
-        <img class="link-preview-image {{#eq embed.type "video"}}embedded-video-preview-image{{/eq}}" src="{{embed.image}}" />
-        {{#eq embed.type "video"}}
+{{log this}}
+<a class="link-preview-container{{#eq type "video"}} embedded-video-preview{{/eq}}" target="_blank" rel="noopener noreferrer"{{#eq type "video"}} embedurl="{{embedUrl}}"{{/eq}} href="{{linkUrl}}">
+    {{#eq type "video"}}<div style="display:flex;justify-content:center;position:relative;">{{/eq}}
+        <img class="link-preview-image{{#eq type "video"}} embedded-video-preview-image{{/eq}}" src="{{image}}" />
+        {{#eq type "video"}}
             <i class="fas fa-play-circle link-preview-icon" style="color: white;filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));position: absolute;font-size: 30px;align-self: center;"></i>
-        {{/eq}}
     </div>
+    {{/eq}}
     <div class="link-preview-text-container">
-        <span class="link-preview-title">{{embed.title}}</span>
-        <span class="link-preview-description">{{{embed.description}}}</span>
-        <span class="link-preview-domain">{{embed.domain}}{{#eq embed.type "video"}} (will open as an embed){{/eq}}</span>
+        <span class="link-preview-title">{{title}}</span>
+        <span class="link-preview-description">{{{description}}}</span>
+        <span class="link-preview-domain">{{domain}}{{#eq type "video"}} (will open as an embed){{/eq}}</span>
     </div>
 </a>
