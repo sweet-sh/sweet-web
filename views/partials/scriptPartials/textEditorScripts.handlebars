@@ -179,8 +179,7 @@
                     var m = $("#embed" + id)
                     m.find('progress').attr('value', 0);
                     m.find("#percentage").html("Upload error :( Hit the X and try again?");
-                    console.log(status);
-                    console.log(error);
+                    console.log("image upload error: "+error);
                     m.removeClass('still-loading');
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                     if (error != "abort") {
