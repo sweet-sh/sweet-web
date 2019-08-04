@@ -32,7 +32,7 @@ var commentSchema = new mongoose.Schema({
   deleted: { type: Boolean, default: false },
   embeds: [embedSchema],
   cachedHTML:{ //was rendered with either the version of the template indicated by the post's corresponding cachedHTML MTime or the version that was available when the comment was made, whichever is newer
-    commentHTML: String
+    fullHTML: String
   }
 });
 
@@ -96,7 +96,7 @@ var postSchema = new mongoose.Schema({
   unsubscribedUsers: [String],
   embeds: [embedSchema],
   cachedHTML:{ //the below MTimes also set a floor for the rendering date of the cached comment html (none will have older cached html, newer comments may have newer cached html, either way it'll all be brought up to date when the post is displayed)
-    postHTML: String,
+    fullHTML: String,
     imageGalleryMTime: Date, //the last modified date of the imagegallery template when the html was rendered
     embedsMTime: Date //the last modified date of the embeds template when the html was rendered, also goes for the comment embeds
   }

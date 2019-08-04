@@ -115,6 +115,11 @@
         static value(node) {
             return node.getAttribute('data-url');
         }
+
+        static formats(node){
+            var n = $(node);
+            return {title:n.find('.link-preview-title').html(), description:n.find('.link-preview-description').html(), domain:n.find('.link-preview-domain').html(),image:n.find('.link-preview-image').attr('src')}
+        }
     }
 
     LinkPreview.blotName = 'LinkPreview';

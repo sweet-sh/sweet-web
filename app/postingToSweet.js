@@ -201,7 +201,7 @@ module.exports = function(app) {
             return;
         }
 
-        function savePost() {
+        function savePost() { //todo: combine code for community and non-community posts, there's a lot that's duplicated that doesn't need to be
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -303,6 +303,10 @@ module.exports = function(app) {
                         }
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
+                        //we need to verify link preview information, but doing it before saving the post could make the response unpredictably slow, so
+                        //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
+                        //if link preview info is found to be inaccurate)
+                        helper.checkLinkPreviews(post, post);
                     })
                     .catch((err) => {
                         console.log("Database error: " + err)
@@ -385,9 +389,7 @@ module.exports = function(app) {
                                     })
                             }
                         });
-                        Community.findOneAndUpdate({
-                            _id: communityId
-                        }, {
+                        Community.findOneAndUpdate({ _id: communityId }, {
                             $set: {
                                 lastUpdated: new Date()
                             }
@@ -396,9 +398,13 @@ module.exports = function(app) {
                         })
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
+                        //we need to verify link preview information, but doing it before saving the post could make the response unpredictably slow, so
+                        //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
+                        //if link preview info is found to be inaccurate)
+                        helper.checkLinkPreviews(post, post);
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Database error when attempting to save new post: " + err)
                     });
             }
         }
@@ -409,7 +415,7 @@ module.exports = function(app) {
     //Inputs: id of post to delete (in req.params)
     //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it caused, delete the post document.
     app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
-        Post.findOne({                "_id": req.params.postid            })
+        Post.findOne({ "_id": req.params.postid })
             .then((post) => {
 
                 if (!post.author._id.equals(req.user._id)) {

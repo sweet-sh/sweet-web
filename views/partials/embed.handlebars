@@ -8,6 +8,6 @@
     <div class="link-preview-text-container">
         <span class="link-preview-title">{{embed.title}}</span>
         <span class="link-preview-description">{{{embed.description}}}</span>
-        <span class="link-preview-domain">{{embed.domain}}</span>
+        <span class="link-preview-domain">{{embed.domain}}{{#eq embed.type "video"}} (will open as an embed){{/eq}}</span>
     </div>
 </a>

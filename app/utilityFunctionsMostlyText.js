@@ -159,16 +159,14 @@ module.exports = {
                 }
             } else if (op.insert.LinkPreview) {
                 //i'm assuming that there will always be a newline text insert in the text right before an inline embed
-                var embed = await this.getLinkMetadata(op.insert.LinkPreview);
+                var embed = op.attributes;
                 embed.position = resultLengthSoFar;
                 embed.linkUrl = (op.insert.LinkPreview.contains("//") ? "" : "//") +op.insert.LinkPreview;
                 if(youtubeUrlFindingRegex.test(op.LinkPreview)){
                     embed.type="video";
-                    embed.domain += "(will open as embed)";
                     embed.embedUrl = "https://www.youtube.com/embed/"+youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5]+"?autoplay=1";
                 }else if(vimeoUrlFindingRegex.test(op.insert.LinkPreview)){
                     embed.type="video";
-                    embed.domain += "(will open as embed)";
                     embed.embedUrl = "https://www.youtube.com/embed/"+vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4]+"?autoplay=1";
                 }else{
                     embed.type = "link-preview";
@@ -211,6 +209,23 @@ module.exports = {
     },
     isOdd: function(n) {
         return Math.abs(n % 2) == 1;
+    },
+    checkLinkPreviews: async function(postOrComment, saveTarget){ //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
+        function compareProp(prop){
+            if(l[prop]!=meta[prop]){
+                l[prop]=meta[prop];
+                return true;
+            }
+            return false;
+        }
+        for(var l of postOrComment.embeds){
+            //todo: put the below line in a try catch and remove the embed if it throws an exception. that may require using a regular for loop in order to remove the element by index
+            var meta = await this.getLinkMetadata(l.linkUrl);
+            if(compareProp('description') || compareProp('title') || compareProp('image') || compareProp('domain')){
+                saveTarget.save();
+                //this.updateHTMLCache(postOrComment,saveTarget); //not implemented yet
+            }
+        }
     },
     //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
     escapeHTMLChars: function(string) {
@@ -266,8 +281,11 @@ module.exports = {
         });
     },
     getLinkMetadata: async function(url){
+        //standardize url protocol so that request() will accept it. (request() will automatically change the http to https if necessary)
         if(!url.includes('//')){
             url = 'http://'+url;
+        }else if(url.substring(0,2)=="//"){
+            url = "http:"+url;
         }
         var urlreq = new Promise(function(resolve, reject){
             request({url:url,gzip:true}, function (error, response, body) {
@@ -304,6 +322,9 @@ module.exports = {
                 return withEmbeds;
             }
         }
+    },
+    updateHTMLCache: function(postOrComment){
+        var positionedImages = {};
     }
 }
 
