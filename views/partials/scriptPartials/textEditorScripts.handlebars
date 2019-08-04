@@ -25,21 +25,20 @@
 </script>
 
 <script>
-
     //within-editor embeds utility functions:
 
-    function updateSubmitButtonState(postForm){
+    function updateSubmitButtonState(postForm) {
         var button = postForm.find('.create-comment, #postSubmit');
-        if(postForm.find('.still-loading').length == 0){
+        if (postForm.find('.still-loading').length == 0) {
             var button = postForm.find('.create-comment, #postSubmit');
-            button.attr('disabled',false);
-            if(button.hasClass('create-comment')){
+            button.attr('disabled', false);
+            if (button.hasClass('create-comment')) {
                 button.html("Reply");
-            }else if(button.attr('id')=="postSubmit"){
+            } else if (button.attr('id') == "postSubmit") {
                 button.html('Send <i class="fas fa-chevron-right"></i>');
             }
-        }else{
-            button.attr('disabled',true);
+        } else {
+            button.attr('disabled', true);
             button.html("<i class='fas fa-spinner fa-spin'></i> Uploading");
         }
     }
@@ -97,14 +96,14 @@
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                 }
             })
-            node.request.fail(function(jqXHR, textStatus, error){
+            node.request.fail(function(jqXHR, textStatus, error) {
                 var m = $("#embed" + id);
                 if (!m.length) { return; }
                 m.removeClass('still-loading');
                 bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(");
                 m.find('.image-clear').click();
-                if(error!="abort"){
-                    $.post("/admin/reporterror", { errorstring: "error creating link preview for url "+url+":\n"+error });
+                if (error != "abort") {
+                    $.post("/admin/reporterror", { errorstring: "error creating link preview for url " + url + ":\n" + error });
                 }
             })
 
@@ -119,9 +118,9 @@
             return node.getAttribute('data-url');
         }
 
-        static formats(node){
+        static formats(node) {
             var n = $(node);
-            return {title:n.find('.link-preview-title').html(), description:n.find('.link-preview-description').html(), domain:n.find('.link-preview-domain').html(),image:n.find('.link-preview-image').attr('src')}
+            return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html(), image: n.find('.link-preview-image').attr('src') }
         }
     }
 
@@ -133,10 +132,10 @@
     var files = {}; //each file object is stored in this object under the container's id so that if a user deletes an image embed and then undoes that action, quill can find the file in here and reconstitute the embed from it.
     class PostImage extends BlockEmbed {
         static create(file) {
-            if(file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif"){
+            if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
                 return null;
-            }else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
+            } else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
                 bootbox.alert("Sorry, but this file appears to be too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
                 return null;
             }
@@ -189,9 +188,9 @@
                     console.log(error);
                     m.removeClass('still-loading');
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
-                    if(error!="abort"){
-                        $.post("/admin/reporterror", { errorstring: "error uploading image:\n"+error });
-                    }              
+                    if (error != "abort") {
+                        $.post("/admin/reporterror", { errorstring: "error uploading image:\n" + error });
+                    }
                 },
                 success: function(data, status, jqXHR) {
                     var m = $("#embed" + id)
@@ -241,7 +240,7 @@
     PostImage.className = 'newimagecont';
     Quill.register(PostImage);
 
-    function attachQuill(element, placeholder) {
+    function attachQuill(element, placeholder, embedsForbidden) {
         var quill = new Quill(element, {
             modules: {
                 toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
@@ -262,11 +261,11 @@
                             key: 'backspace',
                             collapsed: true,
                             offset: 0,
-                            handler: function(range, context){
-                                if(this.quill.getText(range.index,1)=="\n"){
-                                    var before = this.quill.getContents(range.index-1,1);
-                                    if(before.ops.length && before.ops[0].insert && (before.ops[0].insert.LinkPreview || before.ops[0].insert.PostImage)){
-                                        this.quill.deleteText(range.index,1);
+                            handler: function(range, context) {
+                                if (this.quill.getText(range.index, 1) == "\n") {
+                                    var before = this.quill.getContents(range.index - 1, 1);
+                                    if (before.ops.length && before.ops[0].insert && (before.ops[0].insert.LinkPreview || before.ops[0].insert.PostImage)) {
+                                        this.quill.deleteText(range.index, 1);
                                         return false;
                                     }
                                 }
@@ -293,16 +292,39 @@
             }
             return delta;
         })
-        //save the most recent cursor position when the editor loses focus
+        $(element).children('.ql-editor')[0].oncopy = function(e) {
+            e.preventDefault();
+            //sets the clipboard to just have text contents instead of trying to copy embeds which is erratic (link previews can theoretically always be copied but images malfunction bc we might not have access to that file anymore)
+            if ((!e.target.className.includes("link-preview")) && e.target.id != "postImageDescription") {
+                //if the user is copying from the editor directly we just need to set the clipboard contents to the selected plain text
+                var s = quill.getSelection();
+                console.log("copied: " + quill.getText(s.index, s.length) + " (range was " + s.index + " " + s.length + ")")
+                console.log(e);
+                e.clipboardData.setData('text/plain', quill.getText(s.index, s.length));
+            } else {
+                //if the user is copying from link preview text or the image description that they just wrote we need to set the clipboard to the selected plain text from that element.
+                var text = "";
+                //this is for copying out of the image description textarea:
+                var activeEl = document.activeElement;
+                var activeElTagName = activeEl ? activeEl.tagName.toLowerCase() : null;
+                if (
+                    (activeElTagName == "textarea") || (activeElTagName == "input" &&
+                        /^(?:text|search|password|tel|url)$/i.test(activeEl.type)) &&
+                    (typeof activeEl.selectionStart == "number")
+                ) {
+                    text = activeEl.value.slice(activeEl.selectionStart, activeEl.selectionEnd);
+                //and this is for copying out of anything else:
+                } else if (window.getSelection) {
+                    text = window.getSelection().toString();
+                }
+                e.clipboardData.setData('text/plain', text);
+            }
+            return false;
+        }
+        //save the most recent cursor position when the editor loses focus for emoji picker placement
         quill.on('selection-change', function(range, oldRange, source) {
             if (!range) {
                 element.lastCursorPos = oldRange.index;
-            }
-        })
-        //prevent there from ever being embeds with no new lines to type text on
-        quill.on('text-change',function(range,oldRange,source){
-            if(quill.getText()==""){
-                quill.insertText(quill.getLength(),"\n");
             }
         })
         element.insertEmojiAtCursor = function(emojiString) {
@@ -324,97 +346,106 @@
             //if there is some text the first will be true; if there are > 0 embeds, the second will be true
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
-        element.getContents = function() {
-            quill.updateContents();
-            var c = quill.getContents();
-            if(c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string"){
-                c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
+        if (!embedsForbidden) {
+            //when embeds are forbidden, the html contents of the .ql-editor element will be used instead of the below
+            element.getContents = function() {
+                quill.updateContents();
+                var c = quill.getContents();
+                if (c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string") {
+                    c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
+                }
+                if (c.ops && c.ops[c.ops.length - 1] && typeof c.ops[c.ops.length - 1].insert == "string") {
+                    c.ops[c.ops.length - 1].insert = c.ops[c.ops.length - 1].insert.replace(/\s+$/, ''); //remove ending whitespace
+                }
+                return c;
             }
-            if(c.ops && c.ops[c.ops.length-1] && typeof c.ops[c.ops.length-1].insert == "string"){
-                c.ops[c.ops.length-1].insert = c.ops[c.ops.length-1].insert.replace(/\s+$/, ''); //remove ending whitespace
-            }
-            return c;
-        }
-        //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
-        //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
-        element.addLinkPreview = function(url) {
-            var sel = quill.getSelection(true);
-            var range = sel.index;
-            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
-                quill.deleteText(range,1);
-                var addEmbedAt = range;
-            }else{
-                var addEmbedAt = quill.getLength();
-            }
-            quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
-            element.linkPreviewsAdded++;
-            updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
-        }
-
-        element.addImage = function(file) {
-            var sel = quill.getSelection(true);
-            var range = sel.index;
-            if(sel.length==0 && quill.getText(range,1)=="\n" && quill.getText(range+1,1)!=""){
-                quill.deleteText(range,1);
-                var addEmbedAt = range;
-            }else{
-                var addEmbedAt = quill.getLength();
-            }
-            quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
-            element.imagesAdded++;
-            updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
-        }
-        element.imagesAdded = 0;
-        element.linkPreviewsAdded = 0;
-        //listen for and use pasted image data
-        element.onpaste = function(e) {
-            var imagesAdded = false;
-            // event.originalEvent.clipboard for newer chrome versions
-            var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-            for (var i = 0; i < items.length; i++) {
-                if (element.imagesAdded > 3) {
-                    bootbox.alert("sorry, we only take 4 images at once atm");
-                    break;
+            //prevent there from ever being embeds with no new lines to type text on
+            quill.on('text-change', function(range, oldRange, source) {
+                if (quill.getText() == "") {
+                    quill.insertText(quill.getLength(), "\n");
+                }
+            })
+            //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
+            //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
+            element.addLinkPreview = function(url) {
+                var sel = quill.getSelection(true);
+                var range = sel.index;
+                if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
+                    quill.deleteText(range, 1);
+                    var addEmbedAt = range;
                 } else {
-                    if (items[i].type.indexOf("image") === 0) {
-                        element.addImage(items[i].getAsFile());
-                        imagesAdded = true;
-                    }
+                    var addEmbedAt = quill.getLength();
                 }
+                quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
+                element.linkPreviewsAdded++;
+                updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
-            if (imagesAdded) {
-                e.preventDefault();
-                return false; //no idea if this actually does anything but just in case
+
+            element.addImage = function(file) {
+                var sel = quill.getSelection(true);
+                var range = sel.index;
+                if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
+                    quill.deleteText(range, 1);
+                    var addEmbedAt = range;
+                } else {
+                    var addEmbedAt = quill.getLength();
+                }
+                quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+                element.imagesAdded++;
+                updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
-        }
-        //listen for and use dragged-and-dropped images
-        element.ondrop = function(ev) {
-            ev.preventDefault();
-            $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
-            if (ev.dataTransfer.items) {
-                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+            element.imagesAdded = 0;
+            element.linkPreviewsAdded = 0;
+            //listen for and use pasted image data
+            element.onpaste = function(e) {
+                var imagesAdded = false;
+                // event.originalEvent.clipboard for newer chrome versions
+                var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                for (var i = 0; i < items.length; i++) {
                     if (element.imagesAdded > 3) {
                         bootbox.alert("sorry, we only take 4 images at once atm");
                         break;
-                    } else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
-                        element.addImage(ev.dataTransfer.items[i].getAsFile());
+                    } else {
+                        if (items[i].type.indexOf("image") === 0) {
+                            element.addImage(items[i].getAsFile());
+                            imagesAdded = true;
+                        }
                     }
                 }
-            } else {
-                for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-                    if (element.imagesAdded > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
-                        break;
-                    } else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {
-                        element.addImage(ev.dataTransfer.files[i]);
-                    }
+                if (imagesAdded) {
+                    e.preventDefault();
+                    return false; //no idea if this actually does anything but just in case
                 }
             }
-            removeBodyFader();
+            //listen for and use dragged-and-dropped images
+            element.ondrop = function(ev) {
+                ev.preventDefault();
+                $(".post-controls").css('display', 'flex'); //just in case the user hasn't previously clicked in the text area
+                if (ev.dataTransfer.items) {
+                    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                        if (element.imagesAdded > 3) {
+                            bootbox.alert("sorry, we only take 4 images at once atm");
+                            break;
+                        } else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
+                            element.addImage(ev.dataTransfer.items[i].getAsFile());
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+                        if (element.imagesAdded > 3) {
+                            bootbox.alert("sorry, we only take 4 images at once atm");
+                            break;
+                        } else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {
+                            element.addImage(ev.dataTransfer.files[i]);
+                        }
+                    }
+                }
+                removeBodyFader(ev);
+            }
         }
     }
 
-    
+
     //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
     var dragcounter = 0;
     var faded = false;
@@ -475,7 +506,7 @@
         //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
         var floatyImageCont = prepareImageForMoving(selectedImage);
 
-        floatyImageCont[0].pointerOffset = mouseDownEvent.originalEvent.clientY-getTop(floatyImageCont);
+        floatyImageCont[0].pointerOffset = mouseDownEvent.originalEvent.clientY - getTop(floatyImageCont);
 
         prevPointerY = mouseDownEvent.originalEvent.clientY;
 
@@ -509,7 +540,7 @@
 
         var floatyImageCont = prepareImageForMoving(selectedImage);
 
-        floatyImageCont[0].pointerOffset = e.changedTouches[0].clientY-getTop(floatyImageCont);
+        floatyImageCont[0].pointerOffset = e.changedTouches[0].clientY - getTop(floatyImageCont);
 
         prevPointerY = e.changedTouches[0].clientY;
 
@@ -539,8 +570,8 @@
     }
 
     //gets the position to the element's top relative to the top of the screen, like how the css top property works with position:fixed
-    function getTop(e){
-        return e.offset().top-$(window).scrollTop();
+    function getTop(e) {
+        return e.offset().top - $(window).scrollTop();
     }
 
     //called as soon as movement is initiated:
@@ -572,14 +603,14 @@
         spacer.css("border", "dashed")
         spacer.empty();
 
-        imagecont[0].scrollPrompterId = setInterval(function(){scrollPrompter(imagecont, spacer)},50);
+        imagecont[0].scrollPrompterId = setInterval(function() { scrollPrompter(imagecont, spacer) }, 50);
 
         lastWindowPos = window.scrollY;
-        $(window).on('scroll',function(e){
-            if(window.scrollY > lastWindowPos){
+        $(window).on('scroll', function(e) {
+            if (window.scrollY > lastWindowPos) {
                 moveimagecont(prevPointerY, imagecont, spacer, "down")
-            }else if(window.scrollY < lastWindowPos){
-                moveimagecont(prevPointerY, imagecont, spacer, "up")                
+            } else if (window.scrollY < lastWindowPos) {
+                moveimagecont(prevPointerY, imagecont, spacer, "up")
             }
             lastWindowPos = window.scrollY;
         })
@@ -588,30 +619,30 @@
     }
 
     //assumes a window that's at least 300px tall
-    function scrollPrompter(imagecont, spacer){
+    function scrollPrompter(imagecont, spacer) {
         var t = getTop(imagecont);
-        if(t < 100){
-            $(window).scrollTop($(window).scrollTop()-10);
-        }else if(t > window.innerHeight-200){
-            $(window).scrollTop($(window).scrollTop()+10);
+        if (t < 100) {
+            $(window).scrollTop($(window).scrollTop() - 10);
+        } else if (t > window.innerHeight - 200) {
+            $(window).scrollTop($(window).scrollTop() + 10);
         }
     }
 
     //this function is called when the user moves either their mouse or finger to reposition the embed or the screen scrolls in a scrollDirection
     function moveimagecont(pointerY, imagecont, spacer, scrollDirection) {
-        var deltaY = pointerY-prevPointerY;
+        var deltaY = pointerY - prevPointerY;
         prevPointerY = pointerY;
         //move the floaty element:
         var imageconttop = getTop(imagecont);
         var spacertop = getTop(spacer);
         var imageconth = imagecont.outerHeight(true);
         //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-        var newYPos = Math.min(Math.max(pointerY-imagecont[0].pointerOffset, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
+        var newYPos = Math.min(Math.max(pointerY - imagecont[0].pointerOffset, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
         imagecont.css("top", newYPos + "px");
 
         //move the spacer (maybe):
 
-        if (scrollDirection=="down" || deltaY > 0) { //moving down
+        if (scrollDirection == "down" || deltaY > 0) { //moving down
             var elementBelow = spacer.next();
             while (elementBelow.length && elementBelow.next().length && (imageconttop + imageconth) > (getTop(elementBelow) + elementBelow.outerHeight(true))) {
                 elementBelow = elementBelow.next();
@@ -641,7 +672,7 @@
     //generally cancel drag and dropping when an alert has to be displayed about an upload, just in case drag and dropping is going on
     function movementEnded() {
         var imagecont = $('.onthemove');
-        if(imagecont.length){
+        if (imagecont.length) {
             clearInterval(imagecont[0].scrollPrompterId);
             $(window).off('scroll');
             $('.imagecontspacer').after($('.onthemove'));
