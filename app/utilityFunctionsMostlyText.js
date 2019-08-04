@@ -10,16 +10,18 @@ const metascraper = require('metascraper')([
 ]);
 const request = require('request');
 
+//todo: put these in a sensible order
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
-        if (rawText.ops) {
+        
+        if (rawText.ops) { //
             var parsedDelta = await this.parseDelta(rawText);
             rawText = parsedDelta.text;
-            var embeds = parsedDelta.embeds;
+            var inlineElements = parsedDelta.inlineElements;
         } else {
-            var embeds = [];
+            var inlineElements = [];
         }
         let splitContent = rawText.split('</p>');
         let parsedContent = [];
@@ -73,7 +75,7 @@ module.exports = {
             text: parsedContent,
             mentions: trimmedMentions,
             tags: trimmedTags,
-            embeds: [] //replace this when these are working
+            inlineElements: inlineElements
         };
     },
     //i'm gonna keep it real, i did not expect this to get this complicated
@@ -84,14 +86,9 @@ module.exports = {
         var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
         var linesOfParsedString = ["<p>"];
 
-        var embeds = [];
-        var images = [];
-        var isHorizontal = [];
-        var isVertical = [];
-        var imageDescriptions = [];
-        var imagePositions = [];
+        var inlineElements = [];
 
-        var resultLengthSoFar = 0;
+        var linesFinished = 0; // the assumption is that the rest of the text parsing (in parseText) will not add or remove any lines
         var withinList = false;
         var lineOpen = true;
         for (op of delta.ops) {
@@ -106,13 +103,12 @@ module.exports = {
                         if (withinList) {
                             withinList = false;
                             linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                            resultLengthSoFar += 5;
                             linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
-                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesFinished++;
                             linesOfParsedString.push("<p>");
                         } else {
                             linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
-                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesFinished++;
                             linesOfParsedString.push("<p>");
                         }
                         continue;
@@ -120,12 +116,12 @@ module.exports = {
                         if (!withinList) {
                             withinList = true;
                             linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
-                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesFinished++;
                             linesOfParsedString.push("<li>");
                             continue;
                         } else {
                             linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
-                            resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                            linesFinished++;
                             linesOfParsedString.push("<li>");
                             continue;
                         }
@@ -150,36 +146,41 @@ module.exports = {
                     if (withinList) {
                         withinList = false;
                         linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                        resultLengthSoFar += 5;
                         linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length);
                     }
                     linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                    resultLengthSoFar += linesOfParsedString[linesOfParsedString.length - 1].length;
+                    linesFinished++;
                     linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
                 }
             } else if (op.insert.LinkPreview) {
                 //i'm assuming that there will always be a newline text insert in the text right before an inline embed
                 var embed = op.attributes;
-                embed.position = resultLengthSoFar;
-                embed.linkUrl = (op.insert.LinkPreview.contains("//") ? "" : "//") +op.insert.LinkPreview;
-                if(youtubeUrlFindingRegex.test(op.LinkPreview)){
-                    embed.type="video";
-                    embed.embedUrl = "https://www.youtube.com/embed/"+youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5]+"?autoplay=1";
-                }else if(vimeoUrlFindingRegex.test(op.insert.LinkPreview)){
-                    embed.type="video";
-                    embed.embedUrl = "https://www.youtube.com/embed/"+vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4]+"?autoplay=1";
-                }else{
-                    embed.type = "link-preview";
+                embed.type = "link-preview";
+                embed.position = linesFinished;
+                embed.linkUrl = (op.insert.LinkPreview.contains("//") ? "" : "//") + op.insert.LinkPreview;
+                if (youtubeUrlFindingRegex.test(op.LinkPreview)) {
+                    embed.isEmbeddableVideo = true;
+                    embed.embedUrl = "https://www.youtube.com/embed/" + youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5] + "?autoplay=1";
+                } else if (vimeoUrlFindingRegex.test(op.insert.LinkPreview)) {
+                    embed.isEmbeddableVideo = true;
+                    embed.embedUrl = "https://www.youtube.com/embed/" + vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4] + "?autoplay=1";
+                } else {
+                    embed.isEmbeddableVideo = false;
                 }
-                embeds.push(embed);
+                inlineElements.push(embed);
 
-                console.log("link preview at position " + resultLengthSoFar);
+                console.log("link preview on line: " + linesFinished);
                 console.log("it is to " + op.insert.LinkPreview);
             } else if (op.insert.PostImage) {
-                images.push(op.attributes.imageURL);
-                imageDescriptions.push(op.attributes.description)
-                imagePositions.push(resultLengthSoFar);
-                console.log("image at position " + resultLengthSoFar);
+                if (inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
+                    var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
+                } else {
+                    var image = { images: [], imageDescriptions: [], position: linesFinished, type: "image(s)" };
+                }
+                image.images.push(op.attributes.imageURL);
+                image.imageDescriptions.push(op.attributes.description)
+                //todo: move code for isHorizontal and isVertical here
+                console.log("image on line: " + linesFinished);
                 console.log("its file name will be " + op.attributes.imageURL);
                 console.log("its description is " + op.attributes.description);
             }
@@ -201,29 +202,31 @@ module.exports = {
         }
         console.log("finished html:");
         console.log(linesOfParsedString.join("\n"));
-        return { text: linesOfParsedString.join(""), embeds: embeds, images:images, imagePositions: imagePositions, imageDescriptions:imageDescriptions, isHorizontal: isHorizontal, isVertical:isVertical };
+        return { text: linesOfParsedString.join(""), inlineElements:inlineElements };
     },
-    //maybe just have the metascaper function in here (will also be used directly above) and have that route in viewingsweet or whatever just call it and send back the result
     isEven: function(n) {
         return n % 2 == 0;
     },
     isOdd: function(n) {
         return Math.abs(n % 2) == 1;
     },
-    checkLinkPreviews: async function(postOrComment, saveTarget){ //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
-        function compareProp(prop){
-            if(l[prop]!=meta[prop]){
-                l[prop]=meta[prop];
+    checkLinkPreviews: async function(postOrComment, saveTarget) { //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
+        function compareProp(prop) {
+            if (l[prop] != meta[prop]) {
+                console.log("link preview in document " + postOrComment._id.toString() + " had " + prop + " " + l[prop] + " but the live page for url " + l.linkUrl + " had " + prop + " " + meta[prop]);
+                l[prop] = meta[prop];
                 return true;
             }
             return false;
         }
-        for(var l of postOrComment.embeds){
-            //todo: put the below line in a try catch and remove the embed if it throws an exception. that may require using a regular for loop in order to remove the element by index
-            var meta = await this.getLinkMetadata(l.linkUrl);
-            if(compareProp('description') || compareProp('title') || compareProp('image') || compareProp('domain')){
-                saveTarget.save();
-                //this.updateHTMLCache(postOrComment,saveTarget); //not implemented yet
+        for (var l of postOrComment.inlineElements) {
+            if (l.type == "link-preview") {
+                //todo: put the below line in a try catch and remove the embed if it throws an exception. that may require using a regular for loop in order to remove the element by index
+                var meta = await this.getLinkMetadata(l.linkUrl);
+                if (compareProp('description') || compareProp('title') || compareProp('image') || compareProp('domain')) {
+                    saveTarget.save();
+                    //this.updateHTMLCache(postOrComment,saveTarget); //not implemented yet
+                }
             }
         }
     },
@@ -280,18 +283,18 @@ module.exports = {
             }
         });
     },
-    getLinkMetadata: async function(url){
+    getLinkMetadata: async function(url) {
         //standardize url protocol so that request() will accept it. (request() will automatically change the http to https if necessary)
-        if(!url.includes('//')){
-            url = 'http://'+url;
-        }else if(url.substring(0,2)=="//"){
-            url = "http:"+url;
+        if (!url.includes('//')) {
+            url = 'http://' + url;
+        } else if (url.substring(0, 2) == "//") {
+            url = "http:" + url;
         }
-        var urlreq = new Promise(function(resolve, reject){
-            request({url:url,gzip:true}, function (error, response, body) {
-                if(error){
+        var urlreq = new Promise(function(resolve, reject) {
+            request({ url: url, gzip: true }, function(error, response, body) {
+                if (error) {
                     reject();
-                }else{
+                } else {
                     resolve(body);
                 }
             });
@@ -323,11 +326,26 @@ module.exports = {
             }
         }
     },
-    updateHTMLCache: function(postOrComment){
-        var positionedImages = {};
+    updateHTMLCache: function(postOrComment, saveTarget) { //saveTarget should be the post if it's a post or the post that the comment belongs to if it's a comment
+        //todo: split postOrComment.parsedText into lines (which can end with </p> or </li> or </li></ul> and can start similarly). maybe a regex that grabs lines and then add each subsequent match to a lines array
+        if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
+            for (const il of postOrComment.inlineElements) {
+                //todo: write this, put the rendered inline elements right before the line given by position (e. g. position==0 means put it before lines[0], at the beginning.)
+                //if it's an image(s) have to get full url
+                //join the result and put it in the result in postOrComment.cachedHTML.fullHTML, save saveTarget
+            }
+        } else {
+            var html = postOrComment.parsedContent.slice(); // i think that'll clone it so we're not modifying the original parsedContent? todo: check that
+            if (postOrComment.embeds && postOrComment.embeds.length) {
+                //this is a post from before the inlineElements array, render its embed (mandated to be just one) and put it at the end of html
+            } else if (postOrComment.images && postOrComment.images.length) {
+                //this is a post or comment from before the inlineElements array, render its images (with determined full urls) with the parallel arrays and put that at the end of html
+            }
+            //put html in fullHTML, save saveTarget
+        }
     }
 }
 
 function wordCount(str) {
-    return str.split(' ').filter(function(n) {return n != ''}).length;
+    return str.split(' ').filter(function(n) { return n != '' }).length;
 }

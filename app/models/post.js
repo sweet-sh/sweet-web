@@ -1,16 +1,35 @@
 var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-//okay so this schema is used in the embeds field in posts and comments but the name "embed" is misleading, it can also refer to link previews which are only kind of embeds, we just originally used this schema to preview video embeds
 var embedSchema = new mongoose.Schema({
-    type: String, //"video" or "link-preview"
+    type: String, //"video"
     linkUrl: String,
-    embedUrl: String, //only present if type == "video"
+    embedUrl: String,
     title: String,
     description: String,
     image: String,
     domain: String,
-    position: Number //if this is empty, the embed was just put at the end of the post
+})
+
+var inlineElementSchema = new mongoose.Schema({
+  type: String, //either "link-preview" or "image(s)"
+
+  position: Number, //placement within parsedContent in lines (0 = top of the post)
+  
+  //used if link-preview:
+  isEmbeddableVideo: Boolean,
+  linkUrl: String,
+  embedUrl: String, //only used if isEmbeddableVideo is true
+  title: String,
+  image: String,
+  description: String,
+  domain: String,
+
+  //used if image(s) (yeah, it's the same parallel arrays as the the old post formats):
+  images: [String],
+  imageDescriptions: [String],
+  imageIsVertical: [String],
+  imageIsHorizontal: [String],
 })
 
 var commentSchema = new mongoose.Schema({
@@ -27,11 +46,11 @@ var commentSchema = new mongoose.Schema({
   imageDescriptions: [String],
   imageIsVertical: [String],
   imageIsHorizontal: [String],
-  imagePositions: [Number], //only present for newer comments, the images used to just all go at the end
+
+  inlineElements: [inlineElementSchema], //this is used instead of the image parallel arrays in newer comments. keep in mind you can't check the post's imageVersion to see if this was used, bc comments using this model can still be made on old posts
 
   deleted: { type: Boolean, default: false },
-  embeds: [embedSchema],
-  cachedHTML:{ //was rendered with either the version of the template indicated by the post's corresponding cachedHTML MTime or the version that was available when the comment was made, whichever is newer
+  cachedHTML:{ //was rendered with either the versions of the templates indicated by the post's corresponding cachedHTML MTimes or the version that was available when the comment was created, whichever is newer
     fullHTML: String
   }
 });
@@ -84,21 +103,24 @@ var postSchema = new mongoose.Schema({
   contentWarnings: String,
   commentsDisabled: Boolean,
 
-  imageVersion: Number, //1=array of filenames accessible through /public/images/uploads; 2=array of filenames accessible through /api/images/display/ (which checks the user's permissions and the image's privacy;) and 3 is like the last one but uses the imagePositionsArray (they used to just show up at the end of the post)
-  //image parallel arrays:
+  imageVersion: Number, //1: array of filenames accessible through /public/images/uploads/[filename]; 2=array of filenames accessible through /api/images/display/[filename] (which checks the user's permissions and the image's privacy;) and 3: image data stored in inlineElements instead
+  //image parallel arrays (no positions, they were all put at the end):
   images: [String],
   imageDescriptions: [String],
   imageIsVertical: [String],
   imageIsHorizontal: [String],
-  imagePositions: [Number], //position within the post's text in characters
 
   subscribedUsers: [String],
   unsubscribedUsers: [String],
-  embeds: [embedSchema],
+
+  embeds: [embedSchema], //this was only used simultanously with imageVersion 2, so you can check for that i guess. embeds are stored in inlineElements under version 3
+
+  inlineElements: [inlineElementSchema], //this is used instead of the image parallel arrays and the embeds in newer posts
+
   cachedHTML:{ //the below MTimes also set a floor for the rendering date of the cached comment html (none will have older cached html, newer comments may have newer cached html, either way it'll all be brought up to date when the post is displayed)
     fullHTML: String,
     imageGalleryMTime: Date, //the last modified date of the imagegallery template when the html was rendered
-    embedsMTime: Date //the last modified date of the embeds template when the html was rendered, also goes for the comment embeds
+    embedsMTime: Date //the last modified date of the embeds template when the html was rendered
   }
 });
 

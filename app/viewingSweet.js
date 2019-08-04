@@ -576,57 +576,25 @@ module.exports = function(app) {
     //in the post and all of its comments.
     async function keepCachedHTMLUpToDate(post) {
 
-        //only runs if images' cached html is out of date
-        async function updateImages(displayContext) {
-            if (displayContext.images && displayContext.images.length > 0) {
-                displayContext.cachedHTML.imageGalleryHTML = await hbs.render(galleryTemplatePath, {
-                    images: imageUrlsArray,
-                    imageDescriptions: displayContext.imageDescriptions,
-                    post_id: displayContext._id,
-                    imageIsVertical: displayContext.imageIsVertical,
-                    imageIsHorizontal: displayContext.imageIsHorizontal,
-                    author: displayContext.author,
-                    contentWarnings: displayContext.contentWarnings
-                })
-            }
+        //only runs if cached html is out of date
+        async function updateHTMLRecursive(displayContext) {
+            helper.updateHTMLCache(displayContext);
             if (displayContext.comments) {
                 for (comment of displayContext.comments) {
-                    if (comment.timestamp < galleryTemplateMTime) { //comments are provided with cached html when they're created, which might be up to date even if the post's isn't
-                        await updateImages(comment);
+                    if (comment.timestamp < galleryTemplateMTime && comment.timestamp < embedTemplateMTime) { //comments are provided with cached html when they're created, which might be up to date even if the post's isn't
+                        await updateHtmlRecursive(comment);
                     }
                 }
             } else if (displayContext.replies) {
                 for (reply of displayContext.replies) {
-                    if (comment.timestamp < galleryTemplateMTime) {
-                        await updateImages(reply);
+                    if (reply.timestamp < galleryTemplateMTime && reply.timestamp < embedTemplateMTime) {
+                        await updateHtmlRecursive(reply);
                     }
                 }
             }
         }
 
-        //only runs if embeds' cached html is out of date
-        async function updateEmbeds(displayContext) {
-            if (displayContext.embeds && displayContext.embeds.length > 0) {
-                displayContext.cachedHTML.embedsHTML = [];
-                for (embed of displayContext.embeds) {
-                    displayContext.cachedHTML.embedsHTML.push(await hbs.render(embedsTemplatePath, { embed: embed }))
-                }
-            }
-            if (displayContext.comments) {
-                for (comment of displayContext.comments) {
-                    if (comment.timestamp < embedTemplateMTime) {
-                        await updateEmbeds(comment);
-                    }
-                }
-            } else if (displayContext.replies) {
-                for (reply of displayContext.replies) {
-                    if (comment.timestamp < embedTemplateMTime) {
-                        await updateEmbeds(reply);
-                    }
-                }
-            }
-        }
-
+/*
         //get the full url for all images in the displayContext
         var imageUrlsArray = []
         if (post.imageVersion === 2) {
@@ -638,26 +606,17 @@ module.exports = function(app) {
                 imageUrlsArray.push('/images/uploads/' + image)
             })
         }
-
-        var cacheModified = false;
-
+*/
         var galleryTemplatePath = "./views/partials/imagegallery.handlebars";
         var galleryTemplateMTime = fs.statSync(galleryTemplatePath).mtime; //would probably be better asynchronous
-        if (!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) {
-            console.log("post image gallery html not up to date, updating")
-            await updateImages(post);
-            post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
-            cacheModified = true;
-        }
         var embedsTemplatePath = "./views/partials/embed.handlebars";
         var embedTemplateMTime = fs.statSync(embedsTemplatePath).mtime;
-        if (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime) {
-            console.log("post embeds html not up to date, updating")
-            await updateEmbeds(post)
+
+        if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) ||(!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
+            console.log("post image gallery html not up to date, updating")
+            await updateHTMLRecursive(post);
+            post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
             post.cachedHTML.embedsMTime = embedTemplateMTime;
-            cacheModified = true;
-        }
-        if (cacheModified) {
             await post.save();
         }
     }
@@ -992,7 +951,7 @@ module.exports = function(app) {
                     }
 
                     displayedPost = {
-                        canDisplay: canDisplay,
+                        canDisplay: canDisplay, //todo: remove here and in template, if this is false then the post should not have been added thanks to the continue;
                         _id: displayContext._id,
                         deleteid: displayContext._id,
                         type: displayContext.type,
@@ -1009,8 +968,8 @@ module.exports = function(app) {
                         privacy: displayContext.privacy,
                         parsedTimestamp: parsedTimestamp,
                         lastUpdated: displayContext.lastUpdated,
-                        rawContent: displayContext.rawContent, //todo: check if this is this used 'cause it's going to be different now, also replace this with cached html with inlines eventually
-                        parsedContent: displayContext.parsedContent,
+                        rawContent: displayContext.rawContent, //todo: check if this is this used 'cause it's going to be different now
+                        parsedContent: displayContext.cachedHTML.fullHTML, //todo: rename key here and in the template to like fullPostHTML or something
                         commentsDisabled: displayContext.commentsDisabled,
                         comments: displayContext.comments,
                         numberOfComments: displayContext.numberOfComments,
@@ -1021,10 +980,7 @@ module.exports = function(app) {
                         lastCommentAuthor: "", // As does this
                         subscribedUsers: displayContext.subscribedUsers,
                         unsubscribedUsers: displayContext.unsubscribedUsers,
-                        embedsHTML: displayContext.cachedHTML.embedsHTML,
                         hasImages: (displayContext.images && displayContext.images.length > 0),
-                        galleryHTML: displayContext.cachedHTML.imageGalleryHTML
-                        // linkPreview: displayContext.linkPreview
                     }
 
                     //these are only a thing for logged in users

@@ -170,18 +170,16 @@ module.exports = function(app) {
     //if not logged in.
     app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
 
-        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true, true);
+        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true);
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
-        var postImages = parsedResult.images.slice(0, 4);
-        var postImageDescriptions = parsedResult.imageDescriptions.slice(0, 4);
-        var postImagePositions = parsedResult.imagePositions.slice(0, 4);
-        var embeds = parsedResult.embeds.slice(0, 10000); //todo: set embeds limits
+
 
         var postImageQuality = req.user.settings.imageQuality;
 
+        //todo: move somewhere where createpost and create comment can both access it        
         var imageIsVertical = [];
         var imageIsHorizontal = [];
         for (image of postImages) {
@@ -232,7 +230,7 @@ module.exports = function(app) {
                     embeds: embeds
                 });
 
-                // Parse images
+                // Parse images. todo: either move to helper.parseDelta or modify to look for the images in inlineElements
                 if (postImages) {
                     postImages.forEach(function(imageFileName) {
                         if (imageFileName) {
@@ -303,7 +301,7 @@ module.exports = function(app) {
                         }
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
-                        //we need to verify link preview information, but doing it before saving the post could make the response unpredictably slow, so
+                        //we need to verify link preview information, but doing it before saving the post could make the res.send take a while to get to, so
                         //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
                         //if link preview info is found to be inaccurate)
                         helper.checkLinkPreviews(post, post);
@@ -345,7 +343,7 @@ module.exports = function(app) {
                     embeds: embeds,
                 });
 
-                // Parse images
+                // Parse images. todo: either move to helper.parseDelta or modify to look for the images in inlineElements
                 if (postImages) {
                     postImages.forEach(function(imageFileName) {
                         fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
@@ -357,6 +355,7 @@ module.exports = function(app) {
                         Community.findOne({ _id: communityId })
                             .then(community => {
                                 image = new Image({
+                                    //todo: save image quality level i guess, the non-community posts get that anyway
                                     context: "community",
                                     filename: imageFileName,
                                     privacy: community.settings.visibility,
@@ -380,9 +379,7 @@ module.exports = function(app) {
                             if (mention != req.user.username) { //don't get notified from mentioning yourself
                                 User.findOne({
                                         username: mention,
-                                        communities: {
-                                            $in: [communityId]
-                                        }
+                                        communities: { $in: [communityId] }
                                     })
                                     .then((user) => {
                                         notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
@@ -390,15 +387,13 @@ module.exports = function(app) {
                             }
                         });
                         Community.findOneAndUpdate({ _id: communityId }, {
-                            $set: {
-                                lastUpdated: new Date()
-                            }
+                            $set: { lastUpdated: new Date() }
                         }).then(community => {
                             console.log("Updated community!")
                         })
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
-                        //we need to verify link preview information, but doing it before saving the post could make the response unpredictably slow, so
+                        //we need to verify link preview information, but doing it before saving the post could make the res.send take a while to get to, so
                         //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
                         //if link preview info is found to be inaccurate)
                         helper.checkLinkPreviews(post, post);
@@ -423,7 +418,7 @@ module.exports = function(app) {
                     return;
                 }
 
-                // Delete images
+                // Delete images todo: change to look in inlineElements if imageVersion == 3
                 post.images.forEach((image) => {
                     if (post.imageVersion === 2) {
                         fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
@@ -434,20 +429,12 @@ module.exports = function(app) {
                             if (err) console.log("Image deletion error " + err)
                         })
                     }
-                    Image.deleteOne({
-                        "filename": image
-                    })
+                    Image.deleteOne({ "filename": image })
                 })
 
                 // Delete tags (does not currently fix tag last updated time)
                 post.tags.forEach((tag) => {
-                    Tag.findOneAndUpdate({
-                            name: tag
-                        }, {
-                            $pull: {
-                                posts: req.params.postid
-                            }
-                        })
+                    Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
                         .then((tag) => {
                             console.log("Deleted tag: " + tag)
                         })
@@ -459,9 +446,7 @@ module.exports = function(app) {
                 // Delete boosts
                 if (post.type == "original") {
                     post.boosts.forEach((boost) => {
-                        Post.deleteOne({
-                                "_id": boost
-                            })
+                        Post.deleteOne({ "_id": boost })
                             .then((boost) => {
                                 console.log("Deleted boost: " + boost)
                             })
@@ -472,16 +457,14 @@ module.exports = function(app) {
                 }
 
                 //delete comment images
-                //TODO: also delete images for threaded comments
+                //TODO: delete inlineElements images if they're there, also delete images for nested comments
                 post.comments.forEach((comment) => {
                     if (comment.images) {
                         comment.images.forEach((image) => {
                             fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                                 if (err) console.log("Image deletion error " + err)
                             });
-                            Image.deleteOne({
-                                "filename": image
-                            });
+                            Image.deleteOne({ "filename": image });
                         })
                     }
                 });
@@ -493,9 +476,7 @@ module.exports = function(app) {
                                 subjectId: post._id
                             }
                         }
-                    }, {
-                        multi: true
-                    })
+                    }, { multi: true })
                     .then(response => {
                         console.log(response)
                     })
@@ -504,9 +485,7 @@ module.exports = function(app) {
                 console.log("Database error: " + err)
             })
             .then(() => {
-                Post.deleteOne({
-                        "_id": req.params.postid
-                    })
+                Post.deleteOne({ "_id": req.params.postid })
                     .then(() => {
                         res.sendStatus(200);
                     })
@@ -526,6 +505,7 @@ module.exports = function(app) {
         let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
         let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
 
+        //todo: consolidate with the same code used in createpost
         var imageIsVertical = [];
         var imageIsHorizontal = [];
         for (image of postImages) {
@@ -541,33 +521,14 @@ module.exports = function(app) {
         }
 
         var rawContent = sanitize(req.body.commentContent);
-        var parsedResult = await helper.parseText(rawContent, false, true, true, true, true);
+        var parsedResult = await helper.parseText(rawContent, false, true, true, true);
 
         if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
             res.status(400).send('bad post op');
             return;
         }
 
-        var fullImageUrls = []
-        for (img of postImages) {
-            fullImageUrls.push("/api/image/display/" + img);
-        }
-        var embedsHTML = []
-        for (embed of parsedResult.embeds) {
-            embedsHTML.push(await hbs.render('./views/partials/embed.handlebars', { embed: embed }));
-        }
-        var imageGalleryHTML = await hbs.render('./views/partials/imagegallery.handlebars', {
-            images: fullImageUrls,
-            post_id: commentId.toString(),
-            imageDescriptions: imageDescriptions,
-            imageIsVertical: imageIsVertical,
-            imageIsHorizontal: imageIsHorizontal,
-            author: {
-                username: req.user.username
-            }
-        });
-
-        const comment = {
+        var comment = {
             _id: commentId,
             authorEmail: req.user.email,
             author: req.user._id,
@@ -581,11 +542,9 @@ module.exports = function(app) {
             imageDescriptions: imageDescriptions,
             imageIsVertical: imageIsVertical,
             imageIsHorizontal: imageIsHorizontal,
-            cachedHTML: {
-                imageGalleryHTML: imageGalleryHTML,
-                embedsHTML: embedsHTML
-            }
         };
+
+        //todo: pass comment to helper.updateCachedHTML or whatever, maybe then put comment.cachedHTML.fullHTML in a variable for putting in res.send below
 
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
@@ -664,7 +623,7 @@ module.exports = function(app) {
                 }
                 post.save()
                     .then(async () => {
-                        // Parse images
+                        // Parse images todo: adapt for inlineElements or actually, just move this and the createpost versions into parseDelta so we don't have it like 30 times
                         if (postImages) {
                             postImages.forEach(function(imageFileName) {
                                 if (imageFileName) {
@@ -883,7 +842,7 @@ module.exports = function(app) {
                                 name: name,
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
-                                content: helper.mixInEmbeds(comment),
+                                content: fullHTML, //todo: make this what's stored in the comment object by helper.updateCachedHTML above
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
                                 embedsExist: !!parsedResult.embeds,
@@ -962,6 +921,7 @@ module.exports = function(app) {
                     return;
                 }
 
+                //todo: adapt to also work with images in inlineElements
                 target.images.forEach((image) => {
                     fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                         if (err) console.log("Image deletion error " + err)
