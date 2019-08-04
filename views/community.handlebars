@@ -333,8 +333,8 @@
 
 {{#if loggedIn}}
 
-attachQuill("#communityRulesHtml");
-attachQuill("#communityDescriptionHtml");
+attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
+attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
 
 $("#rulesForm").submit(function(e){
   $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());

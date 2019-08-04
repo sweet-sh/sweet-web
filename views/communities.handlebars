@@ -115,8 +115,8 @@
 
 <script type="text/javascript">
 
-attachQuill(document.getElementById("communityDescriptionHtml"));
-attachQuill(document.getElementById("communityRulesHtml"));
+attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
+attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
 
 $("#newCommunityForm").submit(function(e){
   $("#communityRules").val($("#communityRulesHtml").find(".ql-editor").html());
