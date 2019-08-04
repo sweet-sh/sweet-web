@@ -1137,6 +1137,7 @@ hr {
   /*border moved to colors*/
   margin: 0;
   object-fit: contain;
+  position: relative;
 }
 
 #postImageUpload {

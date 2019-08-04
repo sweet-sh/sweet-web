@@ -13,7 +13,7 @@
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
     <div class="image-preview">
-        <div class="fader" style="color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-scrollDirection:column;">
+        <div class="fader" style="position: absolute;top: 0;display: flex;flex-direction:column;color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-scrollDirection:column;">
             <div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress>
         </div>
     </div>
@@ -97,12 +97,15 @@
                     updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
                 }
             })
-            node.request.fail(function(){
+            node.request.fail(function(jqXHR, textStatus, error){
                 var m = $("#embed" + id);
                 if (!m.length) { return; }
                 m.removeClass('still-loading');
-                bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(")
+                bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(");
                 m.find('.image-clear').click();
+                if(error!="abort"){
+                    $.post("/admin/reporterror", { errorstring: "error creating link preview for url "+url+":\n"+error });
+                }
             })
 
             n.find('.image-clear').click(clearEmbed);
@@ -184,9 +187,11 @@
                     m.find("#percentage").html("Upload error :( Hit the X and try again?");
                     console.log(status);
                     console.log(error);
-                    $.post("/admin/reporterror", { errorstring: error });
                     m.removeClass('still-loading');
-                    updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));                    
+                    updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
+                    if(error!="abort"){
+                        $.post("/admin/reporterror", { errorstring: "error uploading image:\n"+error });
+                    }              
                 },
                 success: function(data, status, jqXHR) {
                     var m = $("#embed" + id)
