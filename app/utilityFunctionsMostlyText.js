@@ -13,28 +13,41 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path')
 
-//todo: put these in a sensible order
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
-
-        if (rawText.ops) { //
+        if (rawText.ops) { //it is in delta format
             var parsedDelta = await this.parseDelta(rawText);
             rawText = parsedDelta.text;
             var inlineElements = parsedDelta.inlineElements;
         } else {
             var inlineElements = [];
         }
-        let splitContent = rawText.split('</p>');
+
+        const blankLinesAllowed = true;
+
+        if (blankLinesAllowed) { //otherwise, they'll just be filtered out later anyway
+            rawText = rawText.replace(/^(<p><br><\/p>)*/, '') //filter out blank lines from beginning
+            rawText = rawText.replace(/(<p><br><\/p>)*$/, '') //filter them out from the end
+            rawText = rawText.replace(/(<p><br><\/p>){2,}/g, '<p><br></p>') //filters out multiple blank lines in a row within the post
+        }
+
+        let splitContent = [];
+        var lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
+        var match = undefined;
+        while (match = lineFinder.exec(rawText)) {
+            splitContent.push(match[0]);
+        }
         let parsedContent = [];
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
         var mentionReplace = '$1<a href="/$2">@$2</a>';
         var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
         var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
-        splitContent.forEach(function(line) {
-            line += '</p>'
-            if (line.replace(/<[^>]*>/g, "") != "") { // Filters out lines which are just HTML tags
+
+        for (var i = 0; i < splitContent.length; i++) {
+            var line = splitContent[i];
+            if (blankLinesAllowed || line != "<p><br></p>") {
                 if (urlsEnabled) {
                     line = Autolinker.link(line);
                 }
@@ -46,7 +59,7 @@ module.exports = {
                 }
                 parsedContent.push(line);
             }
-        })
+        }
         parsedContent = parsedContent.join('');
         parsedContent = sanitize(parsedContent);
 
@@ -81,12 +94,14 @@ module.exports = {
             inlineElements: inlineElements
         };
     },
-    //i'm gonna keep it real, i did not expect this to get this complicated
+    //called by parse text to turn the quilljs delta format (which we use for text with embeds) into html
     parseDelta: async function(delta) {
         //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
         var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
         //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
         var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+
+        //this starts the first line. it may be modified if it turns out this is a line in a list or blockquote
         var linesOfParsedString = ["<p>"];
 
         var inlineElements = [];
@@ -95,17 +110,22 @@ module.exports = {
         const imagesAllowed = 4;
         const linkPreviewsAllowed = 4;
 
-        var linesFinished = 0; // the assumption is that the rest of the text parsing (in parseText) will not add or remove any lines
+        var linesFinished = 0; // the assumption is that the text parsing in parseText will not add or remove any lines
         var withinList = false;
-        var lineOpen = true;
+        //the delta format stores a series of operations in "ops." in this context, they will all be "insert" ops, with their main content in .insert and the extra attributes of that content in .attributes
+        //the best way to understand this function is probably to step through it. basically, we start with a line "in progress" (the <p> that starts the array above) and add each insert onto it,
+        //accompanied by the tags for its formatting, until we hit an end of line signal, when we finish the line with an end tag. it may turn out that the end of line is blockquote or list formatted,
+        //in which case we have to go back and start the line with the appropriate tag (or tags in the case of lists, <ul> and <li>), and then for lists we start starting lines with <li> and then
+        //when we leave that formatting mode (when we hit a non list-fomatted newline) we have to end the previous (finished) line with </li> and </ul> and go back and start the current one with <p>.
+        //embeds are added with a position attribute describing how many lines have been completed when they are encountered, which serves to place them in the text later.
         for (op of delta.ops) {
             if (typeof op.insert == "string" && (op.insert !== "" || op.attributes)) {
                 op.insert = this.escapeHTMLChars(op.insert);
-                lineOpen = true;
                 var formattingStartTags = "";
                 var formattingEndTags = "";
                 if (op.attributes) {
-                    // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are
+                    // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are. as far as i can tell, it is guaranteed that only
+                    //newlines will have this formatting.
                     if (op.attributes.blockquote) {
                         if (withinList) {
                             withinList = false;
@@ -147,6 +167,7 @@ module.exports = {
                         formattingEndTags = formattingEndTags + "</a>";
                     }
                 }
+                //splitting the string into lines like this means that the first element is part of the previous line and then all subsequent ones start and finish their own lines, except the last one doesn't finish its
                 var lines = op.insert.split('\n');
                 linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
                 for (var i = 1; i < lines.length; i++) {
@@ -155,12 +176,15 @@ module.exports = {
                         linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
                         linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length);
                     }
+                    if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") { //if the line we're finishing has no actual content
+                        linesOfParsedString[linesOfParsedString.length - 1] += "<br>";
+                    }
                     linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
                     linesFinished++;
                     linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
                 }
             } else if (op.insert.LinkPreview && linkPreviewsAdded <= linkPreviewsAllowed) {
-                //i'm assuming that there will always be a newline text insert in the text right before an inline embed
+                //i'm assuming that there will always be a newline text insert in the text right before an inline embed, so we don't have to go through the end-of-line process
                 var embed = op.attributes;
                 embed.type = "link-preview";
                 embed.position = linesFinished;
@@ -210,18 +234,55 @@ module.exports = {
             if ((typeof delta.ops[delta.ops.length - 1].insert != "string")) {
                 linesOfParsedString.pop();
             } else {
-                linesOfParsedString[linesOfParsedString.length - 1] += "</p>"
+                if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") {
+                    linesOfParsedString[linesOfParsedString.length - 1] += "<br></p>";
+                } else {
+                    linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                }
             }
         }
         console.log("finished html:");
         console.log(linesOfParsedString.join("\n"));
         return { text: linesOfParsedString.join(""), inlineElements: inlineElements };
     },
-    isEven: function(n) {
-        return n % 2 == 0;
+    sanitizeHtmlForSweet: function(parsedContent) {
+        return sanitizeHtml(parsedContent, {
+            allowedTags: ['blockquote', 'ul', 'li', 'em', 'i', 'b', 'strong', 'a', 'p', 'br'],
+            allowedAttributes: {
+                'a': ['href', 'target']
+            },
+            transformTags: {
+                'a': function(tagName, attribs) {
+                    //if a link is not explicitly relative due to an initial / (like mention and hashtag links are) and doesn't already include the // that makes it non-relative
+                    if (attribs.href.substring(0, 1) != "/" && !attribs.href.includes('//')) {
+                        //make the link explicitly non-relative
+                        attribs.href = "//" + attribs.href;
+                    }
+                    attribs.target = "_blank";
+                    return {
+                        tagName: 'a',
+                        attribs: attribs
+                    };
+                }
+            }
+        });
     },
-    isOdd: function(n) {
-        return Math.abs(n % 2) == 1;
+    //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
+    escapeHTMLChars: function(string) {
+        var entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;',
+            '\t': '&emsp;' //this one is my idea
+        };
+        return String(string).replace(/[&<>"'`=\/\t]/g, function(s) {
+            return entityMap[s];
+        });
     },
     //takes a post or comment, returns the version with updated inlineElements array and cache if needed or nothing if not
     checkLinkPreviews: async function(postOrComment) {
@@ -257,59 +318,6 @@ module.exports = {
             }
         }
     },
-    //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
-    escapeHTMLChars: function(string) {
-        var entityMap = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;',
-            '/': '&#x2F;',
-            '`': '&#x60;',
-            '=': '&#x3D;',
-            '\t': '&emsp;' //this one is my idea
-        };
-        return String(string).replace(/[&<>"'`=\/\t]/g, function(s) {
-            return entityMap[s];
-        });
-    },
-    slugify: function(string) {
-        const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
-        const b = 'aaaaaaaaceeeeghiiiimnnnoooooprssstuuuuuwxyz------'
-        const p = new RegExp(a.split('').join('|'), 'g')
-
-        return string.toString().toLowerCase()
-            .replace(/\s+/g, '-') // Replace spaces with -
-            .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
-            .replace(/&/g, '-and-') // Replace & with 'and'
-            .replace(/[^\w\-]+/g, '') // Remove all non-word characters
-            .replace(/\-\-+/g, '-') // Replace multiple - with single -
-            .replace(/^-+/, '') // Trim - from start of text
-            .replace(/-+$/, '') // Trim - from end of text
-    },
-    sanitizeHtmlForSweet: function(parsedContent) {
-        return sanitizeHtml(parsedContent, {
-            allowedTags: ['blockquote', 'ul', 'li', 'em', 'i', 'b', 'strong', 'a', 'p', 'br'],
-            allowedAttributes: {
-                'a': ['href', 'target']
-            },
-            transformTags: {
-                'a': function(tagName, attribs) {
-                    //if a link is not explicitly relative due to an initial / (like mention and hashtag links are) and doesn't already include the // that makes it non-relative
-                    if (attribs.href.substring(0, 1) != "/" && !attribs.href.includes('//')) {
-                        //make the link explicitly non-relative
-                        attribs.href = "//" + attribs.href;
-                    }
-                    attribs.target = "_blank";
-                    return {
-                        tagName: 'a',
-                        attribs: attribs
-                    };
-                }
-            }
-        });
-    },
     getLinkMetadata: async function(url) {
         //standardize url protocol so that request() will accept it. (request() will automatically change the http to https if necessary)
         if (!url.includes('//')) {
@@ -333,24 +341,6 @@ module.exports = {
             title: metadata.title,
             description: metadata.description,
             domain: urlp.parse(url).hostname
-        }
-    },
-    //DEPRECATED
-    mixInEmbeds: function(post) { //actually, can also be a comment
-        if (post.embeds && post.embeds.length > 0) {
-            var index = 0;
-            var withEmbeds = "";
-            if (post.embeds.length == 1 && typeof post.embeds[0].position == "undefined") { //old, positionless single embed scheme
-                return post.parsedContent + post.cachedHTML.embedsHTML[0];
-            } else {
-                for (var i = 0; i < post.embeds.length; i++) { //new, positioned embed scheme
-                    withEmbeds += post.parsedContent.substring(index, post.embeds[i].position);
-                    withEmbeds += post.cachedHTML.embedsHTML[i];
-                    index = post.embeds[i].position;
-                }
-                withEmbeds += post.parsedContent.substring(post.embeds[post.embeds.length - 1].position, post.parsedContent.length);
-                return withEmbeds;
-            }
         }
     },
     //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
@@ -389,13 +379,13 @@ module.exports = {
         }
         return { imageIsHorizontal: imageIsHorizontal, imageIsVertical: imageIsVertical };
     },
-    //returns the postOrComment with the cachedHTML.fullContentHTML field set to its final HTML. also, some extra info in the inlineElements, but that hopefully won't get saved 'cause it's not in the inlineElement schema
+    //returns the postOrComment with the cachedHTML.fullContentHTML field set to its final HTML. also, some extra info in the inlineElements, but that won't get saved 'cause it's not in the inlineElement schema
     updateHTMLCache: async function(postOrComment) {
         if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
             var lines = [];
             const lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
             while (line = lineFinder.exec(postOrComment.parsedContent)) {
-                lines.push(line);
+                lines.push(line[0]);
             }
             var addedLines = 0;
             for (const il of postOrComment.inlineElements) {
@@ -454,7 +444,27 @@ module.exports = {
             }
             return postOrComment;
         }
-    }
+    },
+    isEven: function(n) {
+        return n % 2 == 0;
+    },
+    isOdd: function(n) {
+        return Math.abs(n % 2) == 1;
+    },
+    slugify: function(string) {
+        const a = 'àáäâãåăæçèéëêǵḧìíïîḿńǹñòóöôœṕŕßśșțùúüûǘẃẍÿź·/_,:;'
+        const b = 'aaaaaaaaceeeeghiiiimnnnoooooprssstuuuuuwxyz------'
+        const p = new RegExp(a.split('').join('|'), 'g')
+
+        return string.toString().toLowerCase()
+            .replace(/\s+/g, '-') // Replace spaces with -
+            .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+            .replace(/&/g, '-and-') // Replace & with 'and'
+            .replace(/[^\w\-]+/g, '') // Remove all non-word characters
+            .replace(/\-\-+/g, '-') // Replace multiple - with single -
+            .replace(/^-+/, '') // Trim - from start of text
+            .replace(/-+$/, '') // Trim - from end of text
+    },
 }
 
 function wordCount(str) {

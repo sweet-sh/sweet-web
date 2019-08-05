@@ -150,7 +150,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     }
     e.preventDefault();
     let editor = $('#editor');
-    let postContent = editor[0].getContents(); //delta object
+    let postContent = editor[0].getContents(); //delta object if we have embeds; normal html if not
     if (editor[0].hasContent()) {
       $(this).attr('disabled');
       $.ajax({
@@ -159,10 +159,10 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         data: {
           communityId: $('#postForm').attr("communityId"),
           postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
-          postContent: JSON.stringify(postContent),
+          postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
           postContentWarnings: $('#postContentWarnings').val(),
         }
-      }).done(function (postTimestamp) { //actually this should be a string set to the 1 millisecond later than the new post's timestamp.
+      }).done(function (postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
         $("#emojiWindow").slideUp("fast");
@@ -186,7 +186,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     let commentID = commentForm.attr('data-comment-id');
     let commentContainer = commentForm.find(".ql-container");
     let commentEditor = commentForm.find('.ql-editor');
-    let commentContent = commentContainer[0].getContents(); //delta object
+    let commentContent = commentContainer[0].getContents(); //delta object if we have embeds; normal html if not
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }
@@ -197,7 +197,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
 
     if (commentContainer[0].hasContent()) {
       commentButton.prop('disabled', true);
-      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: JSON.stringify(commentContent) },
+      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: JSON.stringify(commentContent) }, //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
       function(data) {
         if (data!='nope'){
           commentEditor.html('');

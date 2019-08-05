@@ -338,10 +338,9 @@
             //if there is some text the first will be true; if there are > 0 embeds, the second will be true
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
-        //the following code inserts embeds into the editor and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
-        if (!embedsForbidden) {
-            //when embeds are forbidden, the html contents of the .ql-editor element will be used instead of the below
-            element.getContents = function() {
+        //when embeds are forbidden, the html contents of the .ql-editor element will be used instead of the below
+        element.getContents = function() {
+            if (element.imagesAdded() > 0 || element.linkPreviewsAdded() > 0) {
                 quill.updateContents();
                 var c = quill.getContents();
                 if (c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string") {
@@ -351,7 +350,13 @@
                     c.ops[c.ops.length - 1].insert = c.ops[c.ops.length - 1].insert.replace(/\s+$/, ''); //remove ending whitespace
                 }
                 return c;
+            } else {
+                return $(element).children('.ql-editor').html();
             }
+        }
+
+        //the following code deals with embeds and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
+        if (!embedsForbidden) {
             //prevent there from ever being embeds at the end of the content with no new lines after to type text on
             quill.on('text-change', function(range, oldRange, source) {
                 if (quill.getText() === "") {
@@ -483,7 +488,7 @@
 
     //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
     var dragcounter = 0;
-    
+
     var faded = false;
     dragFaderActivated = false;
 
@@ -627,7 +632,7 @@
         var w = $(window);
         var wst = w.scrollTop();
         var wh = w.height();
-        if (t < wst + 100 && pt < wst+50) {
+        if (t < wst + 100 && pt < wst + 50) {
             w.scrollTop(wst - 10);
         } else if (b > wh - 100 && pb > (wst + wh)) {
             w.scrollTop(wst + 10);
@@ -661,7 +666,7 @@
                     spacer.insertAfter(elementBelow);
                 }
             }
-        //if moving up, we move the spacer above the element above the floating element if the floating element's top edge has passed over the middle of that element or is less than 70px away from that element's top edge, whichever comes last
+            //if moving up, we move the spacer above the element above the floating element if the floating element's top edge has passed over the middle of that element or is less than 70px away from that element's top edge, whichever comes last
         } else if (scrollDirection == "up" || deltaY < 0) { //moving up
             var elementAbove = spacer.prev();
             while (elementAbove.length && elementAbove.prev().length && floatingEmbedtop < getTop(elementAbove)) {
