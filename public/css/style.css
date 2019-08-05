@@ -1122,6 +1122,13 @@ hr {
   width: 100%;
   margin-bottom: 0.5rem !important;
   cursor: default;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
  }
 
 .image-preview {
@@ -1156,7 +1163,7 @@ hr {
   height: 100%;
 }
 
-.image-preview-controls > a {
+.image-preview-controls > div {
   text-decoration: none;
   color: #aaa;
   width: 1.5em;
@@ -1164,9 +1171,14 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-.image-preview-controls > a:hover {
+.image-preview-controls > .image-move {
+  cursor: grab;
+}
+
+.image-preview-controls > div:hover {
   color: #666;
 }
 

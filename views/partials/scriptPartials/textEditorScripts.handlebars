@@ -6,8 +6,8 @@
         <span class="link-preview-domain">...loading...</span>
     </div>
     <div class="image-preview-controls">
-        <a href="javascript:void(0)" class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></a>
-        <a href="javascript:void(0)" class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+        <div class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></div>
+        <div class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
     </div>
 </script>
 
@@ -19,8 +19,8 @@
     </div>
     <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers."></textarea>
     <div class="image-preview-controls">
-        <a href="javascript:void(0)" class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></a>
-        <a href="javascript:void(0)" class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></a>
+        <div class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></div>
+        <div class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
     </div>
 </script>
 
@@ -386,6 +386,16 @@
             }
             element.linkPreviewsAdded = function() {
                 return $(element).children('.ql-editor').children('.link-preview-container').length;
+            }
+            //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
+            element.onclick = function(e){
+                var lastThingInEditor = $(element).children('.ql-editor').children().last();
+                if(lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('newimagecont')){
+                    if(e.clientY > getTop(lastThingInEditor)+lastThingInEditor.outerHeight(false)){
+                        quill.insertText(quill.getLength(),'\n');
+                        quill.setSelection(quill.getLength(),0);
+                    }
+                }
             }
             //listen for and use pasted image data
             element.onpaste = function(e) {
