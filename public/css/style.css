@@ -118,6 +118,10 @@ hr {
 #postForm:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
+#postForm .form-row {
+    margin-left: 0;
+    margin-right: 0;
+}
 .content-box {
   border-bottom: 1px solid #dfdfdf;
 }
@@ -212,6 +216,7 @@ div.post-images > 1 or more (a > img.post-single-image)
   grid-column-gap: 2px;
   grid-row-gap: 2px;
   max-height: 450px;
+  margin-bottom: 0.5em;
 }
 
 /* Base style for individual images */
@@ -1048,6 +1053,11 @@ hr {
 .link-form-cont {
   display: none;
   overflow: hidden; /* this mysteriously smooths out the jquery slide down animation, which happens to this element */
+  margin: 0 -3px; /* Given the overflow hidden above, this allows the selected glow to show properly */
+}
+
+.new-comment-form .link-form-cont {
+    margin: 0 -6px; /* Gotta sort this out at some point */
 }
 
 .linkPreviewAddingForm {
@@ -1109,6 +1119,13 @@ hr {
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+.embedded-video-preview-container {
+    display:flex;
+    justify-content:center;
+    position:relative;
+    height: 78px;
 }
 
  .image-preview-holder {
@@ -1414,7 +1431,8 @@ hr {
     align-self: center;
     max-height:100%;
     width: 140px !important;
-    object-fit: contain;
+    object-fit: cover;
+    min-width: 140px;
 }
 
 .link-preview-description {
