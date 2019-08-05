@@ -25,8 +25,10 @@
 </script>
 
 <script>
-    //within-editor embeds utility functions:
+    //okay so the below is the code that configures the quill.js text editor to work how we want it to vis-a-vis text formatting and using inline image and
+    //link preview elements, both of which i'm referring to as "embeds" bc i can't think of a better name. "inlines"?
 
+    //within-editor embeds utility functions:
     function updateSubmitButtonState(postForm) {
         var button = postForm.find('.create-comment, #postSubmit');
         if (postForm.find('.still-loading').length == 0) {
@@ -43,10 +45,10 @@
         }
     }
 
-    //attached to the x of the embeds above and below when a new one is created after a rearrangement
+    //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
     function clearEmbed(e) {
         var m = $(this).parent().parent();
-        if (m[0].request && m[0].request.readyState != 4) {
+        if (m[0].request && m[0].request.readyState != 4) { //if the request is still in progress
             m[0].request.abort();
         }
         var postform = m.closest('.new-comment-form, .contentForm');
@@ -54,12 +56,15 @@
         updateSubmitButtonState(postform);
     }
 
-    var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and forms part of their ids so they can all be uniquely identified
-    //in callbacks that affect embeds, they should be selected by their ids that are formed from this instead of using the existing node variable, bc the re-arranger may have removed the original element
+    var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and before that is used to create their ids so they can all be uniquely identified
+    //in callbacks that affect embeds, they should be selected by their ids that are formed from this instead of using the existing node variable, bc the re-arranger may have replaced the original element
+    //actually i'm not completely sure if that's necessary, but anyway it's easy, just do var $("#embed" + id); (id is declared in the create function where the relevant callbacks are also created)
 
     //register embed types!
     let BlockEmbed = Quill.import('blots/block/embed');
     class LinkPreview extends BlockEmbed {
+
+        //this is called when the quill api is used to create an embed with type 'LinkPreview' (which is where you pass in the url)
         static create(url) {
             //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
             var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
@@ -75,16 +80,24 @@
             node.innerHTML = $("#new-post-link-preview-contents")[0].innerHTML;
             var n = $(node);
             n.addClass('still-loading');
+            n.find('.link-preview-image').on('error', function(e) {
+                $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+            })
             node.request = $.post("/api/newpostform/linkpreviewdata", { url: url }, function(data, status, jqXHR) {
                 var m = $("#embed" + id);
                 if (!m.length) { return; }
                 m.removeClass('still-loading');
                 if (data == "invalid url i guess") {
-                    bootbox.alert("Sorry, we couldn't connnect to that url (" + url + ") to obtain a preview :(")
+                    bootbox.alert("Sorry, we couldn't connnect to that url (" + url + ") to obtain a preview :(");
+                    endMovement(); //in case this link preview is currently being dragged
                     m.find('.image-clear').click();
                 } else {
                     var linkInfo = JSON.parse(data);
-                    m.find(".link-preview-image").attr('src', linkInfo.image)
+                    if (linkInfo.image) {
+                        m.find(".link-preview-image").attr('src', linkInfo.image)
+                    } else {
+                        m.find(".link-preview-image").replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                    }
                     m.find('.link-preview-title').html(linkInfo.title);
                     m.find('.link-preview-description').html(linkInfo.description);
                     m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
@@ -96,6 +109,7 @@
                 if (!m.length) { return; }
                 m.removeClass('still-loading');
                 bootbox.alert("Sorry, we couldn't connect to that url (" + url + ") to obtain a preview :(");
+                endMovement(); //in case this link preview is currently being dragged
                 m.find('.image-clear').click();
                 if (error != "abort") {
                     $.post("/admin/reporterror", { errorstring: "error creating link preview for url " + url + ":\n" + error });
@@ -109,12 +123,18 @@
             return node;
         }
 
+        //quill calls this function to find out what value it should put for this embed in the object it returns when you call getContents() on it
+        //(or what value to pass to create() if it has to recreate this object bc of an undo)
         static value(node) {
             return node.getAttribute('data-url');
         }
 
+        //quill calls this function to find out what attributes it should put for this embed in the object it returns when you call getContents() on it
         static formats(node) {
             var n = $(node);
+            if (n.hasClass('still-loading') || n.hasClass('onthemove') || n.hasClass('embedspacer')) {
+                return {};
+            }
             return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html().replace(' (will open as embed)', ''), image: n.find('.link-preview-image').attr('src') }
         }
     }
@@ -126,6 +146,8 @@
 
     var files = {}; //each file object is stored in this object under the container's id so that if a user deletes an image embed and then undoes that action, quill can find the file in here and reconstitute the embed from it.
     class PostImage extends BlockEmbed {
+
+        //this is called when the quill api is used to create an embed with type 'PostImage' (which is where you pass in the file)
         static create(file) {
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
@@ -136,7 +158,7 @@
             }
             let node = super.create();
             node.setAttribute('id', 'embed' + newEmbedId);
-            files[node.getAttribute('id')] = file;
+            files[node.getAttribute('id')] = file; //store the file in case quill needs to re-create the embed with it bc of an undo action (or redo i guess?)
             var id = newEmbedId;
             newEmbedId++;
             node.setAttribute('contenteditable', false);
@@ -197,7 +219,7 @@
                         } else if (serverResponse.error == "filetype") {
                             bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
                         }
-                        endMovement()
+                        endMovement(); //in case this link preview is currently being dragged
                         m.find('.image-clear').click();
                     } else {
                         if (serverResponse.thumbnail) {
@@ -218,10 +240,13 @@
             return node;
         }
 
+        //quill calls this function to find out what value it should put for this embed in the object it returns when you call getContents() on it (although we don't use this there)
+        //or what value to pass to create() if it has to recreate this object bc of an undo, which we can use
         static value(node) {
             return files[node.getAttribute('id')];
         }
 
+        //quill calls this function to find out what attributes it should put for this embed in the object it returns when you call getContents() on it
         static formats(node) {
             return { description: $(node).find('#postImageDescription').val(), imageURL: node.getAttribute('image-url') };
         }
@@ -231,13 +256,14 @@
     PostImage.className = 'newimagecont';
     Quill.register(PostImage);
 
+    //element is the div that will now become the container for the quill editor and will have the class ql-container. not to be confused with the ql-editor div inside.
     function attachQuill(element, placeholder, embedsForbidden) {
         var quill = new Quill(element, {
             modules: {
                 toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
                 keyboard: {
                     bindings: {
-                        //Addition: if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
+                        //if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
                         blqtBksp: {
                             key: 'backspace',
                             collapsed: true,
@@ -247,7 +273,7 @@
                                 this.quill.format('blockquote', false);
                             }
                         },
-                        //also, if the user hits backspace with the cursor on a newline after an embed, delete the newline (instead of the embed before it)
+                        //also, if the user hits backspace with the cursor on a newline after an embed, delete the newline instead of the embed before it
                         embedBksp: {
                             key: 'backspace',
                             collapsed: true,
@@ -269,12 +295,16 @@
             placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
             theme: 'bubble'
         });
-        //remove pasted formatting that we don't support
+        //prevent image html elements from being copied and pasted in (raw image files are fine and are detected by the onpaste listener below, this just blocks "hotlinked" external images)
         quill.clipboard.addMatcher("img", function(node, delta) {
             return { ops: [] };
         });
+        //remove pasted formatting that we don't support. copying and pasting embeds has been erratic for me so this just blocks it, although that probably deserves a second look someday
         quill.clipboard.addMatcher("*", function(node, delta) {
             for (var i = 0; i < delta.ops.length; i++) {
+                if (typeof delta.ops[i].insert != "string") { //if it's not a string, it is an embed
+                    delta.ops[i].insert = "";
+                }
                 for (const key in delta.ops[i].attributes) {
                     if (key != "bold" && key != "italic" && key != "link" && key != "blockquote" && key != "list") {
                         delete delta.ops[i].attributes[key];
@@ -283,34 +313,7 @@
             }
             return delta;
         })
-        $(element).children('.ql-editor')[0].oncopy = function(e) {
-            e.preventDefault();
-            //sets the clipboard to just have text contents instead of trying to copy embeds which is erratic (link previews can theoretically always be copied but images malfunction bc we might not have access to that file anymore)
-            if ((!e.target.className.includes("link-preview")) && e.target.id != "postImageDescription") {
-                //if the user is copying from the editor directly we just need to set the clipboard contents to the selected plain text
-                var s = quill.getSelection();
-                e.clipboardData.setData('text/plain', quill.getText(s.index, s.length));
-            } else {
-                //if the user is copying from link preview text or the image description that they just wrote we need to set the clipboard to the selected plain text from that element.
-                var text = "";
-                //this is for copying out of the image description textarea:
-                var activeEl = document.activeElement;
-                var activeElTagName = activeEl ? activeEl.tagName.toLowerCase() : null;
-                if (
-                    (activeElTagName == "textarea") || (activeElTagName == "input" &&
-                        /^(?:text|search|password|tel|url)$/i.test(activeEl.type)) &&
-                    (typeof activeEl.selectionStart == "number")
-                ) {
-                    text = activeEl.value.slice(activeEl.selectionStart, activeEl.selectionEnd);
-                    //and this is for copying out of anything else:
-                } else if (window.getSelection) {
-                    text = window.getSelection().toString();
-                }
-                e.clipboardData.setData('text/plain', text);
-            }
-            return false;
-        }
-        //save the most recent cursor position when the editor loses focus for emoji picker placement
+        //save the most recent cursor position when the editor loses focus for emoji picker placement. 
         quill.on('selection-change', function(range, oldRange, source) {
             if (!range) {
                 element.lastCursorPos = oldRange.index;
@@ -335,6 +338,7 @@
             //if there is some text the first will be true; if there are > 0 embeds, the second will be true
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
+        //the following code inserts embeds into the editor and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
         if (!embedsForbidden) {
             //when embeds are forbidden, the html contents of the .ql-editor element will be used instead of the below
             element.getContents = function() {
@@ -354,8 +358,7 @@
                     quill.insertText(quill.getLength(), "\n");
                 }
             })
-            //addImage and addLinkPreview functions! the other functions for rearranging those things within the text can go outside of this function, below
-            //embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it.
+            //addImage and addLinkPreview functions! embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it (my heuristic for "was intentionally placed there")
             element.addLinkPreview = function(url) {
                 var sel = quill.getSelection(true);
                 var range = sel.index;
@@ -381,19 +384,21 @@
                 quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
             }
+
             element.imagesAdded = function() {
                 return $(element).children('.ql-editor').children('.newimagecont').length;
             }
             element.linkPreviewsAdded = function() {
                 return $(element).children('.ql-editor').children('.link-preview-container').length;
             }
+
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
-            element.onclick = function(e){
+            element.onclick = function(e) {
                 var lastThingInEditor = $(element).children('.ql-editor').children().last();
-                if(lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('newimagecont')){
-                    if(e.clientY > getTop(lastThingInEditor)+lastThingInEditor.outerHeight(false)){
-                        quill.insertText(quill.getLength(),'\n');
-                        quill.setSelection(quill.getLength(),0);
+                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('newimagecont')) {
+                    if (e.clientY > getTop(lastThingInEditor) + lastThingInEditor.outerHeight(false)) {
+                        quill.insertText(quill.getLength(), '\n');
+                        quill.setSelection(quill.getLength(), 0);
                     }
                 }
             }
@@ -440,12 +445,12 @@
             }
             if (!dragFaderActivated) {
                 $(function() {
-                    //this stuff is all here bc it's relevant to the drag-and-drop handling code for the quill editor above
+                    //this stuff is for to the drag-and-drop handling code for the quill editor above
                     //this activates the fader that dims non-drag-and-drop elements (has a z-index 1 lower than the editor areas)
                     document.body.ondragover = function(e) {
                         e.preventDefault();
                         var dt = e.dataTransfer;
-                        //so it won't react if just some text or image from the page is being dragged around
+                        //if statement so it won't react if just some text or image from the page is being dragged around
                         if (dt.types && (dt.types.indexOf ? dt.types.indexOf('Files') != -1 : dt.types.contains('Files'))) {
                             if (!faded) {
                                 $('body').append('<div id="bodyFader"></div>');
@@ -478,6 +483,7 @@
 
     //incremented and decremented and reset by drag event listeners to keep track of whether the dragged thing is still in our window or not
     var dragcounter = 0;
+    
     var faded = false;
     dragFaderActivated = false;
 
@@ -490,28 +496,25 @@
         });
     }
 
-    //this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
-    //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only have posts older than the current time.)
-    needPostsOlderThan = new Date().getTime();
-
     //scripts for rearranging the embeds within the text editor
 
-    //these event listener functions are initially attached to the embeds' movement handles,when they're created, above
+    //these two event listener functions are initially attached to the embeds' movement handles,when they're created, above
 
     function mousedownOnHandle(mouseDownEvent) {
         mouseDownEvent.preventDefault();
-        var selectedImage = $(this).parent().parent();
+        var selectedEmbed = $(this).parent().parent();
 
-        //turms selectedImage into a spacer element. floatyImageCont is going to contain the image now instead.
-        var floatyImageCont = prepareImageForMoving(selectedImage);
+        //turms selectedEmbed into a spacer element. floatyEmbed is going to contain the embed now instead.
+        var floatyEmbed = prepareEmbedForMoving(selectedEmbed);
 
-        floatyImageCont[0].pointerOffset = mouseDownEvent.originalEvent.clientY - getTop(floatyImageCont);
+        //this is the distance from the top of the embed to the mouse at the moment of mousedown, when the mouse moves this offset is maintained which moves the embed
+        floatyEmbed[0].pointerOffset = mouseDownEvent.originalEvent.clientY - getTop(floatyEmbed);
 
         prevPointerY = mouseDownEvent.originalEvent.clientY;
 
         $(document).mousemove(function(e) {
             e.preventDefault();
-            moveimagecont(e.originalEvent.clientY, floatyImageCont, selectedImage);
+            moveEmbed(e.originalEvent.clientY, floatyEmbed, selectedEmbed);
             return false;
         });
 
@@ -525,22 +528,18 @@
     var touchinprogress = false;
 
     function touchStartOnHandle(e) {
-
         if (e.cancelable) {
             e.preventDefault();
         }
 
         if (touchinprogress) {
-            return; //don't want to try to move two images at once, everything would probably need to be rewritten for that
+            return; //don't want to try to move two embeds at once
         }
         touchinprogress = true;
 
-        var selectedImage = $(this).parent().parent();
-
-        var floatyImageCont = prepareImageForMoving(selectedImage);
-
-        floatyImageCont[0].pointerOffset = e.changedTouches[0].clientY - getTop(floatyImageCont);
-
+        var selectedEmbed = $(this).parent().parent();
+        var floatyEmbed = prepareEmbedForMoving(selectedEmbed);
+        floatyEmbed[0].pointerOffset = e.changedTouches[0].clientY - getTop(floatyEmbed);
         prevPointerY = e.changedTouches[0].clientY;
 
         //function to be passed to the touchmove handler and then later removed from it
@@ -549,10 +548,9 @@
             if (event.cancelable) {
                 event.preventDefault();
             }
-            moveimagecont(event.changedTouches[0].clientY, floatyImageCont, selectedImage);
+            moveEmbed(event.changedTouches[0].clientY, floatyEmbed, selectedEmbed);
         }
 
-        //for some reason jQuery Did Not Want to work with these touch events. Possibly they would like us to be using jQuery Mobile. But, this is pretty simple, we don't need it.
         this.addEventListener("touchmove", touchmoveevent, { passive: false });
 
         this.addEventListener('touchend', function(e) {
@@ -568,99 +566,110 @@
         });
     }
 
-    //gets the position to the element's top relative to the top of the screen, like how the css top property works with position:fixed
+    //gets the position to the element's top relative to the top of the screen, which is the same distance that the css "top" property sets when position:fixed.
     function getTop(e) {
         return e.offset().top - $(window).scrollTop();
     }
 
-    //called as soon as movement is initiated:
+    //called by the mousedown or touchstart event listener when movement is initiated
     //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
-    function prepareImageForMoving(selectedImage) {
-        var spacer = selectedImage;
+    function prepareEmbedForMoving(selectedEmbed) {
 
-        var imagecont = spacer.clone(false);
-        imagecont.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
-        imagecont.find('.image-move').on('mousedown', mousedownOnHandle);
-        imagecont.find('.image-clear').click(clearEmbed);
+        var floatingVersion = selectedEmbed.clone(false);
+        floatingVersion.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
+        floatingVersion.find('.image-move').on('mousedown', mousedownOnHandle);
+        floatingVersion.find('.image-clear').click(clearEmbed);
 
-        spacer.addClass("imagecontspacer");
+        var spacer = selectedEmbed;
+
+        spacer.addClass("embedspacer");
         spacer.attr('id', '');
 
-        imagecont.css("width", spacer.outerWidth(true) + "px");
-        imagecont.css("left", spacer.offset().left + "px");
-        imagecont.css("top", getTop(spacer) + "px");
+        floatingVersion.css("width", spacer.outerWidth(true) + "px");
+        floatingVersion.css("left", spacer.offset().left + "px");
+        floatingVersion.css("top", getTop(spacer) + "px");
 
-        spacer.closest('.ql-container').append(imagecont);
+        spacer.closest('.ql-container').append(floatingVersion);
 
         //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
-        imagecont.css("position", "fixed");
-        imagecont.css("z-index", 2147483647); // over 9000
-        imagecont.css("background-color", "white");
+        floatingVersion.css("position", "fixed");
+        floatingVersion.css("z-index", 2147483647); // over 9000
+        floatingVersion.css("background-color", "white");
 
-        imagecont.addClass("onthemove");
+        floatingVersion.addClass("onthemove");
 
         spacer.css("border", "dashed")
         spacer.empty();
 
-        imagecont[0].scrollPrompterId = setInterval(function() { scrollPrompter(imagecont, spacer) }, 50);
+        floatingVersion[0].scrollPrompterId = setInterval(function() { scrollPrompter(floatingVersion) }, 50);
 
         lastWindowPos = window.scrollY;
         $(window).on('scroll', function(e) {
             if (window.scrollY > lastWindowPos) {
-                moveimagecont(prevPointerY, imagecont, spacer, "down")
+                moveEmbed(prevPointerY, floatingVersion, spacer, "down")
             } else if (window.scrollY < lastWindowPos) {
-                moveimagecont(prevPointerY, imagecont, spacer, "up")
+                moveEmbed(prevPointerY, floatingVersion, spacer, "up")
             }
             lastWindowPos = window.scrollY;
         })
 
-        return imagecont;
+        return floatingVersion;
     }
 
-    //assumes a window that's at least 300px tall
-    function scrollPrompter(imagecont, spacer) {
-        var t = getTop(imagecont);
-        if (t < 100) {
-            $(window).scrollTop($(window).scrollTop() - 10);
-        } else if (t > window.innerHeight - 200) {
-            $(window).scrollTop($(window).scrollTop() + 10);
+    //auto-scrolls when the floating element is less than 100px away from the top or bottom and the top or bottom of the editor is offscreen.
+    //called through setInterval, which is started in prepareEmbedForMoving, and then canceled in endMovement
+    function scrollPrompter(floatingEmbed) {
+        var t = floatingEmbed.offset().top;
+        var h = floatingEmbed.outerHeight();
+        var b = t + h;
+        var pt = floatingEmbed.parent().offset().top;
+        var pb = pt + floatingEmbed.parent().outerHeight();
+        var w = $(window);
+        var wst = w.scrollTop();
+        var wh = w.height();
+        if (t < wst + 100 && pt < wst+50) {
+            w.scrollTop(wst - 10);
+        } else if (b > wh - 100 && pb > (wst + wh)) {
+            w.scrollTop(wst + 10);
         }
     }
 
     //this function is called when the user moves either their mouse or finger to reposition the embed or the screen scrolls in a scrollDirection
-    function moveimagecont(pointerY, imagecont, spacer, scrollDirection) {
+    function moveEmbed(pointerY, floatingEmbed, spacer, scrollDirection) {
         var deltaY = pointerY - prevPointerY;
         prevPointerY = pointerY;
         //move the floaty element:
-        var imageconttop = getTop(imagecont);
+        var floatingEmbedtop = getTop(floatingEmbed);
         var spacertop = getTop(spacer);
-        var imageconth = imagecont.outerHeight(true);
-        //new y pos is the old y pos + the mouse's delta-y unless that's less than the parent's top bound or more than the parent's bottom bound - the height of the element
-        var newYPos = Math.min(Math.max(pointerY - imagecont[0].pointerOffset, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
-        imagecont.css("top", newYPos + "px");
+        var floatingEmbedh = floatingEmbed.outerHeight(true);
+        //new y pos is the pointer's y less the original offset unless that's less than the parent's top bound or more than (the parent's bottom bound - the height of the element)
+        var newYPos = Math.min(Math.max(pointerY - floatingEmbed[0].pointerOffset, getTop(spacer.parent())), getTop(spacer.parent()) + (spacer.parent().outerHeight(true) - spacer.outerHeight(true))); //beauty
+        floatingEmbed.css("top", newYPos + "px");
 
         //move the spacer (maybe):
 
+        //if moving down, we move the spacer below the element below the floating element if the floating element's bottom edge has passed over the middle of that element or is less than 70px away from that element's bottom edge, whichever comes last
         if (scrollDirection == "down" || deltaY > 0) { //moving down
             var elementBelow = spacer.next();
-            while (elementBelow.length && elementBelow.next().length && (imageconttop + imageconth) > (getTop(elementBelow) + elementBelow.outerHeight(true))) {
+            while (elementBelow.length && elementBelow.next().length && (floatingEmbedtop + floatingEmbedh) > (getTop(elementBelow) + elementBelow.outerHeight(true))) {
                 elementBelow = elementBelow.next();
             }
             if (elementBelow.length) {
                 var ebt = getTop(elementBelow);
                 var line = Math.max(ebt + (0.5 * elementBelow.outerHeight(true)), ebt + elementBelow.outerHeight(true) - 70);
-                if ((imageconttop + imageconth) > line) {
+                if ((floatingEmbedtop + floatingEmbedh) > line) {
                     spacer.insertAfter(elementBelow);
                 }
             }
+        //if moving up, we move the spacer above the element above the floating element if the floating element's top edge has passed over the middle of that element or is less than 70px away from that element's top edge, whichever comes last
         } else if (scrollDirection == "up" || deltaY < 0) { //moving up
             var elementAbove = spacer.prev();
-            while (elementAbove.length && elementAbove.prev().length && imageconttop < getTop(elementAbove)) {
+            while (elementAbove.length && elementAbove.prev().length && floatingEmbedtop < getTop(elementAbove)) {
                 elementAbove = elementAbove.prev();
             }
             if (elementAbove.length) {
                 var line = Math.min(getTop(elementAbove) + (0.5 * elementAbove.outerHeight(true)), getTop(elementAbove) + 70);
-                if (imageconttop < line) {
+                if (floatingEmbedtop < line) {
                     spacer.insertBefore(elementAbove);
                 }
             }
@@ -670,17 +679,14 @@
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot. it's all called to just
     //generally cancel drag and dropping when an alert has to be displayed about an upload, just in case drag and dropping is going on
     function endMovement() {
-        var imagecont = $('.onthemove');
-        if (imagecont.length) {
-            clearInterval(imagecont[0].scrollPrompterId);
+        var floatingEmbed = $('.onthemove');
+        if (floatingEmbed.length) {
+            clearInterval(floatingEmbed[0].scrollPrompterId);
             $(window).off('scroll');
-            $('.imagecontspacer').after($('.onthemove'));
-            imagecont.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
-            imagecont.removeClass("onthemove");
-            var spacer = $('.imagecontspacer');
-            if (!spacer.next().length && !(spacer.prev().length && spacer.prev().text().trim() == "")) {
-                spacer.after("<p></p>")
-            }
+            $('.embedspacer').after($('.onthemove'));
+            floatingEmbed.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
+            floatingEmbed.removeClass("onthemove");
+            var spacer = $('.embedspacer');
             spacer.remove();
         }
     }

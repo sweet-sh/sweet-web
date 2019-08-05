@@ -1,4 +1,9 @@
 <script type="text/javascript">
+
+//this is used to keep track of the oldest post currently loaded in the feed; when the infinite scroll script fetches the next page of posts,
+//it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only want posts older than the current time, we only have posts older than the current time)
+needPostsOlderThan = new Date().getTime();
+
 $(function(){
 {{#if loggedIn}}
     // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
@@ -15,6 +20,7 @@ $(function(){
     });
 
 {{/if}}
+
     // Attach scripts to newly loaded posts
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         var newlyLoadedStuff = $(items);

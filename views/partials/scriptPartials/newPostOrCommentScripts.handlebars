@@ -124,6 +124,9 @@ $("body").on('click', '#postLinkButton', function(e) {
 $("body").on('click', ".link-add", function(e){
   var input = $(this).siblings('input')
   var url = input.val();
+  if(!url){
+    url = input.attr('placeholder');
+  }
   input.val('');
   var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
   if(subject.linkPreviewsAdded() < 4){
