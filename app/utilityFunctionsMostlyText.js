@@ -54,14 +54,7 @@ module.exports = {
         rawText = sanitize(rawText);
 
         rawText = this.sanitizeHtmlForSweet(rawText);
-
-        if (!cwsEnabled) {
-            let contentWordCount = wordCount(rawText);
-            if (contentWordCount > 160) {
-                rawText = '<div class="abbreviated-content">' + rawText + '</div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>';
-            }
-        }
-
+        
         let mentionsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match(mentionRegex)))
         let tagsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match(hashtagRegex)))
         let trimmedMentions = []

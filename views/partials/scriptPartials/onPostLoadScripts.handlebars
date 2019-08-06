@@ -28,6 +28,40 @@ $(function(){
         if(this.fadedOut){
             $(this).fadeIn(250);
         }
+        
+        function heightCheckReadMore(e) {
+            if (e.height() > 700) {
+                var contentCont = e.find('.content');
+                if (!contentCont.hasClass('content-warning-post')) {
+                    var content = contentCont.children();
+                    content.remove();
+                    contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
+                    contentCont.children('.abbreviated-content').append(content);
+                }
+            }
+        }
+
+        newlyLoadedStuff.each(function(i,e){
+            e = $(e);
+            var imgs = e.find('img');
+            if(imgs.length){
+                var loaded = 0;
+                imgs.on('load', function(){
+                    loaded++;
+                    if(loaded == imgs.length){
+                        heightCheckReadMore(e);
+                    }
+                })
+                imgs.on('error', function(){
+                    loaded++;
+                    if(loaded == imgs.length){
+                        heightCheckReadMore(e);
+                    }
+                })
+            }else{
+                heightCheckReadMore(e);
+            }
+        })
 
         needPostsOlderThan = newlyLoadedStuff.last().find("#oldesttimestamp").html(); //the new oldest-post-loaded timestamp is provided by the server in this element
 

@@ -1901,7 +1901,7 @@ a.show-more:hover { /* Shim for old show more button element */
 }
 
 .abbreviated-content {
-  height: 7rem;
+  height: 20rem;
   overflow: hidden;
 }
 
@@ -1909,7 +1909,7 @@ a.show-more:hover { /* Shim for old show more button element */
   content: "";
   position: absolute;
   z-index: 1;
-  top: 4.5rem;
+  top: 17.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;
