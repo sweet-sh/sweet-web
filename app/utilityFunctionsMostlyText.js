@@ -260,8 +260,8 @@ module.exports = {
     //returns the postOrComment with the cachedHTML.fullContentHTML field set to its final HTML. also, some extra info in the inlineElements, but that won't get saved 'cause it's not in the inlineElement schema
     updateHTMLCache: async function(postOrComment) {
         if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
-            var lines = [];
-            const lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
+            var lines = []; //they're more like paragraphs, really
+            const lineFinder = /(<p>.*?<\/p>)|(<ul>.*?<\/ul>)|(<blockquote>.*?<\/blockquote>)/g;
             while (line = lineFinder.exec(postOrComment.parsedContent)) {
                 lines.push(line[0]);
             }
