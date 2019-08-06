@@ -1128,16 +1128,11 @@ hr {
     height: 78px;
 }
 
- .image-preview-holder {
-   margin: 0.5em 0;
-   display: none;
- }
-
- .newimagecont {
+ .image-preview-container {
   display: flex;
   height: 100px;
   width: 100%;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.5rem;
   cursor: default;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -1147,6 +1142,21 @@ hr {
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
  }
+
+ .ipc-group {
+  border-left: solid thin lightblue;
+   border-right: solid thin lightblue;
+   padding: 0.3rem;
+   margin: 0!important;
+ }
+
+ .ipc-group-top {
+   border-top: solid thin lightblue;
+ }
+
+ .ipc-group-bottom {
+  border-bottom: solid thin lightblue;
+}
 
 .image-preview {
   flex: 1;
@@ -1209,7 +1219,7 @@ hr {
   resize: none;
 }
 
-.newimagecont {
+.image-preview-holder {
   transition: scale .1s ease-in-out, opacity .1s ease-in-out;
 }
 .onthemove {

@@ -54,6 +54,7 @@
         var postform = m.closest('.new-comment-form, .contentForm');
         m.remove();
         updateSubmitButtonState(postform);
+        createImageGroups(m.closest('.ql-editor'));
     }
 
     var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and before that is used to create their ids so they can all be uniquely identified
@@ -254,7 +255,7 @@
     }
     PostImage.blotName = 'PostImage';
     PostImage.tagName = 'div';
-    PostImage.className = 'newimagecont';
+    PostImage.className = 'image-preview-container';
     Quill.register(PostImage);
 
     //element is the div that will now become the container for the quill editor and will have the class ql-container. not to be confused with the ql-editor div inside.
@@ -351,15 +352,15 @@
                     }
                     if (n.hasClass('link-preview-container')) {
                         textWEmbedsArray.push({ type: "link-preview", linkUrl: n.attr('linkUrl') });
-                    } else if (n.hasClass('newimagecont')) {
-                        var prevE = textWEmbedsArray[textWEmbedsArray.length-1];
-                        if(typeof prevE != "string" && prevE.type == "image(s)"){
+                    } else if (n.hasClass('image-preview-holder')) {
+                        var prevE = textWEmbedsArray[textWEmbedsArray.length - 1];
+                        if (typeof prevE != "string" && prevE.type == "image(s)") {
                             prevE.imageDescriptions.push(n.find('#postImageDescription').val());
                             prevE.images.push(n.attr('image-url'));
-                        }else{
-                            textWEmbedsArray.push({type:"image(s)", imageDescriptions: [n.find('#postImageDescription').val()], images: [n.attr('image-url')] })
+                        } else {
+                            textWEmbedsArray.push({ type: "image(s)", imageDescriptions: [n.find('#postImageDescription').val()], images: [n.attr('image-url')] })
                         }
-                    }else{
+                    } else {
                         textWEmbedsArray.push(n[0].outerHTML);
                     }
                 })
@@ -402,10 +403,11 @@
                 }
                 quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
+                createImageGroups($(element).children('.ql-editor'));
             }
 
             element.imagesAdded = function() {
-                return $(element).children('.ql-editor').children('.newimagecont').length;
+                return $(element).children('.ql-editor').children('.image-preview-holder').length;
             }
             element.linkPreviewsAdded = function() {
                 return $(element).children('.ql-editor').children('.link-preview-container').length;
@@ -414,7 +416,7 @@
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
                 var lastThingInEditor = $(element).children('.ql-editor').children().last();
-                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('newimagecont')) {
+                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('image-preview-holder')) {
                     if (e.clientY > getTop(lastThingInEditor) + lastThingInEditor.outerHeight(false)) {
                         quill.insertText(quill.getLength(), '\n');
                         quill.setSelection(quill.getLength(), 0);
@@ -599,6 +601,19 @@
         floatingVersion.find('.image-move').on('mousedown', mousedownOnHandle);
         floatingVersion.find('.image-clear').click(clearEmbed);
 
+        var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
+        selectedEmbed.removeClass(groupClasses);
+        var above = selectedEmbed.prev('.image-preview-container');
+        while (above.length) {
+            above.removeClass(groupClasses);
+            above = above.prev('.image-preview-container');
+        }
+        var below = selectedEmbed.next('.image-preview-container');
+        while (below.length) {
+            below.removeClass(groupClasses);
+            below = below.next('.image-preview-container');
+        }
+
         var spacer = selectedEmbed;
 
         spacer.addClass("embedspacer");
@@ -707,6 +722,35 @@
             floatingEmbed.removeClass("onthemove");
             var spacer = $('.embedspacer');
             spacer.remove();
+            createImageGroups(floatingEmbed.closest('.ql-editor'));
+        }
+    }
+
+    function createImageGroups(qlEditorElement) {
+        var kids = qlEditorElement.children();
+        kids.removeClass('ipc-group ipc-group-top ipc-group-bottom'); //reset. this is not very well optimized, the loop below could be added to to just remove specific    classes where necessary
+        var containersInARow = 0;
+        for (var i = 0; i < kids.length; i++) {
+            if ($(kids[i]).hasClass('image-preview-container')) {
+                containersInARow++;
+                if (containersInARow > 1) {
+                    if (containersInARow == 2) {
+                        $(kids[i - 1]).addClass('ipc-group ipc-group-top');
+                    } else {
+                        $(kids[i - 1]).addClass('ipc-group');
+                    }
+                }
+            } else {
+                if (containersInARow > 1) {
+                    $(kids[i - 1]).addClass('ipc-group ipc-group-bottom');
+                }
+                containersInARow = 0;
+            }
+        }
+        if (containersInARow > 1) {
+            $(kids[kids.length - 1]).addClass('ipc-group ipc-group-bottom');
+        } else if (containersInARow == 1) {
+            $(kids[kids.length - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
         }
     }
 </script>
