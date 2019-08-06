@@ -54,7 +54,7 @@ module.exports = {
         rawText = sanitize(rawText);
 
         rawText = this.sanitizeHtmlForSweet(rawText);
-        
+
         let mentionsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match(mentionRegex)))
         let tagsArray = Array.from(new Set(rawText.replace(/<[^>]*>/g, " ").match(hashtagRegex)))
         let trimmedMentions = []
@@ -97,9 +97,9 @@ module.exports = {
                 }
             } else {
                 if (pList[i].type == "link-preview") {
-                    try{
+                    try {
                         pList[i] = await this.getLinkMetadata(pList[i].linkUrl);
-                    }catch(err){
+                    } catch (err) {
                         console.log("could not parse link preview while creating post:");
                         console.log(err);
                         pList.splice(i, 1);
@@ -113,7 +113,7 @@ module.exports = {
                 i--;
             }
         }
-        if(pList.length){
+        if (pList.length) {
             pList.splice(lastcontent, pList.length - 1 - lastcontent);
         }
         return { text: pList.join(''), inlineElements: inlineElements };
@@ -163,7 +163,7 @@ module.exports = {
             var pURL = 'http://' + url;
         } else if (url.substring(0, 2) == "//") {
             var pURL = "http:" + url;
-        }else{
+        } else {
             var pURL = url;
         }
         var cache = mongoose.model('Cached Link Metadata');
@@ -199,15 +199,27 @@ module.exports = {
         var parsed = undefined;
         var isEmbeddableVideo = false;
         if (parsed = youtubeUrlFindingRegex.exec(url)) {
-            result.embedUrl = parsed[5];
+            result.embedUrl = "https://www.youtube.com/embed/" + parsed[5] + "?autoplay=1"; //won't actually autoplay until link preview is clicked
             isEmbeddableVideo = true;
-            //todo: pull time information out of parsed[6]
+            try {
+                var time = /t=(?:([0-9]*)m)?((?:[0-9])*)(?:s)?/.exec(parsed[6]);
+                if (time) {
+                    var seconds = parseInt(time[2]);
+                    if (time[1]) {
+                        seconds += (parseInt(time[1]) * 60);
+                    }
+                    result.embedUrl += "&start=" + seconds;
+                }
+            } catch (err) {
+                console.log("youtube link had time specifier that was apparently malformed! error:")
+                console.log(err);
+            }
         } else if (parsed = vimeoUrlFindingRegex.exec(url)) {
-            result.embedUrl = parsed[4]
+            result.embedUrl = "https://player.vimeo.com/video/" + parsed[4] + "?autoplay=1"; //won't actually autoplay until link preview is clicked
             isEmbeddableVideo = true;
         }
         result.isEmbeddableVideo = isEmbeddableVideo;
-        if(!cacheHit){
+        if (!cacheHit) {
             var newCache = new cache(result);
             newCache.linkUrl = pURL;
             newCache.save();

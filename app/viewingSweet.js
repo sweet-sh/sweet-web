@@ -1158,11 +1158,12 @@ module.exports = function(app) {
 
         var profileData = await User.findOne({ username: req.params.username }).catch(err => {
             console.error("error in username query in /:username");
-            console.error(err)
+            console.error(err);
         });
         if (!profileData) {
             console.log("user " + req.params.username + " not found");
             res.status(404).redirect('/404');
+            return;
         }
         var communitiesData = await Community.find({ members: profileData._id }).catch(c); //given to the renderer at the end
         var followersArray = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from); //only used for the below
@@ -1316,7 +1317,7 @@ module.exports = function(app) {
             res.setHeader('content-type', 'text/plain');
             res.send(JSON.stringify(metadata))
         } catch (err) {
-            console.log("could not get link preview information for url "+req.body.url)
+            console.log("could not get link preview information for url " + req.body.url)
             console.log(err);
             res.send("invalid url i guess");
         }
