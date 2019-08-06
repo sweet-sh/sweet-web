@@ -1,8 +1,9 @@
 var mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+//this is used by older posts instead of the below inlineElementSchema
 var embedSchema = new mongoose.Schema({
-    type: String, //"video"
+    type: String, //"video" always
     linkUrl: String,
     embedUrl: String,
     title: String,
@@ -30,6 +31,16 @@ var inlineElementSchema = new mongoose.Schema({
   imageDescriptions: [String],
   imageIsVertical: [String],
   imageIsHorizontal: [String],
+});
+
+var linkPreviewCacheSchema = new mongoose.Schema({
+    isEmbeddableVideo: Boolean,
+    linkUrl: String,
+    embedUrl: String, //only used if isEmbeddableVideo is true
+    title: String,
+    image: String,
+    description: String,
+    domain: String,
 })
 
 var commentSchema = new mongoose.Schema({
@@ -134,6 +145,10 @@ postSchema.index({timestamp:-1});
 
 //honestly only used by the active users graph but what the hell
 postSchema.index({'comments.timestamp':-1});
+
+linkPreviewCacheSchema.index({linkUrl:1});
+//just retrieve this with mongoose.model('Cached Link Metadata') in the one place in which it is needed
+mongoose.model('Cached Link Metadata', linkPreviewCacheSchema);
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Post', postSchema);

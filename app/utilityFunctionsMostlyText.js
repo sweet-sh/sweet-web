@@ -17,17 +17,13 @@ module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
-        if (rawText.ops) { //it is in delta format
-            var parsedDelta = await this.parseDelta(rawText);
-            rawText = parsedDelta.text;
-            var inlineElements = parsedDelta.inlineElements;
+        if (typeof rawText != "string") { //it is an array of paragraphs and inline elements
+            var parsedParagraphList = await this.parseParagraphList(rawText);
+            rawText = parsedParagraphList.text;
+            var inlineElements = parsedParagraphList.inlineElements;
         } else {
             var inlineElements = [];
-        }
-
-        const blankLinesAllowed = true;
-
-        if (blankLinesAllowed) { //otherwise, they'll just be filtered out later anyway
+            //this is also done by parseParagraphList, but if we're not using that we use this, here
             rawText = rawText.replace(/^(<p><br><\/p>)*/, '') //filter out blank lines from beginning
             rawText = rawText.replace(/(<p><br><\/p>)*$/, '') //filter them out from the end
             rawText = rawText.replace(/(<p><br><\/p>){2,}/g, '<p><br></p>') //filters out multiple blank lines in a row within the post
@@ -39,36 +35,30 @@ module.exports = {
         while (match = lineFinder.exec(rawText)) {
             splitContent.push(match[0]);
         }
-        let parsedContent = [];
+
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
         var mentionReplace = '$1<a href="/$2">@$2</a>';
         var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
         var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
 
-        for (var i = 0; i < splitContent.length; i++) {
-            var line = splitContent[i];
-            if (blankLinesAllowed || line != "<p><br></p>") {
-                if (urlsEnabled) {
-                    line = Autolinker.link(line);
-                }
-                if (mentionsEnabled) {
-                    line = line.replace(mentionRegex, mentionReplace)
-                }
-                if (hashtagsEnabled) {
-                    line = line.replace(hashtagRegex, hashtagReplace);
-                }
-                parsedContent.push(line);
-            }
+        if (urlsEnabled) {
+            rawText = Autolinker.link(rawText);
         }
-        parsedContent = parsedContent.join('');
-        parsedContent = sanitize(parsedContent);
+        if (mentionsEnabled) {
+            rawText = rawText.replace(mentionRegex, mentionReplace)
+        }
+        if (hashtagsEnabled) {
+            rawText = rawText.replace(hashtagRegex, hashtagReplace);
+        }
 
-        parsedContent = this.sanitizeHtmlForSweet(parsedContent);
+        rawText = sanitize(rawText);
+
+        rawText = this.sanitizeHtmlForSweet(rawText);
 
         if (!cwsEnabled) {
-            let contentWordCount = wordCount(parsedContent);
+            let contentWordCount = wordCount(rawText);
             if (contentWordCount > 160) {
-                parsedContent = '<div class="abbreviated-content">' + parsedContent + '</div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>';
+                rawText = '<div class="abbreviated-content">' + rawText + '</div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>';
             }
         }
 
@@ -87,163 +77,53 @@ module.exports = {
             })
         }
 
-        return {
-            text: parsedContent,
+        var parsedStuff = {
+            text: rawText, //well, not raw anymore
             mentions: trimmedMentions,
             tags: trimmedTags,
             inlineElements: inlineElements
-        };
+        }
+
+        console.log(JSON.stringify(parsedStuff, null, 4));
+
+        return parsedStuff;
     },
-    //called by parse text to turn the quilljs delta format (which we use for text with embeds) into html
-    parseDelta: async function(delta) {
-        //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
-        var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
-        //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
-        var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
-
-        //this starts the first line. it may be modified if it turns out this is a line in a list or blockquote
-        var linesOfParsedString = ["<p>"];
-
+    parseParagraphList: async function(pList) {
         var inlineElements = [];
-        var imagesAdded = 0;
-        var linkPreviewsAdded = 0;
-        const imagesAllowed = 4;
-        const linkPreviewsAllowed = 4;
-
-        var linesFinished = 0; // the assumption is that the text parsing in parseText will not add or remove any lines
-        var withinList = false;
-        //the delta format stores a series of operations in "ops." in this context, they will all be "insert" ops, with their main content in .insert and the extra attributes of that content in .attributes
-        //the best way to understand this function is probably to step through it. basically, we start with a line "in progress" (the <p> that starts the array above) and add each insert onto it,
-        //accompanied by the tags for its formatting, until we hit an end of line signal, when we finish the line with an end tag. it may turn out that the end of line is blockquote or list formatted,
-        //in which case we have to go back and start the line with the appropriate tag (or tags in the case of lists, <ul> and <li>), and then for lists we start starting lines with <li> and then
-        //when we leave that formatting mode (when we hit a non list-fomatted newline) we have to end the previous (finished) line with </li> and </ul> and go back and start the current one with <p>.
-        //embeds are added with a position attribute describing how many lines have been completed when they are encountered, which serves to place them in the text later.
-        for (op of delta.ops) {
-            if (typeof op.insert == "string" && (op.insert !== "" || op.attributes)) {
-                op.insert = this.escapeHTMLChars(op.insert);
-                var formattingStartTags = "";
-                var formattingEndTags = "";
-                if (op.attributes) {
-                    // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are. as far as i can tell, it is guaranteed that only
-                    //newlines will have this formatting.
-                    if (op.attributes.blockquote) {
-                        if (withinList) {
-                            withinList = false;
-                            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
-                            linesFinished++;
-                            linesOfParsedString.push("<p>");
-                        } else {
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
-                            linesFinished++;
-                            linesOfParsedString.push("<p>");
-                        }
-                        continue;
-                    } else if (op.attributes.list == "bullet") {
-                        if (!withinList) {
-                            withinList = true;
-                            linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
-                            linesFinished++;
-                            linesOfParsedString.push("<li>");
-                            continue;
-                        } else {
-                            linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
-                            linesFinished++;
-                            linesOfParsedString.push("<li>");
-                            continue;
-                        }
-                    }
-                    //other formatting is attached directly to the text it applies to
-                    if (op.attributes.bold) {
-                        formattingStartTags = "<strong>" + formattingStartTags;
-                        formattingEndTags = formattingEndTags + "</strong>";
-                    }
-                    if (op.attributes.italic) {
-                        formattingStartTags = "<em>" + formattingStartTags;
-                        formattingEndTags = formattingEndTags + "</em>";
-                    }
-                    if (op.attributes.link) {
-                        formattingStartTags = '<a href="' + op.attributes.link + '" target="_blank">' + formattingStartTags;
-                        formattingEndTags = formattingEndTags + "</a>";
+        //iterate over list, remove blank lines from the beginning, remove blank lines if the last one is blank, mark the last non-blank line and remove all elements after it afterward
+        //also, pull out the inline elements and put them in their own array with their position
+        var lastcontent = 0;
+        for (var i = 0; i < pList.length; i++) {
+            if (typeof pList[i] == "string") {
+                var isBlank = pList[i].match(/^<p>(<br>|\s)*<\/p>$/);
+                if ((i == 0 || i > lastcontent + 1) && isBlank) {
+                    pList.splice(i, 1);
+                    i--;
+                } else if (!isBlank) {
+                    lastcontent = i;
+                }
+            } else {
+                if (pList[i].type == "link-preview") {
+                    try{
+                        pList[i] = await this.getLinkMetadata(pList[i].linkUrl);
+                    }catch(err){
+                        console.log("could not parse link preview while creating post:");
+                        console.log(err);
+                        pList.splice(i, 1);
+                        i--;
                     }
                 }
-                //splitting the string into lines like this means that the first element is part of the previous line and then all subsequent ones start and finish their own lines, except the last one doesn't finish its
-                var lines = op.insert.split('\n');
-                linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
-                for (var i = 1; i < lines.length; i++) {
-                    if (withinList) {
-                        withinList = false;
-                        linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                        linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length);
-                    }
-                    if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") { //if the line we're finishing has no actual content
-                        linesOfParsedString[linesOfParsedString.length - 1] += "<br>";
-                    }
-                    linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                    linesFinished++;
-                    linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
-                }
-            } else if (op.insert.LinkPreview && linkPreviewsAdded <= linkPreviewsAllowed) {
-                //i'm assuming that there will always be a newline text insert in the text right before an inline embed, so we don't have to go through the end-of-line process
-                var embed = op.attributes;
-                embed.type = "link-preview";
-                embed.position = linesFinished;
-                embed.linkUrl = (op.insert.LinkPreview.includes("//") ? "" : "//") + op.insert.LinkPreview;
-                if (youtubeUrlFindingRegex.test(op.insert.LinkPreview)) {
-                    embed.isEmbeddableVideo = true;
-                    embed.embedUrl = "https://www.youtube.com/embed/" + youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5] + "?autoplay=1";
-                } else if (vimeoUrlFindingRegex.test(op.insert.LinkPreview)) {
-                    embed.isEmbeddableVideo = true;
-                    embed.embedUrl = "https://www.youtube.com/embed/" + vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4] + "?autoplay=1";
-                } else {
-                    embed.isEmbeddableVideo = false;
-                }
-                inlineElements.push(embed);
-                linkPreviewsAdded++;
-
-                console.log("link preview on line: " + linesFinished);
-                console.log("it is to " + op.insert.LinkPreview);
-                if (embed.isEmbeddableVideo) {
-                    console.log("it is an embeddable video");
-                }
-            } else if (op.insert.PostImage && imagesAdded <= imagesAllowed && op.attributes.imageURL != "loading...") {
-                if (imagesAdded > 0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
-                    var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
-                } else {
-                    var image = { images: [], imageDescriptions: [], position: linesFinished, type: "image(s)" };
-                    inlineElements.push(image);
-                }
-                image.images.push(op.attributes.imageURL);
-                image.imageDescriptions.push(op.attributes.description);
-                imagesAdded++;
-
-                console.log("image on line: " + linesFinished);
-                console.log("its file name will be " + op.attributes.imageURL);
-                console.log("its description is " + op.attributes.description);
+                lastcontent = i;
+                pList[i].position = i;
+                inlineElements.push(pList[i]);
+                pList.splice(i, 1);
+                i--;
             }
         }
-        if (withinList) {
-            if (typeof delta.ops[delta.ops.length - 1].insert == "string" && (!delta.ops[delta.ops.length - 1].attributes || !delta.ops[delta.ops.length - 1].attributes.list)) {
-                linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</p>";
-            } else {
-                linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
-                linesOfParsedString.pop();
-            }
-        } else {
-            if ((typeof delta.ops[delta.ops.length - 1].insert != "string")) {
-                linesOfParsedString.pop();
-            } else {
-                if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") {
-                    linesOfParsedString[linesOfParsedString.length - 1] += "<br></p>";
-                } else {
-                    linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
-                }
-            }
+        if(pList.length){
+            pList.splice(lastcontent, pList.length - 1 - lastcontent);
         }
-        console.log("finished html:");
-        console.log(linesOfParsedString.join("\n"));
-        return { text: linesOfParsedString.join(""), inlineElements: inlineElements };
+        return { text: pList.join(''), inlineElements: inlineElements };
     },
     sanitizeHtmlForSweet: function(parsedContent) {
         return sanitizeHtml(parsedContent, {
@@ -284,64 +164,62 @@ module.exports = {
             return entityMap[s];
         });
     },
-    //takes a post or comment, returns the version with updated inlineElements array and cache if needed or nothing if not
-    checkLinkPreviews: async function(postOrComment) {
-        var changed = false;
-
-        function compareProp(prop) {
-            if (l[prop] != meta[prop]) {
-                console.log("link preview in document " + postOrComment._id.toString() + " had " + prop + " " + l[prop] + " but the live page for url " + l.linkUrl + " had " + prop + " " + meta[prop]);
-                l[prop] = meta[prop];
-                changed = true;
-                return true;
-            }
-            return false;
-        }
-        for (var i = 0; i < postOrComment.inlineElements.length; i++) {
-            var l = postOrComment.inlineElements[i];
-            if (l.type == "link-preview") {
-                try {
-                    var meta = await this.getLinkMetadata(l.linkUrl);
-                    compareProp('description');
-                    compareProp('title');
-                    compareProp('image');
-                    compareProp('domain');
-                } catch (e) {
-                    changed = true;
-                    postOrComment.inlineElements.splice(i, 1); //remove link preview if metadata cannot be confirmed
-                }
-            }
-            if (changed) {
-                return (await this.updateHTMLCache(postOrComment));
-            } else {
-                return;
-            }
-        }
-    },
     getLinkMetadata: async function(url) {
-        //standardize url protocol so that request() will accept it. (request() will automatically change the http to https if necessary)
+        //standardize url protocol so that request() will accept it and the cache will hit more often. (request() will automatically change the http to https if necessary)
         if (!url.includes('//')) {
-            url = 'http://' + url;
+            var pURL = 'http://' + url;
         } else if (url.substring(0, 2) == "//") {
-            url = "http:" + url;
+            var pURL = "http:" + url;
+        }else{
+            var pURL = url;
         }
-        var urlreq = new Promise(function(resolve, reject) {
-            request({ url: url, gzip: true }, function(error, response, body) {
-                if (error) {
-                    reject();
-                } else {
-                    resolve(body);
-                }
-            });
-        })
-        const html = await urlreq;
-        const metadata = await metascraper({ html, url })
-        return {
+        var cache = mongoose.model('Cached Link Metadata');
+        var found = await cache.findOne({ linkUrl: pURL });
+        var cacheHit = !!found;
+        if (!cacheHit) {
+            var urlreq = new Promise(function(resolve, reject) {
+                request({ url: pURL, gzip: true }, function(error, response, body) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(body);
+                    }
+                });
+            })
+            const html = await urlreq;
+            var metadata = await metascraper({ html, url: pURL });
+        } else {
+            var metadata = found;
+        }
+        var result = {
+            type: "link-preview",
+            linkUrl: url.includes('//') ? url : "//" + url, //here we attach // instead of http:// because that's something browsers will understand (even if request doesn't) and it's not "wrong" for https sites
             image: metadata.image,
             title: metadata.title,
             description: metadata.description,
-            domain: urlp.parse(url).hostname
+            domain: urlp.parse(pURL).hostname
         }
+        //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+        var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+        //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+        var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+        var parsed = undefined;
+        var isEmbeddableVideo = false;
+        if (parsed = youtubeUrlFindingRegex.exec(url)) {
+            result.embedUrl = parsed[5];
+            isEmbeddableVideo = true;
+            //todo: pull time information out of parsed[6]
+        } else if (parsed = vimeoUrlFindingRegex.exec(url)) {
+            result.embedUrl = parsed[4]
+            isEmbeddableVideo = true;
+        }
+        result.isEmbeddableVideo = isEmbeddableVideo;
+        if(!cacheHit){
+            var newCache = new cache(result);
+            newCache.linkUrl = pURL;
+            newCache.save();
+        }
+        return result;
     },
     //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
     //the non-first arguments are just stored in the image documents in the database. postType is "user" or "community"
@@ -469,4 +347,163 @@ module.exports = {
 
 function wordCount(str) {
     return str.split(' ').filter(function(n) { return n != '' }).length;
+}
+
+
+//the following is a function i wrote to parse quilljs' delta format and turn formatted text into html and inline elements into an array. it turned
+//out to be more complicated than necessary so right now we're actually just going to pull the html from the quill editor directly and process it in
+//the parseParagraphList function above. this function works well to the best of my knowledge and could still be used for turning quilljs deltas into 
+//custom formatted html if such a need ever arises.
+
+//called by parse text to turn the quilljs delta format (which can be used for text with embeds) into html
+function parseDeltaNotUsedRightNow(delta) {
+    //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+    var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+    //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+    var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+
+    //this starts the first line. it may be modified if it turns out this is a line in a list or blockquote
+    var linesOfParsedString = ["<p>"];
+
+    var inlineElements = [];
+    var imagesAdded = 0;
+    var linkPreviewsAdded = 0;
+    const imagesAllowed = 4;
+    const linkPreviewsAllowed = 4;
+
+    var linesFinished = 0; // the assumption is that the text parsing in parseText will not add or remove any lines
+    var withinList = false;
+    //the delta format stores a series of operations in "ops." in this context, they will all be "insert" ops, with their main content in .insert and the extra attributes of that content in .attributes
+    //the best way to understand this function is probably to step through it. basically, we start with a line "in progress" (the <p> that starts the array above) and add each insert onto it,
+    //accompanied by the tags for its formatting, until we hit an end of line signal, when we finish the line with an end tag. it may turn out that the end of line is blockquote or list formatted,
+    //in which case we have to go back and start the line with the appropriate tag (or tags in the case of lists, <ul> and <li>), and then for lists we start starting lines with <li> and then
+    //when we leave that formatting mode (when we hit a non list-fomatted newline) we have to end the previous (finished) line with </li> and </ul> and go back and start the current one with <p>.
+    //embeds are added with a position attribute describing how many lines have been completed when they are encountered, which serves to place them in the text later.
+    for (var i = 0; i < delta.ops.length; i++) {
+        var op = delta.ops[i];
+        if (typeof op.insert == "string" && (op.insert !== "" || op.attributes)) {
+            op.insert = this.escapeHTMLChars(op.insert);
+            var formattingStartTags = "";
+            var formattingEndTags = "";
+            if (op.attributes) {
+                // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are. as far as i can tell, it is guaranteed that only
+                //newlines will have this formatting.
+                if (op.attributes.blockquote) {
+                    if (withinList) {
+                        withinList = false;
+                        linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                        linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
+                        linesFinished++;
+                        linesOfParsedString.push("<p>");
+                    } else {
+                        linesOfParsedString[linesOfParsedString.length - 1] = "<blockquote>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</blockquote>";
+                        linesFinished++;
+                        linesOfParsedString.push("<p>");
+                    }
+                    continue;
+                } else if (op.attributes.list == "bullet") {
+                    if (!withinList) {
+                        withinList = true;
+                        linesOfParsedString[linesOfParsedString.length - 1] = "<ul><li>" + linesOfParsedString[linesOfParsedString.length - 1].substring(3, linesOfParsedString[linesOfParsedString.length - 1].length) + "</li>";
+                        linesFinished++;
+                        linesOfParsedString.push("<li>");
+                        continue;
+                    } else {
+                        linesOfParsedString[linesOfParsedString.length - 1] += "</li>";
+                        linesFinished++;
+                        linesOfParsedString.push("<li>");
+                        continue;
+                    }
+                }
+                //other formatting is attached directly to the text it applies to
+                if (op.attributes.bold) {
+                    formattingStartTags = "<strong>" + formattingStartTags;
+                    formattingEndTags = formattingEndTags + "</strong>";
+                }
+                if (op.attributes.italic) {
+                    formattingStartTags = "<em>" + formattingStartTags;
+                    formattingEndTags = formattingEndTags + "</em>";
+                }
+                if (op.attributes.link) {
+                    formattingStartTags = '<a href="' + op.attributes.link + '" target="_blank">' + formattingStartTags;
+                    formattingEndTags = formattingEndTags + "</a>";
+                }
+            }
+            //splitting the string into lines like this means that the first element is part of the previous line and then all subsequent ones start and finish their own lines, except the last one doesn't finish its
+            var lines = op.insert.split('\n');
+            linesOfParsedString[linesOfParsedString.length - 1] += formattingStartTags + lines[0] + formattingEndTags;
+            for (var i = 1; i < lines.length; i++) {
+                if (withinList) {
+                    withinList = false;
+                    linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+                    linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length);
+                }
+                if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") { //if the line we're finishing has no actual content
+                    linesOfParsedString[linesOfParsedString.length - 1] += "<br>";
+                }
+                linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+                linesFinished++;
+                linesOfParsedString.push("<p>" + formattingStartTags + lines[i] + formattingEndTags);
+            }
+        } else if (op.insert.LinkPreview && linkPreviewsAdded <= linkPreviewsAllowed) {
+            //i'm assuming that there will always be a newline text insert in the text right before an inline embed, so we don't have to go through the end-of-line process
+            var embed = op.attributes;
+            embed.type = "link-preview";
+            embed.position = linesFinished;
+            embed.linkUrl = (op.insert.LinkPreview.includes("//") ? "" : "//") + op.insert.LinkPreview;
+            if (youtubeUrlFindingRegex.test(op.insert.LinkPreview)) {
+                embed.isEmbeddableVideo = true;
+                embed.embedUrl = "https://www.youtube.com/embed/" + youtubeUrlFindingRegex.exec(op.insert.LinkPreview)[5] + "?autoplay=1";
+            } else if (vimeoUrlFindingRegex.test(op.insert.LinkPreview)) {
+                embed.isEmbeddableVideo = true;
+                embed.embedUrl = "https://www.youtube.com/embed/" + vimeoUrlFindingRegex.exec(op.insert.LinkPreview)[4] + "?autoplay=1";
+            } else {
+                embed.isEmbeddableVideo = false;
+            }
+            inlineElements.push(embed);
+            linkPreviewsAdded++;
+
+            console.log("link preview on line: " + linesFinished);
+            console.log("it is to " + op.insert.LinkPreview);
+            if (embed.isEmbeddableVideo) {
+                console.log("it is an embeddable video");
+            }
+        } else if (op.insert.PostImage && imagesAdded <= imagesAllowed && op.attributes.imageURL != "loading...") {
+            if (imagesAdded > 0 && inlineElements[inlineElements.length - 1].type == "image(s)" && inlineElements[inlineElements.length - 1].position == linesFinished) {
+                var image = inlineElements[inlineElements.length - 1]; //the below should modify this actual array element
+            } else {
+                var image = { images: [], imageDescriptions: [], position: linesFinished, type: "image(s)" };
+                inlineElements.push(image);
+            }
+            image.images.push(op.attributes.imageURL);
+            image.imageDescriptions.push(op.attributes.description);
+            imagesAdded++;
+
+            console.log("image on line: " + linesFinished);
+            console.log("its file name will be " + op.attributes.imageURL);
+            console.log("its description is " + op.attributes.description);
+        }
+    }
+    if (withinList) {
+        if (typeof delta.ops[delta.ops.length - 1].insert == "string" && (!delta.ops[delta.ops.length - 1].attributes || !delta.ops[delta.ops.length - 1].attributes.list)) {
+            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+            linesOfParsedString[linesOfParsedString.length - 1] = "<p>" + linesOfParsedString[linesOfParsedString.length - 1].substring(4, linesOfParsedString[linesOfParsedString.length - 1].length) + "</p>";
+        } else {
+            linesOfParsedString[linesOfParsedString.length - 2] += "</ul>";
+            linesOfParsedString.pop();
+        }
+    } else {
+        if ((typeof delta.ops[delta.ops.length - 1].insert != "string")) {
+            linesOfParsedString.pop();
+        } else {
+            if (linesOfParsedString[linesOfParsedString.length - 1] == "<p>") {
+                linesOfParsedString[linesOfParsedString.length - 1] += "<br></p>";
+            } else {
+                linesOfParsedString[linesOfParsedString.length - 1] += "</p>";
+            }
+        }
+    }
+    console.log("finished html:");
+    console.log(linesOfParsedString.join("\n"));
+    return { text: linesOfParsedString.join(""), inlineElements: inlineElements };
 }

@@ -268,16 +268,9 @@ module.exports = function(app) {
                         }
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
-                        //we need to verify link preview information, but doing it before saving the post could make the res.send take a while to get to, so
-                        //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
-                        //if link preview info is found to be inaccurate)
-                        var check = await helper.checkLinkPreviews(post);
-                        if (check) { //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
-                            check.save();
-                        }
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Error creating new post: " + err)
                     });
 
                 //community post
@@ -335,13 +328,6 @@ module.exports = function(app) {
                         })
                         //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
                         res.status(200).send("" + (postCreationTime.getTime() + 1));
-                        //we need to verify link preview information, but doing it before saving the post could make the res.send take a while to get to, so
-                        //we'll just go with what the client sent us initially and make it verify itself next (this function saves a new version of the post
-                        //if link preview info is found to be inaccurate)
-                        var check = await helper.checkLinkPreviews(post);
-                        if (check) { //function returned the post object with updated link previews and cachedHTML if necessary, nothing otherwise
-                            check.save();
-                        }
                     })
                     .catch((err) => {
                         console.log("Database error when attempting to save new post: " + err)
@@ -809,10 +795,6 @@ module.exports = function(app) {
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
-                                var check = await helper.checkLinkPreviews(comment);
-                                if (check) {
-                                    //todo: check contains the newly verified link metadata and cachedHTML.fullContentHTML, that needs to be placed in the comment we just made and the post saved
-                                }
                             })
                     })
                     .catch((err) => {

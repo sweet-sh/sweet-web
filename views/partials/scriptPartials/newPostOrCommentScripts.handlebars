@@ -150,7 +150,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     }
     e.preventDefault();
     let editor = $('#editor');
-    let postContent = editor[0].getContents(); //delta object if we have embeds; normal html if not
+    let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html if not
     if (editor[0].hasContent()) {
       $(this).attr('disabled');
       $.ajax({
@@ -186,7 +186,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     let commentID = commentForm.attr('data-comment-id');
     let commentContainer = commentForm.find(".ql-container");
     let commentEditor = commentForm.find('.ql-editor');
-    let commentContent = commentContainer[0].getContents(); //delta object if we have embeds; normal html if not
+    let commentContent = commentContainer[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html if not
     if (commentType == "primary") {
         commentsContainer = commentButton.closest('.comments').find('.comments-container');
     }

@@ -73,6 +73,7 @@
             var isVideo = (youtubeUrlFindingRegex.test(url) || vimeoUrlFindingRegex.test(url));
             let node = super.create();
             node.setAttribute('id', 'embed' + newEmbedId);
+            node.setAttribute('linkUrl', url);
             var id = newEmbedId;
             newEmbedId++;
             node.setAttribute('data-url', url);
@@ -338,18 +339,31 @@
             //if there is some text the first will be true; if there are > 0 embeds, the second will be true
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
-        //when embeds are forbidden, the html contents of the .ql-editor element will be used instead of the below
+        //when embeds are forbidden, the html contents of the .ql-editor element will be used "raw" instead of the below
         element.getContents = function() {
             if (element.imagesAdded() > 0 || element.linkPreviewsAdded() > 0) {
-                quill.updateContents();
-                var c = quill.getContents();
-                if (c.ops && c.ops[0].insert && typeof c.ops[0].insert == "string") {
-                    c.ops[0].insert = c.ops[0].insert.replace(/^\s+/, ''); //remove starting whitespace
-                }
-                if (c.ops && c.ops[c.ops.length - 1] && typeof c.ops[c.ops.length - 1].insert == "string") {
-                    c.ops[c.ops.length - 1].insert = c.ops[c.ops.length - 1].insert.replace(/\s+$/, ''); //remove ending whitespace
-                }
-                return c;
+                var elements = $(element).children('.ql-editor').children();
+                var textWEmbedsArray = [];
+                elements.each(function(i, n) {
+                    var n = $(n);
+                    if (n.hasClass('still-loading') || n.hasClass('onthemove') || n.hasClass('embedspacer')) {
+                        return;
+                    }
+                    if (n.hasClass('link-preview-container')) {
+                        textWEmbedsArray.push({ type: "link-preview", linkUrl: n.attr('linkUrl') });
+                    } else if (n.hasClass('newimagecont')) {
+                        var prevE = textWEmbedsArray[textWEmbedsArray.length-1];
+                        if(typeof prevE != "string" && prevE.type == "image(s)"){
+                            prevE.imageDescriptions.push(n.find('#postImageDescription').val());
+                            prevE.images.push(n.attr('image-url'));
+                        }else{
+                            textWEmbedsArray.push({type:"image(s)", imageDescriptions: [n.find('#postImageDescription').val()], images: [n.attr('image-url')] })
+                        }
+                    }else{
+                        textWEmbedsArray.push(n[0].outerHTML);
+                    }
+                })
+                return textWEmbedsArray;
             } else {
                 return $(element).children('.ql-editor').html();
             }
