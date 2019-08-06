@@ -1134,6 +1134,7 @@ hr {
   width: 100%;
   margin-bottom: 0.5rem;
   cursor: default;
+  transition: scale .1s ease-in-out, opacity .1s ease-in-out, padding .05s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
@@ -1147,15 +1148,19 @@ hr {
   border-left: solid thin lightblue;
    border-right: solid thin lightblue;
    padding: 0.3rem;
-   margin: 0!important;
+   margin-bottom: 0!important;
  }
 
  .ipc-group-top {
    border-top: solid thin lightblue;
+   border-top-left-radius: 0.5rem;
+   border-top-right-radius: 0.5rem;
  }
 
  .ipc-group-bottom {
   border-bottom: solid thin lightblue;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
 }
 
 .image-preview {
@@ -1219,9 +1224,6 @@ hr {
   resize: none;
 }
 
-.image-preview-holder {
-  transition: scale .1s ease-in-out, opacity .1s ease-in-out;
-}
 .onthemove {
   transform: scale(.99);
   opacity: .75;

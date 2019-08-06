@@ -352,7 +352,7 @@
                     }
                     if (n.hasClass('link-preview-container')) {
                         textWEmbedsArray.push({ type: "link-preview", linkUrl: n.attr('linkUrl') });
-                    } else if (n.hasClass('image-preview-holder')) {
+                    } else if (n.hasClass('image-preview-container')) {
                         var prevE = textWEmbedsArray[textWEmbedsArray.length - 1];
                         if (typeof prevE != "string" && prevE.type == "image(s)") {
                             prevE.imageDescriptions.push(n.find('#postImageDescription').val());
@@ -407,7 +407,7 @@
             }
 
             element.imagesAdded = function() {
-                return $(element).children('.ql-editor').children('.image-preview-holder').length;
+                return $(element).children('.ql-editor').children('.image-preview-container').length;
             }
             element.linkPreviewsAdded = function() {
                 return $(element).children('.ql-editor').children('.link-preview-container').length;
@@ -416,7 +416,7 @@
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
                 var lastThingInEditor = $(element).children('.ql-editor').children().last();
-                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('image-preview-holder')) {
+                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('image-preview-container')) {
                     if (e.clientY > getTop(lastThingInEditor) + lastThingInEditor.outerHeight(false)) {
                         quill.insertText(quill.getLength(), '\n');
                         quill.setSelection(quill.getLength(), 0);
