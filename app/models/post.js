@@ -15,12 +15,12 @@ var embedSchema = new mongoose.Schema({
 var inlineElementSchema = new mongoose.Schema({
   type: String, //either "link-preview" or "image(s)"
 
-  position: Number, //placement within parsedContent in lines (0 = top of the post)
+  position: Number, //what number "paragraph" this should be when it's mixed into parsedContent, where a paragraph is a <p>...</p>, <ul>...</ul>, or a <blockquote></blockquote>.
   
   //used if link-preview:
   isEmbeddableVideo: Boolean,
   linkUrl: String,
-  embedUrl: String, //only used if isEmbeddableVideo is true
+  embedUrl: String, //only defined if isEmbeddableVideo is true
   title: String,
   image: String,
   description: String,
@@ -33,6 +33,7 @@ var inlineElementSchema = new mongoose.Schema({
   imageIsHorizontal: [String],
 });
 
+//this is really similar to the embed schema but i only just realized that and i don't feel like changing this
 var linkPreviewCacheSchema = new mongoose.Schema({
     isEmbeddableVideo: Boolean,
     linkUrl: String,

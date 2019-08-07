@@ -191,7 +191,7 @@ module.exports = function(app) {
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
 
-        if (!(parsedResult.inlineElements || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
+        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
         }
@@ -469,10 +469,9 @@ module.exports = function(app) {
         var commentId = mongoose.Types.ObjectId();
 
         var rawContent = sanitize(req.body.commentContent);
-        //if rawContent is not html, it's a quilljs delta object that needs to be parsed
         var parsedResult = await helper.parseText(JSON.parse(rawContent), false, true, true, true);
 
-        if (!(parsedResult.inlineElements || parsedResult.text.trim())) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
             res.status(400).send('bad post op');
             return;
         }

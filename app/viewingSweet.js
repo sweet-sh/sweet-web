@@ -1081,21 +1081,22 @@ module.exports = function(app) {
                     // our vague error message on the frontend)
                     if (typeof displayedPost !== 'undefined') {
                         var canDisplay = true;
-                        if (displayedPost.images != "") {
-                            console.log("Post has an image!")
-                            var metadataImage = "https://sweet.sh/images/uploads/" + displayedPost.images[0]
+                        //todo: use the first image from the post if it has one, its address and location in the post document will be based on displayedPost.imageVersion
+                        if (displayedPost.author.imageEnabled) {
+                            var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
                         } else {
-                            if (displayedPost.author.imageEnabled) {
-                                console.log("Post has no image, but author has an image!")
-                                var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
-                            } else {
-                                console.log("Neither post nor author have an image!")
-                                var metadataImage = "https://sweet.sh/images/cake.svg";
-                            }
+                            var metadataImage = "https://sweet.sh/images/cake.svg";
+                        }
+                        var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
+                        if(firstLine && firstLine[1]){
+                            firstLine = firstLine[1];
+                        }else{
+                            //todo: maybe look at the post's inline elements and if there's a link preview have this be "link to..." or if there's an image with a description use that
+                            firstLine = "Just another ol' good post on sweet";
                         }
                         metadata = {
                             title: "@" + displayedPost.author.username + " on sweet",
-                            description: displayedPost.rawContent.split('\n')[0],
+                            description: firstLine,
                             image: metadataImage,
                             url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
                         }

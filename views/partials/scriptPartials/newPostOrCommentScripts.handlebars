@@ -150,7 +150,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     }
     e.preventDefault();
     let editor = $('#editor');
-    let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html if not
+    let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
     if (editor[0].hasContent()) {
       $(this).attr('disabled');
       $.ajax({

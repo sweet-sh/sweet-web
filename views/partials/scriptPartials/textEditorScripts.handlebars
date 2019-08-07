@@ -340,21 +340,21 @@
             //if there is some text the first will be true; if there are > 0 embeds, the second will be true
             return (quill.getText().trim().length > 0 || quill.getLength() > quill.getText().length);
         }
-        //when embeds are forbidden, the html contents of the .ql-editor element will be used "raw" instead of the below
+        //when embeds are forbidden in community pages and whatever a simple selector is used to get the html contents instead of this function
         element.getContents = function() {
             if (element.imagesAdded() > 0 || element.linkPreviewsAdded() > 0) {
                 var elements = $(element).children('.ql-editor').children();
                 var textWEmbedsArray = [];
                 elements.each(function(i, n) {
                     var n = $(n);
-                    if (n.hasClass('still-loading') || n.hasClass('onthemove') || n.hasClass('embedspacer')) {
+                    if (n.hasClass('still-loading') || n.hasClass('onthemove') || n.hasClass('embedspacer') || n.attr('image-url') == "loading...") {
                         return;
                     }
                     if (n.hasClass('link-preview-container')) {
                         textWEmbedsArray.push({ type: "link-preview", linkUrl: n.attr('linkUrl') });
                     } else if (n.hasClass('image-preview-container')) {
                         var prevE = textWEmbedsArray[textWEmbedsArray.length - 1];
-                        if (typeof prevE != "string" && prevE.type == "image(s)") {
+                        if (prevE && typeof prevE != "string" && prevE.type == "image(s)") {
                             prevE.imageDescriptions.push(n.find('#postImageDescription').val());
                             prevE.images.push(n.attr('image-url'));
                         } else {

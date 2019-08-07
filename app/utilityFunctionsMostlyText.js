@@ -24,16 +24,9 @@ module.exports = {
         } else {
             var inlineElements = [];
             //this is also done by parseParagraphList, but if we're not using that we use this, here
-            rawText = rawText.replace(/^(<p><br><\/p>)*/, '') //filter out blank lines from beginning
-            rawText = rawText.replace(/(<p><br><\/p>)*$/, '') //filter them out from the end
-            rawText = rawText.replace(/(<p><br><\/p>){2,}/g, '<p><br></p>') //filters out multiple blank lines in a row within the post
-        }
-
-        let splitContent = [];
-        var lineFinder = /<p>.*?<\/p>|(?:<ul><li>|<li>).*?(?:<\/li><\/ul>|<\/li>)/g;
-        var match = undefined;
-        while (match = lineFinder.exec(rawText)) {
-            splitContent.push(match[0]);
+            rawText = rawText.replace(/^(<p>(<br>|\s)*<\/p>)*/, '') //filter out blank lines from beginning
+            rawText = rawText.replace(/(<p>(<br>|\s)<\/p>)*$/, '') //filter them out from the end
+            rawText = rawText.replace(/(<p>(<br>|\s)<\/p>){2,}/g, '<p><br></p>') //filters out multiple blank lines in a row within the post
         }
 
         var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
@@ -83,18 +76,17 @@ module.exports = {
     },
     parseParagraphList: async function(pList) {
         var inlineElements = [];
-        //iterate over list, remove blank lines from the beginning, remove blank lines if the last one is blank, mark the last non-blank line and remove all elements after it afterward
+        //iterate over list, remove blank lines from the beginning, collapse consecutive blank lines into one, and finally remove the last line if it's blank
         //also, pull out the inline elements and put them in their own array with their position
-        var lastcontent = 0;
+        var lastWasBlank = false;
         for (var i = 0; i < pList.length; i++) {
             if (typeof pList[i] == "string") {
                 var isBlank = pList[i].match(/^<p>(<br>|\s)*<\/p>$/);
-                if ((i == 0 || i > lastcontent + 1) && isBlank) {
+                if (((i == 0 && !inlineElements.length) || lastWasBlank) && isBlank) {
                     pList.splice(i, 1);
                     i--;
-                } else if (!isBlank) {
-                    lastcontent = i;
                 }
+                lastWasBlank = isBlank;
             } else {
                 if (pList[i].type == "link-preview") {
                     try {
@@ -106,15 +98,15 @@ module.exports = {
                         i--;
                     }
                 }
-                lastcontent = i;
+                lastWasBlank = false;
                 pList[i].position = i;
                 inlineElements.push(pList[i]);
                 pList.splice(i, 1);
                 i--;
             }
         }
-        if (pList.length) {
-            pList.splice(lastcontent, pList.length - 1 - lastcontent);
+        if (pList.length && lastWasBlank) {
+            pList.splice(pList.length-1, 1);
         }
         return { text: pList.join(''), inlineElements: inlineElements };
     },
@@ -203,14 +195,17 @@ module.exports = {
             isEmbeddableVideo = true;
             try {
                 var time = /t=(?:([0-9]*)m)?((?:[0-9])*)(?:s)?/.exec(parsed[6]);
-                if (time) {
-                    var seconds = parseInt(time[2]);
-                    if (time[1]) {
-                        seconds += (parseInt(time[1]) * 60);
-                    }
+                var seconds = 0;
+                if (time[2]) {
+                    seconds += parseInt(time[2]);
+                }
+                if (time[1]) {
+                    seconds += (parseInt(time[1]) * 60);
+                }
+                if (seconds) {
                     result.embedUrl += "&start=" + seconds;
                 }
-            } catch (err) {
+            } catch (err) { //catch potential parseInt errors
                 console.log("youtube link had time specifier that was apparently malformed! error:")
                 console.log(err);
             }
