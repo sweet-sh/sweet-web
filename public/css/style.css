@@ -708,10 +708,6 @@ hr {
   padding-bottom: 0px;
 }
 
-.post-content {
-  position: relative;
-}
-
 .user-list {
     padding: 0;
     margin: 0 0 0 0;
@@ -1761,6 +1757,7 @@ article.comment > .content {
     border: 1px solid #f0f0f0;
     border-radius: 4px;
     max-width: 480px;
+    position: relative;
 }
 article.comment > .content.comment-deleted-content,
 article.comment > .content.comment-muted-content {
@@ -1883,10 +1880,10 @@ a.show-more:hover { /* Shim for old show more button element */
     color: #ce1717;
 }
 
-.abbreviated-content:not(.content-warning-content)::after {
+.post .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
-.comment-content .abbreviated-content:not(.content-warning-content)::after {
+.comment .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
 }
 

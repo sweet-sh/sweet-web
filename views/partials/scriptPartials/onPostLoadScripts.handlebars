@@ -4,8 +4,21 @@
 //it should start with posts just older than that. it starts out with the current time as a placeholder (obvs we only want posts older than the current time, we only have posts older than the current time)
 needPostsOlderThan = new Date().getTime();
 
+// Globally defining the check height function (should this go somewhere ... else?)
+function heightCheckReadMore(e) {
+    if (e.height() > 700) {
+        var contentCont = e.find('.content');
+        if (!contentCont.hasClass('content-warning-post')) {
+            var content = contentCont.children();
+            content.remove();
+            contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
+            contentCont.children('.abbreviated-content').append(content);
+        }
+    }
+}
 $(function(){
 {{#if loggedIn}}
+
     // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
     // Init tribute
     $.post('/api/user/followers', function (data) {
@@ -31,18 +44,6 @@ $(function(){
 
         if(this.fadedOut){
             $(this).fadeIn(250);
-        }
-
-        function heightCheckReadMore(e) {
-            if (e.height() > 700) {
-                var contentCont = e.find('.content');
-                if (!contentCont.hasClass('content-warning-post')) {
-                    var content = contentCont.children();
-                    content.remove();
-                    contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
-                    contentCont.children('.abbreviated-content').append(content);
-                }
-            }
         }
 
         newlyLoadedStuff.each(function(i,e){

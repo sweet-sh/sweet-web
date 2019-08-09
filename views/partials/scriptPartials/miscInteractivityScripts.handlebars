@@ -1,4 +1,5 @@
 <script type="text/javascript">
+$(function() {
 {{#if loggedInUserData.settings.flashRecentComments}}
     $(window).scroll(function() {
         $(".recent-comment-content:not(.flash)").each(function(){
@@ -16,7 +17,6 @@
     });
 {{/if}}
 
-$(function() {
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
@@ -85,7 +85,7 @@ $(function() {
     var searchQuery = $('#navbarSearchField').val();
     window.location.href = '/search/' +	searchQuery
   });
-  
+
   // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
   window.setInterval(function(){
     $("#notificationsContainer").load("/api/notification/display");
@@ -113,6 +113,11 @@ $(function() {
   $('body').on('click', '.show-comments', function() {
     commentsContainer = $(this).closest(".post").find(".comments");
     commentsContainer.slideToggle("fast", function(){
+      commentsContainer.find('.comment').each(function(i,e) {
+          e = $(e);
+          console.log(e.height());
+          heightCheckReadMore(e);
+      })
       if (commentsContainer.is(':visible')){
         if(commentsContainer.height() > $(window).height()){
           scrollTarget = $(this).closest('.comments').find('.recent-comment-content')
@@ -135,14 +140,17 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      var h = $(this).prev(".abbreviated-content").css('height','100%').height();
-      $(this).prev(".abbreviated-content").css('height','20rem');
-      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:h},200);
+        // I think just setting the height to 100% and losing the animation is an okay
+        // compromise, because not setting the content height to a fixed pixel number
+        // prevents the comment text from overflowing when a video preview is expanded
+      // var h = $(this).prev(".abbreviated-content").css('height','100%').height();
+      // $(this).prev(".abbreviated-content").css('height','20rem');
+      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("content").height('100%');
       $(this).attr("data-state","expanded");
     }
     else {
-      var pC = $(this).prev(".post-content");
-      pC.addClass("abbreviated-content").removeClass("post-content").animate({height:"20rem"},200);
+      var pC = $(this).prev(".content");
+      pC.addClass("abbreviated-content").removeClass("content").animate({height:"20rem"},200);
       var scroll = pC.offset().top;
       $("html, body").animate({ scrollTop: (scroll-200)+"px" },200); //-200 to roughly account for the navbar covering up the very top of the screen
       $(this).attr("data-state","contracted");
