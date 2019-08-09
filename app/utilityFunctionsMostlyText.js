@@ -106,7 +106,7 @@ module.exports = {
             }
         }
         if (pList.length && lastWasBlank) {
-            pList.splice(pList.length-1, 1);
+            pList.splice(pList.length - 1, 1);
         }
         return { text: pList.join(''), inlineElements: inlineElements };
     },
@@ -195,15 +195,17 @@ module.exports = {
             isEmbeddableVideo = true;
             try {
                 var time = /t=(?:([0-9]*)m)?((?:[0-9])*)(?:s)?/.exec(parsed[6]);
-                var seconds = 0;
-                if (time[2]) {
-                    seconds += parseInt(time[2]);
-                }
-                if (time[1]) {
-                    seconds += (parseInt(time[1]) * 60);
-                }
-                if (seconds) {
-                    result.embedUrl += "&start=" + seconds;
+                if (time) {
+                    var seconds = 0;
+                    if (time[2]) {
+                        seconds += parseInt(time[2]);
+                    }
+                    if (time[1]) {
+                        seconds += (parseInt(time[1]) * 60);
+                    }
+                    if (seconds) {
+                        result.embedUrl += "&start=" + seconds;
+                    }
                 }
             } catch (err) { //catch potential parseInt errors
                 console.log("youtube link had time specifier that was apparently malformed! error:")
