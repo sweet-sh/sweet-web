@@ -622,7 +622,7 @@
                     var index = parseInt(li.getAttribute('data-index'));
                     var textToInsert = "@"+tribute.collection[0].values[index].value;
                     var quill = tribute.current.element.parentElement.__quill;
-                    var sel = quill.getSelection();
+                    var sel = quill.getSelection(true);
                     if(sel.length==0){
                         var atPos = sel.index;
                         while(atPos>0 && quill.getText(atPos,1)!="@"){
@@ -630,7 +630,7 @@
                         }
                         if(quill.getText(atPos,1)=="@"){
                             quill.deleteText(atPos,sel.index-atPos);
-                            quill.insertText(quill.getSelection().index,textToInsert+" ");
+                            quill.insertText(quill.getSelection(true).index,textToInsert+" ");
                         }
                     }
                     //end of crazy hack. the line commented out below is what it replaced.

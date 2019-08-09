@@ -5,15 +5,19 @@
 needPostsOlderThan = new Date().getTime();
 
 // Globally defining the check height function (should this go somewhere ... else?)
-function heightCheckReadMore(e) {
-    if (e.height() > 700) {
-        var contentCont = e.find('.content');
+function showMoreAndImageLightboxing(e) {
+    var contentCont = $(e.find('.content')[0]);
+    if (e.height() > 550) {
         if (!contentCont.hasClass('content-warning-post')) {
             var content = contentCont.children();
             content.remove();
             contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
             contentCont.children('.abbreviated-content').append(content);
         }
+    }
+    var images = contentCont.find('.post-images a');
+    if(images.length){
+        images.simpleLightbox();
     }
 }
 $(function(){
@@ -46,6 +50,7 @@ $(function(){
             $(this).fadeIn(250);
         }
 
+        //problem: this waits until all comment images are loaded as well
         newlyLoadedStuff.each(function(i,e){
             e = $(e);
             var imgs = e.find('img');
@@ -54,17 +59,17 @@ $(function(){
                 imgs.on('load', function(){
                     loaded++;
                     if(loaded == imgs.length){
-                        heightCheckReadMore(e);
+                        showMoreAndImageLightboxing(e);
                     }
                 })
                 imgs.on('error', function(){
                     loaded++;
                     if(loaded == imgs.length){
-                        heightCheckReadMore(e);
+                        showMoreAndImageLightboxing(e);
                     }
                 })
             }else{
-                heightCheckReadMore(e);
+                showMoreAndImageLightboxing(e);
             }
         })
 
@@ -75,33 +80,25 @@ $(function(){
                 $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
             })
         }
-
+/*
         if (newlyLoadedStuff.find('.post-images').length > 0) {
             var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;
             console.log("images loaded: " + imagesLoaded);
             var imagesLightboxed = 0;
 
             var $images = newlyLoadedStuff.find('.post-images a');
-            var $imagesGrouped = $images.filter('[data-group]');
-            var $imagesAlone = $images.not($imagesGrouped);
-
-            // Handle standalone images
-            $imagesAlone.each(function (index, element) {
-                $(element).simpleLightbox();
-                imagesLightboxed++;
-            });
 
             // Handle grouped images
-            if ($imagesGrouped.length > 0) {
+            if ($images.length > 0) {
                 // Select all groups
-                var groupNames = $imagesGrouped.map(function () {
+                var groupNames = $images.map(function () {
                     return $(this).data('group');
                 }).get();
                 groupNames = $.unique(groupNames);
 
                 // Apply on each group
                 $.each(groupNames, function (key, value) {
-                    var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
+                    var filteredGroup = $images.filter(function () {
                         return $(this).data('group') == value;
                     })
                     filteredGroup.simpleLightbox();
@@ -113,7 +110,7 @@ $(function(){
                 }
                 //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
             }
-        }
+        }*/
         {{#if loggedIn}}
         var commentForms = newlyLoadedStuff.find('.editable-text');
         commentForms.each(function(){

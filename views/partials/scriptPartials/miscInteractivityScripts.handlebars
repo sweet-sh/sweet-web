@@ -116,7 +116,7 @@ $(function() {
       commentsContainer.find('.comment').each(function(i,e) {
           e = $(e);
           console.log(e.height());
-          heightCheckReadMore(e);
+          showMoreAndImageLightboxing(e);
       })
       if (commentsContainer.is(':visible')){
         if(commentsContainer.height() > $(window).height()){
@@ -140,13 +140,10 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-        // I think just setting the height to 100% and losing the animation is an okay
-        // compromise, because not setting the content height to a fixed pixel number
-        // prevents the comment text from overflowing when a video preview is expanded
-      // var h = $(this).prev(".abbreviated-content").css('height','100%').height();
-      // $(this).prev(".abbreviated-content").css('height','20rem');
-      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("content").height('100%');
-      $(this).attr("data-state","expanded");
+    var h = $(this).prev(".abbreviated-content").css('height','100%').height();
+    $(this).prev(".abbreviated-content").css('height','20rem');
+    $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("content").animate({height:h},200,"swing",function(){$(this).css('height','100%')});
+    $(this).attr("data-state","expanded");
     }
     else {
       var pC = $(this).prev(".content");

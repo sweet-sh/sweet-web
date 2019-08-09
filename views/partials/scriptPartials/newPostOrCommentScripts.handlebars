@@ -202,29 +202,11 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         if (data!='nope'){
           commentEditor.html('');
           var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          $('html').animate({scrollTop: (Math.max(0,appendedComment.offset().top-100))});
           //add the lightbox listener to the newly appended comment images
           var commentimages = appendedComment.find('.post-images a');
-          if (commentimages.length > 0) {
-            var $images = commentimages;
-            var $imagesGrouped = $images.filter('[data-group]');
-            var $imagesAlone = $images.not($imagesGrouped);
-
-            // Handle standalone images
-            $imagesAlone.each(function (index, element) {
-              $(element).simpleLightbox();
-            });
-
-            // Handle grouped imags
-            if ($imagesGrouped.length > 0) {
-              // Select all groups
-              var groupNames = $imagesGrouped.map(function () { return $(this).data('group'); }).get();
-              groupNames = $.unique(groupNames);
-
-              // Apply on each group
-              $.each(groupNames, function (key, value) {
-                $imagesGrouped.filter(function () { return $(this).data('group') == value; }).simpleLightbox();
-              });
-            }
+          if(commentimages.length){
+            commentimages.simpleLightbox();
           }
 
           let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
