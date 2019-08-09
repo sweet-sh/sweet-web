@@ -50,10 +50,9 @@ $(function(){
             $(this).fadeIn(250);
         }
 
-        //problem: this waits until all comment images are loaded as well
         newlyLoadedStuff.each(function(i,e){
             e = $(e);
-            var imgs = e.find('img');
+            var imgs = e.children('.content').find('img');
             if(imgs.length){
                 var loaded = 0;
                 imgs.on('load', function(){
@@ -80,37 +79,7 @@ $(function(){
                 $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
             })
         }
-/*
-        if (newlyLoadedStuff.find('.post-images').length > 0) {
-            var imagesLoaded = newlyLoadedStuff.find('.post-single-image').length;
-            console.log("images loaded: " + imagesLoaded);
-            var imagesLightboxed = 0;
-
-            var $images = newlyLoadedStuff.find('.post-images a');
-
-            // Handle grouped images
-            if ($images.length > 0) {
-                // Select all groups
-                var groupNames = $images.map(function () {
-                    return $(this).data('group');
-                }).get();
-                groupNames = $.unique(groupNames);
-
-                // Apply on each group
-                $.each(groupNames, function (key, value) {
-                    var filteredGroup = $images.filter(function () {
-                        return $(this).data('group') == value;
-                    })
-                    filteredGroup.simpleLightbox();
-                    imagesLightboxed += filteredGroup.length;
-                });
-                console.log("images lightboxed: " + imagesLightboxed)
-                if (imagesLightboxed != imagesLoaded) {
-                    console.log("not all images lightboxed!!!!!!");
-                }
-                //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
-            }
-        }*/
+        
         {{#if loggedIn}}
         var commentForms = newlyLoadedStuff.find('.editable-text');
         commentForms.each(function(){
