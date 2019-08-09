@@ -13,7 +13,11 @@ $(function(){
         tribute = new Tribute({
             values: followers,
             menuItemTemplate: function (item) {
-                return '<img class="tribute-image" src="/images/' + item.original.image + '">' + item.string;
+                return '<img class="tribute-image" src="/images/' + item.original.image + '"><span class="tribute-text">' + item.string + '</span>';
+            },
+            searchOpts: {
+                pre: '<strong>',
+                post: '</strong>'
             }
         })
         tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
@@ -28,7 +32,7 @@ $(function(){
         if(this.fadedOut){
             $(this).fadeIn(250);
         }
-        
+
         function heightCheckReadMore(e) {
             if (e.height() > 700) {
                 var contentCont = e.find('.content');

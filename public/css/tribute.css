@@ -26,8 +26,8 @@
       background-color: #f8f9fa;}
     .tribute-container li.highlight {
       background: #ededed; }
-    .tribute-container li span {
-      font-weight: bold; }
+    /* .tribute-container li span { Automatically makes matched elements (which default to <span>) in tribute bold, but we are selecting matching strings with <strong> tags and wrapping the whole thing in a <span> so we don't need this
+      font-weight: bold; } */
     .tribute-container li.no-match {
       cursor: default; }
   .tribute-container .menu-highlighted {
