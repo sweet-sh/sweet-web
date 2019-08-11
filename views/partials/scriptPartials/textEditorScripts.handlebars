@@ -415,6 +415,7 @@
 
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
+                console.log(e.target);
                 var lastThingInEditor = $(element).children('.ql-editor').children().last();
                 if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('image-preview-container')) {
                     if (e.clientY > getTop(lastThingInEditor) + lastThingInEditor.outerHeight(false)) {
