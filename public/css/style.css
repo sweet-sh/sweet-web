@@ -1144,7 +1144,7 @@ hr {
   border-left: solid thin lightblue;
    border-right: solid thin lightblue;
    padding: 0.3rem;
-   margin-bottom: 0!important;
+   margin-bottom: 0;
  }
 
  .ipc-group-top {
@@ -1157,6 +1157,7 @@ hr {
   border-bottom: solid thin lightblue;
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
+  margin-bottom:0.5rem;
 }
 
 .image-preview {
@@ -1394,6 +1395,18 @@ hr {
     color: #28a745;
 }
 
+.slidable-embed {
+  cursor:default;
+}
+
+.slidable-embed .link-preview-title, .slidable-embed .link-preview-domain, .slidable-embed .link-preview-description {
+  cursor:text;
+}
+
+.slidable-embed .link-preview-image, .slidable-embed.link-preview-container {
+  cursor:default;
+}
+
 .link-preview-container {
     display: flex;
     height: 100px;
@@ -1405,7 +1418,6 @@ hr {
     margin: 0 0 0.5em 0;
     background-color: #ffffff;
     align-items:center;
-    cursor:default;
 }
 
 .link-preview-container::before {
@@ -1428,11 +1440,6 @@ hr {
     text-decoration: none;
     background: #fcfcfc;
 }
-
-.link-preview-title, .link-preview-domain, .link-preview-description {
-  cursor:text;
-}
-
 
 .link-preview-text-container {
     display: flex;
