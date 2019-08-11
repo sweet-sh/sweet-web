@@ -1405,6 +1405,7 @@ hr {
     margin: 0 0 0.5em 0;
     background-color: #ffffff;
     align-items:center;
+    cursor:default;
 }
 
 .link-preview-container::before {
@@ -1427,6 +1428,11 @@ hr {
     text-decoration: none;
     background: #fcfcfc;
 }
+
+.link-preview-title, .link-preview-domain, .link-preview-description {
+  cursor:text;
+}
+
 
 .link-preview-text-container {
     display: flex;

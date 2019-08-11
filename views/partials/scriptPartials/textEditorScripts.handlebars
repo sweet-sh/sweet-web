@@ -82,6 +82,7 @@
             node.innerHTML = $("#new-post-link-preview-contents")[0].innerHTML;
             var n = $(node);
             n.addClass('still-loading');
+            n.addClass('slidable-embed');
             n.find('.link-preview-image').on('error', function(e) {
                 $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
             })
@@ -168,6 +169,7 @@
             node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
             var n = $(node);
             n.addClass("still-loading");
+            n.addClass('slidable-embed');
             //create filereader that will obtain us the preview
             var fr = new FileReader();
             fr.onload = function(e) {
@@ -415,11 +417,43 @@
 
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
-                var lastThingInEditor = $(element).children('.ql-editor').children().last();
-                if (lastThingInEditor.hasClass('link-preview-container') || lastThingInEditor.hasClass('image-preview-container')) {
-                    if (e.clientY > getTop(lastThingInEditor) + lastThingInEditor.outerHeight(false)) {
+                console.log(e.target);
+                var et = $(e.target);
+                if (et.hasClass('ql-editor')) {
+                    var c = et.children();
+                    var firstChild = c.first();
+                    var lastChild = c.last();
+                    if (firstChild.hasClass('slidable-embed') && e.clientY < getTop(firstChild)) {
+                        quill.insertText(0,'\n');
+                        quill.setSelection(0);
+                    } else if (lastChild.hasClass('slidable-embed') && e.clientY > getTop(lastChild) + lastChild.outerHeight(false)) {
                         quill.insertText(quill.getLength(), '\n');
-                        quill.setSelection(quill.getLength(), 0);
+                        quill.setSelection(quill.getLength());
+                    } else {
+                        var prev = undefined;
+                        var lineAdded = false;
+                        et.children().each(function(i, child) {
+                            if (!lineAdded) {
+                                child = $(child);
+                                if (prev) {
+                                    if (child.hasClass('slidable-embed') && prev.hasClass('slidable-embed')) {
+                                        if (e.clientY < getTop(child) && e.clientY > getTop(prev) + prev.outerHeight(false)) {
+                                            var newLine = $('<p></p>')
+                                            prev.after(newLine);
+                                            var sel = window.getSelection();
+                                            var range = document.createRange();
+                                            range.setStart(newLine[0],0);
+                                            range.collapse(true);
+                                            sel.removeAllRanges();
+                                            sel.addRange(range);
+                                            lineAdded = true;
+                                            createImageGroups(et);
+                                        }
+                                    }
+                                }
+                                prev = child;
+                            }
+                        })
                     }
                 }
             }
