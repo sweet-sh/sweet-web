@@ -417,6 +417,14 @@ h6 {
     padding-left: 15px;
 }
 
+@media (min-width: 992px){
+.col-lg-7 {
+    -ms-flex: 0 0 58.333333%;
+    flex: 0 0 58.333333%;
+    max-width: 58.333333%;
+}
+}
+
 .col-md-4 h4,
 .col-md-4 h5,
 .col-md-4 h6 {
@@ -529,8 +537,6 @@ h6 {
 #resultsContainer,
 #directoryResults,
 #postsContainer {
-    border: 1px solid #dfdfdf;
-    background: white;
     padding: 0;
 }
 
@@ -1026,23 +1032,7 @@ h6 {
     height: 35px;
 }
 
-/*post images*/
-
-.comment .content .post-images.one-image {
-    display: inline-block;
-}
-
-.comment .content .post-images .post-single-image {
-    max-height: 200px;
-}
-
-.comment .content .post-images img.post-single-image.vertical-image {
-    max-height: 350px;
-}
-
-.comment .content .post-images.one-image.vertical-image {
-    max-height: 350px;
-}
+/* ====== POST IMAGES ======= */
 
 /*
 STRUCTURE
@@ -1051,48 +1041,98 @@ div.post-images > 1 or more (a > img.post-single-image)
 
 /* Base style for outside container */
 .post-images {
-    display: grid;
-    grid-column-gap: 2px;
-    grid-row-gap: 2px;
-    max-height: 450px;
-    margin-bottom: 0.5em;
+  display: grid;
+  grid-column-gap: 2px;
+  grid-row-gap: 2px;
+  max-height: 450px;
+  margin-bottom: 0.5rem;
 }
 
 /* Base style for individual images */
 .post-single-image {
-    transition: all 100ms ease-in;
-    border-radius: 4px;
-    border: 1px solid #ededed;
+  transition: all 100ms ease-in;
+  border-radius: 4px;
+  border: 1px solid #ededed;
 }
-
 .post-images .post-single-image:hover {
-    border-color: #9b9b9b;
+  border-color: #9b9b9b;
 }
 
 /* One image */
 .post-images.one-image .post-single-image {
-    max-width: 100%;
-    max-height: 450px;
-    grid-template-columns: 100%;
-    /* Is this and the line below necessary? */
-    grid-template-rows: min-content;
+  max-width: 100%;
+  max-height: 450px;
+  grid-template-columns: 100%; /* Is this and the line below necessary? */
+  grid-template-rows: min-content;
 }
 
 /* Single vertical images are taller */
 .post-images.one-image.vertical-image {
-    max-height: 600px;
+  max-height: 600px;
 }
-
 .post-images.one-image.vertical-image .post-single-image {
-    max-height: 600px;
+  max-height: 600px;
 }
 
 /* Single horizontal images fill the whole box
 (currently images narrower than the box expand to fit which is not ideal but... okay) */
 .post-images.horizontal-image .post-single-image {
-    object-fit: cover;
-    width: 100%;
+  object-fit: cover;
+  width: 100%;
 }
+
+/* Two images */
+.post-images.two-images {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 100%;
+}
+
+/* Three and four images */
+.post-images.three-images,
+.post-images.four-images {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.post-images.three-images > *:first-child {
+  grid-row-end: span 2;
+}
+
+/* Images in multi-image containers expand to fill their whole cell */
+.post-images.two-images .post-single-image,
+.post-images.three-images .post-single-image,
+.post-images.four-images .post-single-image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  max-height: 450px;
+}
+
+/* Hack of sorts to fit images to maximum height of multi-image container */
+.post-images a {
+  min-height: 100%;
+}
+
+.comment .post-images {
+    max-width: 480px;
+    max-height: 200px;
+    margin-top: 0.35rem;
+}
+
+.comment .post-images.one-image {
+  display: inline-block;
+}
+.comment .post-images .post-single-image {
+    max-height: 200px;
+}
+
+.comment .post-images img.post-single-image.vertical-image {
+  max-height: 350px;
+}
+
+.comment.post-images.one-image.vertical-image {
+  max-height: 350px;
+}
+
 
 /* new post/comment form stuff*/
 
@@ -1383,9 +1423,16 @@ div.post-images > 1 or more (a > img.post-single-image)
 }
 
 
-/*post image adder stuff (🐍)*/
+/*post image + link preview adder stuff (🐍)*/
+/* actually, most of the link preview stuff is in its own section as the css also applies to the real link previews in the posts */
 
-/* image previews within the quill editor stuff */
+.slidable-embed {
+  cursor:default;
+}
+
+.slidable-embed .link-preview-title, .slidable-embed .link-preview-domain, .slidable-embed .link-preview-description {
+  cursor:text;
+}
 
 .image-preview-container {
   display: flex;
@@ -1407,7 +1454,7 @@ div.post-images > 1 or more (a > img.post-single-image)
   border-left: solid thin lightblue;
    border-right: solid thin lightblue;
    padding: 0.3rem;
-   margin-bottom: 0!important;
+   margin-bottom: 0;
  }
 
  .ipc-group-top {
@@ -1420,6 +1467,7 @@ div.post-images > 1 or more (a > img.post-single-image)
  border-bottom: solid thin lightblue;
  border-bottom-left-radius: 0.5rem;
  border-bottom-right-radius: 0.5rem;
+ margin-bottom:0.5rem;
 }
 
 .image-preview {
@@ -1820,7 +1868,7 @@ article.post:hover {
     content: "";
     position: absolute;
     z-index: 1;
-    bottom: 17.5rem;
+    top: 17.5rem;
     left: 0;
     pointer-events: none;
     width: 100%;
@@ -1833,7 +1881,7 @@ article.post:hover {
   content: "";
   position: absolute;
   z-index: 1;
-  bottom: 17.5rem;
+  top: 17.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;
@@ -2530,7 +2578,6 @@ select.form-control:not([size]):not([multiple]) {
     margin: 0 0 0.5em 0;
     background-color: #ffffff;
     align-items:center;
-    cursor:default;
 }
 
 .link-preview-container:hover {
@@ -2544,10 +2591,6 @@ select.form-control:not([size]):not([multiple]) {
 
 .link-preview-container::after {
   display:none;
-}
-
-.link-preview-title, .link-preview-domain, .link-preview-description {
-  cursor:text;
 }
 
 .link-preview-text-container {
