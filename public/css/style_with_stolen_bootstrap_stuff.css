@@ -156,6 +156,8 @@ hr {
     color: #cbcbcb;
 }
 
+/* Raph got up to here converting CSS to SCSS */
+
 dl,
 ol,
 ul {
@@ -296,7 +298,7 @@ h6 {
 .pane {
     padding: 15px;
     background: #fff;
-    border: 1px solid #dee2e6;
+    border: 1px solid #dfdfdf;
 }
 
 .justify-content-center {
@@ -433,6 +435,7 @@ h6 {
     }
 }
 
+/* This is such a hot mess of a hack, I'm sorry */
 .col-md-4 h4,
 .col-md-4 h5,
 .col-md-4 h6 {
@@ -2843,9 +2846,9 @@ select.form-control:not([size]):not([multiple]) {
 #nav-tabContent,
 #communitiesTabContent {
     background: white;
-    border-left: 1px solid #dee2e6;
-    border-right: 1px solid #dee2e6;
-    border-bottom: 1px solid #dee2e6;
+    border-left: 1px solid #dfdfdf;
+    border-right: 1px solid #dfdfdf;
+    border-bottom: 1px solid #dfdfdf;
     padding: 15px;
     margin-top: 0;
 }
@@ -2901,7 +2904,7 @@ select.form-control:not([size]):not([multiple]) {
 .nav-tabs .nav-link.active {
     color: #495057;
     background-color: #fff;
-    border-color: #dee2e6 #dee2e6 #fff;
+    border-color: #dfdfdf #dfdfdf #fff;
 }
 
 .nav-tabs .nav-link {
@@ -2922,7 +2925,7 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .nav-tabs {
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #dfdfdf;
 }
 
 .nav-tabs .nav-item {
@@ -3176,7 +3179,7 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 #editBody #nav-tabContent {
-    border: 1px solid #dee2e6;
+    border: 1px solid #dfdfdf;
 }
 
 .subscribed-alert {

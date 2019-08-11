@@ -1,0 +1,31 @@
+label {
+    display: inline-block;
+    margin-bottom: .5rem
+}
+
+button {
+    border-radius: 0
+
+    &:focus {
+        outline: 1px dotted;
+        outline: 5px auto -webkit-focus-ring-color // This should be a variable?? Does this just come from the browser? I have so many questions
+    }
+}
+
+input[type=checkbox],
+input[type=radio] {
+    box-sizing: border-box;
+    padding: 0
+}
+
+input[type=date],
+input[type=datetime-local],
+input[type=month],
+input[type=time] {
+    -webkit-appearance: listbox
+}
+
+textarea {
+    overflow: auto;
+    resize: vertical
+}

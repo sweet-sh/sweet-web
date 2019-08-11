@@ -1,0 +1,62 @@
+$body-font: 'Ubuntu', sans-serif;
+$normal-weight: 400;
+$semi-bold-weight: 500;
+$bold-weight: 700;
+
+html {
+    // Are these... necessary? Fuck knows what they do
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    -ms-overflow-style: scrollbar;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: $body-font;
+    font-weight: $normal-weight;
+    line-height: 1.5;
+    text-align: left;
+    font-size: 96.5%;
+    color: $text-black;
+    background: $background-grey;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
+
+b,
+strong {
+    font-weight: bolder;
+}
+
+a {
+    color: $light-blue;
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+
+    &:hover {
+        color: $sweet-red;
+        text-decoration: underline;
+    }
+    // From Bootstrap: necessary?
+    &:not([href]):not([tabindex]) {
+        color: inherit;
+        text-decoration: none
+    }
+}
+
+hr {
+    border: 0;
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
+    height: 1px;
+    display: block;
+    border-top: 1px solid;
+    margin: 0.5em 0;
+    padding: 0;
+    color: $darker-grey;
+}

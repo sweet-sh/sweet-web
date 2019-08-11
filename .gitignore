@@ -8,6 +8,7 @@
 config/apis.js
 config/database.js
 config/auth.js
+.sass-cache
 
 ### macOS ###
 # General
