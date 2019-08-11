@@ -1,0 +1,236 @@
+
+{{> newCommentFormTemplate}}
+
+<script type="text/javascript">
+
+//this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
+function restartInfiniteScroll(timestamp){
+  if(!timestamp){
+    timestamp = new Date().getTime();
+  }
+  var postsContainer = $('#postsContainer');
+    postsContainer.fadeOut(250,function(){
+      postsContainer.html("");
+      needPostsOlderThan = timestamp;
+      postsContainer.infiniteScroll('loadNextPage');
+      postsContainer[0].fadedOut = true;
+    });
+  }
+
+//NEW POST FORM CODE
+
+$(function(){
+
+  var editor = undefined;
+  if(editor = document.getElementById('editor')){
+    attachQuill(editor)
+  }
+
+  $(".ql-editor").focus(function (e) {
+    if(e.target.parentElement.id == "editor"){
+      $(".post-controls").css('display', 'flex');
+    }
+  })
+
+  $("#postContentWarningsButton").click(function () {
+    $("#postContentWarningsContainer").removeClass("bounce")
+    if ($("#postContentWarningsContainer").is(":hidden")) {
+        $("#postContentWarningsContainer").slideDown("fast");
+    }
+    else if ($("#postContentWarningsContainer").is(":visible") && !$("#postContentWarnings").val()) {
+        $("#postContentWarningsContainer").slideUp("fast");
+    }
+    else {
+        $("#postContentWarningsContainer").addClass("bounce")
+    }
+  })
+  $("#postPrivacy-private").change(function () {
+    if (this.checked) {
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i> Private");
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i>");
+    }
+  });
+  $("#postPrivacy-public").change(function () {
+    if (this.checked) {
+      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i> Public");
+      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i>");
+    }
+  });
+  $("#emojiWindowButton").click(function () {
+    $("#emojiWindow").slideToggle("fast");
+    $("#editor").find(".ql-editor").focus()
+  })
+  $("#emojiWindow>.add-emoji").click(function () {
+    $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
+  })
+  $('body').on('click', '.reply-to-comment', function() {
+    // First, check if the reply form is already open - if it is, just scroll to it
+    var commentContainer = $(this).closest('.comment');
+    var postID = commentContainer.closest('.post').attr("data-post-id");
+    var commentID = commentContainer.attr("data-comment-id");
+    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
+    if (checkFormExists.length) {
+        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
+            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
+        }
+        console.log("Form already exists!")
+        return;
+    }
+
+    // Create new comment form
+    var newForm = $(document.getElementById("new-comment-form-template").innerHTML);
+    newForm.attr('data-comment-type','child').attr('data-post-id',postID).attr('data-comment-id',commentID);
+    newForm.appendTo(commentContainer);
+    attachQuill(newForm.find('.editable-text')[0],"Reply to this post with a good reply")
+    tribute.attach($(".ql-editor"));
+    //Scroll to newly created form
+    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
+        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
+    }
+  })
+})
+
+$(function(){
+  $("body").on('click', '#postImageButton', function (e) {
+    let ourFileInputGuy = $(this).closest('.contentForm, .new-comment-form').children('.file-input');
+    //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+    if (!ourFileInputGuy[0].changeEventAttached) {
+      ourFileInputGuy.change(function(e){
+        var n = $(this).parent().find('.ql-container')[0];
+        for(var i=0; i < this.files.length; i++){
+          if(n.imagesAdded() > 3){
+            bootbox.alert("we only take 4 images at a time right now, sorry");
+            break;
+          }else{
+            n.addImage(this.files[i]);
+          }
+        }
+        $(this).val(''); //ensures change event will fire, even if the user picks the same image again
+      });
+      ourFileInputGuy[0].changeEventAttached = true;
+    }
+    ourFileInputGuy.click();
+  })
+
+$("body").on('click', '#postLinkButton', function(e) {
+    var urlEntry = $(this).closest('.contentForm, .new-comment-form').children('.link-form-cont');
+    if(urlEntry.is(':hidden')){
+      urlEntry.slideDown('fast',function(){urlEntry.find('input').focus()});
+    }else{
+      urlEntry.slideUp('fast');
+    }
+})
+
+$("body").on('click', ".link-add", function(e){
+  var input = $(this).siblings('input')
+  var url = input.val();
+  if(!url){
+    url = input.attr('placeholder');
+  }
+  input.val('');
+  var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
+  if(subject.linkPreviewsAdded() < 4){
+    subject.addLinkPreview(url);
+  }else{
+    bootbox.alert("we only take 4 link previews per post, sorry");
+  }
+})
+
+$("body").on('keyup',"#linkPreviewUrlEntry", function(e){
+  if(e.keyCode==13){ //activate on pressing enter
+    $(this).siblings('.link-add').click();
+  }
+})
+
+  var haveWeSentPost = false;
+  //function for very specifically submitting a post, not a comment
+  $("#postSubmit").click(function (e) {
+    if (haveWeSentPost) {
+      return;
+    }
+    e.preventDefault();
+    let editor = $('#editor');
+    let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
+    if (editor[0].hasContent()) {
+      $(this).attr('disabled');
+      $.ajax({
+        url: '/createpost',
+        type: 'POST',
+        data: {
+          communityId: $('#postForm').attr("communityId"),
+          postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
+          postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
+          postContentWarnings: $('#postContentWarnings').val(),
+        }
+      }).done(function (postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
+        $('#postContentWarnings').val("");
+        $("#postContentWarningsContainer").slideUp("fast");
+        $("#emojiWindow").slideUp("fast");
+        $(".link-form-cont").slideUp("fast");
+        editor.find(".ql-editor").html("");
+        haveWeSentPost = false;
+        restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
+      });
+      haveWeSentPost = true;
+    } else {
+      bootbox.alert("This post appears to be... empty");
+    }
+  });
+
+  //function for sumbitting a comment and then placing the new comment on the page
+  $('body').on('click', '.create-comment', function() {
+    let commentButton = $(this);
+    let commentForm = commentButton.closest('.new-comment-form');
+    let commentType = commentForm.attr('data-comment-type');
+    let postID = commentForm.attr('data-post-id');
+    let commentID = commentForm.attr('data-comment-id');
+    let commentContainer = commentForm.find(".ql-container");
+    let commentEditor = commentForm.find('.ql-editor');
+    let commentContent = commentContainer[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html if not
+    if (commentType == "primary") {
+        commentsContainer = commentButton.closest('.comments').find('.comments-container');
+    }
+    else if (commentType == "child") {
+        commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
+    }
+    let emojiWindow = commentForm.find('.replyEmojiWindow');
+
+    if (commentContainer[0].hasContent()) {
+      commentButton.prop('disabled', true);
+      $.post("/createcomment/"+postID+"/"+commentID, { commentContent: JSON.stringify(commentContent) }, //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
+      function(data) {
+        if (data!='nope'){
+          commentEditor.html('');
+          var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
+          $('html').animate({scrollTop: (Math.max(0,appendedComment.offset().top-100))});
+          //add the lightbox listener to the newly appended comment images
+          var commentimages = appendedComment.find('.post-images a');
+          if(commentimages.length){
+            commentimages.simpleLightbox();
+          }
+
+          let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
+          if(counterToChange.textContent === ""){
+            counterToChange.innerHTML = "1";
+          } else {
+            let newCommentCount = parseInt(counterToChange.textContent)+1;
+            counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
+          }
+          // Reset (or DESTROY) comment form
+          if (commentType == "primary") {
+              commentButton.prop('disabled', false);
+              emojiWindow.hide();
+          }
+          else if (commentType == "child") {
+              commentForm.remove();
+          }
+        } else {
+          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
+          $(html).hide().appendTo(commentsContainer).fadeIn();
+          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
+        }
+      });
+    }
+  })
+})
+</script>

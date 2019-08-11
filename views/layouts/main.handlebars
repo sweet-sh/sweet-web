@@ -48,9 +48,13 @@
   <link rel="stylesheet" href="/css/tribute.css" />
   <script src="/js/tribute.min.js" crossorigin="anonymous"></script>
 
-  <script src="/js/handlebars-v4.1.2.min.js" crossorigin="anonymous"></script>
+  {{> clientSideCodeErrorReporter }}
 
-  {{> helperscripts }}
+  {{#if loggedIn}}
+  {{> textEditorScripts}}
+  {{/if}}
+
+  {{> onPostLoadScripts }}
 
 </head>
 
@@ -80,10 +84,10 @@
 
 </body>
 
+{{> miscInteractivityScripts }}
 
-
-{{> scripts}}
-
-{{> uploadscripts}}
+{{#if loggedIn}}
+{{> newPostOrCommentScripts }}
+{{/if}}
 
 </html>

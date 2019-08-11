@@ -1,0 +1,27 @@
+<script>
+    window.onerror = function(errorMessage, source, lineno, colno, error) {
+        if (source == "Error: Not Found") {
+            return; //this is a routine error coming from scrolling to the bottom of an infinite scroll feed, it's not a problem, unless something weird happens later
+        }
+        var errorstring = "error: " + errorMessage + "\noriginating from script: " + source + " on line " + lineno + " and column " + colno;
+        if (error && error.stack) {
+            errorstring += "\nfull stack trace: \n" + error.stack;
+        }
+        if (error && error.message) {
+            errorstring += "\nerror object message: " + error.message;
+        }
+        if (errorMessage && errorMessage.message) { //it looks like some browsers just use an error object as the first paramater
+            errorstring += "\nother message: " + errorMessage.message;
+        }
+        if (errorMessage && errorMessage.stack) {
+            errorstring += "\npossibly second stack trace: \n" + errorMessage.stack;
+        }
+        if (typeof errorMessage == "object") {
+            errorstring += "\nnamespace: " + errorMessage.namespace;
+        }
+        if (window.navigator && window.navigator.userAgent) {
+            errorstring += "\nbrowser user agent header: " + window.navigator.userAgent;
+        }
+        $.post("/admin/reporterror", { errorstring: errorstring });
+    }
+</script>

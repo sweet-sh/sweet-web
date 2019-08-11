@@ -1,3 +1,4 @@
+//simple service worker script that listens recieves "pushes" from the server and then displays their data as notifications, and also reacts to clicks on them
 self.addEventListener('push', function(event) {
     console.log('[Service Worker] Push Received.');
     console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);

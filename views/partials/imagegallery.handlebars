@@ -1,6 +1,6 @@
 <div class="post-images{{#if this.contentWarnings}} content-warning-images {{/if}}{{#eq this.images.length 1}} one-image {{lookup this.imageIsVertical 0}} {{lookup this.imageIsHorizontal 0}}{{/eq}}{{#eq this.images.length 2}} two-images{{/eq}}{{#eq this.images.length 3}} three-images{{/eq}}{{#eq this.images.length 4}} four-images{{/eq}}">
   {{#each this.images}}
-    <a href="{{this}}" {{#gt ../this.images.length 1}}data-group="{{#if ../this._id}}{{../this._id}}{{else}}{{../post_id}}{{/if}}"{{/gt}}>
+    <a href="{{this}}">
         <img alt="{{#if ../this.imageDescriptions}}{{lookup ../this.imageDescriptions @index}} (posted by {{../this.author.username}}){{else}}Image posted by {{../this.author.username}}{{/if}}" class="post-single-image{{#eq ../this.images.length 1}} {{lookup ../this.imageIsVertical @index}} {{lookup ../this.imageIsHorizontal @index}}{{/eq}}" src="{{this}}"/>
     </a>
   {{/each}}

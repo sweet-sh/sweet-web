@@ -45,14 +45,14 @@ var apiConfig = require('../config/apis.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
 
-module.exports = function (app) {
+module.exports = function(app) {
 
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
     //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
-    app.post("/api/image/v2", isLoggedInOrRedirect, async function (req, res) {
+    app.post("/api/image/v2", isLoggedInOrRedirect, async function(req, res) {
         var imageQualitySettingsArray = {
             'standard': {
                 resize: 1200,
@@ -81,9 +81,7 @@ module.exports = function (app) {
                 } catch (err) {
                     console.log("image failed to be loaded by sharp for format determination");
                     res.setHeader('content-type', 'text/plain');
-                    res.end(JSON.stringify({
-                        error: "filetype"
-                    }));
+                    res.end(JSON.stringify({ error: "filetype" }));
                     return;
                 }
                 var imageFormat = imageMeta.format;
@@ -91,69 +89,62 @@ module.exports = function (app) {
                 if (imageFormat == "gif") {
                     if (req.files.image.size <= 5242880) {
                         var imageData = req.files.image.data;
-                        console.log(imageUrl + '.gif');
-                        fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function (err) { //to temp
+                        fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function(err) { //to temp
                             if (err) {
                                 return console.log(err);
                             }
                             res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.gif',
-                            }));
+                            res.end(JSON.stringify({ url: imageUrl + '.gif' }));
                         })
                     } else {
                         res.setHeader('content-type', 'text/plain');
-                        res.end(JSON.stringify({
-                            error: "filesize"
-                        }));
+                        res.end(JSON.stringify({ error: "filesize" }));
                     }
                 } else if (imageFormat == "jpeg" || imageFormat == "png") {
                     sharpImage = sharpImage.resize({
-                            width: imageQualitySettings.resize,
-                            withoutEnlargement: true
-                        })
-                        .rotate();
+                        width: imageQualitySettings.resize,
+                        withoutEnlargement: true
+                    }).rotate();
                     if (imageFormat == "png" && req.user.settings.imageQuality == "standard") {
-                        sharpImage = sharpImage.flatten({
-                            background: {
-                                r: 255,
-                                g: 255,
-                                b: 255
-                            }
-                        });
+                        sharpImage = sharpImage.flatten({ background: { r: 255, g: 255, b: 255 } });
                     }
                     if (imageFormat == "jpeg" || req.user.settings.imageQuality == "standard") {
-                        sharpImage = sharpImage.jpeg({
-                            quality: imageQualitySettings.jpegQuality
-                        })
+                        sharpImage = sharpImage.jpeg({ quality: imageQualitySettings.jpegQuality })
+                        var finalFormat = "jpeg";
                     } else {
                         sharpImage = sharpImage.png();
+                        var finalFormat = "png";
                     }
-                    sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + imageFormat) //to temp
-                        .then(image => {
-                            res.setHeader('content-type', 'text/plain');
-                            res.end(JSON.stringify({
-                                url: imageUrl + '.' + imageFormat,
-                            }));
-                        })
+
+                    //if the image is being rotated according to exif data or a is png with transparency being removed, send the client a thumbnail showing these changes
+                    if ((imageMeta.orientation && imageMeta.orientation !== 1) || (imageFormat == "png" && imageMeta.hasAlpha && finalFormat == "jpeg")) {
+                        //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                        var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                        thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                    } else {
+                        var thumbnail = undefined;
+                    }
+
+                    await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
                         .catch(err => {
                             console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-
+                    var response = { url: imageUrl + '.' + finalFormat }
+                    if (thumbnail) {
+                        response.thumbnail = "data:image/" + finalFormat + ";base64," + thumbnail.toString('base64');
+                    }
+                    res.setHeader('content-type', 'text/plain');
+                    res.end(JSON.stringify(response));
                 } else {
                     console.log("image not a gif or a png or a jpg according to sharp!");
                     res.setHeader('content-type', 'text/plain');
-                    res.end(JSON.stringify({
-                        error: "filetype"
-                    }));
+                    res.end(JSON.stringify({ error: "filetype" }));
                     return;
                 }
             } else {
                 res.setHeader('content-type', 'text/plain');
-                res.end(JSON.stringify({
-                    error: "filesize"
-                }));
+                res.end(JSON.stringify({ error: "filesize" }));
             }
         }
     })
@@ -161,9 +152,9 @@ module.exports = function (app) {
     //Responds to post requests that inform the server that a post that images were uploaded for will not be posted by deleting those images.
     //Inputs: image file name
     //Outputs: the image presumably in the temp folder with that filename is deleted
-    app.post("/cleartempimage", isLoggedInOrErrorResponse, function (req, res) {
+    app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
         if (req.body.imageURL != "" && !req.body.imageURL.includes("/")) {
-            fs.unlink("./cdn/images/temp/" + req.body.imageURL, function (e) {
+            fs.unlink("./cdn/images/temp/" + req.body.imageURL, function(e) {
                 if (e) {
                     console.log("could not delete image " + "./cdn/images/temp/" + req.body.imageURL);
                     console.log(e);
@@ -177,49 +168,35 @@ module.exports = function (app) {
     //if it's a community post.
     //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
     //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, async function (req, res) {
+    app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
+
+        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true);
+
+        if (req.body.communityId) {
+            var privacy = (await Community.findById(req.body.communityId)).settings.visibility;
+        } else {
+            var privacy = req.body.postPrivacy;
+        }
+
+        for (var inline of parsedResult.inlineElements) {
+            if (inline.type == "image(s)") {
+                //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
+                var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : user), req.user._id, privacy, req.user.settings.imageQuality);
+                inline.imageIsHorizontal = horizOrVertics.isHorizontal;
+                inline.imageIsVertical = horizOrVertics.isVertical;
+            }
+        }
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
         var postPrivacy = req.body.postPrivacy;
-        var postImages = JSON.parse(req.body.postImageURL).slice(0, 4); //in case someone sends us more with custom ajax request
-        var postImageDescriptions = JSON.parse(req.body.postImageDescription).slice(0, 4);
-        var postImageQuality = req.user.settings.imageQuality;
 
-        var imageIsVertical = [];
-        var imageIsHorizontal = [];
-        for (image of postImages) {
-            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
-                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
-                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
-                imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
-            } else {
-                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
-                imageIsVertical.push("");
-                imageIsHorizontal.push("");
-            }
-        }
-
-        if (!(postImages || parsedResult)) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
+        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
         }
 
-        var rawContent = sanitize(req.body.postContent);
-        var parsedResult = await helper.parseText(rawContent, req.body.postContentWarnings, true, true, true, true);
-
-        function savePost(linkPreviewEnabled, linkPreviewMetadata) {
-            // if (linkPreviewEnabled) {
-            //     linkPreview = {
-            //         url: linkPreviewMetadata.url,
-            //         domain: url.parse(linkPreviewMetadata.url).hostname,
-            //         title: linkPreviewMetadata.title,
-            //         description: linkPreviewMetadata.description,
-            //         image: linkPreviewMetadata.image,
-            //     }
-            // } else {
-            //     linkPreview = {};
-            // }
+        function savePost() { //todo: combine code for community and non-community posts, there's a lot that's duplicated that doesn't need to be
             //non-community post
             if (!req.body.communityId) {
                 var post = new Post({
@@ -230,70 +207,26 @@ module.exports = function (app) {
                     privacy: postPrivacy,
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: rawContent,
+                    rawContent: req.body.postContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                    imageVersion: 2,
-                    images: postImages,
-                    imageDescriptions: postImageDescriptions,
-                    imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,
+                    imageVersion: 3,
+                    inlineElements: parsedResult.inlineElements,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
-                    }],
-                    embeds: parsedResult.embeds
-                    // linkPreview: linkPreview
+                    }]
                 });
 
-                // Parse images
-                if (postImages) {
-                    postImages.forEach(function (imageFileName) {
-                        if (imageFileName) {
-                            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
-                                if (e) {
-                                    console.log("could not move " + imageFileName + " out of temp");
-                                    console.log(e);
-                                }
-                            }) //move images out of temp storage
-                            sharp('./cdn/images/' + imageFileName).metadata().then(metadata => {
-                                image = new Image({
-                                    context: "user",
-                                    filename: imageFileName,
-                                    privacy: postPrivacy,
-                                    user: req.user._id,
-                                    quality: postImageQuality,
-                                    height: metadata.height,
-                                    width: metadata.width
-                                })
-                                image.save();
-                            })
-                        }
-                    });
-                }
                 var newPostId = post._id;
                 post.save()
-                    .then(() => {
+                    .then(async () => {
                         parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({
-                                name: tag
-                            }, {
-                                "$push": {
-                                    "posts": newPostId
-                                },
-                                "$set": {
-                                    "lastUpdated": postCreationTime
-                                }
-                            }, {
-                                upsert: true,
-                                new: true
-                            }, function (error, result) {
-                                if (error) return
-                            });
+                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
                         });
                         if (postPrivacy == "private") {
                             console.log("This post is private!")
@@ -301,17 +234,13 @@ module.exports = function (app) {
                             Relationship.find({
                                     from: req.user.email,
                                     value: "trust"
-                                }, {
-                                    'to': 1
-                                })
+                                }, { 'to': 1 })
                                 .then((emails) => {
                                     let emailsArray = emails.map(({
                                         to
                                     }) => to)
-                                    parsedResult.mentions.forEach(function (mention) {
-                                        User.findOne({
-                                                username: mention
-                                            })
+                                    parsedResult.mentions.forEach(function(mention) {
+                                        User.findOne({ username: mention })
                                             .then((user) => {
                                                 if (emailsArray.includes(user.email)) {
                                                     notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
@@ -326,21 +255,22 @@ module.exports = function (app) {
                         } else if (postPrivacy == "public") {
                             console.log("This post is public!")
                             // This is a public post, notify everyone
-                            parsedResult.mentions.forEach(function (mention) {
+                            parsedResult.mentions.forEach(function(mention) {
                                 if (mention != req.user.username) { //don't get notified from mentioning yourself
                                     User.findOne({ username: mention })
                                         .then((user) => {
-                                            if(user){
+                                            if (user) {
                                                 notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                                             }
                                         })
                                 }
                             });
                         }
-                        res.redirect('back');
+                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
+                        res.status(200).send("" + (postCreationTime.getTime() + 1));
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Error creating new post: " + err)
                     });
 
                 //community post
@@ -356,122 +286,62 @@ module.exports = function (app) {
                     privacy: 'public',
                     timestamp: postCreationTime,
                     lastUpdated: postCreationTime,
-                    rawContent: rawContent,
+                    rawContent: req.body.postContent,
                     parsedContent: parsedResult.text,
                     numberOfComments: 0,
                     mentions: parsedResult.mentions,
                     tags: parsedResult.tags,
                     contentWarnings: sanitize(req.body.postContentWarnings),
-                    imageVersion: 2,
-                    images: postImages,
-                    imageDescriptions: postImageDescriptions,
-                    imageIsVertical: imageIsVertical,
-                    imageIsHorizontal: imageIsHorizontal,
+                    imageVersion: 3,
+                    inlineElements: parsedResult.inlineElements,
                     subscribedUsers: [req.user._id],
                     boostsV2: [{
                         booster: req.user._id,
                         timestamp: postCreationTime
                     }],
-                    embeds: parsedResult.embeds,
-                    // linkPreview: linkPreview
                 });
 
-                // Parse images
-                if (postImages) {
-                    postImages.forEach(function (imageFileName) {
-                        fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
-                            if (e) {
-                                console.log("could not move " + imageFileName + " out of temp");
-                                console.log(e);
-                            }
-                        }) //move images out of temp storage
-                        Community.findOne({
-                                _id: communityId
-                            })
-                            .then(community => {
-                                image = new Image({
-                                    context: "community",
-                                    filename: imageFileName,
-                                    privacy: community.settings.visibility,
-                                    user: req.user._id,
-                                    community: communityId
-                                })
-                                image.save();
-                            })
-                    });
-                }
                 var newPostId = post._id;
                 post.save()
-                    .then(() => {
+                    .then(async () => {
                         parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({
-                                name: tag
-                            }, {
-                                "$push": {
-                                    "posts": newPostId
-                                }
-                            }, {
-                                upsert: true,
-                                new: true
-                            }, function (error, result) {
+                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
                                 if (error) return
                             });
                         });
                         // Notify everyone mentioned that belongs to this community
-                        parsedResult.mentions.forEach(function (mention) {
+                        parsedResult.mentions.forEach(function(mention) {
                             if (mention != req.user.username) { //don't get notified from mentioning yourself
                                 User.findOne({
                                         username: mention,
-                                        communities: {
-                                            $in: [communityId]
-                                        }
+                                        communities: { $in: [communityId] }
                                     })
                                     .then((user) => {
                                         notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
                                     })
                             }
                         });
-                        Community.findOneAndUpdate({
-                            _id: communityId
-                        }, {
-                            $set: {
-                                lastUpdated: new Date()
-                            }
+                        Community.findOneAndUpdate({ _id: communityId }, {
+                            $set: { lastUpdated: new Date() }
                         }).then(community => {
                             console.log("Updated community!")
                         })
-                        res.redirect('back');
+                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
+                        res.status(200).send("" + (postCreationTime.getTime() + 1));
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Database error when attempting to save new post: " + err)
                     });
             }
         }
-
-        //get link preview for first link in content
-        // contentURLMatch = parsedResult.text.match(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/);
-        // if (contentURLMatch) {
-        //     contentURL = contentURLMatch[2]
-        //     got(contentURL)
-        //     .then(({ body: html, url }) => {
-        //         metascraper({ html, url })
-        //             .then(metadata => {
-        //                 savePost(true, metadata);
-        //         })
-        //     })
-        // } else {
-        //     savePost(false);
-        // }
         savePost();
     });
 
     //Responds to requests that delete posts.
     //Inputs: id of post to delete (in req.params)
     //Outputs: delete each image, delete each tag, delete the boosted versions, delete each comment image, delete notifications it caused, delete the post document.
-    app.post("/deletepost/:postid", isLoggedInOrRedirect, function (req, res) {
-        Post.findOne({
-                "_id": req.params.postid
-            })
+    app.post("/deletepost/:postid", isLoggedInOrRedirect, function(req, res) {
+        Post.findOne({ "_id": req.params.postid })
             .then((post) => {
 
                 if (!post.author._id.equals(req.user._id)) {
@@ -479,45 +349,50 @@ module.exports = function (app) {
                     return;
                 }
 
-                // Delete images
-                post.images.forEach((image) => {
-                    if (post.imageVersion === 2) {
-                        fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                            if (err) console.log("Image deletion error " + err)
-                        })
-                    } else {
-                        fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {
-                            if (err) console.log("Image deletion error " + err)
-                        })
+                if (post.imageVersion < 3 || !post.imageVersion) {
+                    for (const image of post.images) {
+                        if (post.imageVersion == 2) {
+                            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                                if (err) console.log("Image deletion error " + err)
+                            })
+                        } else {
+                            fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {
+                                if (err) console.log("Image deletion error " + err)
+                            })
+                        }
+                        Image.deleteOne({ "filename": image });
                     }
-                    Image.deleteOne({
-                        "filename": image
-                    })
-                })
+
+                } else {
+                    for (const ie of post.inlineElements) {
+                        if (ie.type == "image(s)") {
+                            for (const image of ie.images) {
+                                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                                    if (err) console.log("Image deletion error " + err)
+                                })
+                                Image.deleteOne({ "filename": image });
+                            }
+                        }
+                    }
+                }
 
                 // Delete tags (does not currently fix tag last updated time)
-                post.tags.forEach((tag) => {
-                    Tag.findOneAndUpdate({
-                            name: tag
-                        }, {
-                            $pull: {
-                                posts: req.params.postid
-                            }
-                        })
-                        .then((tag) => {
-                            console.log("Deleted tag: " + tag)
-                        })
-                        .catch((err) => {
-                            console.log("Database error: " + err)
-                        })
-                })
+                if (post.tags) {
+                    post.tags.forEach((tag) => {
+                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
+                            .then((tag) => {
+                                console.log("Deleted tag: " + tag)
+                            })
+                            .catch((err) => {
+                                console.log("Database error: " + err)
+                            })
+                    })
+                }
 
                 // Delete boosts
-                if (post.type == "original") {
+                if (post.type == "original" && post.boosts) {
                     post.boosts.forEach((boost) => {
-                        Post.deleteOne({
-                                "_id": boost
-                            })
+                        Post.deleteOne({ "_id": boost })
                             .then((boost) => {
                                 console.log("Deleted boost: " + boost)
                             })
@@ -527,19 +402,40 @@ module.exports = function (app) {
                     })
                 }
 
-                //delete comment images
-                post.comments.forEach((comment) => {
-                    if (comment.images) {
-                        comment.images.forEach((image) => {
+                function deleteImagesRecursive(postOrComment) {
+                    if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
+                        for (const il of postOrComment.inlineElements) {
+                            if (il.type == "image(s)") {
+                                for (const image of il.images) {
+                                    fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                                        if (err) console.log("Image deletion error " + err)
+                                    });
+                                    Image.deleteOne({ "filename": image });
+                                }
+                            }
+                        }
+                    } else if (postOrComment.images && postOrComment.images.length) {
+                        for (const image of postOrComment.images) {
                             fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                                 if (err) console.log("Image deletion error " + err)
                             });
-                            Image.deleteOne({
-                                "filename": image
-                            });
-                        })
+                            Image.deleteOne({ "filename": image });
+                        }
                     }
-                });
+
+                    if (postOrComment.comments && postOrComment.comments.length) {
+                        for (var comment of postOrComment.comments) {
+                            deleteImagesRecursive(comment);
+                        }
+                    }
+                    if (postOrComment.replies && postOrComment.replies.length) {
+                        for (var reply of postOrComment.replies) {
+                            deleteImagesRecursive(reply);
+                        }
+                    }
+                }
+
+                deleteImagesRecursive(post);
 
                 // Delete notifications
                 User.update({}, {
@@ -548,20 +444,13 @@ module.exports = function (app) {
                                 subjectId: post._id
                             }
                         }
-                    }, {
-                        multi: true
-                    })
+                    }, { multi: true })
                     .then(response => {
                         console.log(response)
                     })
             })
-            .catch((err) => {
-                console.log("Database error: " + err)
-            })
             .then(() => {
-                Post.deleteOne({
-                        "_id": req.params.postid
-                    })
+                Post.deleteOne({ "_id": req.params.postid })
                     .then(() => {
                         res.sendStatus(200);
                     })
@@ -575,35 +464,19 @@ module.exports = function (app) {
     //Inputs: comment body, filenames of comment images, descriptions of comment images
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
-    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function (req, res) {
+    app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function(req, res) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
-        let postImages = JSON.parse(req.body.imageUrls).slice(0, 4); //in case someone tries to send us more images than 4
-        let imageDescriptions = JSON.parse(req.body.imageDescs).slice(0, 4); // ditto
-
-        var imageIsVertical = [];
-        var imageIsHorizontal = [];
-        for (image of postImages) {
-            if (fs.existsSync(path.resolve('./cdn/images/temp/' + image))) {
-                var metadata = await sharp(path.resolve('./cdn/images/temp/' + image)).metadata();
-                imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
-                imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
-            } else {
-                console.log("image " + path.resolve('./cdn/images/temp/' + image) + " not found! Oh no")
-                imageIsVertical.push("");
-                imageIsHorizontal.push("");
-            }
-        }
 
         var rawContent = sanitize(req.body.commentContent);
-        var parsedResult = await helper.parseText(rawContent, false, true, true, true, false);
+        var parsedResult = await helper.parseText(JSON.parse(rawContent), false, true, true, true);
 
-        if (!(postImages || parsedResult.text)) { //in case someone tries to make a blank comment with a custom ajax post request. storing blank comments = not to spec
+        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
             res.status(400).send('bad post op');
             return;
         }
 
-        const comment = {
+        var comment = {
             _id: commentId,
             authorEmail: req.user.email,
             author: req.user._id,
@@ -612,17 +485,33 @@ module.exports = function (app) {
             parsedContent: parsedResult.text,
             mentions: parsedResult.mentions,
             tags: parsedResult.tags,
-            images: postImages,
-            imageDescriptions: imageDescriptions,
-            imageIsVertical: imageIsVertical,
-            imageIsHorizontal: imageIsHorizontal
         };
 
-        Post.findOne({
-                "_id": req.params.postid
-            })
+        Post.findOne({ "_id": req.params.postid })
             .populate('author')
-            .then((post) => {
+            .then(async (post) => {
+
+                if (post.communityId) {
+                    var postType = "community";
+                    var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
+                } else {
+                    var postType = "user";
+                    var postPrivacy = post.privacy;
+                }
+
+                for (var inline of parsedResult.inlineElements) {
+                    if (inline.type == "image(s)") {
+                        //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        inline.imageIsHorizontal = horizOrVertics.isHorizontal;
+                        inline.imageIsVertical = horizOrVertics.isVertical;
+                    }
+                }
+
+                comment.inlineElements = parsedResult.inlineElements;
+                comment = await helper.updateHTMLCache(comment);
+                var contentHTML = comment.cachedHTML.fullContentHTML;
+
                 numberOfComments = 0;
                 var depth = undefined;
                 commentParent = false;
@@ -651,6 +540,7 @@ module.exports = function (app) {
                     // This is a child level comment so we have to drill through the comments
                     // until we find it
                     commentParent = undefined;
+
                     function findNested(array, id, depthSoFar = 2) {
                         var foundElement = false;
                         array.forEach((element) => {
@@ -688,7 +578,7 @@ module.exports = function (app) {
                     //if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
                     return;
                 }
-                postPrivacy = post.privacy;
+                var postPrivacy = post.privacy;
                 post.lastUpdated = new Date();
                 // Add user to subscribed users for post
                 if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
@@ -696,31 +586,9 @@ module.exports = function (app) {
                 }
                 post.save()
                     .then(async () => {
-                        // Parse images
-                        if (postImages) {
-                            postImages.forEach(function (imageFileName) {
-                                if (imageFileName) {
-                                    fs.rename("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function (e) {
-                                        if (e) {
-                                            console.log("could not move " + imageFileName + " out of temp");
-                                            console.log(e);
-                                        }
-                                    }) //move images out of temp storage
-                                    image = new Image({
-                                        context: "user",
-                                        filename: imageFileName,
-                                        privacy: post.privacy,
-                                        user: req.user._id
-                                    })
-                                    image.save();
-                                }
-                            });
-                        }
 
                         //Notify any and all interested parties
-                        User.findOne({
-                                _id: post.author
-                            })
+                        User.findOne({ _id: post.author })
                             .then((originalPoster) => {
                                 //remove duplicates from subscribed/unsubscribed users
                                 subscribedUsers = post.subscribedUsers.filter((v, i, a) => a.indexOf(v) === i);
@@ -732,7 +600,7 @@ module.exports = function (app) {
                                 workingMentions = parsedResult.mentions.filter(m => m != req.user.username);
 
                                 if (post.type == "community") {
-                                    workingMentions.forEach(function (mentionedUsername) {
+                                    workingMentions.forEach(function(mentionedUsername) {
                                         User.findOne({
                                             username: mentionedUsername
                                         }).then((mentionedUser) => {
@@ -774,7 +642,7 @@ module.exports = function (app) {
                                             })
                                         })
                                     } else if (postPrivacy == "public") {
-                                        workingMentions.forEach(function (mention) {
+                                        workingMentions.forEach(function(mention) {
                                             User.findOne({
                                                     username: mention
                                                 })
@@ -900,53 +768,28 @@ module.exports = function (app) {
                             })
 
                         if (req.user.imageEnabled) {
-                            image = req.user.image
+                            var image = req.user.image
                         } else {
-                            image = 'cake.svg'
+                            var image = 'cake.svg'
                         }
                         if (req.user.displayName) {
-                            name = '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>';
+                            var name = '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>';
                         } else {
-                            name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
+                            var name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>';
                         }
 
-                        classNames = ['one-image', 'two-images', 'three-images', 'four-images'];
-                        let commentImageGallery = function () {
-                            html = '<div class="post-images ' + classNames[postImages.length - 1] + '">';
-                            for (let i = 0; i < postImages.length; i++) {
-                                html += ('<a href="/api/image/display/' + postImages[i] + '">') + '<img alt="' + imageDescriptions[i] + ' (posted by ' + req.user.username + ')" class="post-single-image" src="/api/image/display/' + postImages[i] + '" ' + '</a>';
-                            }
-                            html += (postImages.length > 0 ? '</div>' : '');
-                            html += '</div></div>';
-                            return html;
-                        }
-                        var fullImageUrls = []
-                        for (img of postImages) {
-                            fullImageUrls.push("/api/image/display/" + img);
-                        }
-                        commentHtml = hbs.render('./views/partials/comment_dynamic.handlebars', {
+                        hbs.render('./views/partials/comment_dynamic.handlebars', {
                                 image: image,
                                 name: name,
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
-                                content: parsedResult.text,
+                                content: contentHTML,
                                 comment_id: commentId.toString(),
                                 post_id: post._id.toString(),
-                                imagesExist: (fullImageUrls.length > 0 ? true : false),
-                                image_gallery: await hbs.render('./views/partials/imagegallery.handlebars', {
-                                    images: fullImageUrls,
-                                    post_id: commentId.toString(),
-                                    imageDescriptions: imageDescriptions,
-                                    imageIsVertical: imageIsVertical,
-                                    imageIsHorizontal: imageIsHorizontal,
-                                    author: {
-                                        username: req.user.username
-                                    }
-                                }),
                                 depth: depth
                             })
-                            .then(html => {
-                                result = {
+                            .then(async html => {
+                                var result = {
                                     comment: html
                                 }
                                 res.contentType('json');
@@ -964,10 +807,8 @@ module.exports = function (app) {
     //Output: deletes each of the comment's images and removes the comment's document from the post. Then, updates the post's lastUpdated field to be
     //that of the new most recent comment's (or the time of the post's creation if there are no comments left) with the relocatePost function. Also
     //updates numberOfComments.
-    app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function (req, res) {
-        Post.findOne({
-                "_id": req.params.postid
-            })
+    app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
+        Post.findOne({ "_id": req.params.postid })
             .then((post) => {
                 commentsByUser = 0;
                 latestTimestamp = 0;
@@ -1015,14 +856,25 @@ module.exports = function (app) {
                     return;
                 }
 
-                target.images.forEach((image) => {
-                    fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                        if (err) console.log("Image deletion error " + err)
-                    })
-                    Image.deleteOne({
-                        "filename": image
-                    })
-                })
+                if (target.images && target.images.length) {
+                    for (const image of target.images) {
+                        fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                            if (err) console.log("Image deletion error " + err)
+                        })
+                        Image.deleteOne({ "filename": image });
+                    }
+                } else if (target.inlineElements && target.inlineElements.length) {
+                    for (const ie of target.inlineElements) {
+                        if (ie.type == "image(s)") {
+                            for (const image of ie.images) {
+                                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
+                                    if (err) console.log("Image deletion error " + err)
+                                })
+                                Image.deleteOne({ "filename": image });
+                            }
+                        }
+                    }
+                }
 
                 // Check if target has children
                 if (target.replies && target.replies.length) {
@@ -1042,7 +894,7 @@ module.exports = function (app) {
 
                 post.save()
                     .then((comment) => {
-                        // relocatePost(ObjectId(req.params.postid));
+                        // todo: check if post's lastUpdated is changed somewhere? relocatePost(ObjectId(req.params.postid))?
                         post.lastUpdated = latestTimestamp;
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
                         if (commentsByUser == 0) {
@@ -1081,7 +933,7 @@ module.exports = function (app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/createboost/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/createboost/:postid', isLoggedInOrRedirect, function(req, res) {
         boostedTimestamp = new Date();
         Post.findOne({
                 '_id': req.params.postid
@@ -1138,7 +990,7 @@ module.exports = function (app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
+    app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
         Post.findOne({
                 '_id': req.params.postid
             }, {
@@ -1157,7 +1009,7 @@ module.exports = function (app) {
                 })
                 Post.deleteOne({
                     _id: boost.boost
-                }, function () {
+                }, function() {
                     console.log('delete')
                 });
                 boostedPost.save().then(() => {
@@ -1168,12 +1020,12 @@ module.exports = function (app) {
 };
 
 function cleanTempFolder() {
-    fs.readdir("./cdn/images/temp", function (err, files) {
+    fs.readdir("./cdn/images/temp", function(err, files) {
         files.forEach(file => {
             if (file != ".gitkeep" && file != "") {
-                fs.stat("./cdn/images/temp/" + file, function (err, s) {
+                fs.stat("./cdn/images/temp/" + file, function(err, s) {
                     if (Date.now() - s.mtimeMs > 3600000) {
-                        fs.unlink("./cdn/images/temp/" + file, function (e) {
+                        fs.unlink("./cdn/images/temp/" + file, function(e) {
                             if (e) {
                                 console.log("couldn't clean temp file " + file);
                                 console.log(e);

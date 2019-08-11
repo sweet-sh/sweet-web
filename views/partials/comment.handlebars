@@ -24,13 +24,10 @@
                 </aside>
             </div>
         </header>
-        {{#if this.parsedContent}}
+        {{#if this.cachedHTML.fullContentHTML}} {{! sure hope that's in there }}
             <section class="content{{#if isRecent}} recent-comment-content{{/if}}">
-                {{{this.parsedContent}}}
+                {{{this.cachedHTML.fullContentHTML}}}
             </section>
-        {{/if}}
-        {{#if this.images}}
-            {{> imagegallery }}
         {{/if}}
         <footer class="toolbar">
             {{#if this.canReply }}

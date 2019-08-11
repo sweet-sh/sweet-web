@@ -1,4 +1,5 @@
 <script type="text/javascript">
+$(function() {
 {{#if loggedInUserData.settings.flashRecentComments}}
     $(window).scroll(function() {
         $(".recent-comment-content:not(.flash)").each(function(){
@@ -16,7 +17,6 @@
     });
 {{/if}}
 
-$(function() {
   $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
   });
@@ -31,11 +31,6 @@ $(function() {
 
   $("#notificationsContainer").load( "/api/notification/display" );
 
-  // $('#notificationsDropdownLink, #notificationsPageLink').hover(function(){
-  //   $(this).find('.notifications-count').css('color', '#ce1717');
-  // }, function() {
-  //   $(this).find('.notifications-count').css('color', '#6c757d');
-  // });
   if ($('#notificationsPageLink').hasClass('active')){
     $('#notificationsPageLink').find('.notifications-count').css('color', '#900202');
   }
@@ -63,7 +58,7 @@ $(function() {
       });
   })
 
-
+  //not currently used
   $("#darkModeToggle").click(function(e){
     e.preventDefault();
     if ($(this).hasClass('notification-active')){
@@ -91,16 +86,11 @@ $(function() {
     window.location.href = '/search/' +	searchQuery
   });
 
-
-  // window.onbeforeunload = function() {
-  //     return true;
-  // };
-
   // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
   window.setInterval(function(){
     $("#notificationsContainer").load("/api/notification/display");
     {{#eq activePage "home"}}
-    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/1", function(error, result){
+    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/"+((new Date()).getTime()), function(error, result){
       let latestPost = $("#checkNewPosts").find(".post").attr("data-post-id");
       let currentlyDisplayedPost = $("#postsContainer").find(".post").attr("data-post-id");
       if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
@@ -123,6 +113,11 @@ $(function() {
   $('body').on('click', '.show-comments', function() {
     commentsContainer = $(this).closest(".post").find(".comments");
     commentsContainer.slideToggle("fast", function(){
+      commentsContainer.find('.comment').each(function(i,e) {
+          e = $(e);
+          console.log(e.height());
+          showMoreAndImageLightboxing(e);
+      })
       if (commentsContainer.is(':visible')){
         if(commentsContainer.height() > $(window).height()){
           scrollTarget = $(this).closest('.comments').find('.recent-comment-content')
@@ -145,14 +140,14 @@ $(function() {
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
     if (state == "contracted") {
-      var h = $(this).prev(".abbreviated-content").css('height','100%').height();
-      $(this).prev(".abbreviated-content").css('height','7rem');
-      $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("post-content").animate({height:h},200);
-      $(this).attr("data-state","expanded");
+    var h = $(this).prev(".abbreviated-content").css('height','100%').height();
+    $(this).prev(".abbreviated-content").css('height','20rem');
+    $(this).prev(".abbreviated-content").removeClass("abbreviated-content").addClass("content").animate({height:h},200,"swing",function(){$(this).css('height','100%')});
+    $(this).attr("data-state","expanded");
     }
     else {
-      var pC = $(this).prev(".post-content");
-      pC.addClass("abbreviated-content").removeClass("post-content").animate({height:"7rem"},200);
+      var pC = $(this).prev(".content");
+      pC.addClass("abbreviated-content").removeClass("content").animate({height:"20rem"},200);
       var scroll = pC.offset().top;
       $("html, body").animate({ scrollTop: (scroll-200)+"px" },200); //-200 to roughly account for the navbar covering up the very top of the screen
       $(this).attr("data-state","contracted");
@@ -190,63 +185,28 @@ $(function() {
         })
     })
 
-  // $('body').on('click', '.fullBoostList', function(e) {
-  //   var thisList = $(this);
-  //   thisList.removeClass('fullBoostList');
-  //   thisList.addClass('fullBoostListClicked');
-  //   function removeBoostListPopUp(e){
-  //     thisList.removeClass('fullBoostListClicked');
-  //     thisList.addClass('fullBoostList');
-  //     $('body').off('click', removeBoostListPopUp);
-  //   }
-  //   $('body').on('click', removeBoostListPopUp);
-  // })
   $('body').on('click', '.content-warning-show-more', function() {
-    var state = $(this).attr("data-state");
-    var abbrContent = $(this).closest(".post").find(".abbreviated-content");
+    var $this = $(this);
+    var images = $this.closest(".post").find(".content-warning-images");
+    var state = $this.attr("data-state");
+    var abbrContent = $this.closest(".post").find(".abbreviated-content");
     console.log(abbrContent)
     if (state == "contracted") {
-      var h = abbrContent.css('height','100%').height();
+      abbrContent.css('height','100%')
+      images.toggleClass("content-warning-images-shown");
+      var h = abbrContent.height();
       abbrContent.css('height','0');
       abbrContent.animate({height:h},200);
-      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
-      $(this).attr("data-state","expanded");
+      $this.attr("data-state","expanded");
+    } else {
+      abbrContent.animate({height:"0"},200,function(){
+        images.toggleClass("content-warning-images-shown");
+        $this.attr("data-state","contracted");
+      })
     }
-    else {
-      abbrContent.animate({height:"0"},200);
-      $(this).closest(".post").find(".content-warning-images").toggleClass("content-warning-images-shown");
-      $(this).attr("data-state","contracted");
-    }
-    var text = $(this).text();
-    $(this).text(
+    var text = $this.text();
+    $this.text(
         text == "Show post" ? "Hide post" : "Show post");
-  })
-  $('body').on('click', '.reply-to-comment', function() {
-    // First, check if the reply form is already open - if it is, just scroll to it
-    var commentContainer = $(this).closest('.comment');
-    var postID = commentContainer.closest('.post').attr("data-post-id");
-    var commentID = commentContainer.attr("data-comment-id");
-    var checkFormExists = commentContainer.find('.new-comment-form[data-comment-id="'+commentID+'"]');
-    if (checkFormExists.length) {
-        if (checkFormExists[0].getBoundingClientRect().bottom > $(window).height()-50){
-            $("html, body").animate({ scrollTop: checkFormExists.offset().top-200 }, 200);
-        }
-        console.log("Form already exists!")
-        return;
-    }
-
-    / Create new comment form with Handlebars.js
-    var source = document.getElementById("new-comment-form-template").innerHTML;
-    var template = Handlebars.compile(source);
-    var html = $(template({post_id: postID, comment_id: commentID, comment_type: 'child'}));
-    html.appendTo(commentContainer);
-    attachQuill(html.find('.editable-text')[0],"Reply to this post with a good reply")
-    tribute.attach($(".ql-editor"));
-    //Scroll to newly created form
-    newForm = commentContainer.find('.new-comment-form');
-    if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
-        $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
-    }
   })
   $('body').on('click', '.delete-post', function() {
     var element = $(this);
@@ -285,115 +245,7 @@ $(function() {
       }
     });
   })
-  $('body').on('click', '.create-comment', function() {
-    let commentButton = $(this);
-    let commentForm = commentButton.closest('.new-comment-form');
-    let commentType = commentForm.attr('data-comment-type');
-    let postID = commentForm.attr('data-post-id');
-    let commentID = commentForm.attr('data-comment-id');
-    let commentContainer = commentForm.find(".ql-container");
-    let commentEditor = commentForm.find('.ql-editor');
-    let commentContent = commentEditor.html();
-    if (commentType == "primary") {
-        commentsContainer = commentButton.closest('.comments').find('.comments-container');
-    }
-    else if (commentType == "child") {
-        commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
-    }
-    let emojiWindow = commentForm.find('.replyEmojiWindow');
 
-    let pc = commentForm.find('#image-preview-holder')[0];
-
-    var sortedurls = []; //will contain urls in preview-window order, instead of the order in which they were recieved from the server
-    var imagedescs = [];
-
-    if(pc.uploadsCompleted){
-      if(pc.uploadsCompleted != pc.uploadsStarted-pc.uploadsCancelled){
-        bootbox.alert("You have image uploads in progress.");
-        return;
-      }else{
-        for(let i=0; i < $(pc).find('.newimagecont').length; i++){
-          let imageWindow = $($(pc).find('.newimagecont')[i]); // i feel like there probably exists a cleaner way to do this than $($())?
-          sortedurls.push(pc.uploadedImageUrls[imageWindow.attr('urlpos')]);
-          imagedescs.push(imageWindow.find('#postImageDescription').val());
-        }
-      }
-    }
-
-    if (commentContainer[0].hasContent() || sortedurls.length > 0) { // Filter out empty comments
-      commentButton.prop('disabled', true);
-      $.post("/createcomment/"+postID+"/"+commentID,
-      { commentContent: commentContent,
-        imageUrls: JSON.stringify(sortedurls),
-        imageDescs: JSON.stringify(imagedescs)
-      },
-      function(data) {
-        if (data!='nope'){
-          commentEditor.html('');
-          var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
-          //add the lightbox listener to the newly appended comment images
-          var commentimages = appendedComment.find('.post-images a');
-          if (commentimages.length > 0) {
-            var $images = commentimages;
-            var $imagesGrouped = $images.filter('[data-group]');
-            var $imagesAlone = $images.not($imagesGrouped);
-            var params = {
-              // your params
-            };
-
-            // Handle standalone images
-            $imagesAlone.each(function (index, element) {
-              $(element).simpleLightbox(params);
-            });
-
-            // Handle grouped imags
-            if ($imagesGrouped.length > 0) {
-              // Select all groups
-              var groupNames = $imagesGrouped.map(function () {
-                return $(this).data('group');
-              }).get();
-              groupNames = $.unique(groupNames);
-
-              // Apply on each group
-              $.each(groupNames, function (key, value) {
-                $imagesGrouped.filter(function () {
-                    return $(this).data('group') == value;
-                  })
-                  .simpleLightbox(params);
-              });
-            }
-          }
-
-
-          let counterToChange = commentButton.closest(".post").find(".show-comments").find('.comments-number')[0];
-          if(counterToChange.textContent === ""){
-            counterToChange.innerHTML = "1";
-          } else {
-            let newCommentCount = parseInt(counterToChange.textContent)+1;
-            counterToChange.innerHTML = counterToChange.innerHTML.replace((newCommentCount-1), newCommentCount);
-          }
-          // Reset (or DESTROY) comment form
-          if (commentType == "primary") {
-              commentButton.prop('disabled', false);
-              emojiWindow.hide();
-              $(pc).children('.newimagecont').remove(); //removes all image preview windows
-          }
-          else if (commentType == "child") {
-              commentForm.remove();
-          }
-          pc.uploadsStarted = 0;
-          pc.uploadsCompleted = 0;
-          pc.uploadsCancelled = 0;
-          pc.uploadedImageUrls = [];
-          pc.imageUploadRequests = [];
-        } else {
-          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
-          $(html).hide().appendTo(commentsContainer).fadeIn();
-          // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
-        }
-      });
-    }
-  })
   $('body').on('click', '.notificationLink', function(e) {
     e.preventDefault();
     var link = this.href;

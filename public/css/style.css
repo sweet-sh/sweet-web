@@ -118,6 +118,10 @@ hr {
 #postForm:hover {
   box-shadow: 0px 0px 6px rgba(0,0,0,0.2);
 }
+#postForm .form-row {
+    margin-left: 0;
+    margin-right: 0;
+}
 .content-box {
   border-bottom: 1px solid #dfdfdf;
 }
@@ -212,6 +216,7 @@ div.post-images > 1 or more (a > img.post-single-image)
   grid-column-gap: 2px;
   grid-row-gap: 2px;
   max-height: 450px;
+  margin-bottom: 0.5em;
 }
 
 /* Base style for individual images */
@@ -297,12 +302,6 @@ div.post-images > 1 or more (a > img.post-single-image)
 
 .comment.post-images.one-image.vertical-image {
   max-height: 350px;
-}
-
-
-.image-clear {
-  background-color: #ffffff99;
-  color: #000000;
 }
 .image-preview {
   background-color: #f6f6f6 !important;
@@ -677,8 +676,8 @@ hr {
   align-items: center;
 }
 
-#replyControlsRow button:first-child {
-    margin-right: 5px;
+#replyControlsRow button {
+    margin-right: 3px;
 }
 
 #resultsContainer,
@@ -707,10 +706,6 @@ hr {
   padding: 15px;
   /*border moved to colors section*/
   padding-bottom: 0px;
-}
-
-.post-content {
-  position: relative;
 }
 
 .user-list {
@@ -1016,10 +1011,23 @@ hr {
   min-height: 4rem;
 }
 
+/*used to dim non-droppable areas upon drag-and-drop dragover*/
+#bodyFader {
+    z-index: 355;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #00000055;
+    display: none;
+}
+
 .ql-container {
   font-family:inherit;
   padding: 0;
   background-color:#fff;
+  z-index:356; /*one higher than #bodyFader, as these are the droppable areas*/
 }
 
 .ql-editor.ql-blank::before {
@@ -1036,6 +1044,27 @@ hr {
 
 #postContentWarningsContainer {
   display: none;
+}
+
+.link-form-cont {
+  display: none;
+  overflow: hidden; /* this mysteriously smooths out the jquery slide down animation, which happens to this element */
+  margin: 0 -3px; /* Given the overflow hidden above, this allows the selected glow to show properly */
+}
+
+.new-comment-form .link-form-cont {
+    margin: 0 -6px; /* Gotta sort this out at some point */
+}
+
+.linkPreviewAddingForm {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 0 3px;
+}
+
+.link-add {
+  white-space:nowrap;
 }
 
 #emojiWindow,
@@ -1088,17 +1117,48 @@ hr {
     height: 100%;
 }
 
- .image-preview-holder {
-   margin: 0.5em 0;
-   display: none;
- }
+.embedded-video-preview-container {
+    display:flex;
+    justify-content:center;
+    position:relative;
+    height: 78px;
+}
 
- .newimagecont {
+ .image-preview-container {
   display: flex;
   height: 100px;
   width: 100%;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.5rem;
+  cursor: default;
+  transition: scale .1s ease-in-out, opacity .1s ease-in-out, padding .05s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
  }
+
+ .ipc-group {
+  border-left: solid thin lightblue;
+   border-right: solid thin lightblue;
+   padding: 0.3rem;
+   margin-bottom: 0;
+ }
+
+ .ipc-group-top {
+   border-top: solid thin lightblue;
+   border-top-left-radius: 0.5rem;
+   border-top-right-radius: 0.5rem;
+ }
+
+ .ipc-group-bottom {
+  border-bottom: solid thin lightblue;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  margin-bottom:0.5rem;
+}
 
 .image-preview {
   flex: 1;
@@ -1113,6 +1173,7 @@ hr {
   /*border moved to colors*/
   margin: 0;
   object-fit: contain;
+  position: relative;
 }
 
 #postImageUpload {
@@ -1128,9 +1189,10 @@ hr {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  height: 100%;
 }
 
-.image-preview-controls > a {
+.image-preview-controls > div {
   text-decoration: none;
   color: #aaa;
   width: 1.5em;
@@ -1138,9 +1200,14 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-.image-preview-controls > a:hover {
+.image-preview-controls > .image-move {
+  cursor: grab;
+}
+
+.image-preview-controls > div:hover {
   color: #666;
 }
 
@@ -1154,9 +1221,6 @@ hr {
   resize: none;
 }
 
-.newimagecont {
-  transition: scale .1s ease-in-out, opacity .1s ease-in-out;
-}
 .onthemove {
   transform: scale(.99);
   opacity: .75;
@@ -1331,6 +1395,18 @@ hr {
     color: #28a745;
 }
 
+.slidable-embed {
+  cursor:default;
+}
+
+.slidable-embed .link-preview-title, .slidable-embed .link-preview-domain, .slidable-embed .link-preview-description {
+  cursor:text;
+}
+
+.slidable-embed .link-preview-image, .slidable-embed.link-preview-container {
+  cursor:default;
+}
+
 .link-preview-container {
     display: flex;
     height: 100px;
@@ -1339,8 +1415,25 @@ hr {
     font-weight: 500;
     border: 1px solid #dfdfdf;
     border-radius: 4px;
-    margin: 0.5em 0;
+    margin: 0 0 0.5em 0;
     background-color: #ffffff;
+    align-items:center;
+}
+
+.link-preview-container::before {
+  display:none;
+}
+.link-preview-container::after {
+  display:none;
+}
+
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::before, .ql-container.ql-bubble:not(.ql-disabled) a:hover::after {
+  visibility:hidden;
+  display:none;
+}
+
+.ql-bubble .ql-editor img {
+  max-width: fit-content;
 }
 
 .link-preview-container:hover {
@@ -1362,15 +1455,17 @@ hr {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    line-height: 27px;
 }
 
+
 .link-preview-image {
-    flex: 1;
     border-radius: 2px;
     align-self: center;
     max-height:100%;
-    margin-right:auto;
-    max-width: 140px;
+    width: 140px !important;
+    object-fit: cover;
+    min-width: 140px;
 }
 
 .link-preview-description {
@@ -1675,6 +1770,7 @@ article.comment > .content {
     border: 1px solid #f0f0f0;
     border-radius: 4px;
     max-width: 480px;
+    position: relative;
 }
 article.comment > .content.comment-deleted-content,
 article.comment > .content.comment-muted-content {
@@ -1797,10 +1893,10 @@ a.show-more:hover { /* Shim for old show more button element */
     color: #ce1717;
 }
 
-.abbreviated-content:not(.content-warning-content)::after {
+.post .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(255,255,255, 1) 90%);
 }
-.comment-content .abbreviated-content:not(.content-warning-content)::after {
+.comment .abbreviated-content:not(.content-warning-content)::after {
   background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
 }
 
@@ -1815,7 +1911,7 @@ a.show-more:hover { /* Shim for old show more button element */
 }
 
 .abbreviated-content {
-  height: 7rem;
+  height: 20rem;
   overflow: hidden;
 }
 
@@ -1823,7 +1919,7 @@ a.show-more:hover { /* Shim for old show more button element */
   content: "";
   position: absolute;
   z-index: 1;
-  top: 4.5rem;
+  top: 17.5rem;
   left: 0;
   pointer-events: none;
   width: 100%;

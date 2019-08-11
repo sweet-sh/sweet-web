@@ -115,8 +115,8 @@
 
 <script type="text/javascript">
 
-attachQuill(document.getElementById("communityDescriptionHtml"));
-attachQuill(document.getElementById("communityRulesHtml"));
+attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
+attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
 
 $("#newCommunityForm").submit(function(e){
   $("#communityRules").val($("#communityRulesHtml").find(".ql-editor").html());
@@ -132,7 +132,6 @@ $("#newCommunityForm").submit(function(e){
       $("#directoryResults").css("display", "inherit");
       $('#directoryResults').infiniteScroll({
         path: function() {
-          console.log("Blarp")
           var pageNumber = ( this.loadCount + 1 );
           return '/api/community/getall/' + pageNumber;
         },

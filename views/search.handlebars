@@ -22,52 +22,57 @@
 </div>
 
 <script>
-$('#resultsContainer').infiniteScroll({
-  path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showsearch/{{query}}/' + pageNumber;
-  },
-  append: '.content-box',
-  prefill: true,
-  history: true,
-  status: '.page-load-status'
-});
 
-$('#searchForm').submit(function (e) {
-  e.preventDefault();
-  //-------------------------------------//
-  $('#resultsContainer').infiniteScroll('destroy');
-  $('#resultsContainer').html("");
-  $('#searchTitle').text($("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search");
-  historyData = {
-    url: '/showsearch/' + $("#searchQuery").val(),
-    title: $("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search"
-  }
-  history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
+$(function(){
+  $('#resultsContainer').on('load.infiniteScroll', function (event, response, path) {
+      var newlyLoadedStuff = $(response);
+      needPostsOlderThan = newlyLoadedStuff.find("#oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
+  })
+
   $('#resultsContainer').infiniteScroll({
     path: function() {
-      var pageNumber = ( this.loadCount + 1 );
-      return '/showsearch/' + $("#searchQuery").val() + '/' + pageNumber;
+      return '/showsearch/{{query}}/' + needPostsOlderThan;
     },
     append: '.content-box',
     prefill: true,
-    history: true
+    history: true,
+    status: '.page-load-status'
   });
-  return false;
-});
 
-window.onpopstate = function(history) {
-  $('#resultsContainer').infiniteScroll('destroy');
-  $('#resultsContainer').html("");
-  $('#searchTitle').text(history.state.title);
-  $('#resultsContainer').infiniteScroll({
-    path: function() {
-      var pageNumber = ( this.loadCount + 1 );
-      return history.state.url + '/' + pageNumber;
-    },
-    append: '.content-box',
-    prefill: true,
-    history: true
+  $('#searchForm').submit(function (e) {
+    e.preventDefault();
+    //-------------------------------------//
+    $('#resultsContainer').infiniteScroll('destroy');
+    $('#resultsContainer').html("");
+    $('#searchTitle').text($("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search");
+    historyData = {
+      url: '/showsearch/' + $("#searchQuery").val(),
+      title: $("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search"
+    }
+    history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
+    $('#resultsContainer').infiniteScroll({
+      path: function() {
+        return '/showsearch/' + $("#searchQuery").val() + '/' + needPostsOlderThan;
+      },
+      append: '.content-box',
+      prefill: true,
+      history: true
+    });
+    return false;
   });
-};
+
+  window.onpopstate = function(history) {
+    $('#resultsContainer').infiniteScroll('destroy');
+    $('#resultsContainer').html("");
+    $('#searchTitle').text(history.state.title);
+    $('#resultsContainer').infiniteScroll({
+      path: function() {
+        return history.state.url + '/' + needPostsOlderThan;
+      },
+      append: '.content-box',
+      prefill: true,
+      history: true
+    });
+  };
+})
 </script>

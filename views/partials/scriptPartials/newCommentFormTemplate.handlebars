@@ -1,0 +1,70 @@
+{{!-- embedded at the top of newPostOrCommentScripts.handlebars --}}
+<script id="new-comment-form-template" type="text/custom-template">
+<div class="new-comment-form" data-comment-type="\{{comment_type}}" data-post-id="\{{post_id}}" data-comment-id="\{{comment_id}}">
+  <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
+  <div class="form-row">
+    <div class="editable-post-content editable-text" id="postContent">
+      <p><br></p>
+    </div>
+  </div>
+    <div class="link-form-cont"> {{! this container is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid it down, as it needs to be display:flex}}
+    <div class="my-2 linkPreviewAddingForm">
+      <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="Enter a url..." />
+      <button class="btn btn-primary btn-fade ml-3 link-add">Please Add This Link He Is A Good Link</button>
+    </div>
+  </div>
+  <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
+      <button type="button" class="add-emoji">🍬</button>
+      <button type="button" class="add-emoji">🍭</button>
+      <button type="button" class="add-emoji">🍡</button>
+      <button type="button" class="add-emoji">🍩</button>
+      <button type="button" class="add-emoji">🍪</button>
+      <button type="button" class="add-emoji">🍫</button>
+      <button type="button" class="add-emoji">🎂</button>
+      <button type="button" class="add-emoji">🍯</button>
+      <button type="button" class="add-emoji">🍎</button>
+      <button type="button" class="add-emoji">🍑</button>
+      <button type="button" class="add-emoji">🍌</button>
+      <button type="button" class="add-emoji">🍓</button>
+      <button type="button" class="add-emoji">🍇</button>
+      <button type="button" class="add-emoji">🍉</button>
+      <button type="button" class="add-emoji">🐝</button>
+      <button type="button" class="add-emoji">😊</button>
+      <button type="button" class="add-emoji">🙃</button>
+      <button type="button" class="add-emoji">😍</button>
+      <button type="button" class="add-emoji">😂</button>
+      <button type="button" class="add-emoji">😭</button>
+      <button type="button" class="add-emoji">😬</button>
+      <button type="button" class="add-emoji">😆</button>
+      <button type="button" class="add-emoji">😩</button>
+      <button type="button" class="add-emoji">😱</button>
+      <button type="button" class="add-emoji">😒</button>
+      <button type="button" class="add-emoji">🖖</button>
+      <button type="button" class="add-emoji">🙌</button>
+      <button type="button" class="add-emoji">👏</button>
+      <button type="button" class="add-emoji">👌</button>
+      <button type="button" class="add-emoji">💪</button>
+      <button type="button" class="add-emoji">🤦</button>
+      <button type="button" class="add-emoji">🌱</button>
+      <button type="button" class="add-emoji">🌞</button>
+      <button type="button" class="add-emoji">🌝</button>
+      <button type="button" class="add-emoji">❤️</button>
+      <button type="button" class="add-emoji">💕</button>
+      <button type="button" class="add-emoji">💖</button>
+      <button type="button" class="add-emoji">🔥</button>
+      <button type="button" class="add-emoji">🎉</button>
+      <button type="button" class="add-emoji">💯</button>
+      <button type="button" class="add-emoji">🏳️‍🌈</button>
+  </div>
+  <div id="replyControlsRow" class="form-row mt-2 post-controls">
+    <div class="leftSideControls">
+      <button type="button" class="btn btn-primary btn-fade" id="postLinkButton"><i class="fas fa-link"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
+    </div>
+    <div class="rightSideControls">
+      <button type="submit" class="btn btn-primary btn-fade create-comment">Reply <i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</div>
+</script>

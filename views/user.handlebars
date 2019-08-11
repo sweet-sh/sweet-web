@@ -26,11 +26,11 @@
     {{/unless}}
     {{#if loggedIn}}
       <div class="container commentsList" id="postsContainer"></div>
-      {{> infinitescrollrequests}}
+      {{> infiniteScrollLoadingSpinner}}
     {{else}}
       {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
   		  <div class="container commentsList" id="postsContainer"></div>
-        {{> infinitescrollrequests}}
+        {{> infiniteScrollLoadingSpinner}}
       {{/eq}}
     {{/if}}
   </div>
@@ -90,12 +90,11 @@
 <script>
 $('#postsContainer').infiniteScroll({
   path: function() {
-    var pageNumber = ( this.loadCount + 1 );
-    return '/showposts/user/{{profileData._id}}/' + pageNumber;
+    return '/showposts/user/{{profileData._id}}/' + needPostsOlderThan;
   },
   append: '.post',
   prefill: true,
-  history: false,
+  history: true, //to be clear, this should not work
   status: '.page-load-status'
 });
 </script>

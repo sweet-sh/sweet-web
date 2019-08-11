@@ -67,15 +67,7 @@
             </aside>
             <div class="abbreviated-content content-warning-content" style="height:0">
         {{/if}}
-        {{{this.parsedContent}}}
-        {{#if this.embeds}}
-            {{#each this.embeds}}
-                {{> embed }}
-            {{/each}}
-        {{/if}}
-        {{#if this.images}}
-            {{> imagegallery }}
-        {{/if}}
+        {{{this.internalPostHTML}}}
         {{#if this.contentWarnings}}
             </div>
             <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
@@ -162,6 +154,9 @@
             {{/if}}
         </section>
     {{/unless}}
+    {{#if @last}}
+    <div id="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
+    {{/if}}
 </article>
 {{/if}}
 {{/each}}

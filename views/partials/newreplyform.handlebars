@@ -1,18 +1,24 @@
 <div class="new-comment-form" data-comment-type="primary" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">
+<input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
   <div class="form-row">
     <div class="editable-post-content editable-text" id="postContent">
       <p><br></p>
     </div>
   </div>
-  <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
+  <div class="form-row mt-2 card p-1 replyEmojiWindow" style="display:none">
     {{> emojilist }}
   </div>
-  <div id="image-preview-holder" class="form-row post-controls image-preview-holder">
-    <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
+  <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
+    <div class="my-2 linkPreviewAddingForm">
+      <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="endless.horse" />
+      <button class="btn btn-primary btn-fade ml-1 link-add"><i class="fas fa-plus"></i></button>
+    </div>
   </div>
   <div id="replyControlsRow" class="form-row mt-2 post-controls">
     <div class="leftSideControls">
-      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button><button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="postLinkButton"><i class="fas fa-link"></i></button>
+      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
     </div>
     <div class="rightSideControls">
       <button type="submit" class="btn btn-primary btn-fade create-comment">Reply <i class="fas fa-chevron-right"></i></button>
