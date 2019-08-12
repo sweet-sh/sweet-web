@@ -380,6 +380,14 @@ module.exports = function(app) {
         })
     })
 
+    app.get('/about', function(req, res) {
+        res.render('about', {
+            loggedIn: req.isAuthenticated(),
+            loggedInUserData: req.user,
+            activePage: 'support'
+        })
+    })
+
     //Responds to get requests for /search.
     //Input: none
     //Output: renders search page unless isLoggedInOrRedirect redirects you
