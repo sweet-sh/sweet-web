@@ -156,8 +156,6 @@ hr {
     color: #cbcbcb;
 }
 
-/* Raph got up to here converting CSS to SCSS */
-
 dl,
 ol,
 ul {
@@ -1049,6 +1047,10 @@ h6 {
     height: 110%;
     height: 35px;
 }
+
+
+/* Raph got up to here converting CSS to SCSS */
+
 
 /* ====== POST IMAGES ======= */
 

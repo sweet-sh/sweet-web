@@ -1,3 +1,21 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Inconsolata:400,700');
+
+@font-face {
+    font-family: 'OpenDyslexic3';
+    src: url('/fonts/OpenDyslexicThree-Bold.woff2') format('woff2'), url('/fonts/OpenDyslexicThree-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'OpenDyslexic3';
+    src: url('/fonts/OpenDyslexicThree-Regular.woff2') format('woff2'), url('/fonts/OpenDyslexicThree-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 $body-font: 'Ubuntu', sans-serif;
 $normal-weight: 400;
 $semi-bold-weight: 500;
@@ -59,4 +77,73 @@ hr {
     margin: 0.5em 0;
     padding: 0;
     color: $darker-grey;
+}
+
+dl,
+ol,
+ul {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+blockquote {
+    border-left: 2px solid #bbb;
+    color: #777;
+    padding-left: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-bottom: .5rem;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+    color: inherit
+}
+
+.h2,
+h2 {
+    font-size: 2rem
+}
+
+.h3,
+h3 {
+    font-size: 1.75rem
+}
+
+.h4,
+h4 {
+    font-size: 1.5rem
+}
+
+.h5,
+h5 {
+    font-size: 1.25rem
+}
+
+.h6,
+h6 {
+    font-size: 1rem
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    margin-bottom: .5rem;
+    letter-spacing: -0.5px;
 }

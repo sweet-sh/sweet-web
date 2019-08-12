@@ -1,0 +1,353 @@
+/*navbar, including notifications list stuff*/
+
+.navbar {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    padding: .5rem 1rem
+}
+
+.fixed-top {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030
+}
+
+#topNav {
+    border-bottom-color: #ce1717;
+    background: white;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+#navbarProfileImage.active {
+    border: 1px solid #900202;
+}
+
+#navbarProfileImage:hover {
+    border: 1px solid #ce1717;
+}
+
+#navbarSearchField {
+    background: #f3f3f3;
+    border-color: #e1e1e1;
+    width: 180px;
+}
+
+#topNav .nav-link,
+#topNav .nav-link:visited,
+#topNav .nav-link:active,
+#notificationsDropdownLink {
+    color: #666;
+    text-decoration: none;
+}
+
+#topNav .nav-link.active {
+    color: #900202;
+}
+
+#notificationsDropdownLink:hover,
+#topNav .nav-link:hover {
+    color: #ce1717;
+}
+
+#topNav .dropdown-item {
+    color: #666;
+    font-size: 90%;
+}
+
+#sweetLogo {
+    width: 30px;
+    height: 30px;
+}
+
+#sweetLogo:hover {
+    animation: shake 0.5s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes shake {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(-3deg);
+    }
+
+    40% {
+        transform: rotate(3deg);
+    }
+
+    60% {
+        transform: rotate(0deg);
+    }
+
+    80% {
+        transform: rotate(3deg);
+    }
+
+    100% {
+        transform: rotate(-3deg);
+    }
+}
+
+#sweetLogoLink {
+    line-height: 30px;
+    position: relative;
+    top: 2px;
+}
+
+#sweetIndexLogo {
+    width: 600px;
+    height: 600px;
+    opacity: 0.1;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -300px;
+    margin-left: -300px;
+}
+
+#navbarProfileImage {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+}
+
+.navbar-group {
+    display: flex;
+}
+
+#navbarLeftGroup {
+    justify-content: flex-start;
+    flex: 1;
+}
+
+#navbarLeftGroup .nav-item:not(:last-child) {
+    padding-right: 3.5rem;
+}
+
+#navbarCentreGroup {
+    justify-content: center;
+}
+
+#navbarRightGroup {
+    justify-content: flex-end;
+    flex: 1;
+}
+
+#navbarRightGroup .nav-item:not(:last-of-type) {
+    padding-right: 2rem;
+}
+
+#navbarRightGroup .nav-item {
+    padding-right: 8px;
+}
+
+#navbarMenuMobile {
+    justify-content: space-between;
+    width: 100%;
+}
+
+#navbarMenuDesktop {
+    display: none;
+    justify-content: space-around;
+    margin: 0 auto;
+    width: 1110px;
+}
+
+@media (min-width: 576px) {
+    #navbarMenuMobile {
+        display: none;
+    }
+
+    #navbarMenuDesktop {
+        display: inline-flex;
+    }
+}
+
+#navbarMenuDesktop .nav-link,
+#navbarMenuMobile .nav-link {
+    font-size: 20px;
+    padding: 0;
+}
+
+#topNav .nav-item,
+#topNav .nav-link {
+    display: flex;
+    align-items: center;
+}
+
+#topNav .dropdown-toggle::after {
+    display: none !important;
+}
+
+.navbar-username,
+.nav-link-text {
+    display: none;
+    font-size: 1rem;
+    margin-left: 8px;
+    font-weight: 300;
+}
+
+.nav-link-text.not-hidden {
+    display: inline !important;
+}
+
+#notificationsPageLink,
+#notificationsDropdownLink {
+    position: relative;
+}
+
+.notificationLink {
+    background: #f9f9fa;
+    color: #707070 !important;
+}
+
+.notifications-count {
+    font-size: 14px;
+    position: absolute;
+    top: -6px;
+    left: 9px;
+    /* color: #ce1717; */
+}
+
+@media (min-width: 839px) {
+
+    .navbar-username,
+    .nav-link-text {
+        display: inline;
+    }
+
+    .notifications-count {
+        top: -4px;
+        left: 9px;
+    }
+
+    #navbarLeftGroup .nav-item:not(:last-child) {
+        padding-right: 2rem;
+    }
+}
+
+/*dropdowns used in navbar and ALSO in user sidebar to access the flag button*/
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    float: left;
+    min-width: 10rem;
+    padding: .5rem 0;
+    margin: .125rem 0 0;
+    font-size: 1rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: .25rem
+}
+
+.dropdown,
+.dropup {
+    position: relative
+}
+
+.dropdown-toggle::after {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "";
+    border-top: .3em solid;
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: .25rem 1.5rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+}
+
+.dropdown-divider {
+    height: 0;
+    margin: .5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
+}
+
+.dropdown-menu.show {
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+    border: 1px solid #b6b6b6;
+    top: 46px;
+}
+
+@media (min-width: 576px) {
+    #notificationsContainer {
+        min-width: 360px;
+        max-height: 500px;
+        overflow-x: scroll;
+    }
+}
+
+#notificationsList,
+#notificationsContainer {
+    font-size: 0.825em;
+    font-weight: 300;
+}
+
+#notificationsList strong,
+#notificationsContainer strong {
+    font-weight: 500;
+}
+
+.notification-active {
+    font-weight: 500;
+    background: #eaeaea;
+    color: rgb(73, 80, 87) !important;
+}
+
+.list-group-item-action:hover {
+    color: #495057;
+    text-decoration: none;
+    background-color: #f9f3f3;
+}
+
+.button.clear-all-notifications {
+    border-radius: 0;
+    width: 100%;
+    border: 0px;
+    box-sizing: border-box;
+    height: 110%;
+    height: 35px;
+}
