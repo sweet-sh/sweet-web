@@ -134,10 +134,10 @@ module.exports = function(app) {
             User.count().then(users => {
                 Community.find().sort('-lastUpdated').then(communities => {
                     var publicCommunites = communities.filter(c => c.settings.visibility == "public" && c.settings.joinType == "open");
-                    publicCommunites.length = 8;
                     publicCommunites.sort(function() {
                       return .5 - Math.random();
                     });
+                    publicCommunites.length = 8;
                     res.render('index', {layout: 'logged-out', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
                 })
             })
