@@ -56,7 +56,7 @@ module.exports = function (app, passport) {
                 username: req.body.username,
                 email: req.body.email
             }
-            res.redirect(301, '/signup');
+            res.redirect(301, '/');
         } else {
             req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({
                 max: 80
@@ -82,15 +82,15 @@ module.exports = function (app, passport) {
                         username: req.body.username,
                         email: req.body.email
                     }
-                    res.redirect(301, '/signup');
+                    res.redirect(301, '/');
                 } else {
                     req.session.sessionFlash = {
                         type: 'info',
                         message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
                     }
                     passport.authenticate('signup', {
-                        successRedirect: '/login',
-                        failureRedirect: '/signup',
+                        successRedirect: '/',
+                        failureRedirect: '/',
                         failureFlash: true
                     })(req, res);
                 }
@@ -118,13 +118,14 @@ module.exports = function (app, passport) {
                 }).join("<hr>");
                 req.session.sessionFlash = {
                     type: 'warning',
-                    message: errors
+                    message: errors,
+                    email: req.body.email
                 }
-                res.redirect(301, '/login');
+                res.redirect(301, '/');
             } else {
                 passport.authenticate('login', {
                     successRedirect: '/home',
-                    failureRedirect: '/login',
+                    failureRedirect: '/',
                     failureFlash: true
                 })(req, res);
             }

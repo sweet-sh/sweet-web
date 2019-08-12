@@ -132,7 +132,14 @@ module.exports = function(app) {
             res.redirect('/home');
         } else {
             User.count().then(users => {
-                res.render('index', { userCount: users });
+                Community.find().sort('-lastUpdated').then(communities => {
+                    var publicCommunites = communities.filter(c => c.settings.visibility == "public" && c.settings.joinType == "open");
+                    publicCommunites.length = 8;
+                    publicCommunites.sort(function() {
+                      return .5 - Math.random();
+                    });
+                    res.render('index', {layout: 'intro', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
+                })
             })
         }
     });
@@ -572,7 +579,7 @@ module.exports = function(app) {
         return;
     })
 
-    //this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date 
+    //this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date
     //in the post and all of its comments.
     async function keepCachedHTMLUpToDate(post) {
 

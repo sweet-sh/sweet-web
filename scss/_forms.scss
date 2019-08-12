@@ -12,6 +12,12 @@ button {
     }
 }
 
+input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
 input[type=checkbox],
 input[type=radio] {
     box-sizing: border-box;

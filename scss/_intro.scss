@@ -1,0 +1,185 @@
+// Colors
+$bg-color: #fff;
+$dot-color: #eeeeee;
+
+// Dimensions
+$dot-size: 2px;
+$dot-space: 22px;
+
+.intro-body {
+    background: linear-gradient(90deg, $bg-color ($dot-space - $dot-size), transparent 1%) center,
+		linear-gradient($bg-color ($dot-space - $dot-size), transparent 1%) center,
+		$dot-color;
+	background-size: $dot-space $dot-space;
+    background-position: fixed;
+
+    .bee-logo {
+        padding-left: 1rem;
+        height: 3rem;
+        bottom: 0.3rem;
+        position: relative;
+    }
+
+    h1 {
+        color: $sweet-red;
+        font-size: 4rem;
+        font-weight: 500;
+        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+        margin: 0;
+    }
+
+    p {
+        font-size: 1.25rem;
+        font-weight: 300;
+    }
+
+    .subtitle {
+        color: $sweet-red;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-text {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.intro-container {
+    margin: 30px auto;
+}
+
+.intro-form {
+    border: 1px solid $light-grey;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fff;
+
+    &:not(:first-child) {
+        margin-top: 2rem;
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 1rem;
+
+        label {
+            position: absolute;
+            top: 7px;
+            left: 0.5rem;
+            opacity: 0;
+
+            @include transition;
+        }
+
+        input:not(:placeholder-shown) {
+            padding-top: 20px;
+        }
+
+        input:not(:placeholder-shown) + label {
+            transform: translateY(-5px);
+            opacity: 1;
+        }
+    }
+
+    label {
+        font-size: 0.85rem;
+        color: $dark-pink;
+        font-weight: 500;
+    }
+
+    input {
+       width: 100%;
+       height: 45px;
+       border: 1px solid $light-grey;
+       border-radius: 3px;
+       padding: 0.25rem 0.5rem;
+       box-shadow: none;
+
+       @include transition;
+
+       &:focus {
+           border-color: $light-pink;
+       }
+    }
+
+    button {
+        width: 100%;
+        color: #fff;
+        background: $dark-pink;
+        border: $dark-pink;
+        border-radius: 3px;
+        padding: 0.3rem;
+        text-transform: uppercase;
+        box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+
+        @include transition;
+
+        &:hover {
+            cursor: pointer;
+            background: $sweet-red;
+        }
+    }
+
+    .help-text {
+        opacity: .6;
+        padding-left: 8px;
+        display: block;
+        margin: 3px 0 0 0;
+    }
+}
+
+.help-link {
+    font-size: small;
+    margin-top: 0.75rem;
+    display: block;
+    width: 100%;
+    text-align: right;
+}
+
+.intro-communites-list {
+    margin: 1rem 0 0 0;
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    li {
+        width: 24%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        border: 1px solid $medium-grey;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        text-align: center;
+        background: #fff;
+
+        @include transition;
+
+        &:hover {
+            background: $lightest-pink;
+            border-color: $light-pink;
+        }
+
+        @media screen and (max-width: 768px) {
+            width: 32%;
+        }
+        @media screen and (max-width: 576px) {
+            // width: 48%;
+            display: none;
+        }
+    }
+    img {
+        width: 100%;
+        margin-bottom: 10px;
+        border-radius: 6px;
+    }
+
+    a {
+        font-weight: bold;
+        color: $text-black;
+    }
+}
