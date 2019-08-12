@@ -409,8 +409,8 @@ section {
 }
 
 .fixed-container>section {
-    border: 1px solid #cecece;
-    background: #fffafc;
+    border: 1px solid $medium-grey;
+    background: $lightest-pink;
     padding: 0.5rem 1rem 1rem 1rem;
     width: 350px;
     margin-bottom: 1rem;
@@ -453,6 +453,10 @@ section {
 
 .hashtags-list>* {
     margin-right: 0.5rem;
+}
+
+#userActionsButtons {
+    margin: 1rem 0;
 }
 
 /*some stuff user profile and community pages share*/
@@ -627,7 +631,13 @@ section {
     border-bottom: none;
 }
 
-/*todo: what is this*/
+#votesContainer {
+  background: $lightest-pink;
+  border-left: 1px solid $medium-grey;
+  border-right: 1px solid $medium-grey;
+}
+
+// This is the box containing the new proposal in community votes
 .proposal-box>p:last-of-type {
     margin-bottom: 0;
 }

@@ -35,7 +35,7 @@
         {{! Muted and not a member}}
         {{#eq communityData.settings.joinType "open"}}
         </ul>
-          <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+          <button type="button" id="joinButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
         {{/eq}}
         {{#eq communityData.settings.joinType "approval"}}
           {{#if hasRequested}}
@@ -45,7 +45,7 @@
             </div>
           {{else}}
           </ul>
-            <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+            <button type="button" id="requestButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
           {{/if}}
         {{/eq}}
       {{/if}}
@@ -70,7 +70,7 @@
           {{#unless isMember}}
             {{#eq communityData.settings.joinType "open"}}
             </ul>
-              <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+              <button type="button" id="joinButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
             {{/eq}}
             {{#eq communityData.settings.joinType "approval"}}
               {{#if hasRequested}}
@@ -80,7 +80,7 @@
                 </div>
               {{else}}
               </ul>
-                <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+                <button type="button" id="requestButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
               {{/if}}
             {{/eq}}
           {{else}}

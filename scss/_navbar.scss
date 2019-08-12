@@ -61,7 +61,7 @@
 }
 
 #topNav .nav-link.active {
-    color: #900202;
+    color: $dark-red;
 }
 
 #topNav .nav-link.active .nav-link-text {
@@ -200,7 +200,7 @@
 
 #navbarMenuDesktop .nav-link,
 #navbarMenuMobile .nav-link {
-    font-size: 20px;
+    font-size: 1.05rem;
     padding: 0;
 }
 
@@ -217,7 +217,7 @@
 .navbar-username,
 .nav-link-text {
     display: none;
-    font-size: 1rem;
+    // font-size: 1rem;
     margin-left: 8px;
     font-weight: 300;
 }

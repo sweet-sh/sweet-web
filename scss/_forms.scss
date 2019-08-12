@@ -74,7 +74,7 @@ textarea {
     border-radius: 3px;
     text-transform: uppercase;
     box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
-    padding: .55rem .75rem;
+    padding: .75rem .75rem;
     margin: 0;
 
     @include transition;
@@ -101,6 +101,10 @@ textarea {
         &:hover {
             background: $darkest-grey;
         }
+    }
+
+    &.lowercase-button {
+        text-transform: none;
     }
 }
 
@@ -147,6 +151,13 @@ button.close {
 
 .ql-bubble .ql-editor img {
     max-width: fit-content;
+}
+
+.ql-bubble .ql-editor blockquote {
+    border-left: 2px solid $medium-grey;
+    color: darken($dark-grey, 10%);
+    padding-left: 0.5rem;
+    margin: 0.5rem 0;
 }
 
 /*used to dim non-droppable areas while drag-and-dropping images into the editor*/
@@ -223,21 +234,13 @@ button.close {
 
 .editable-text {
     width: 100%;
-    padding: .375rem .75rem;
+    padding: 0;
     border-radius: .25rem;
     font-size: 1rem;
     line-height: 1.5;
-    border: 2px solid #ced4da;
+    border: 2px solid $medium-grey;
     cursor: text;
-    /* min-height: 2.5rem !important; */
-}
-
-.editable-text:focus {
-    color: #495057;
-    background-color: #fff;
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25);
+    min-height: 4em;
 }
 
 .editable-text>p:last-child,
@@ -339,7 +342,7 @@ button.close {
 }
 
 .switch-field input:checked+label {
-    background-color: #cb5e4c;
+    background-color: $dark-pink;
     color: white;
     box-shadow: none;
 }
@@ -429,22 +432,22 @@ button.close {
 }
 
 .ipc-group {
-    border-left: solid thin lightblue;
-    border-right: solid thin lightblue;
+    border-left: solid thin $light-pink;
+    border-right: solid thin $light-pink;
     padding: 0.3rem;
     margin-bottom: 0;
 }
 
 .ipc-group-top {
-    border-top: solid thin lightblue;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
+    border-top: solid thin $light-pink;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
 }
 
 .ipc-group-bottom {
-    border-bottom: solid thin lightblue;
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
+    border-bottom: solid thin $light-pink;
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
     margin-bottom: 0.5rem;
 }
 

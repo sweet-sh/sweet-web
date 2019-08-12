@@ -84,8 +84,8 @@
                       {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                     </div>
                     <div class="ml-auto mt-2 mt-lg-0">
-                      <button type="button" class="btn btn-success community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
-                      <button type="button" class="btn btn-danger community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
+                      <button type="button" class="button community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
+                      <button type="button" class="button community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
                     </div>
                   </div>
                 </div>
@@ -121,7 +121,7 @@
                   <div class="form-group">
                     Your community's URL will be: <span class="text-info">https://sweet.sh/community/<span id="communitySlug"></span></span>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
@@ -132,7 +132,7 @@
                     <div class="form-control" style="height:auto;" id="communityDescriptionHtml">{{{communityData.descriptionRaw}}}</div>
                     <input type="hidden" name="proposedValue" id="communityDescription">
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
@@ -143,7 +143,7 @@
                     <div class="form-control" style="height:auto;" id="communityRulesHtml">{{{communityData.rulesRaw}}}</div>
                     <input type="hidden" name="proposedValue" id="communityRules">
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-welcomeMessageEditor" role="tabpanel" aria-labelledby="nav-welcomeMessageEditor-tab">
@@ -159,7 +159,7 @@
                     </p>
                     <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="communityWelcomeMessage" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
                   </div>
-                  <button type="submit" class="btn btn-primary updateWelcomeMessage">Update</button>
+                  <button type="submit" class="button updateWelcomeMessage">Update</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
@@ -173,7 +173,7 @@
                       <input type="file" name="proposedValue" id="image-upload" />
                     </div>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button" id="community-image-button">Create vote</button>
+                  <button type="submit" class="button community-action-button" id="community-image-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-visibilityEditor" role="tabpanel" aria-labelledby="nav-visibilityEditor-tab">
@@ -186,7 +186,7 @@
                       <option value="private" {{#eq communityData.settings.visibility "private"}}selected{{/eq}}>Private (posts visible only to members)</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-joinTypeEditor" role="tabpanel" aria-labelledby="nav-joinTypeEditor-tab">
@@ -200,7 +200,7 @@
                       <!-- <option value="closed" {{#eq communityData.settings.joinType "closed"}}selected{{/eq}}>Closed (only invited users can join)</option> -->
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-voteLengthEditor" role="tabpanel" aria-labelledby="nav-voteLengthEditor-tab">
@@ -216,7 +216,7 @@
                       <option value="30" {{#eq communityData.settings.voteLength 30}}selected{{/eq}}>30 days</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
             </div>
@@ -232,7 +232,7 @@
               <div class="content-box">
                 <div class="row">
                   <div class="col commentContent">
-                    <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
+                    <div class="mb-2 d-lg-flex align-items-center">
                       <div class="d-flex align-items-center">
                         <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
                         {{#if this.displayName}}
@@ -242,8 +242,8 @@
                         {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                       </div>
                       <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-dark community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
-                        <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                        <button type="button" class="button community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
+                        <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
                       </div>
                     </div>
                   </div>
@@ -269,11 +269,11 @@
                         {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                       </div>
                       <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-dark community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
+                        <button type="button" class="button community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
                         {{#if this.isBanned}}
-                          <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                          <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
                         {{else}}
-                          <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                          <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
                         {{/if}}
                       </div>
                     </div>
@@ -300,7 +300,7 @@
                         {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                       </div>
                       <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                        <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
                       </div>
                     </div>
                   </div>

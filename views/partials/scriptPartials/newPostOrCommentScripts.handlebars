@@ -60,6 +60,13 @@ $(function(){
     $("#new-post-emoji-picker").slideToggle("fast");
     $("#editor").find(".ql-editor").focus()
   })
+  $(".replyEmojiWindowButton").click(function () {
+      emojiPicker = $(this).closest('.new-comment-form').find('.emoji-picker')
+      editor = $(this).closest('.new-comment-form').find('.ql-editor')
+      console.log(emojiPicker)
+    emojiPicker.slideToggle("fast");
+    editor.focus()
+  })
   $("#new-post-emoji-picker>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })

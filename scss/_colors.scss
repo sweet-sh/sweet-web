@@ -4,14 +4,15 @@ $text-white: #ffffff; // Text color for dark mode.
 $background-grey: #f9f9fa; // Page background
 $lightest-grey: #f3f3f3; // Form input backgrounds
 $light-grey: #efefef;
-$medium-grey: #dfdfdf; // Post borders
+$medium-grey: #cecece; // Post borders
 $darker-grey: #cbcbcb; // Currently only horizontal rules I think?
 $dark-grey: #aaa;
 $darkest-grey: #666;
 
 $light-blue: #338fc2; // Links
-$sweet-red: #ce1717; // The Best Red (TM). Navbar, hovers, buttons, etc.
 
+$sweet-red: #ce1717; // The Best Red (TM). Hovers, buttons, etc.
+$dark-red: darken($sweet-red, 10%);
 $lightest-pink: #fffafc;
 $light-pink: lighten($sweet-red, 40%);
 $dark-pink: lighten($sweet-red, 20%);

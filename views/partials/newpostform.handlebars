@@ -12,7 +12,7 @@
   <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
     <div class="my-2 linkPreviewAddingForm">
       <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="endless.horse" />
-      <button class="btn btn-primary btn-fade ml-1 link-add"><i class="fas fa-plus"></i></button>
+      <button class="button grey-button link-add" style="margin-left: 0.5rem;"><i class="fas fa-arrow-up"></i></button>
     </div>
   </div>
   <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
@@ -32,7 +32,7 @@
       <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
       <button type="button" class="button grey-button" id="emojiWindowButton"><i class="far fa-smile"></i></button>
       <button type="button" class="button grey-button" id="postContentWarningsButton"><i class="fas fa-info-circle"></i></button>
-      <button type="submit" class="button" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
+      <button type="submit" style="margin-left: 1rem;" class="button" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </div>

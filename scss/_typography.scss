@@ -88,8 +88,8 @@ ul {
 }
 
 blockquote {
-    border-left: 2px solid #bbb;
-    color: #777;
+    border-left: 2px solid $medium-grey;
+    color: darken($dark-grey, 10%);
     padding-left: 0.5rem;
     margin: 0.5rem 0;
 }

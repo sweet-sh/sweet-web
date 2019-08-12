@@ -205,6 +205,12 @@ article.post>.toolbar {
     margin-bottom: 1rem;
     padding-left: 0.65rem;
     max-width: 390px;
+
+    @media screen and (max-width: 576px) {
+        max-width: 100%;
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 
@@ -227,9 +233,13 @@ article.post:hover {
     width: 40px;
     justify-content: center;
     margin-right: 32px;
+    padding: 0;
     &:hover {
         background: #fff;
         color: $sweet-red;
+    }
+    @media screen and (max-width: 576px) {
+        margin-right: 0;
     }
 }
 

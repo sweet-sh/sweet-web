@@ -64,7 +64,10 @@
 }
 
 #profileControlsDesktopMobile {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: space-between;
 }
 
 #profileControlsTablet {
@@ -77,13 +80,19 @@
     }
 
     #profileControlsTablet {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        justify-content: space-between;
     }
 }
 
 @media (min-width: 992px) {
     #profileControlsDesktopMobile {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        justify-content: space-between;
     }
 
     #profileControlsTablet {
