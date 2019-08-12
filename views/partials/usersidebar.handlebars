@@ -100,13 +100,13 @@
       </div>
     </div>
     {{#if numberOfFlagsFromTrustedUsers}}
-      <div class="alert alert-danger w-100 my-2" style="text-align:center;">
+      <div class="message w-100 my-2" style="text-align:center;">
         <i class="fas fa-exclamation-triangle"></i>
         {{numberOfFlagsFromTrustedUsers}} {{plural numberOfFlagsFromTrustedUsers 'person/people'}} you trust {{plural numberOfFlagsFromTrustedUsers 'has/have'}} flagged this user.
       </div>
     {{/if}}
     {{#if muted}}
-      <div class="alert alert-dark w-100 my-2" style="text-align:center;">
+      <div class="message w-100 my-2" style="text-align:center;">
         <i class="fas fa-comment-slash"></i>
         You have muted this user. Their posts are hidden from you.
       </div>

@@ -25,7 +25,7 @@
 }
 
 #topNav {
-    border-bottom-color: #ce1717;
+    border-bottom-color: $dark-pink;
     background: white;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     border-bottom-width: 2px;
@@ -86,6 +86,13 @@
 #sweetLogo:hover {
     animation: shake 0.5s;
     animation-iteration-count: infinite;
+}
+
+.navbar-site-title {
+    font-weight: 500 !important;
+    font-family: 'Quicksand',sans-serif;
+    font-size: 1.4rem !important;
+    line-height: 1;
 }
 
 @keyframes shake {
@@ -175,9 +182,10 @@
 
 #navbarMenuDesktop {
     display: none;
-    justify-content: space-around;
+    justify-content: space-between;
     margin: 0 auto;
-    width: 1110px;
+    width: 1020px;
+    padding: 0;
 }
 
 @media (min-width: 576px) {

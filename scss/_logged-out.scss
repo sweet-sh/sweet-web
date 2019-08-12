@@ -6,7 +6,7 @@ $dot-color: #eeeeee;
 $dot-size: 2px;
 $dot-space: 22px;
 
-.intro-body {
+.logged-out-body {
     background: linear-gradient(90deg, $bg-color ($dot-space - $dot-size), transparent 1%) center,
 		linear-gradient($bg-color ($dot-space - $dot-size), transparent 1%) center,
 		$dot-color;
@@ -24,8 +24,17 @@ $dot-space: 22px;
         color: $sweet-red;
         font-size: 4rem;
         font-weight: 500;
-        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+        font-family: 'Quicksand',sans-serif;
         margin: 0;
+
+        a, a:active, a:visited {
+            color: $sweet-red;
+        }
+
+        a:hover {
+            color: $dark-pink;
+            text-decoration: none;
+        }
     }
 
     p {
@@ -37,6 +46,7 @@ $dot-space: 22px;
         color: $sweet-red;
         font-size: 2rem;
         margin-bottom: 2rem;
+        letter-spacing: -.5px;
     }
 
     .sidebar-text {
@@ -45,17 +55,19 @@ $dot-space: 22px;
     }
 }
 
-.intro-container {
+.logged-out-container {
     margin: 30px auto;
 }
 
-.intro-form {
+.logged-out-form {
     border: 1px solid $light-grey;
     border-radius: 6px;
     padding: 10px;
     background: #fff;
+    max-width: 500px;
+    margin: 1rem auto;
 
-    &:not(:first-child) {
+    &:not(:first-of-type) {
         margin-top: 2rem;
     }
 
@@ -94,7 +106,6 @@ $dot-space: 22px;
        border: 1px solid $light-grey;
        border-radius: 3px;
        padding: 0.25rem 0.5rem;
-       box-shadow: none;
 
        @include transition;
 
@@ -112,6 +123,7 @@ $dot-space: 22px;
         padding: 0.3rem;
         text-transform: uppercase;
         box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+        font-size: 1.15rem;
 
         @include transition;
 
@@ -131,13 +143,13 @@ $dot-space: 22px;
 
 .help-link {
     font-size: small;
-    margin-top: 0.75rem;
+    margin-top: 1.25rem;
     display: block;
     width: 100%;
     text-align: right;
 }
 
-.intro-communites-list {
+.logged-out-communites-list {
     margin: 1rem 0 0 0;
     list-style-type: none;
     padding: 0;

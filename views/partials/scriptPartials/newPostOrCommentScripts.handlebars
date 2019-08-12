@@ -225,7 +225,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
               commentForm.remove();
           }
         } else {
-          let html = '<article class="comment"><div class="alert alert-danger">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
+          let html = '<article class="comment"><div class="message alert">There has been a problem posting your comment. Sorry! Please copy the comment text, refresh the page, and try again.</div></article>'
           $(html).hide().appendTo(commentsContainer).fadeIn();
           // commentButton.prop('disabled', false); // Probably don't disable the reply button if an error occurs because god knows what else has happened to the form
         }

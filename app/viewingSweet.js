@@ -138,7 +138,7 @@ module.exports = function(app) {
                     publicCommunites.sort(function() {
                       return .5 - Math.random();
                     });
-                    res.render('index', {layout: 'intro', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
+                    res.render('index', {layout: 'logged-out', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
                 })
             })
         }
@@ -149,6 +149,7 @@ module.exports = function(app) {
     //Output: rendering of the login page with the flash message included.
     app.get('/login', function(req, res) {
         res.render('login', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });
@@ -158,6 +159,7 @@ module.exports = function(app) {
     //Output: rendering of the signup page with the flash message included.
     app.get('/signup', function(req, res) {
         res.render('signup', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });

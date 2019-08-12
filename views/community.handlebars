@@ -4,14 +4,14 @@
   </div>
   <div class="col-md-7">
     {{#if isBanned}}
-      <div class="alert alert-danger text-center">
+      <div class="message text-center">
         You have been banned from this community.
       </div>
     {{else}}
       <div id="mainBody" class="community-container">
         {{#unless loggedIn}}
-        <div class="alert alert-success w-100 text-center" style="font-size:1.4em;">
-          <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
+        <div class="message w-100 text-center" style="font-size:1.4em;">
+          <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="message-link" href="/signup">Sign up now</a>!
         </div>
         {{/unless}}
         {{> message }}
@@ -19,7 +19,7 @@
           {{#unless isMuted}}
             {{> newpostform }}
           {{else}}
-            <div class="alert alert-secondary text-center">
+            <div class="message text-center">
               You have been muted in this community. You are unable to post and your posts and votes have been made invisible. If you are unmuted, your posts and votes will be restored.
             </div>
           {{/unless}}
@@ -28,7 +28,7 @@
           {{#eq communityData.settings.visibility "public"}}
             <div class="container commentsList" id="postsContainer"></div>
           {{else}}
-            <div class="alert alert-secondary text-center">
+            <div class="message text-center">
               This community's posts are only visible to its members.
             </div>
           {{/eq}}

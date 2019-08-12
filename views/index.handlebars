@@ -7,7 +7,7 @@
         <p>
             Home to <strong>{{userCount}}</strong> people and <strong>{{communityCount}}</strong> communities
         </p>
-        <ul class='intro-communites-list'>
+        <ul class='logged-out-communites-list'>
 
             {{#each communities}}
                 <li>
@@ -21,7 +21,7 @@
 
         {{> message }}
 
-        <form  class="intro-form" action="/login" method="post">
+        <form  class="logged-out-form" action="/login" method="post">
             <div class="form-group">
                 <input type="text" name="email" placeholder="Email" {{#if sessionFlash.email}}value="{{ sessionFlash.email }}"{{/if}}>
                 <label for="email">Email</label>
@@ -35,7 +35,7 @@
             <a class="help-link" href="/forgot-password">Forgot password?</a>
         </form>
 
-        <form class="intro-form" action="/signup" method="post">
+        <form class="logged-out-form" action="/signup" method="post">
             <p class="sidebar-text">Join sweet for ad-free, safer, democratically governed communites; queer- and trans-friendly spaces; adult-friendly content; and the Internet's best post editor.</p>
 
             <div class="form-group">

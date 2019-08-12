@@ -1,5 +1,6 @@
 /* Fonts */
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Inconsolata:400,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i');
+@import url('https://fonts.googleapis.com/css?family=Quicksand:500&display=swap');
 
 @font-face {
     font-family: 'OpenDyslexic3';
@@ -148,30 +149,37 @@ h6 {
     letter-spacing: -0.5px;
 }
 
-.alert {
+.centered-title {
+    text-align: center;
+}
+
+.message {
   position: relative;
   padding: 0.75rem 1.25rem;
   margin-bottom: 1rem;
   border: 1px solid $light-pink;
   border-radius: 0.25rem;
-  animation: pulse 2s infinite;
   background: $lightest-pink;
   color: $dark-pink;
+
+  &.alert {
+    animation: pulse 2s infinite;
+  }
 }
 
-.alert-heading {
+.message-heading {
   color: inherit;
 }
 
-.alert-link {
+.message-link {
   font-weight: 700;
 }
 
-.alert-dismissible {
+.message-dismissible {
   padding-right: 4rem;
 }
 
-.alert-dismissible .close {
+.message-dismissible .close {
   position: absolute;
   top: 0;
   right: 0;
