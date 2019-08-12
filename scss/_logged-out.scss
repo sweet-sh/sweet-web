@@ -114,25 +114,6 @@ $dot-space: 22px;
        }
     }
 
-    button {
-        width: 100%;
-        color: #fff;
-        background: $dark-pink;
-        border: $dark-pink;
-        border-radius: 3px;
-        padding: 0.3rem;
-        text-transform: uppercase;
-        box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
-        font-size: 1.15rem;
-
-        @include transition;
-
-        &:hover {
-            cursor: pointer;
-            background: $sweet-red;
-        }
-    }
-
     .help-text {
         opacity: .6;
         padding-left: 8px;
@@ -150,14 +131,12 @@ $dot-space: 22px;
 }
 
 .logged-out-communites-list {
-    margin: 1rem 0 0 0;
-    list-style-type: none;
-    padding: 0;
+    margin: 1rem 0;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
 
-    li {
+    a {
         width: 24%;
         box-sizing: border-box;
         display: flex;
@@ -168,12 +147,16 @@ $dot-space: 22px;
         margin-bottom: 10px;
         text-align: center;
         background: #fff;
+        font-weight: bold;
+        color: $text-black;
 
         @include transition;
 
         &:hover {
             background: $lightest-pink;
             border-color: $light-pink;
+            color: $dark-pink;
+            text-decoration: none;
         }
 
         @media screen and (max-width: 768px) {
@@ -190,8 +173,4 @@ $dot-space: 22px;
         border-radius: 6px;
     }
 
-    a {
-        font-weight: bold;
-        color: $text-black;
-    }
 }

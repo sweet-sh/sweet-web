@@ -3220,12 +3220,6 @@ select.form-control:not([size]):not([multiple]) {
     }
 }
 
-.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-
 .alert {
     position: relative;
     padding: .75rem 1.25rem;
@@ -3233,6 +3227,13 @@ select.form-control:not([size]):not([multiple]) {
     border: 1px solid transparent;
     border-radius: .25rem;
 }
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
 
 .alert-secondary {
     color: #383d41;

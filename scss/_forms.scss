@@ -8,7 +8,7 @@ button {
 
     &:focus {
         outline: 1px dotted;
-        outline: 5px auto -webkit-focus-ring-color // This should be a variable?? Does this just come from the browser? I have so many questions
+        outline: 5px auto -webkit-focus-ring-color; // This should be a variable?? Does this just come from the browser? I have so many questions
     }
 }
 
@@ -55,4 +55,43 @@ textarea {
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
+}
+
+// Sweet custom button classes - to be used for all button-style objects on the site
+
+.button {
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    line-height: 1;
+    color: #fff;
+    background: $dark-pink;
+    border: $dark-pink;
+    border-radius: 3px;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+    padding: 0.55rem 0.5rem;
+    margin: 0;
+
+    @include transition;
+
+    &:hover {
+        cursor: pointer;
+        background: $sweet-red;
+        box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    &.button-full-width {
+        width: 100%
+    }
+
+    &.button-large {
+        font-size: 1.15rem;
+    }
 }

@@ -7,15 +7,18 @@
         <p>
             Home to <strong>{{userCount}}</strong> people and <strong>{{communityCount}}</strong> communities
         </p>
-        <ul class='logged-out-communites-list'>
+        <div class='logged-out-communites-list'>
 
             {{#each communities}}
-                <li>
-                    <img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}"/>
-                    <a class="authorLink" href="/community/{{this.slug}}">{{this.name}}</a>
-                </li>
+                <a href="/community/{{this.slug}}">
+                    <img src="https://sweet.sh/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}"/>
+                    {{this.name}}
+                </a>
             {{/each}}
-        </ul>
+        </div>
+        <p style="text-align: center;">
+            <a class="button button-large button-centered" href="/about">Learn more</a>
+        </p>
     </div>
     <div class="col-md-4">
 
@@ -31,7 +34,7 @@
                 <label for="password">Password</label>
             </div>
 
-            <button type="submit">Log in</button>
+            <button class="button button-large button-full-width" type="submit">Log in</button>
             <a class="help-link" href="/forgot-password">Forgot password?</a>
         </form>
 
@@ -57,7 +60,7 @@
                 <label for="passwordrepeat">Repeat password</label>
             </div>
 
-            <button type="submit" >Sign up</button>
+            <button class="button button-large button-full-width" type="submit">Sign up</button>
         </form>
     </div>
 </div>
