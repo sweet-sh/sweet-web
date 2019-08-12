@@ -1,0 +1,105 @@
+/* ====== POST IMAGES ======= */
+
+/*
+STRUCTURE
+div.post-images > 1 or more (a > img.post-single-image)
+*/
+
+/* Base style for outside container */
+.post-images {
+    display: grid;
+    grid-column-gap: 2px;
+    grid-row-gap: 2px;
+    max-height: 450px;
+    margin-bottom: 0.5rem;
+}
+
+/* Base style for individual images */
+.post-single-image {
+    transition: all 100ms ease-in;
+    border-radius: 4px;
+    border: 1px solid #ededed;
+}
+
+.post-images .post-single-image:hover {
+    border-color: #9b9b9b;
+}
+
+/* One image */
+.post-images.one-image .post-single-image {
+    max-width: 100%;
+    max-height: 450px;
+    grid-template-columns: 100%;
+    /* Is this and the line below necessary? */
+    grid-template-rows: min-content;
+}
+
+/* Single vertical images are taller */
+.post-images.one-image.vertical-image {
+    max-height: 600px;
+}
+
+.post-images.one-image.vertical-image .post-single-image {
+    max-height: 600px;
+}
+
+/* Single horizontal images fill the whole box
+(currently images narrower than the box expand to fit which is not ideal but... okay) */
+.post-images.horizontal-image .post-single-image {
+    object-fit: cover;
+    width: 100%;
+}
+
+/* Two images */
+.post-images.two-images {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100%;
+}
+
+/* Three and four images */
+.post-images.three-images,
+.post-images.four-images {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.post-images.three-images>*:first-child {
+    grid-row-end: span 2;
+}
+
+/* Images in multi-image containers expand to fill their whole cell */
+.post-images.two-images .post-single-image,
+.post-images.three-images .post-single-image,
+.post-images.four-images .post-single-image {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    max-height: 450px;
+}
+
+/* Hack of sorts to fit images to maximum height of multi-image container */
+.post-images a {
+    min-height: 100%;
+}
+
+.comment .post-images {
+    max-width: 480px;
+    max-height: 200px;
+    margin-top: 0.35rem;
+}
+
+.comment .post-images.one-image {
+    display: inline-block;
+}
+
+.comment .post-images .post-single-image {
+    max-height: 200px;
+}
+
+.comment .post-images img.post-single-image.vertical-image {
+    max-height: 350px;
+}
+
+.comment.post-images.one-image.vertical-image {
+    max-height: 350px;
+}

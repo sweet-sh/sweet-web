@@ -454,3 +454,426 @@ section {
 .hashtags-list>* {
     margin-right: 0.5rem;
 }
+
+/*some stuff user profile and community pages share*/
+
+/*for community and user profile page sidebars*/
+.user-list {
+    padding: 0;
+    margin: 0 0 0 0;
+    list-style: none;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.user-list-icon {
+    display: flex;
+    position: relative;
+    margin-right: 8px;
+    width: 30px;
+}
+
+.user-list a {
+    position: relative;
+}
+
+.recently-active-marker {
+    color: #46e146;
+    position: absolute;
+    font-size: 0.65rem;
+    left: 23px;
+    bottom: 0px;
+}
+
+.recently-active-marker-inline {
+    color: #46e146;
+    font-size: 0.65rem;
+}
+
+
+.user-list.collapse.show,
+.user-list.collapsing {
+    display: flex !important;
+}
+
+.user-list li {
+    display: inline-block;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 2px;
+    border: 1px solid #dfdfdf;
+}
+
+.user-list li:hover {
+    background: #f1f1f1;
+}
+
+.user-list img {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+.user-list-toggle:hover {
+    text-decoration: none;
+}
+
+/*user profile pics on their page and also the community's image on its page*/
+#profileImageContainer {
+    display: flex;
+    width: 150px;
+    position: relative;
+}
+
+#profileImage {
+    width: 150px;
+    height: 150px;
+    border-radius: 10px;
+    object-fit: cover;
+    object-position: top;
+}
+
+#profileImageContainer.community-image {
+    width: 100%;
+}
+
+#profileImageContainer.community-image #profileImage {
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 776px) {
+    #profileImage {
+        max-height: 250px;
+    }
+}
+
+.own-profile-image {
+    margin-bottom: 0 !important;
+}
+
+/*stuff just for community pages*/
+
+/*used for community vote creation*/
+.content-box {
+    padding: 15px;
+    border-bottom: 1px solid #dfdfdf;
+    padding-bottom: 0px;
+}
+
+.content-box:hover {
+    box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+}
+
+/*page-header itself is used by a bunch of pages, its styles are down in the misc section*/
+.page-header.community-name {
+    padding-top: 10px;
+}
+
+/*community tags indicates open/approval required, public/private*/
+.user-tags,
+.community-tags {
+    margin-top: -10px;
+    margin-bottom: 0.5rem;
+}
+
+.tag {
+    font-weight: 300;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 1px solid;
+    border-radius: 4px;
+    line-height: 1rem;
+    padding: 0.15rem 0.25rem;
+    margin-right: 0.25rem;
+    background: #efefef;
+}
+
+.tag.tag-green {
+    border-color: #28a745;
+    background: #eaffea;
+    color: #28a745;
+}
+
+#nav-tabContent,
+#communitiesTabContent {
+    background: white;
+    border-left: 1px solid #dfdfdf;
+    border-right: 1px solid #dfdfdf;
+    border-bottom: 1px solid #dfdfdf;
+    padding: 15px;
+    margin-top: 0;
+}
+
+#votesContainer {
+    padding: 0;
+    border-bottom: 1px solid #cecece;
+    margin-bottom: 1rem;
+}
+
+.post.vote {
+    background: none;
+    border: 0;
+    border-bottom: 1px solid #cecece;
+}
+
+.post.vote:hover {
+    box-shadow: none;
+}
+
+.post.vote:last-child {
+    border-bottom: none;
+}
+
+/*todo: what is this*/
+.proposal-box>p:last-of-type {
+    margin-bottom: 0;
+}
+
+#newCommunityForm label {
+    font-weight: bold;
+}
+
+/* replaced by... something in postsV2.handlebars, still used in communities and votes .handlebars and systempost i guess */
+.authorLink {
+    color: #1a1717;
+}
+
+/*nav is used in the links to change community tabs and on the sidebar leave and join things somehow.*/
+/*nav-tabs is just in community tabs.*/
+.nav {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dfdfdf #dfdfdf #fff;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+/*nav-link is also used for navigation in navbar, community sidebar, community pages, and community directory page, so should probs. be factored out of here and into the misc. section*/
+.nav-link {
+    display: block;
+    padding: .5rem 1rem;
+}
+
+.nav-link:focus,
+.nav-link:hover {
+    text-decoration: none
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: -1px;
+}
+
+
+.tab-content>.tab-pane {
+    display: none;
+}
+
+.tab-content>.active {
+    display: block;
+}
+
+/*badge is used for community tags and for the "following" notice next to usernames in booster lists*/
+.badge {
+    display: inline-block;
+    padding: .25em .4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem
+}
+
+.badge-secondary {
+    color: #fff;
+    background-color: #6c757d
+}
+
+/*modal stuff mostly stolen from bootstrap*/
+.modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1050;
+    display: none;
+    overflow: hidden;
+    outline: 0
+}
+
+/*is applied to the body element*/
+.modal-open {
+    overflow: hidden;
+}
+
+.modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    border-top-left-radius: .3rem;
+    border-top-right-radius: .3rem;
+}
+
+.modal.fade .modal-dialog {
+    transition: -webkit-transform .3s ease-out;
+    transition: transform .3s ease-out;
+    transition: transform .3s ease-out, -webkit-transform .3s ease-out;
+    -webkit-transform: translate(0, -25%);
+    transform: translate(0, -25%);
+}
+
+.modal.show .modal-dialog {
+    -webkit-transform: translate(0, 0);
+    transform: translate(0, 0);
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: .5rem;
+    pointer-events: none;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+    }
+}
+
+.modal-content {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .2);
+    border-radius: .3rem;
+    outline: 0;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+.modal-backdrop.show {
+    opacity: .5;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+}
+
+.modal-title {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#alertModal,
+#updateProfileModal {
+    margin-top: 90px;
+}
+
+.bootbox-confirm {
+    padding-top: 60px;
+}
+
+.close:not(:disabled):not(.disabled) {
+    cursor: pointer;
+}
+
+.modal-header .close {
+    padding: 1rem;
+    margin: -1rem -1rem -1rem auto;
+}
+
+.modal-footer>:not(:last-child) {
+    margin-right: .25rem;
+}
+
+.modal-footer>:not(:first-child) {
+    margin-left: .25rem;
+}
+
+.close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+}
+
+.modal-body {
+    position: relative;
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.modal-footer {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+}

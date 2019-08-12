@@ -1,0 +1,609 @@
+/*post header stuff*/
+
+.post-header .user-flag {
+    width: 1.5rem;
+    align-self: center;
+}
+
+.user-flag {
+    color: red;
+    margin-left: 5px;
+}
+
+
+article.post>.notifications,
+article.post>header,
+article.post>.content,
+article.post>.toolbar {
+    padding: 0 1rem;
+}
+
+
+article.post>.notifications>div:last-child {
+    margin-bottom: 1em;
+}
+
+article.post>.notifications div {
+    color: #959595;
+    margin-bottom: 0.5rem;
+    font-size: 0.925rem;
+}
+
+article.post>.notifications div a,
+article.post>.notifications div a:active,
+article.post>.notifications div a:visited {
+    color: #959595;
+}
+
+article.post>.notifications div a:hover {
+    color: #ce1717;
+}
+
+article.post>.notifications div.recently-commented-notification {
+    color: #D99BB4;
+}
+
+article.post>.notifications div.recently-commented-notification a,
+article.post>.notifications div.recently-commented-notification a:active,
+article.post>.notifications div.recently-commented-notification a:visited {
+    color: #D99BB4;
+}
+
+article.post>.notifications div.recently-commented-notification a:hover {
+    color: #ce1717;
+}
+
+article.post>.notifications div.community-notification {
+    display: flex;
+    align-items: center;
+}
+
+article.post>.notifications div.community-notification img {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+
+article.post>.notifications div.recently-commented-notification a,
+article.post>.notifications div.community-notification a,
+article.post>.notifications div.boosters-notification a {
+    font-weight: 500;
+}
+
+article.post>header {
+    display: flex;
+}
+
+article.post>header img.author-image {
+    width: 46px;
+    height: 46px;
+    border-radius: 5px;
+}
+
+article.post>header .post-header-left {
+    height: 46px;
+    width: 46px;
+    margin-right: 5px;
+}
+
+article.post>header .post-header-right {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    justify-content: center;
+}
+
+article.post>header h2.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+article.post>header .author-display-name,
+article.comment>header .author-display-name,
+#welcome-message-container>footer .author-display-name {
+    font-weight: 500;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-right: 5px;
+}
+
+article.post>header .author-display-name a,
+article.comment>header .author-display-name a,
+#welcome-message-container>footer .author-display-name a,
+article.post>header .author-username a,
+article.comment>header .author-username a,
+#welcome-message-container>footer .author-username a {
+    color: #1a1717;
+}
+
+article.post>header .author-display-name a:hover,
+article.comment>header .author-display-name a:hover,
+#welcome-message-container>footer .author-display-name a:hover,
+article.post>header .author-username a:hover,
+article.comment>header .author-username a:hover,
+#welcome-message-container>footer .author-username a:hover {
+    color: #ce1717;
+}
+
+article.post>header .author-username,
+article.comment>header .author-username,
+#welcome-message-container>footer .author-username {
+    color: #959595;
+}
+
+article.post>header .author-username:first-child,
+article.comment>header .author-username:first-child,
+#welcome-message-container>footer .author-username:first-child {
+    color: #1a1717;
+    font-weight: 500;
+}
+
+article.post>header .metadata {
+    color: #959595;
+    font-size: 0.85rem;
+}
+
+.postAuthorImage {
+    width: 46px;
+    height: 46px;
+    border-radius: 5px;
+    display: inline;
+    margin-right: 5px;
+}
+
+.button.show-boosters-list {
+    font-size: 0.7rem;
+    margin-left: 2px;
+}
+
+.booster:not(:last-of-type):after {
+    content: ', ';
+}
+
+
+/* post body layout + buttons stuff */
+
+article.post {
+    padding-top: 1rem;
+    border: 1px solid #cecece;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+
+/* Prevent double border on first post in feed */
+/* But then add it back when it's the only one! */
+article.post:first-child:not(:only-child) {
+    border-top: 0;
+}
+
+article.post>.content {
+    position: relative;
+    margin: 1rem 0;
+    overflow-wrap: break-word;
+}
+
+article.post>.content .content-warning {
+    margin-bottom: 0.5rem;
+}
+
+.show-more-content {
+    display: none;
+}
+
+article.post>.toolbar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+    padding-left: 0.65rem;
+    max-width: 390px;
+}
+
+
+article.post:hover {
+    box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+}
+
+.post-action-button {
+    /*um this class was technically deprecated in the new postsV2.handlebars that added threaded comments but the stats page still uses it for some reason*/
+    color: #aaa;
+}
+
+.button.post-toolbar-button {
+    background: #fff;
+    box-shadow: none;
+    color: $dark-grey;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    width: 40px;
+    justify-content: center;
+    margin-right: 32px;
+    &:hover {
+        background: #fff;
+        color: $sweet-red;
+    }
+}
+
+.comments-number {
+    font-size: smaller;
+    margin-left: 3px;
+}
+
+.content-warning {
+    font-weight: 500;
+}
+
+.abbreviated-content {
+    height: 20rem;
+    overflow: hidden;
+}
+
+/*todo: eliminate redundancy here */
+
+.post .abbreviated-content:not(.content-warning-content)::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 17.5rem;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 3rem;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 90%);
+}
+
+
+.comment .abbreviated-content:not(.content-warning-content)::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 17.5rem;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 3rem;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(245, 245, 245, 1) 90%);
+}
+
+.button.show-more {
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0.5rem auto;
+}
+
+.button.content-warning-show-more {
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0 auto 0.5rem auto;
+}
+
+a.show-more {
+    /* Shim for old show more button element. (is this still used?) */
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: .15rem .35rem;
+    font-weight: 300;
+    text-transform: uppercase;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background: #aaa;
+    color: #fff !important;
+    width: 100px;
+    display: block;
+    font-size: 0.8rem;
+    margin: 0.5rem auto;
+}
+
+a.show-more:hover {
+    /* Shim for old show more button element */
+    background: #959595;
+}
+
+/*comments section*/
+
+.button.comment-toolbar-button {
+    background: none;
+    color: #aaa;
+    padding: 0;
+    font-size: 0.7rem;
+}
+
+.button.comment-toolbar-button:not(:first-child) {
+    margin-left: 1rem;
+}
+
+.button.comment-toolbar-button:hover {
+    color: #ce1717;
+}
+
+.comment-content .abbreviated-content:not(.content-warning-content)::after {
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(245, 245, 245, 1) 90%);
+}
+
+.comment-deleted-message,
+.comment-muted-message {
+    font-style: italic;
+    font-weight: 300;
+}
+
+section.comments {
+    font-size: 0.9rem;
+    margin: 0 1rem;
+}
+
+section.comments>.comments-container>.comment:first-child {
+    padding-top: 1rem;
+    border-top: 1px solid #eaeaea;
+}
+
+section.comments:not(.single-post-comments) {
+    display: none;
+}
+
+article.comment {
+    margin-top: .75rem;
+}
+
+div.comments-container>article.comment:first-child {
+    margin-top: 0;
+    /* Otherwise comments section jumps when appearing??  */
+}
+
+article.comment:last-child {
+    margin-bottom: .75rem;
+}
+
+article.comment recent-comment-content {
+    transition: background 0.5s;
+}
+
+article.comment .recent-comment-content.flash {
+    animation: flash 2s ease-out;
+    animation-iteration-count: 1;
+}
+
+@keyframes flash {
+    0% {
+        background-color: #f6f6f6;
+    }
+
+    50% {
+        background-color: #fcfaea;
+    }
+
+    100% {
+        background-color: #f6f6f6;
+    }
+}
+
+article.comment>header .timestamp {
+    font-size: 0.75rem;
+    color: #959595;
+    white-space: nowrap;
+    position: relative;
+    top: 1px;
+}
+
+article.comment>.content {
+    margin-top: 0.25rem;
+    background: #f6f6f6;
+    padding: 0.5rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    max-width: 480px;
+    position: relative;
+}
+
+article.comment>.content.comment-deleted-content,
+article.comment>.content.comment-muted-content {
+    margin-top: 0;
+}
+
+article.comment>.content p:last-child {
+    margin-bottom: 0rem;
+}
+
+article.comment article.comment {
+    padding-left: 10%;
+}
+
+/*the comment header and community welcome message styles are intermixed here*/
+
+#welcome-message-container>footer,
+article.comment>header {
+    display: flex;
+    overflow: hidden;
+}
+
+#welcome-message-container>footer .welcome-message-container,
+article.comment>header .comment-header-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+
+#welcome-message-container>footer .author-image,
+article.comment>header>.author-image {
+    width: 25px;
+    height: 25px;
+    border-radius: 3px;
+    margin-right: 3px;
+}
+
+#welcome-message-container>footer h3.author-name,
+article.comment>header h3.author-name {
+    font-size: 1em;
+    font-family: 'Ubuntu', sans-serif;
+    letter-spacing: 0;
+    margin: 0;
+    display: flex;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding-right: 5px;
+}
+
+#welcome-message-container>footer .author-username,
+article.comment>header .author-username {
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+/*stuff that's just for the welcome message*/
+
+#welcome-message-container footer {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(173, 134, 219, 0.2);
+    padding: 1rem 0 0 0;
+    font-weight: 300 !important;
+    font-size: 0.75rem !important;
+}
+
+#welcome-message-container .updated-by-text {
+    white-space: nowrap;
+    margin-right: 5px;
+    align-self: center;
+}
+
+#welcome-message-container>footer .author-image {
+    height: 20px;
+    width: 20px;
+}
+
+#welcome-message-container {
+    padding: 15px;
+    border-bottom: 0;
+    background: -moz-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
+    background: -webkit-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
+    background: linear-gradient(135deg, #f7efff 0%, #d8cce5 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7efff', endColorstr='#d8cce5', GradientType=1);
+    color: #2c1445;
+    border-left: 1px solid #cecece;
+    border-right: 1px solid #cecece;
+}
+
+#welcome-message-container>p:last-child {
+    margin: 0;
+}
+
+
+/*link preview stuff, also used to preview youtube/vimeo embeds, so that's here too, and also this is used within the editor while previewing the link previews*/
+.link-preview-container {
+    display: flex;
+    height: 100px;
+    padding: 10px;
+    color: #1a1717;
+    font-weight: 500;
+    border: 1px solid #dfdfdf;
+    border-radius: 4px;
+    margin: 0 0 0.5em 0;
+    background-color: #ffffff;
+    align-items: center;
+}
+
+.link-preview-container:hover {
+    text-decoration: none;
+    background: #fcfcfc;
+}
+
+.link-preview-container::before {
+    display: none;
+}
+
+.link-preview-container::after {
+    display: none;
+}
+
+.link-preview-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    margin-left: 10px;
+}
+
+.link-preview-text-container>span {
+    margin: 0;
+    padding: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 27px;
+}
+
+
+@media(max-width:500px) {
+    .link-preview-container {
+        height: 75px;
+    }
+
+    .link-preview-image {
+        max-width: 100px;
+    }
+}
+
+.link-preview-image {
+    border-radius: 2px;
+    align-self: center;
+    max-height: 100%;
+    max-width: 140px;
+    width: 140px !important;
+    object-fit: cover;
+    min-width: 140px;
+}
+
+.link-preview-description {
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.link-preview-domain {
+    font-weight: 300;
+    font-size: 0.9em;
+    font-variant: small-caps;
+}
+
+.embedded-video-cont {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.embedded-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.embedded-video-preview-container {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    height: 78px;
+}

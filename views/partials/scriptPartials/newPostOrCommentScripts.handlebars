@@ -57,10 +57,10 @@ $(function(){
     }
   });
   $("#emojiWindowButton").click(function () {
-    $("#emojiWindow").slideToggle("fast");
+    $("#new-post-emoji-picker").slideToggle("fast");
     $("#editor").find(".ql-editor").focus()
   })
-  $("#emojiWindow>.add-emoji").click(function () {
+  $("#new-post-emoji-picker>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
   $('body').on('click', '.reply-to-comment', function() {
@@ -165,7 +165,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
       }).done(function (postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
-        $("#emojiWindow").slideUp("fast");
+        $("#new-post-emoji-picker").slideUp("fast");
         $(".link-form-cont").slideUp("fast");
         editor.find(".ql-editor").html("");
         haveWeSentPost = false;
@@ -193,7 +193,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     else if (commentType == "child") {
         commentsContainer = commentButton.closest('.comments-container').find('.comment[data-comment-id='+commentID+']').find('.replies')[0];
     }
-    let emojiWindow = commentForm.find('.replyEmojiWindow');
+    let emojiWindow = commentForm.find('.emoji-picker');
 
     if (commentContainer[0].hasContent()) {
       commentButton.prop('disabled', true);

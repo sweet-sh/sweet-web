@@ -3,7 +3,7 @@
     <div id="editor" class="editable-post-content editable-text" id="postContent">
       <p><br></p>
     </div>
-    <div class="form-row mt-2 card p-1" id="emojiWindow" style="display:none">
+    <div class="form-row mt-2 p-1 emoji-picker" id="new-post-emoji-picker" style="display:none">
       {{> emojilist }}
     </div>
   <div class="form-row mt-2" id="postContentWarningsContainer">
@@ -28,11 +28,11 @@
     </div>
     {{/unless}}
     <div class="rightSideControls">
-      <button type="button" class="btn btn-primary btn-fade" id="postLinkButton"><i class="fas fa-link"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
-      <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
+      <button type="button" class="button grey-button" id="postLinkButton"><i class="fas fa-link"></i></button>
+      <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="button grey-button" id="emojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="button grey-button" id="postContentWarningsButton"><i class="fas fa-info-circle"></i></button>
+      <button type="submit" class="button" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </div>

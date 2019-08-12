@@ -1049,9 +1049,6 @@ h6 {
 }
 
 
-/* Raph got up to here converting CSS to SCSS */
-
-
 /* ====== POST IMAGES ======= */
 
 /*
@@ -1834,28 +1831,6 @@ article.post>.toolbar {
     max-width: 390px;
 }
 
-/*
-article.post>.toolbar>div {
-    display: flex;
-    flex: 1;
-}
-
-article.post>.toolbar>div:first-child {
-    justify-content: flex-start;
-}
-
-article.post>.toolbar>div:last-child {
-    justify-content: flex-end;
-}
-
-article.post>.toolbar>div:first-child * {
-    justify-content: flex-start;
-}
-
-article.post>.toolbar>div:last-child * {
-    justify-content: flex-end;
-}
-*/
 
 article.post:hover {
     box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
@@ -3376,3 +3351,5 @@ select.form-control:not([size]):not([multiple]) {
         transform: translateY(0);
     }
 }
+
+/* Raph got up to here hooray! */
