@@ -24,6 +24,7 @@
                 //add an event listener to the profile submit buttom that creates the new formdata object and appends the blob instead of the regular file
                 var imageReader = new FileReader();
                 imageReader.onload = function() {
+                  var startTime = new Date().getTime();
                     var data = new Uint8Array(imageReader.result);
                     resizeWorker = new Worker('/js/resizeWorker.js');
                     resizeWorker.postMessage(data);
@@ -32,8 +33,10 @@
                         var virtualUrl = URL.createObjectURL(imageBlob);
                         preview.css('background-image', "url(" + virtualUrl + ")");
                         var submit = preview.closest('form').find(':submit')[0];
-                        resizeWorker.ternimate();
+                        resizeWorker.terminate();
                         resizeWorker = undefined;
+
+                        console.log('image was loaded and cropped and resized, taking '+(new Date().getTime()-startTime)/1000+" seconds");
 
                         submit.onclick = function(e) {
                             e.preventDefault();
