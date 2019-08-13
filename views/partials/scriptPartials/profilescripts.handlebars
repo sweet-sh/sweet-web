@@ -1,22 +1,81 @@
 {{#if isOwnProfile}}
 <script type="text/javascript">
-  $("#image-upload").change(function (e) {
-    var preview = $("#image-preview");
-    var reader = new FileReader();
-    reader.addEventListener("load", function () {
-      preview.css('background-image',"url("+reader.result+")");
-      $("#image-label").html("change image");
-    }, false);
-    if (this.files[0]) {
-      reader.readAsDataURL(this.files[0]);
-    }else{
-      preview.css('background-image',"");
-      $("#image-label").html("choose image");
-    }
-  })
-  $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
-  $("#image-preview").css("background-size", "cover");
-  $("#image-preview").css("background-position", "center center");
+    var resizeWorker = undefined;
+    $("#image-upload").change(function(e) {
+        //when the image upload changes, load the glue to get the fs stuff and create the file with the file reader. then, create the worker resizeWorker
+        //and send it a message, prompting it to start. OR if it already exists abort it first. listen for it to send the blob back, and make the blob url the background of the preview and stuff.
+        //then add a submit listener to the submit button that prevents default and makes a formdata from the form but substitutes the blob in for the file in the file input and submit back.
+
+        var preview = $("#image-preview");
+
+        try {
+          if(resizeWorker){
+            resizeWorker.terminate();
+            resizeWorker = undefined;
+          }
+
+            createResizeWorker();
+
+            function createResizeWorker() {
+                //create the virtual file
+                //create the worker that runs the resize code
+                //listen for the message back and take the blob
+                //turn it into a data url and set that as the thing's background
+                //add an event listener to the profile submit buttom that creates the new formdata object and appends the blob instead of the regular file
+                var imageReader = new FileReader();
+                imageReader.onload = function() {
+                    var data = new Uint8Array(imageReader.result);
+                    resizeWorker = new Worker('/js/resizeWorker.js');
+                    resizeWorker.postMessage(data);
+                    resizeWorker.onmessage = function(e) {
+                        var imageBlob = e.data;
+                        var virtualUrl = URL.createObjectURL(imageBlob);
+                        preview.css('background-image', "url(" + virtualUrl + ")");
+                        var submit = preview.closest('form').find(':submit')[0];
+                        resizeWorker.ternimate();
+                        resizeWorker = undefined;
+
+                        submit.onclick = function(e) {
+                            e.preventDefault();
+                            $("#image-upload").val('');
+                            var formData = new FormData(preview.closest('form')[0]);
+                            formData.append('imageUpload', imageBlob);
+                            var request = new XMLHttpRequest();
+                            request.open("POST", "/updateprofile");
+                            request.send(formData);
+                            window.location.reload();
+                        }
+                    }
+                }
+                imageReader.readAsArrayBuffer($("#image-upload")[0].files[0]);
+            }
+
+
+
+
+
+        } catch (err) {
+
+            
+
+                    var reader = new FileReader();
+                    reader.addEventListener("load", function() {
+                        preview.css('background-image', "url(" + reader.result + ")");
+                        $("#image-label").html("change image");
+                    }, false);
+                    if (this.files[0]) {
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.css('background-image', "");
+                        $("#image-label").html("choose image");
+                    }
+                    submit.onclick = function(e){return true;}
+            console.error(err);
+        }
+    })
+    $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
+    $("#image-preview").css("background-size", "cover");
+    $("#image-preview").css("background-position", "center center");
 </script>
 {{else}}
 <script type="text/javascript">
