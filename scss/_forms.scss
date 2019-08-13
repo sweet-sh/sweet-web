@@ -1,61 +1,50 @@
-label {
-    display: inline-block;
-    margin-bottom: .5rem
+.form-group {
+    margin-bottom: 1rem;
 }
 
-button {
-    border-radius: 0;
+input, select {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+    display: inline-block;
+    width: 100%;
+    padding: 0.55rem;
+    border-radius: 3px;
+    border: 1px solid $medium-grey;
+    background: $lightest-grey;
+
+    @include transition;
 
     &:focus {
-        outline: 1px dotted;
-        outline: 5px auto -webkit-focus-ring-color; // This should be a variable?? Does this just come from the browser? I have so many questions
+        border-color: $light-pink;
     }
 }
 
-input {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-}
-
-input[type=checkbox],
-input[type=radio] {
-    box-sizing: border-box;
-    padding: 0
-}
-
-input[type=date],
-input[type=datetime-local],
-input[type=month],
-input[type=time] {
-    -webkit-appearance: listbox
-}
-
 textarea {
-    overflow: auto;
-    resize: vertical
+    resize: vertical;
+    line-height: 1.5;
 }
 
-button,
 select {
-    text-transform: none;
+    display: block;
+    width: 100%;
+    padding: 0.25rem 0;
+    margin: 0.5rem 0;
 }
 
-button,
-input {
-    overflow: visible;
+.form-text {
+    color: $darkest-grey;
 }
 
-button,
-input,
-optgroup,
-select,
-textarea {
-    margin: 0;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-}
+// select {
+//     width: 100%;
+// }
 
 // Sweet custom button classes - to be used for all button-style objects on the site
 
@@ -68,7 +57,7 @@ textarea {
     -ms-user-select: none;
     user-select: none;
     line-height: 1;
-    color: #fff;
+    color: $background-white;
     background: $dark-pink;
     border: $dark-pink;
     border-radius: 3px;
@@ -95,6 +84,12 @@ textarea {
         font-size: 1.15rem;
     }
 
+    &.smol-button {
+        font-size: 0.7rem;
+        padding: .35rem;
+    }
+
+
     &.grey-button {
         background: $dark-grey;
 
@@ -112,20 +107,6 @@ textarea {
         background-color: $light-grey;
     }
 }
-
-
-.outline-button {
-    background: #fff;
-    border-color: #aaa;
-    color: #aaa;
-    font-weight: 400;
-}
-
-.outline-button:hover {
-    background: #aaa;
-    color: #fff;
-}
-
 
 button.close {
     padding: 0;
@@ -154,6 +135,10 @@ button.close {
     display: none;
 }
 
+.ql-editor.ql-blank::before {
+    color: $placeholder;
+}
+
 .ql-bubble .ql-editor img {
     max-width: fit-content;
 }
@@ -180,7 +165,7 @@ button.close {
 .ql-container {
     font-family: inherit;
     padding: 0;
-    background-color: #fff;
+    background-color: $editor-background;
     z-index: 356;
     /*one higher than #bodyFader, as these are the droppable areas*/
 }
@@ -224,14 +209,14 @@ button.close {
 
 #searchForm,
 #postForm {
-    border: 1px solid #cecece;
-    background: white;
+    border: 1px solid $medium-grey;
+    background: $element-background;
     padding: 15px;
     margin-bottom: 1rem;
 }
 
 #postForm:hover {
-    box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: $post-shadow;
 }
 
 #postForm .form-row {
@@ -246,6 +231,7 @@ button.close {
     font-size: 1rem;
     line-height: 1.5;
     border: 2px solid $medium-grey;
+    background: $lightest-grey;
     cursor: text;
     min-height: 4em;
 }
@@ -276,11 +262,11 @@ button.close {
     padding: 2px 0.15rem 0 0.15rem;
     border: 1px solid transparent;
     border-radius: 4px;
-    background: #fff;
+    background: $element-background;
 }
 
 .add-emoji:hover {
-    border-color: #ddd;
+    border-color: $medium-grey;
 }
 
 @media (max-width: 575.98px) {
@@ -347,7 +333,7 @@ button.close {
     margin-right: -1px;
     margin-bottom: 0;
     transition: all 0.1s ease-in-out;
-    background-color: #e4e4e4;
+    background-color: $lightest-grey;
     color: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 0, 0, 0.2);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
@@ -379,9 +365,9 @@ button.close {
 }
 
 .new-comment-form {
-    background-color: #f6f6f6;
+    background-color: $lightest-grey;
     padding: .75rem 1rem;
-    border: 1px solid #f0f0f0;
+    border: 1px solid $light-grey;
     border-radius: 4px;
     margin: 0 0 1rem;
 }
@@ -395,13 +381,6 @@ button.close {
     padding-top: 0.5rem;
     border: none;
     margin: 0;
-}
-
-.childReplyForm {
-    padding-left: 64px;
-    margin-bottom: 1em;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 1em;
 }
 
 /*post image + link preview adder stuff (🐍)*/
@@ -469,8 +448,8 @@ button.close {
     background-position: center;
     background-repeat: no-repeat;
     background-image: url("/images/imagePreviewWindowDefault.jpg");
-    background-color: #f6f6f6;
-    border: 1px dashed #d5d5d5;
+    background-color: $lightest-grey;
+    border: 1px dashed $medium-grey;
     margin: 0;
     object-fit: contain;
     position: relative;
@@ -494,7 +473,7 @@ button.close {
 
 .image-preview-controls>div {
     text-decoration: none;
-    color: #aaa;
+    color: $dark-grey;
     width: 1.5em;
     font-size: 2em;
     display: flex;
@@ -504,7 +483,7 @@ button.close {
 }
 
 .image-preview-controls>div:hover {
-    color: #666;
+    color: $darkest-grey;
 }
 
 #postImageDescription {
@@ -526,11 +505,6 @@ button.close {
     touch-action: none;
 }
 
-.image-clear {
-    background-color: #ffffff99;
-    color: #000000;
-}
-
 /* uploader for other images (profile picture, community icon...i think that's it? */
 .file-input {
     display: none;
@@ -546,9 +520,9 @@ button.close {
     position: relative;
     overflow: hidden;
     border-radius: 5px;
-    background-color: #ffffff;
-    color: #ecf0f1;
-    border: 1px dashed #ced4da;
+    background-color: $element-background;
+    color: $lightest-grey;
+    border: 1px dashed $light-grey;
 }
 
 #image-preview input {
@@ -576,101 +550,10 @@ button.close {
     margin: auto;
     text-align: center;
     border-radius: 5px;
-    background-color: #ced4da;
-    color: #555;
-}
-
-/*boring non-rich-text form stuff, for login, search, settings, etc*/
-.form-control::-webkit-input-placeholder {
-    color:$medium-grey;
-    opacity: 1
-}
-
-.form-control::placeholder {
-    color: $medium-grey;
-    opacity: 1
-}
-
-.form-group {
-    margin-bottom: 1rem
-}
-
-.form-text {
-    display: block;
-    margin-top: .25rem
-}
-
-.form-row {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-    margin-right: -5px;
-    margin-left: -5px
-}
-
-.form-inline .form-control {
-    display: inline-block;
-    vertical-align: middle
-}
-
-.form-inline {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-    -ms-flex-flow: row wrap;
-    flex-flow: row wrap;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center
-}
-
-.form-control {
-    display: block;
-    width: 100%;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    font-family: 'Ubuntu', sans-serif;
-}
-
-.form-control:focus {
-    color: #495057;
-    background-color: #fff;
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
-}
-
-select.form-control:not([size]):not([multiple]) {
-    height: calc(2.25rem + 2px)
-}
-
-.form-check {
-    position: relative;
-    display: block;
-    padding-left: 1.25rem
-}
-
-.form-check-input {
-    position: absolute;
-    margin-top: .3rem;
-    margin-left: -1.25rem
-}
-
-.form-check-label {
-    margin-bottom: 0
+    background-color: $light-grey;
+    color: $darkest-grey;
 }
 
 #settingsForm h4 {
-    color: #ce1717;
+    color: $dark-pink;
 }

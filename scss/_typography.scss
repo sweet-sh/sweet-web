@@ -1,5 +1,5 @@
 /* Fonts */
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Quicksand:500');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Quicksand:300,400,500');
 
 @font-face {
     font-family: 'OpenDyslexic3';
@@ -36,7 +36,7 @@ body {
     text-align: left;
     font-size: 96.5%;
     color: $text;
-    background: $background-grey;
+    background: $page-background;
 }
 
 p {
@@ -216,15 +216,15 @@ h6 {
 }
 
 .text-dark {
-    color: #343a40 !important
+    color: $text !important;
 }
 
 .text-center {
-    text-align: center !important
+    text-align: center !important;
 }
 
 .text-muted {
-    color: #6c757d !important
+    color: $darkest-grey !important;
 }
 
 // Bootstrap shim
@@ -240,10 +240,6 @@ small,
 }
 
 /*i may have made that last one up*/
-
-.text-success {
-    color: #28a745 !important
-}
 
 /*only kind of belongs here*/
 .screenreader-text {
@@ -302,9 +298,11 @@ small,
 .tooltip-inner {
     max-width: 200px;
     padding: .25rem .5rem;
-    color: #fff;
+    color: $text;
     text-align: center;
-    background-color: #000;
+    background-color: $element-background;
+    border: 1px solid $text;
+    box-shadow: $button-shadow;
     border-radius: .25rem;
 }
 
@@ -312,7 +310,7 @@ small,
 .bs-tooltip-top .arrow::before {
     top: 0;
     border-width: .4rem .4rem 0;
-    border-top-color: #000;
+    border-top-color: $text;
 }
 
 .tooltip .arrow {

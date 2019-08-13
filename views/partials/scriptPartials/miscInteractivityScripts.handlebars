@@ -178,7 +178,7 @@ $(function() {
             if (user === "you") {
                 return;
             }
-            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="badge badge-secondary float-right">Following</span></li>')
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="tag">Following</span></li>')
         })
         users.otherBoosters.forEach(function(user) {
             modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'</li>')

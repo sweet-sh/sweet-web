@@ -25,13 +25,22 @@
 }
 
 #topNav {
-    border-bottom-color: $navigation-border;
+    border-color: #b0b0b0;
     background: $navigation-background;
-    box-shadow: $navbar-shadow;
-    border-bottom-width: 2px;
-    border-bottom-style: solid;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3),-5px -5px 20px rgba(0,0,0,0.05);
+    border-width: 1px;
+    border-style: solid;
     padding-bottom: 0.5rem;
     padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    margin-left: -550px;
+    margin-right: auto;
+    text-align: center;
+    border-radius: 36px;
+    width: 1100px;
+    left: 50%;
+    text-align: center;
+    display: flex;
 }
 
 #navbarProfileImage.active {
