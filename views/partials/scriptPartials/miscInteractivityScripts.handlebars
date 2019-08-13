@@ -1,5 +1,14 @@
 <script type="text/javascript">
 $(function() {
+    $(window).scroll(function() {
+        var scroll = $(window).scrollTop();
+        if (scroll > 0) {
+            $("#topNav").addClass("shadow");
+        }
+        else {
+            $("#topNav").removeClass("shadow");
+        }
+    });
 {{#if loggedInUserData.settings.flashRecentComments}}
     $(window).scroll(function() {
         $(".recent-comment-content:not(.flash)").each(function(){

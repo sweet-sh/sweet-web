@@ -11,7 +11,6 @@ $dot-space: 22px;
 		linear-gradient($bg-color ($dot-space - $dot-size), transparent 1%) center,
 		$dot-color;
 	background-size: $dot-space $dot-space;
-    background-position: fixed;
 
     .bee-logo {
         padding-left: 1rem;

@@ -105,6 +105,10 @@ select {
     &.outline-button {
         color: $darkest-grey;
         background-color: $light-grey;
+        &:hover {
+            background: $dark-grey;
+            color: $background-white;
+        }
     }
 }
 
@@ -191,11 +195,6 @@ button.close {
     /* Given the overflow hidden above, this allows the selected glow to show properly */
 }
 
-.new-comment-form .link-form-cont {
-    margin: 0 -6px;
-    /* Gotta sort this out at some point */
-}
-
 .linkPreviewAddingForm {
     display: flex;
     flex-direction: row;
@@ -215,6 +214,10 @@ button.close {
     margin-bottom: 1rem;
 }
 
+#searchForm {
+    display: flex;
+}
+
 #postForm:hover {
     box-shadow: $post-shadow;
 }
@@ -231,7 +234,7 @@ button.close {
     font-size: 1rem;
     line-height: 1.5;
     border: 2px solid $medium-grey;
-    background: $lightest-grey;
+    background: $editor-background;
     cursor: text;
     min-height: 4em;
 }
@@ -251,7 +254,8 @@ button.close {
     cursor: default;
     flex-direction: row;
     justify-content: flex-start;
-    border: 1px solid $light-grey;
+    border: 1px solid $medium-grey;
+    background: $element-background;
     padding: 5px;
     border-radius: 6px;
     display: flex;
@@ -267,6 +271,7 @@ button.close {
 
 .add-emoji:hover {
     border-color: $medium-grey;
+    transform: scale(1.2);
 }
 
 @media (max-width: 575.98px) {
@@ -302,6 +307,10 @@ button.close {
     display: none;
     justify-content: space-between;
     align-items: center;
+}
+
+#replyControlsRow {
+    display: flex;
 }
 
 .rightSideControls button:not(:last-child),
