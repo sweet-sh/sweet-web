@@ -71,6 +71,24 @@ $(function(){
   $("#new-post-emoji-picker>.add-emoji").click(function () {
     $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
+
+  $('body').on('click', '.edit-post', function() {
+      var postContainer = $(this).closest('.post');
+      var postID = postContainer.attr("data-post-id");
+      $.post("/createposteditor/"+postID, function(data) {
+          $('body').append(data.editor);
+          var editModal = $('#editPostModal');
+          attachQuill(editModal.find('#editPostContent')[0]);
+          $('#editPostModal').modal();
+      })
+  })
+
+  // Always destroy editor modals when they're closed, so people can't get their
+  // edits back, HA HA
+  $('body').on('hidden.bs.modal', '#editPostModal', function (e) {
+      e.target.remove()
+  })
+
   $('body').on('click', '.reply-to-comment', function() {
     // First, check if the reply form is already open - if it is, just scroll to it
     var commentContainer = $(this).closest('.comment');

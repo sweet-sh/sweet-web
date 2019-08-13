@@ -133,6 +133,11 @@
             </div>
         {{/contains}}
         {{#if isYourPost}}
+            <div class="toolbar-button-container">
+                <button type="button" class="button post-toolbar-button edit-post">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
         	<div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
                     <i class="far fa-trash-alt"></i>

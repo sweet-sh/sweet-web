@@ -1017,6 +1017,39 @@ module.exports = function(app) {
                 })
             })
     })
+
+    app.post('/createposteditor/:postid', isLoggedInOrRedirect, function(req, res) {
+
+        isCommunityPost = false;
+
+        Post.findOne({
+            _id: req.params.postid
+        })
+        .then(post => {
+            if (post.author.equals(req.user._id)){
+                // This post has been written by the logged in user - we good
+                if (post.type == 'community') {
+                    isCommunityPost = true;
+                }
+                hbs.render('./views/partials/posteditormodal.handlebars', {
+                    contentWarnings: post.contentWarnings,
+                    content: post.parsedContent,
+                    privacy: post.privacy,
+                    isCommunityPost: isCommunityPost,
+                })
+                .then(async html => {
+                    var result = {
+                        editor: html
+                    }
+                    res.contentType('json');
+                    res.send(JSON.stringify(result));
+                })
+            }
+            else {
+                res.send('Hold up there scout')
+            }
+        })
+    })
 };
 
 function cleanTempFolder() {

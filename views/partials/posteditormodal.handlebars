@@ -1,0 +1,56 @@
+<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editPostModalLabel">Edit post</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="contentForm" id="postEditForm">
+          <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple style="display:none;">
+              <div class="form-row" style="margin-bottom:0.5rem" id="editPostContentWarningsContainer">
+                <input type="text" class="form-control" name="editPostContentWarnings" id="editPostContentWarnings" placeholder="Warn others about your post's content." value="{{contentWarnings}}" />
+              </div>
+              <div class="editable-post-content editable-text" id="editPostContent">
+                {{{content}}}
+              </div>
+              <div class="form-row mt-2 p-1 emoji-picker" id="edit-post-emoji-picker" style="display:none">
+                {{> emojilist }}
+              </div>
+            <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
+              <div class="my-2 linkPreviewAddingForm">
+                <input type="text" class="form-control" name="editLinkPreviewUrlEntry" id="editLinkPreviewUrlEntry" placeholder="endless.horse" />
+                <button class="button grey-button link-add" style="margin-left: 0.5rem;"><i class="fas fa-arrow-up"></i></button>
+              </div>
+            </div>
+            <div id="editorControlsRow" class="mt-2 post-controls">
+              {{! Hide this div in communities}}
+              {{#unless isCommmunityPost}}
+              <div class="leftSideControls">
+                <div class="switch-field" id="editVisibilityControls">
+                  <input type="radio" id="postPrivacy-public" name="editPostPrivacy" value="public" {{#eq privacy "public"}}checked{{/eq}} />
+                  <label for="postPrivacy-public"><i class='fas fa-eye'></i></label>
+                  <input type="radio" id="postPrivacy-private" name="editPostPrivacy" value="private" {{#eq privacy "private"}}checked{{/eq}}/>
+                  <label for="postPrivacy-private"><i class='fas fa-eye-slash'></i></label>
+                </div>
+              </div>
+              {{/unless}}
+              <div class="rightSideControls">
+                <button type="button" class="button grey-button" id="editPostLinkButton"><i class="fas fa-link"></i></button>
+                <button type="button" class="button grey-button" id="editPostImageButton"><i class="fas fa-image"></i></button>
+                <button type="button" class="button grey-button" id="editEmojiWindowButton"><i class="far fa-smile"></i></button>
+                <button type="button" class="button grey-button" id="editPostContentWarningsButton"><i class="fas fa-info-circle"></i></button>
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="button" id="editPostSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Edit <i class="fas fa-chevron-right"></i></button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
