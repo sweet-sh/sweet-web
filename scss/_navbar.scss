@@ -26,8 +26,8 @@
 
 #topNav {
     border-bottom-color: $dark-pink;
-    background: white;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    background: $navigation-background;
+    box-shadow: $navbar-shadow;
     border-bottom-width: 2px;
     border-bottom-style: solid;
     padding-bottom: 0.5rem;
@@ -270,7 +270,7 @@
     color: $darkest-grey;
     text-align: left;
     list-style: none;
-    background-color: $background-white;
+    background-color: $element-background;
     background-clip: padding-box;
     border: 1px solid $medium-grey;
     border-radius: .25rem
@@ -323,7 +323,7 @@
 .dropdown-menu.show {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+    box-shadow: $dropdown-shadow;
     border: 1px solid $medium-grey;
     top: 46px;
 }
@@ -373,6 +373,6 @@
 
 .notification-active {
     font-weight: 500;
-    background: $background-white !important;
+    background: $element-background !important;
     color: $darkest-grey !important;
 }

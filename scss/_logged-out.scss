@@ -1,5 +1,5 @@
 // Colors
-$bg-color: #fff;
+$bg-color: $background-grey;
 $dot-color: #eeeeee;
 
 // Dimensions
@@ -21,7 +21,7 @@ $dot-space: 22px;
     }
 
     h1 {
-        color: $sweet-red;
+        color: $dark-pink;
         font-size: 4rem;
         font-weight: 500;
         font-family: 'Quicksand',sans-serif;
@@ -148,7 +148,7 @@ $dot-space: 22px;
         text-align: center;
         background: #fff;
         font-weight: bold;
-        color: $text-black;
+        color: $text;
 
         @include transition;
 

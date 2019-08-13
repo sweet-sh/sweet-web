@@ -57,8 +57,8 @@ section {
 /*in handlebars files: community, communities, communitysidebar, settings, and support*/
 .pane {
     padding: 15px;
-    background: #fff;
-    border: 1px solid #dfdfdf;
+    background: $element-background;
+    border: 1px solid $medium-grey;
 }
 
 .justify-content-center {
@@ -301,21 +301,8 @@ section {
 /*not to be confused with comments-container, which actually contains comments*/
 .commentContainer {
     padding: 15px;
-    border-bottom: 1px solid #dfdfdf;
+    border-bottom: 1px solid $medium-grey;
     padding-bottom: 0px;
-}
-
-
-#resultsContainer,
-#directoryResults {
-    border: 1px solid #dfdfdf;
-    background: white;
-}
-
-#resultsContainer,
-#directoryResults,
-#postsContainer {
-    padding: 0;
 }
 
 .community-container {
@@ -363,7 +350,7 @@ section {
 }
 
 .page-header {
-    border-bottom: 2px solid #ce1717;
+    border-bottom: 2px solid $dark-pink;
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
@@ -437,9 +424,9 @@ section {
     position: relative !important;
     right: 11px;
     bottom: -21px;
-    color: #333;
+    color: $text;
     font-size: 0.75rem;
-    background: white;
+    background: $element-background;
     border-radius: 50%;
     width: 12px;
     height: 12px;
@@ -483,7 +470,7 @@ section {
 }
 
 .recently-active-marker {
-    color: #46e146;
+    color: $bright-green;
     position: absolute;
     font-size: 0.65rem;
     left: 23px;
@@ -491,7 +478,7 @@ section {
 }
 
 .recently-active-marker-inline {
-    color: #46e146;
+    color: $bright-green;
     font-size: 0.65rem;
 }
 
@@ -506,11 +493,11 @@ section {
     padding: 5px;
     border-radius: 5px;
     margin: 2px;
-    border: 1px solid #dfdfdf;
+    border: 1px solid $medium-grey;
 }
 
 .user-list li:hover {
-    background: #f1f1f1;
+    background: $lightest-pink;
 }
 
 .user-list img {
@@ -560,15 +547,55 @@ section {
 
 /*stuff just for community pages*/
 
-/*used for community vote creation*/
+.compact-container {
+    border: 1px solid $medium-grey;
+}
+/*used for listing items inside .compact-container*/
 .content-box {
     padding: 15px;
-    border-bottom: 1px solid #dfdfdf;
-    padding-bottom: 0px;
+    border-bottom: 1px solid $medium-grey;
+    background: $element-background;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .content-box-header {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        @media (min-width: 786px) {
+            margin-bottom: 0;
+        }
+    }
+
+    .content-box-actions {
+        flex: 1;
+        justify-content: flex-start;
+        display: flex;
+
+        button:not(:last-child) {
+            margin-right: 0.25rem;
+        }
+
+        @media (min-width: 786px) {
+            justify-content: flex-end;
+        }
+    }
+
+    @media (min-width: 768px) {
+        flex-direction: row;
+    }
+}
+
+.content-box:last-of-type {
+    border-bottom: 0;
 }
 
 .content-box:hover {
-    box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: $post-shadow;
 }
 
 /*page-header itself is used by a bunch of pages, its styles are down in the misc section*/
@@ -592,35 +619,34 @@ section {
     line-height: 1rem;
     padding: 0.15rem 0.25rem;
     margin-right: 0.25rem;
-    background: #efefef;
+    background: $lightest-grey;
+    box-shadow: $button-shadow;
 }
 
 .tag.tag-green {
-    border-color: #28a745;
-    background: #eaffea;
-    color: #28a745;
+    border-color: darken($bright-green, 30%);
+    background: lighten($bright-green, 30%);
+    color: darken($bright-green, 30%);
 }
 
 #nav-tabContent,
 #communitiesTabContent {
-    background: white;
-    border-left: 1px solid #dfdfdf;
-    border-right: 1px solid #dfdfdf;
-    border-bottom: 1px solid #dfdfdf;
+    background: $element-background;
+    border-left: 1px solid $medium-grey;
+    border-right: 1px solid $medium-grey;
+    border-bottom: 1px solid $medium-grey;
     padding: 15px;
     margin-top: 0;
 }
 
 #votesContainer {
-    padding: 0;
-    border-bottom: 1px solid #cecece;
     margin-bottom: 1rem;
 }
 
 .post.vote {
     background: none;
     border: 0;
-    border-bottom: 1px solid #cecece;
+    border-bottom: 1px solid $medium-grey;
 }
 
 .post.vote:hover {
@@ -633,8 +659,7 @@ section {
 
 #votesContainer {
   background: $lightest-pink;
-  border-left: 1px solid $medium-grey;
-  border-right: 1px solid $medium-grey;
+  border: 1px solid $medium-grey;
 }
 
 // This is the box containing the new proposal in community votes
@@ -648,7 +673,7 @@ section {
 
 /* replaced by... something in postsV2.handlebars, still used in communities and votes .handlebars and systempost i guess */
 .authorLink {
-    color: #1a1717;
+    color: $text;
 }
 
 /*nav is used in the links to change community tabs and on the sidebar leave and join things somehow.*/
@@ -666,15 +691,16 @@ section {
 
 .nav-tabs .nav-item.show .nav-link,
 .nav-tabs .nav-link.active {
-    color: #495057;
-    background-color: #fff;
-    border-color: #dfdfdf #dfdfdf #fff;
+    color: $text;
+    background-color: $element-background;
+    border-color: $medium-grey $medium-grey $element-background;
 }
 
 .nav-tabs .nav-link {
     border: 1px solid transparent;
     border-top-left-radius: .25rem;
     border-top-right-radius: .25rem;
+    color: $darkest-grey;
 }
 
 /*nav-link is also used for navigation in navbar, community sidebar, community pages, and community directory page, so should probs. be factored out of here and into the misc. section*/
@@ -689,7 +715,7 @@ section {
 }
 
 .nav-tabs {
-    border-bottom: 1px solid #dfdfdf;
+    border-bottom: 1px solid $medium-grey;
 }
 
 .nav-tabs .nav-item {
@@ -760,7 +786,7 @@ section {
     -ms-flex-pack: justify;
     justify-content: space-between;
     padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid $element-background;
     border-top-left-radius: .3rem;
     border-top-right-radius: .3rem;
 }
@@ -805,7 +831,7 @@ section {
     pointer-events: auto;
     background-color: #fff;
     background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, .2);
+    border: 1px solid $medium-grey;
     border-radius: .3rem;
     outline: 0;
 }
@@ -831,11 +857,6 @@ section {
 .modal-title {
     margin-bottom: 0;
     line-height: 1.5;
-}
-
-#alertModal,
-#updateProfileModal {
-    margin-top: 90px;
 }
 
 .bootbox-confirm {
@@ -864,8 +885,8 @@ section {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1;
-    color: #000;
-    text-shadow: 0 1px 0 #fff;
+    color: $text;
+    text-shadow: 0 1px 0 $element-background;
     opacity: .5;
 }
 
@@ -888,5 +909,5 @@ section {
     -ms-flex-pack: end;
     justify-content: flex-end;
     padding: 1rem;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid $medium-grey;
 }

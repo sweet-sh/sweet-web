@@ -3,7 +3,7 @@
         {{> newpostform }}
         <div id="checkNewPosts"></div>
         {{> newpostsavailable}}
-        <div class="container commentsList" id="postsContainer"></div>
+        <div id="postsContainer"></div>
         {{> infiniteScrollLoadingSpinner}}
     </div>
     {{#or loggedInUserData.settings.showRecommendations loggedInUserData.settings.showHashtags}}

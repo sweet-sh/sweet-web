@@ -25,11 +25,11 @@
     </div>
     {{/unless}}
     {{#if loggedIn}}
-      <div class="container commentsList" id="postsContainer"></div>
+      <div id="postsContainer"></div>
       {{> infiniteScrollLoadingSpinner}}
     {{else}}
       {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
-  		  <div class="container commentsList" id="postsContainer"></div>
+  		  <div id="postsContainer"></div>
         {{> infiniteScrollLoadingSpinner}}
       {{/eq}}
     {{/if}}

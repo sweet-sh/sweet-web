@@ -24,7 +24,7 @@ article.post>.notifications>div:last-child {
 }
 
 article.post>.notifications div {
-    color: #959595;
+    color: $darkest-grey;
     margin-bottom: 0.5rem;
     font-size: 0.925rem;
 }
@@ -32,25 +32,25 @@ article.post>.notifications div {
 article.post>.notifications div a,
 article.post>.notifications div a:active,
 article.post>.notifications div a:visited {
-    color: #959595;
+    color: $darkest-grey;
 }
 
 article.post>.notifications div a:hover {
-    color: #ce1717;
+    color: $sweet-red;
 }
 
 article.post>.notifications div.recently-commented-notification {
-    color: #D99BB4;
+    color: $darker-pink;
 }
 
 article.post>.notifications div.recently-commented-notification a,
 article.post>.notifications div.recently-commented-notification a:active,
 article.post>.notifications div.recently-commented-notification a:visited {
-    color: #D99BB4;
+    color: $darker-pink;
 }
 
 article.post>.notifications div.recently-commented-notification a:hover {
-    color: #ce1717;
+    color: $sweet-red;
 }
 
 article.post>.notifications div.community-notification {
@@ -122,7 +122,7 @@ article.comment>header .author-display-name a,
 article.post>header .author-username a,
 article.comment>header .author-username a,
 #welcome-message-container>footer .author-username a {
-    color: #1a1717;
+    color: $text;
 }
 
 article.post>header .author-display-name a:hover,
@@ -131,24 +131,24 @@ article.comment>header .author-display-name a:hover,
 article.post>header .author-username a:hover,
 article.comment>header .author-username a:hover,
 #welcome-message-container>footer .author-username a:hover {
-    color: #ce1717;
+    color: $sweet-red;
 }
 
 article.post>header .author-username,
 article.comment>header .author-username,
 #welcome-message-container>footer .author-username {
-    color: #959595;
+    color: $darkest-grey;
 }
 
 article.post>header .author-username:first-child,
 article.comment>header .author-username:first-child,
 #welcome-message-container>footer .author-username:first-child {
-    color: #1a1717;
+    color: $text;
     font-weight: 500;
 }
 
 article.post>header .metadata {
-    color: #959595;
+    color: $darkest-grey;
     font-size: 0.85rem;
 }
 
@@ -174,15 +174,9 @@ article.post>header .metadata {
 
 article.post {
     padding-top: 1rem;
-    border: 1px solid #cecece;
+    border: 1px solid $medium-grey;
     margin-bottom: 1rem;
-    background: #fff;
-}
-
-/* Prevent double border on first post in feed */
-/* But then add it back when it's the only one! */
-article.post:first-child:not(:only-child) {
-    border-top: 0;
+    background: $element-background;
 }
 
 article.post>.content {
@@ -215,7 +209,7 @@ article.post>.toolbar {
 
 
 article.post:hover {
-    box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: $post-shadow;
 }
 
 .post-action-button {
@@ -224,7 +218,7 @@ article.post:hover {
 }
 
 .button.post-toolbar-button {
-    background: #fff;
+    background: $element-background;
     box-shadow: none;
     color: $dark-grey;
     flex: 1;
@@ -235,7 +229,7 @@ article.post:hover {
     margin-right: 32px;
     padding: 0;
     &:hover {
-        background: #fff;
+        background: $element-background;
         color: $sweet-red;
     }
     @media screen and (max-width: 576px) {
@@ -257,9 +251,7 @@ article.post:hover {
     overflow: hidden;
 }
 
-/*todo: eliminate redundancy here */
-
-.post .abbreviated-content:not(.content-warning-content)::after {
+.abbreviated-content:not(.content-warning-content)::after {
     content: "";
     position: absolute;
     z-index: 1;
@@ -268,20 +260,14 @@ article.post:hover {
     pointer-events: none;
     width: 100%;
     height: 3rem;
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 90%);
 }
 
+.post .abbreviated-content:not(.content-warning-content)::after {
+    background-image: linear-gradient(to bottom, rgba($element-background, 0), rgba($element-background, 1) 90%);
+}
 
 .comment .abbreviated-content:not(.content-warning-content)::after {
-    content: "";
-    position: absolute;
-    z-index: 1;
-    top: 17.5rem;
-    left: 0;
-    pointer-events: none;
-    width: 100%;
-    height: 3rem;
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(245, 245, 245, 1) 90%);
+    background-image: linear-gradient(to bottom, rgba($element-background, 0), rgba($lightest-grey, 1) 90%);
 }
 
 .button.show-more {
@@ -316,8 +302,8 @@ a.show-more {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    background: #aaa;
-    color: #fff !important;
+    background: $dark-grey;
+    color: $element-background !important;
     width: 100px;
     display: block;
     font-size: 0.8rem;
@@ -326,7 +312,7 @@ a.show-more {
 
 a.show-more:hover {
     /* Shim for old show more button element */
-    background: #959595;
+    background: $darkest-grey;
 }
 
 /*comments section*/
@@ -344,11 +330,7 @@ a.show-more:hover {
 }
 
 .button.comment-toolbar-button:hover {
-    color: #ce1717;
-}
-
-.comment-content .abbreviated-content:not(.content-warning-content)::after {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(245, 245, 245, 1) 90%);
+    color: $sweet-red;
 }
 
 .comment-deleted-message,
@@ -364,7 +346,7 @@ section.comments {
 
 section.comments>.comments-container>.comment:first-child {
     padding-top: 1rem;
-    border-top: 1px solid #eaeaea;
+    border-top: 1px solid $light-grey;
 }
 
 section.comments:not(.single-post-comments) {
@@ -395,21 +377,21 @@ article.comment .recent-comment-content.flash {
 
 @keyframes flash {
     0% {
-        background-color: #f6f6f6;
+        background-color: $lightest-grey;
     }
 
     50% {
-        background-color: #fcfaea;
+        background-color: $light-yellow;
     }
 
     100% {
-        background-color: #f6f6f6;
+        background-color: $lightest-grey;
     }
 }
 
 article.comment>header .timestamp {
     font-size: 0.75rem;
-    color: #959595;
+    color: $darkest-grey;
     white-space: nowrap;
     position: relative;
     top: 1px;
@@ -417,9 +399,9 @@ article.comment>header .timestamp {
 
 article.comment>.content {
     margin-top: 0.25rem;
-    background: #f6f6f6;
+    background: $lightest-grey;
     padding: 0.5rem;
-    border: 1px solid #f0f0f0;
+    border: 1px solid $light-grey;
     border-radius: 4px;
     max-width: 480px;
     position: relative;
@@ -439,6 +421,10 @@ article.comment article.comment {
 }
 
 /*the comment header and community welcome message styles are intermixed here*/
+
+#welcome-message-container {
+    margin-bottom: 1rem;
+}
 
 #welcome-message-container>footer,
 article.comment>header {
@@ -505,14 +491,12 @@ article.comment>header .author-username {
 
 #welcome-message-container {
     padding: 15px;
-    border-bottom: 0;
     background: -moz-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
     background: -webkit-linear-gradient(-45deg, #f7efff 0%, #d8cce5 100%);
     background: linear-gradient(135deg, #f7efff 0%, #d8cce5 100%);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7efff', endColorstr='#d8cce5', GradientType=1);
     color: #2c1445;
-    border-left: 1px solid #cecece;
-    border-right: 1px solid #cecece;
+    border: 1px solid darken(#d8cce5, 5%);
 }
 
 #welcome-message-container>p:last-child {
@@ -525,18 +509,18 @@ article.comment>header .author-username {
     display: flex;
     height: 100px;
     padding: 10px;
-    color: #1a1717;
+    color: $text;
     font-weight: 500;
-    border: 1px solid #dfdfdf;
+    border: 1px solid $medium-grey;
     border-radius: 4px;
     margin: 0 0 0.5em 0;
-    background-color: #ffffff;
+    background-color: $element-background;
     align-items: center;
 }
 
 .link-preview-container:hover {
     text-decoration: none;
-    background: #fcfcfc;
+    background: $lightest-grey;
 }
 
 .link-preview-container::before {

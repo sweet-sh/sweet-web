@@ -14,7 +14,7 @@
     </ul>
     <div class="tab-content" id="communitiesTabContent">
       <div class="tab-pane fade show active" id="communitiesList" role="tabpanel" aria-labelledby="communitiesListTab">
-        <div class="container" id="resultsContainer">
+        <div class="compact-container" id="resultsContainer">
           {{#each communities}}
             <div class="content-box">
               <div class="row">
@@ -94,7 +94,7 @@
         </form>
       </div>
       <div class="tab-pane fade show active" id="directory" role="tabpanel" aria-labelledby="directoryTab">
-        <div class="container" id="directoryResults" style="display:none;"></div>
+        <div class="compact-container" id="directoryResults" style="display:none;"></div>
         {{!--the page loading animation is hidden at the start bc the default starting tab is the "joined communities" one and that doesn't load stuff with infinite scroll --}}
         <div class="page-load-status" style="display:none;">
           <div class="loader-ellips infinite-scroll-request">

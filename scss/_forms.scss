@@ -73,7 +73,7 @@ textarea {
     border: $dark-pink;
     border-radius: 3px;
     text-transform: uppercase;
-    box-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+    box-shadow: $button-shadow;
     padding: .75rem .75rem;
     margin: 0;
 
@@ -82,7 +82,7 @@ textarea {
     &:hover {
         cursor: pointer;
         background: $sweet-red;
-        box-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        box-shadow: $button-shadow-hover;
         color: #fff;
         text-decoration: none;
     }
@@ -222,11 +222,12 @@ button.close {
     white-space: nowrap;
 }
 
-#searchHeader,
+#searchForm,
 #postForm {
     border: 1px solid #cecece;
     background: white;
     padding: 15px;
+    margin-bottom: 1rem;
 }
 
 #postForm:hover {
@@ -317,6 +318,11 @@ button.close {
     align-items: center;
 }
 
+.rightSideControls button:not(:last-child),
+.leftSideControls button:not(:last-child), {
+    margin-right: 0.15rem;
+}
+
 
 /* only used for post visibility controls*/
 .switch-field {
@@ -370,10 +376,6 @@ button.close {
 #replyControlsRow {
     justify-content: space-between;
     align-items: center;
-}
-
-#replyControlsRow button {
-    margin-right: 3px;
 }
 
 .new-comment-form {
@@ -580,12 +582,12 @@ button.close {
 
 /*boring non-rich-text form stuff, for login, search, settings, etc*/
 .form-control::-webkit-input-placeholder {
-    color: lighten($darkest-grey, 15%);
+    color:$medium-grey;
     opacity: 1
 }
 
 .form-control::placeholder {
-    color: lighten($darkest-grey, 15%);
+    color: $medium-grey;
     opacity: 1
 }
 

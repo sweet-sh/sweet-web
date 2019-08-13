@@ -1,6 +1,5 @@
 /* Fonts */
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i');
-@import url('https://fonts.googleapis.com/css?family=Quicksand:500&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:300,400,500,700|Ubuntu:300,300i,400,400i,500,500i,700,700i|Quicksand:500');
 
 @font-face {
     font-family: 'OpenDyslexic3';
@@ -36,7 +35,7 @@ body {
     line-height: 1.5;
     text-align: left;
     font-size: 96.5%;
-    color: $text-black;
+    color: $text;
     background: $background-grey;
 }
 
@@ -149,22 +148,35 @@ h6 {
     letter-spacing: -0.5px;
 }
 
+.page-header a {
+    color: $text;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
 .centered-title {
     text-align: center;
 }
 
 .message {
-  position: relative;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid $light-pink;
-  border-radius: 0.25rem;
-  background: $lightest-pink;
-  color: $dark-pink;
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid $light-pink;
+    border-radius: 0.25rem;
+    background: $lightest-pink;
+    color: $dark-pink;
 
-  &.alert {
-    animation: pulse 2s infinite;
-  }
+    &.alert {
+        animation: pulse 2s infinite;
+    }
+
+    a {
+        color: darken($dark-pink, 10%);
+        font-weight: 500;
+    }
 }
 
 .message-heading {
@@ -213,6 +225,11 @@ h6 {
 
 .text-muted {
     color: #6c757d !important
+}
+
+// Bootstrap shim
+.text-info, .text-warning, .text-success, .text-danger, .text-secondary, .text-light {
+    color: $dark-pink;
 }
 
 .small,

@@ -1,13 +1,11 @@
 <div id="homeBody" class="row justify-content-center">
   <div class="col-lg-8">
     <h3 id="searchTitle" class="page-header mx-2">{{#if query}}{{#eq query ""}}Search{{else}}Search: {{query}}{{/eq}}{{else}}Search{{/if}}</h3>
-    <div id="searchHeader">
       <form class="form-inline mb-3" id="searchForm">
         <input id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags."/>
         <button type="submit" class="button">Search</button>
       </form>
-    </div>
-		<div class="container" id="resultsContainer"></div>
+		<div class="compact-container" id="resultsContainer"></div>
     <div class="page-load-status">
       <div class="loader-ellips infinite-scroll-request">
         <span class="loader-ellips__dot"></span>
