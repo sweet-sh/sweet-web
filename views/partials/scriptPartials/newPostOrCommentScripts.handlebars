@@ -15,6 +15,7 @@ function restartInfiniteScroll(timestamp){
       postsContainer.infiniteScroll("destroy");
       postsContainer[0].fadedOut = true;
       startInfiniteScroll();
+      postsContainer.infiniteScroll("loadNextPage");
     });
   }
 
