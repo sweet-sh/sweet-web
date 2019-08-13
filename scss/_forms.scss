@@ -4,7 +4,7 @@ label {
 }
 
 button {
-    border-radius: 0
+    border-radius: 0;
 
     &:focus {
         outline: 1px dotted;
@@ -105,6 +105,11 @@ textarea {
 
     &.lowercase-button {
         text-transform: none;
+    }
+
+    &.outline-button {
+        color: $darkest-grey;
+        background-color: $light-grey;
     }
 }
 

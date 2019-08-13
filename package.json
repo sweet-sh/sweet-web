@@ -4,7 +4,8 @@
   "description": "A lightweight, trust- and community-based social network",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js & node-sass --output-style compressed scss/index.scss public/css/style.css --watch"
+    "start": "nodemon server.js & node-sass --output-style compressed scss/index.scss public/css/style.css --watch",
+    "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
