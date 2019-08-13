@@ -202,6 +202,7 @@ button.close {
     overflow: hidden;
     /* this mysteriously smooths out the jquery slide down animation, which happens to this element */
     margin: 0 -3px;
+    padding-bottom: 3px;
     /* Given the overflow hidden above, this allows the selected glow to show properly */
 }
 
