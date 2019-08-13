@@ -312,18 +312,19 @@
 {{#unless isBanned}}
 <script>
   //called immediately below and in restartInfiniteScroll
-  function startInfiniteScroll(prefill){
+  function startInfiniteScroll(){
     $('#postsContainer').infiniteScroll({
       path: function() {
         return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
       },
       append: '.post',
-      prefill: !!prefill,
+      prefill: false, //bc it was acting up and i have no idea why
       history: false,
       status: '.page-load-status'
     });
   }
-  startInfiniteScroll(true);
+  startInfiniteScroll();
+  $('#postsContainer').infiniteScroll("loadNextPage");
 
 {{#if loggedIn}}
 

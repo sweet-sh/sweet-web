@@ -87,16 +87,17 @@
 
 <script>
   //called immediately below and in restartInfiniteSCroll
-  function startInfiniteScroll(prefill){
+  function startInfiniteScroll(){
       $('#postsContainer').infiniteScroll({
           path: function() {
               return '/showposts/home/{{loggedInUserData._id}}/' + needPostsOlderThan;
           },
           append: '.post',
-          prefill: !!prefill,
+          prefill: false, //bc it was acting up and i haave no idea why
           history: true,
           status: '.page-load-status'
       });
   }
   startInfiniteScroll(true);
+  $('#postsContainer').infiniteScroll("loadNextPage");
 </script>
