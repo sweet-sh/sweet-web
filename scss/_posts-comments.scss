@@ -333,9 +333,10 @@ a.show-more:hover {
 
 .button.comment-toolbar-button {
     background: none;
-    color: #aaa;
+    color: $dark-grey;
     padding: 0;
     font-size: 0.7rem;
+    box-shadow: none;
 }
 
 .button.comment-toolbar-button:not(:first-child) {

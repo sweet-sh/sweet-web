@@ -696,6 +696,9 @@ section {
     margin-bottom: -1px;
 }
 
+#community-editor-tabs {
+    flex-direction: column;
+}
 
 .tab-content>.tab-pane {
     display: none;

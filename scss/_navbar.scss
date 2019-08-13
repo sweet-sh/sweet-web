@@ -35,7 +35,7 @@
 }
 
 #navbarProfileImage.active {
-    border: 1px solid #900202;
+    border: 1px solid $dark-red;
 
     + .navbar-username {
         font-weight: 400;
@@ -43,12 +43,13 @@
 }
 
 #navbarProfileImage:hover {
-    border: 1px solid #ce1717;
+    border: 1px solid $sweet-red;
 }
 
 #navbarSearchField {
-    background: #f3f3f3;
-    border-color: #e1e1e1;
+    color: $darkest-grey;
+    background: $lightest-grey;
+    border-color: $medium-grey;
     width: 180px;
 }
 
@@ -56,7 +57,7 @@
 #topNav .nav-link:visited,
 #topNav .nav-link:active,
 #notificationsDropdownLink {
-    color: #666;
+    color: $darkest-grey;
     text-decoration: none;
 }
 
@@ -70,12 +71,11 @@
 
 #notificationsDropdownLink:hover,
 #topNav .nav-link:hover {
-    color: #ce1717;
+    color: $sweet-red;
 }
 
 #topNav .dropdown-item {
-    color: #666;
-    font-size: 90%;
+    color: $darkest-grey;
 }
 
 #sweetLogo {
@@ -231,17 +231,11 @@
     position: relative;
 }
 
-.notificationLink {
-    background: #f9f9fa;
-    color: #707070 !important;
-}
-
 .notifications-count {
     font-size: 14px;
     position: absolute;
     top: -6px;
     left: 9px;
-    /* color: #ce1717; */
 }
 
 @media (min-width: 839px) {
@@ -273,12 +267,12 @@
     padding: .5rem 0;
     margin: .125rem 0 0;
     font-size: 1rem;
-    color: #212529;
+    color: $darkest-grey;
     text-align: left;
     list-style: none;
-    background-color: #fff;
+    background-color: $background-white;
     background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, .15);
+    border: 1px solid $medium-grey;
     border-radius: .25rem
 }
 
@@ -303,28 +297,34 @@
 .dropdown-item {
     display: block;
     width: 100%;
-    padding: .25rem 1.5rem;
+    padding: .25rem 1rem;
     clear: both;
     font-weight: 400;
-    color: #212529;
+    color: $darkest-grey;
     text-align: inherit;
     white-space: nowrap;
     background-color: transparent;
     border: 0;
+    cursor: pointer;
+
+    &:hover {
+        background: $lightest-grey;
+        text-decoration: none;
+    }
 }
 
 .dropdown-divider {
     height: 0;
     margin: .5rem 0;
     overflow: hidden;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid $light-grey;
 }
 
 .dropdown-menu.show {
     display: flex;
     flex-direction: column;
     box-shadow: 0 3px 8px rgba(0, 0, 0, .25);
-    border: 1px solid #b6b6b6;
+    border: 1px solid $medium-grey;
     top: 46px;
 }
 
@@ -347,16 +347,10 @@
     font-weight: 500;
 }
 
-.notification-active {
-    font-weight: 500;
-    background: #eaeaea;
-    color: rgb(73, 80, 87) !important;
-}
-
 .list-group-item-action:hover {
-    color: #495057;
+    color: $darkest-grey;
     text-decoration: none;
-    background-color: #f9f3f3;
+    background-color: $lightest-pink;
 }
 
 .button.clear-all-notifications {
@@ -364,6 +358,21 @@
     width: 100%;
     border: 0px;
     box-sizing: border-box;
-    height: 110%;
-    height: 35px;
+    box-shadow: 0px;
+    height: 100%;
+}
+
+.notificationLink {
+    background: $lightest-grey !important;
+    color: darken($dark-grey, 20%) !important;
+
+    &:hover {
+        background: $lightest-pink !important;
+    }
+}
+
+.notification-active {
+    font-weight: 500;
+    background: $background-white !important;
+    color: $darkest-grey !important;
 }

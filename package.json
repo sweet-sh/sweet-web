@@ -4,7 +4,9 @@
   "description": "A lightweight, trust- and community-based social network",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js & node-sass --output-style compressed scss/index.scss public/css/style.css --watch",
+    "watch-sass": "node-sass --source-map true --output-style compressed scss/index.scss public/css/style.css --watch",
+    "generate-dark-mode": "node-sass --source-map true --output-style compressed scss/dark-mode.scss public/css/dark-mode.css",
+    "start": "nodemon server.js & npm run watch-sass",
     "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch"
   },
   "author": "Raphael Kabo",

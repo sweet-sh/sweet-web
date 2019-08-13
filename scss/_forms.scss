@@ -580,12 +580,12 @@ button.close {
 
 /*boring non-rich-text form stuff, for login, search, settings, etc*/
 .form-control::-webkit-input-placeholder {
-    color: #6c757d;
+    color: lighten($darkest-grey, 15%);
     opacity: 1
 }
 
 .form-control::placeholder {
-    color: #6c757d;
+    color: lighten($darkest-grey, 15%);
     opacity: 1
 }
 
