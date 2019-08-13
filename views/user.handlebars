@@ -69,9 +69,11 @@
 			<input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}" maxlength="50">
 		</div>
         <label>Profile image (maximum file size 3MB)</label>
-  			<div id="image-preview">
+  			<div id="image-preview" style="display:flex; justify-content: center; align-items: center;">
   				<label for="image-upload" id="image-label">Choose image</label>
   				<input type="file" name="imageUpload" id="image-upload" accept="image/*" />
+          <div id="profileImageProgressEmoji" style="display: none;">😄</div>
+          <progress id="profileImageProgress" max="100" value="0" style="display: none;"></progress>
   			</div>
       </div>
       <div class="modal-footer">

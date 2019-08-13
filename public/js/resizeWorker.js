@@ -1,4 +1,4 @@
-importScripts("/js/resizerGlueLocal.js");
+importScripts("/js/resizer.js");
 onmessage = function(e) {
     Module['onRuntimeInitialized'] = function() {
         Module['FS_createDataFile']('/', 'image', e.data, true, true, true);
@@ -8,5 +8,6 @@ onmessage = function(e) {
         postMessage(blob);
         FS.unlink("/image");
         FS.unlink("/output.jpg");
+        clearTimeout(talker);
     };
 }

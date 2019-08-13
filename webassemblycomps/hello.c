@@ -4,21 +4,22 @@
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "stb_image_resize.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-int resizeprogress = 0;
+
+EM_JS(void, talkAboutProgress, (double progress), {
+  postMessage(""+progress);
+});
+
 static void my_progress_report(float progress);
 #define STBIR_PROGRESS_REPORT(val) my_progress_report(val)
-static void my_progress_report(float progress){
-   printf("Progress: %f%%\n", progress*100);
-   resizeprogress = progress*100;
-}
 
-int EMSCRIPTEN_KEEPALIVE getResizeProgress(){
-	return resizeprogress;
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+
+static void my_progress_report(float progress){
+   talkAboutProgress(progress*100);
 }
 
 

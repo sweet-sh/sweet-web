@@ -24,11 +24,21 @@
                 //add an event listener to the profile submit buttom that creates the new formdata object and appends the blob instead of the regular file
                 var imageReader = new FileReader();
                 imageReader.onload = function() {
+                  $("#image-upload").val('');
                   var startTime = new Date().getTime();
                     var data = new Uint8Array(imageReader.result);
                     resizeWorker = new Worker('/js/resizeWorker.js');
                     resizeWorker.postMessage(data);
+                    $("#profileImageProgressEmoji").css('display','block');
+                    var progress = $("#profileImageProgress").css('display','inline');
+                    $("#image-label").css('display','none');
                     resizeWorker.onmessage = function(e) {
+                      if(typeof e.data == "string"){
+                        progress.attr('value',e.data);
+                      }else{
+                        $("#image-label").css('display','inline');
+                        $("#profileImageProgressEmoji").css('display','none');
+                        progress.css('display','none').attr('value','0');
                         var imageBlob = e.data;
                         var virtualUrl = URL.createObjectURL(imageBlob);
                         preview.css('background-image', "url(" + virtualUrl + ")");
@@ -40,7 +50,6 @@
 
                         submit.onclick = function(e) {
                             e.preventDefault();
-                            $("#image-upload").val('');
                             var formData = new FormData(preview.closest('form')[0]);
                             formData.append('imageUpload', imageBlob);
                             var request = new XMLHttpRequest();
@@ -49,6 +58,7 @@
                             window.location.reload();
                         }
                     }
+                  }
                 }
                 imageReader.readAsArrayBuffer($("#image-upload")[0].files[0]);
             }
