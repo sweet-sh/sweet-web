@@ -61,11 +61,10 @@ $(function(){
   $("#emojiWindowButton").click(function () {
     $("#new-post-emoji-picker").slideToggle("fast");
     $("#editor").find(".ql-editor").focus()
-  })
-  $(".replyEmojiWindowButton").click(function () {
-      emojiPicker = $(this).closest('.new-comment-form').find('.emoji-picker')
-      editor = $(this).closest('.new-comment-form').find('.ql-editor')
-      console.log(emojiPicker)
+  });
+  $('body').on('click', '.replyEmojiWindowButton', function() {
+    emojiPicker = $(this).closest('.new-comment-form').find('.emoji-picker')
+    editor = $(this).closest('.new-comment-form').find('.ql-editor')
     emojiPicker.slideToggle("fast");
     editor.focus()
   })
