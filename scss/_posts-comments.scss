@@ -161,8 +161,9 @@ article.post>header .metadata {
 }
 
 .button.show-boosters-list {
-    font-size: 0.7rem;
     margin-left: 2px;
+    position: relative;
+    bottom: 2px;
 }
 
 .booster:not(:last-of-type):after {

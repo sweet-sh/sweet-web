@@ -1,5 +1,5 @@
 // Colors
-$bg-color: $background-grey;
+$bg-color: $background-white;
 $dot-color: #eeeeee;
 
 // Dimensions
@@ -28,7 +28,7 @@ $dot-space: 22px;
         margin: 0;
 
         a, a:active, a:visited {
-            color: $sweet-red;
+            color: $dark-pink;
         }
 
         a:hover {
@@ -43,7 +43,7 @@ $dot-space: 22px;
     }
 
     .subtitle {
-        color: $sweet-red;
+        color: $dark-pink;
         font-size: 2rem;
         margin-bottom: 2rem;
         letter-spacing: -.5px;
@@ -60,7 +60,7 @@ $dot-space: 22px;
 }
 
 .logged-out-form {
-    border: 1px solid $light-grey;
+    border: 1px solid $medium-grey;
     border-radius: 6px;
     padding: 10px;
     background: #fff;
@@ -103,7 +103,7 @@ $dot-space: 22px;
     input {
        width: 100%;
        height: 45px;
-       border: 1px solid $light-grey;
+       border: 1px solid $medium-grey;
        border-radius: 3px;
        padding: 0.25rem 0.5rem;
 

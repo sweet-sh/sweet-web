@@ -1,16 +1,43 @@
-$text: #ffffff; // Text for dark mode.
+$text: #fff; // Text for dark mode.
 
-$background-grey: black; // Page background
-$lightest-grey: #f3f3f3; // Form input backgrounds
-$light-grey: #efefef;
-$medium-grey: #cecece; // Post borders
-$dark-grey: #aaa;
-$darkest-grey: #666;
+$background-white: #fff;
+$background-grey: #f9f9fa; // Page background
 
-$light-blue: #338fc2; // Links
+$lightest-grey: #3d3e44; // Form input backgrounds, comment content box backgrounds
+$light-grey: #aaa; // Subtle dividers, comment content box borders
+$medium-grey: #333333; // Post borders
+$dark-grey: #5e5d5d;
+$darkest-grey: #666; // Grey-colored text
+
+$light-blue: #339fdb; // Links
+
+$light-yellow: #fcfaea; // Recent comment flash
+
+$bright-green: #46e146; // Recently active user markers
 
 $sweet-red: #ce1717; // The Best Red (TM). Hovers, buttons, etc.
 $dark-red: darken($sweet-red, 10%);
 $lightest-pink: #fffafc;
 $light-pink: lighten($sweet-red, 40%);
+$darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
 $dark-pink: lighten($sweet-red, 20%);
+
+$highlight: darken($sweet-red, 40%);
+$placeholder: $darkest-grey;
+$editor-background: $darkest-grey;
+
+$navbar-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+$dropdown-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+$post-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+$button-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+$button-shadow-hover: 1px 1px 1px rgba(0,0,0,0.2);
+
+$navigation-background: #222222;
+$element-background: #0f0f0f;
+$page-background: #212224;
+$aside-background: #0f0f0f;
+
+$navigation-border: $dark-pink;
+$navigation-text: rgba(255,255,255, 0.8);
+$navigation-active-text: $dark-pink;
+$navigation-hover-text: $sweet-red;

@@ -18,11 +18,11 @@ div.post-images > 1 or more (a > img.post-single-image)
 .post-single-image {
     transition: all 100ms ease-in;
     border-radius: 4px;
-    border: 1px solid #ededed;
+    border: 1px solid $light-grey;
 }
 
 .post-images .post-single-image:hover {
-    border-color: #9b9b9b;
+    border-color: $dark-grey;
 }
 
 /* One image */
