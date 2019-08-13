@@ -21,6 +21,14 @@ $normal-weight: 400;
 $semi-bold-weight: 500;
 $bold-weight: 700;
 
+// Colors
+$bg-color: lighten($background-grey, 1%);
+$dot-color: $light-grey;
+
+// Dimensions
+$dot-size: 2px;
+$dot-space: 12px;
+
 html {
     // i hate css
     -webkit-text-size-adjust: 100%;
@@ -36,7 +44,11 @@ body {
     text-align: left;
     font-size: 96.5%;
     color: $text;
-    background: $page-background;
+    background: linear-gradient(90deg, $bg-color ($dot-space - $dot-size), transparent 1%) center,
+    		linear-gradient($bg-color ($dot-space - $dot-size), transparent 1%) center,
+    		$dot-color;
+    	background-size: $dot-space $dot-space;
+        background-attachment: fixed;
 }
 
 p {

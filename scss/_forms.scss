@@ -215,6 +215,10 @@ button.close {
     margin-bottom: 1rem;
 }
 
+#searchForm {
+    display: flex;
+}
+
 #postForm:hover {
     box-shadow: $post-shadow;
 }
@@ -231,7 +235,7 @@ button.close {
     font-size: 1rem;
     line-height: 1.5;
     border: 2px solid $medium-grey;
-    background: $lightest-grey;
+    background: $editor-background;
     cursor: text;
     min-height: 4em;
 }
@@ -302,6 +306,10 @@ button.close {
     display: none;
     justify-content: space-between;
     align-items: center;
+}
+
+#replyControlsRow {
+    display: flex;
 }
 
 .rightSideControls button:not(:last-child),
