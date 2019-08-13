@@ -21,7 +21,7 @@
   {{#if profileData.displayName }}
     {{ profileData.displayName }}
   {{/if}}
-  {{#if profileData.displayName }}<br /> <span class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}}
+  {{#if profileData.displayName }}<br /> <span class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}} {{#or flagged flagsFromTrustedUsers}}<i class="fas fa-exclamation-triangle user-flag"></i>{{/or}}
 </h3>
 {{#if isOwnProfile}}
   <div id="profileControlsTablet">
@@ -68,12 +68,12 @@
   {{#if loggedIn}}
     <div id="userActionsButtons" class="mb-2">
         {{#if followed}}
-          <button type="button" id="unfollowButton" class="button"><i class="fas fa-satellite-dish"></i> Unfollow</button>
+          <button type="button" id="unfollowButton" class="button grey-button"><i class="fas fa-satellite-dish"></i> Unfollow</button>
         {{else}}
           <button type="button" id="followButton" class="button"><i class="fas fa-satellite-dish"></i> Follow</button>
         {{/if}}
         {{#if trusted}}
-          <button type="button" id="untrustButton" class="button">
+          <button type="button" id="untrustButton" class="button grey-button">
             <i class="fas fa-lock"></i> Untrust
           </button>
         {{else}}
@@ -86,21 +86,21 @@
         </button>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
           {{#if flagged}}
-            <button type="button" id="unflagButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unflag</button>
+            <button type="button" id="unflagButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i> Unflag</button>
           {{else}}
-            <button type="button" id="flagButton" class="dropdown-item text-danger"><i class="fas fa-exclamation-triangle"></i> Flag</button>
+            <button type="button" id="flagButton" class="dropdown-item"><i class="fas fa-fw fa-exclamation-triangle"></i> Flag</button>
           {{/if}}
           {{#if muted}}
-            <button type="button" id="unmuteButton" class="dropdown-item text-success"><i class="fas fa-check-circle"></i> Unmute</button>
+            <button type="button" id="unmuteButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i> Unmute</button>
           {{else}}
-            <button type="button" id="muteButton" class="dropdown-item text-dark"><i class="fas fa-comment-slash"></i> Mute</button>
+            <button type="button" id="muteButton" class="dropdown-item"><i class="fas fa-fw fa-comment-slash"></i> Mute</button>
           {{/if}}
         </div>
     </div>
-    {{#if numberOfFlagsFromTrustedUsers}}
+    {{#if flagsFromTrustedUsers}}
       <div class="message w-100 my-2" style="text-align:center;">
         <i class="fas fa-exclamation-triangle"></i>
-        {{numberOfFlagsFromTrustedUsers}} {{plural numberOfFlagsFromTrustedUsers 'person/people'}} you trust {{plural numberOfFlagsFromTrustedUsers 'has/have'}} flagged this user.
+        {{flagsFromTrustedUsers}} {{plural flagsFromTrustedUsers 'person/people'}} you trust {{plural flagsFromTrustedUsers 'has/have'}} flagged this user.
       </div>
     {{/if}}
     {{#if muted}}
@@ -114,7 +114,7 @@
 
 {{#and loggedIn trustedUserData }}
   {{#or userTrustsYou isOwnProfile}}
-    <h5>Trusts{{#gt trustedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+    <h5>Trusts{{#gt trustedUserData.length 30}} <a class="user-list-toggle collapsed" href="#trustedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
     <div id="trustedUsersList" class="user-list{{#gt trustedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
       {{#each trustedUserData}}
         <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
@@ -124,7 +124,7 @@
   {{/or}}
 {{/and}}
 {{#and loggedIn usersWhoTrustThemData.length }}
-  <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#trustedByUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+  <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="user-list-toggle collapsed" href="#trustedByUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="trustedByUsersList" class="user-list{{#gt usersWhoTrustThemData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each usersWhoTrustThemData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
@@ -133,7 +133,7 @@
   </div>
 {{/and}}
 {{#if followedUserData}}
-  <h5>Follows{{#gt followedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+  <h5>Follows{{#gt followedUserData.length 30}} <a class="user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each followedUserData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
@@ -142,7 +142,7 @@
   </div>
 {{/if}}
 {{#if followersData}}
-  <h5>Followed by{{#gt followersData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#followersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+  <h5>Followed by{{#gt followersData.length 30}} <a class="user-list-toggle collapsed" href="#followersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="followersList" class="user-list{{#gt followersData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each followersData}}
       <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
@@ -152,7 +152,7 @@
 {{/if}}
 {{#if isOwnProfile}}
   {{#if flaggedUserData}}
-    <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#flaggedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+    <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="user-list-toggle collapsed" href="#flaggedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
       <div id="flaggedUsersList" class="user-list{{#gt flaggedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
         {{#each flaggedUserData}}
           <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
@@ -163,7 +163,7 @@
 {{/if}}
 
 {{#if communitiesData}}
-  <h5>Communities{{#gt communitiesData.length 30}} <a class="text-dark user-list-toggle collapsed" href="#communitiesList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+  <h5>Communities{{#gt communitiesData.length 30}} <a class="user-list-toggle collapsed" href="#communitiesList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
   <div id="communitiesList" class="user-list{{#gt communitiesData.length 30}} collapse{{else}} d-flex{{/gt}}">
     {{#each communitiesData}}
       <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>

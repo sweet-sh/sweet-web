@@ -1222,7 +1222,7 @@ module.exports = function(app) {
                 var followed = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "follow" }).catch(c));
                 var muted = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "mute" }).catch(c));
 
-                var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c);
+                var flagsOnUser = await Relationship.find({ to: profileData.email, value: "flag" }).catch(c);
                 var flagsFromTrustedUsers = 0;
                 var flagged = false;
                 for (var flag of flagsOnUser) {
@@ -1244,7 +1244,6 @@ module.exports = function(app) {
             var followed = false;
             var flagged = false;
         }
-
         res.render('user', {
             loggedIn: req.isAuthenticated(),
             isOwnProfile: isOwnProfile,
