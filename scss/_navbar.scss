@@ -27,11 +27,16 @@
 #topNav {
     border-bottom-color: $navigation-border;
     background: $navigation-background;
-    box-shadow: $navbar-shadow;
     border-bottom-width: 2px;
     border-bottom-style: solid;
     padding-bottom: 0.5rem;
     padding-top: 0.5rem;
+
+    @include transition;
+
+    &.shadow {
+        box-shadow: $navbar-shadow;
+    }
 }
 
 #navbarProfileImage.active {
