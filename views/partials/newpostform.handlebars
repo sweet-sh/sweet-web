@@ -1,21 +1,21 @@
 <div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
 <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple style="display:none;">
+    <div class="form-row" style="margin-bottom:0.5rem" id="postContentWarningsContainer">
+      <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
+    </div>
     <div id="editor" class="editable-post-content editable-text" id="postContent">
       <p><br></p>
     </div>
-    <div class="form-row mt-2 card p-1" id="emojiWindow" style="display:none">
+    <div class="form-row mt-2 p-1 emoji-picker" id="new-post-emoji-picker" style="display:none">
       {{> emojilist }}
     </div>
-  <div class="form-row mt-2" id="postContentWarningsContainer">
-    <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
-  </div>
   <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
     <div class="my-2 linkPreviewAddingForm">
       <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="endless.horse" />
-      <button class="btn btn-primary btn-fade ml-1 link-add"><i class="fas fa-plus"></i></button>
+      <button class="button grey-button link-add" style="margin-left: 0.5rem;"><i class="fas fa-arrow-up"></i></button>
     </div>
   </div>
-  <div id="bottomPostControlsRow" class="form-row mt-2 post-controls">
+  <div id="bottomPostControlsRow" class="mt-2 post-controls">
     {{! Hide this div in communities}}
     {{#unless isMember}}
     <div class="leftSideControls">
@@ -28,11 +28,11 @@
     </div>
     {{/unless}}
     <div class="rightSideControls">
-      <button type="button" class="btn btn-primary btn-fade" id="postLinkButton"><i class="fas fa-link"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="emojiWindowButton"><i class="far fa-smile"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postContentWarningsButton">CWs</button>
-      <button type="submit" class="btn btn-primary btn-fade ml-3" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
+      <button type="button" class="button grey-button" id="postLinkButton"><i class="fas fa-link"></i></button>
+      <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="button grey-button" id="emojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="button grey-button" style="margin-right: 1rem;" id="postContentWarningsButton"><i class="fas fa-info-circle"></i></button>
+      <button type="submit" class="button" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </div>

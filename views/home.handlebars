@@ -3,7 +3,7 @@
         {{> newpostform }}
         <div id="checkNewPosts"></div>
         {{> newpostsavailable}}
-        <div class="container commentsList" id="postsContainer"></div>
+        <div id="postsContainer"></div>
         {{> infiniteScrollLoadingSpinner}}
     </div>
     {{#or loggedInUserData.settings.showRecommendations loggedInUserData.settings.showHashtags}}
@@ -86,17 +86,18 @@
 {{> filemessage }}
 
 <script>
-  //called immediately below only atm
-  function startInfiniteScroll() {
+  //called immediately below and in restartInfiniteSCroll
+  function startInfiniteScroll(){
       $('#postsContainer').infiniteScroll({
           path: function() {
               return '/showposts/home/{{loggedInUserData._id}}/' + needPostsOlderThan;
           },
           append: '.post',
-          prefill: true,
+          prefill: false, //bc it was acting up and i haave no idea why
           history: true,
           status: '.page-load-status'
       });
   }
-  startInfiniteScroll();
+  startInfiniteScroll(true);
+  $('#postsContainer').infiniteScroll("loadNextPage");
 </script>

@@ -132,7 +132,14 @@ module.exports = function(app) {
             res.redirect('/home');
         } else {
             User.count().then(users => {
-                res.render('index', { userCount: users });
+                Community.find().sort('-lastUpdated').then(communities => {
+                    var publicCommunites = communities.filter(c => c.settings.visibility == "public" && c.settings.joinType == "open");
+                    publicCommunites.sort(function() {
+                      return .5 - Math.random();
+                    });
+                    publicCommunites.length = 8;
+                    res.render('index', {layout: 'logged-out', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
+                })
             })
         }
     });
@@ -142,6 +149,7 @@ module.exports = function(app) {
     //Output: rendering of the login page with the flash message included.
     app.get('/login', function(req, res) {
         res.render('login', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });
@@ -151,6 +159,7 @@ module.exports = function(app) {
     //Output: rendering of the signup page with the flash message included.
     app.get('/signup', function(req, res) {
         res.render('signup', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });
@@ -371,6 +380,14 @@ module.exports = function(app) {
         })
     })
 
+    app.get('/about', function(req, res) {
+        res.render('about', {
+            loggedIn: req.isAuthenticated(),
+            loggedInUserData: req.user,
+            activePage: 'support'
+        })
+    })
+
     //Responds to get requests for /search.
     //Input: none
     //Output: renders search page unless isLoggedInOrRedirect redirects you
@@ -572,7 +589,7 @@ module.exports = function(app) {
         return;
     })
 
-    //this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date 
+    //this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date
     //in the post and all of its comments.
     async function keepCachedHTMLUpToDate(post) {
 
@@ -1205,7 +1222,7 @@ module.exports = function(app) {
                 var followed = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "follow" }).catch(c));
                 var muted = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "mute" }).catch(c));
 
-                var flagsOnUser = await Relationship.find({ to: user.email, value: "flag" }).catch(c);
+                var flagsOnUser = await Relationship.find({ to: profileData.email, value: "flag" }).catch(c);
                 var flagsFromTrustedUsers = 0;
                 var flagged = false;
                 for (var flag of flagsOnUser) {
@@ -1227,7 +1244,6 @@ module.exports = function(app) {
             var followed = false;
             var flagged = false;
         }
-
         res.render('user', {
             loggedIn: req.isAuthenticated(),
             isOwnProfile: isOwnProfile,

@@ -22,7 +22,7 @@
         <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i><span class="nav-link-text not-hidden">log in</span></a>
       </li>
       <a href="/" id="sweetLogoLink">
-        <img src="/icons/bee.svg" id="sweetLogo" alt="sweet logo"/>
+        <img src="/icons/bee-color.svg" id="sweetLogo" alt="sweet logo"/>
       </a>
       <li class="nav-item">
         <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> <span class="nav-link-text not-hidden">sign up</span></a>
@@ -51,7 +51,7 @@
       </div>
       <div class="navbar-group" id="navbarCentreGroup">
         <a href="/" id="sweetLogoLink">
-          <img src="/icons/bee.svg" id="sweetLogo" alt="sweet logo"/>
+          <img src="/icons/bee-color.svg" id="sweetLogo" alt="sweet logo"/>
         </a>
       </div>
       <div class="navbar-group" id="navbarRightGroup">
@@ -75,15 +75,19 @@
         <input id="navbarSearchField" class="form-control" type="search" placeholder="Search" aria-label="Search" />
       </div>
     {{else}}
-      <li class="nav-item">
-        <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> <span class="nav-link-text not-hidden">log in</span></a>
-      </li>
-      <a href="/" id="sweetLogoLink">
-        <img src="/icons/bee.svg" id="sweetLogo" alt="sweet logo"/>
-      </a>
-      <li class="nav-item">
-        <a class="nav-link" href="/signup"><i class="fas fa-birthday-cake"></i> <span class="nav-link-text not-hidden">sign up</span></a>
-      </li>
+        <div class="navbar-group" id="navbarLeftGroup">
+            <li class="nav-item">
+              <a class="nav-link" href="/"><img src="/icons/bee-color.svg" id="sweetLogo" alt="sweet logo"/> <span class="nav-link-text not-hidden navbar-site-title">sweet</span></a>
+            </li>
+        </div>
+      <div class="navbar-group" id="navbarRightGroup">
+          <li class="nav-item">
+            <a class="nav-link nav-button" href="/login"><span class="nav-link-text not-hidden">log in</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-button" href="/signup"><span class="nav-link-text not-hidden">sign up</span></a>
+          </li>
+      </div>
     {{/if}}
   </ul>
 </nav>

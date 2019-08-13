@@ -20,16 +20,16 @@
   		{{> newpostform }}
     {{/and}}
     {{#unless loggedIn}}
-    <div class="alert alert-success w-100 text-center" style="font-size:1.4em;">
-      <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
+    <div class="message w-100 text-center" style="font-size:1.4em;">
+      <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a utopian social network. <a class="message-link" href="/signup">Join now</a>!
     </div>
     {{/unless}}
     {{#if loggedIn}}
-      <div class="container commentsList" id="postsContainer"></div>
+      <div id="postsContainer"></div>
       {{> infiniteScrollLoadingSpinner}}
     {{else}}
       {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
-  		  <div class="container commentsList" id="postsContainer"></div>
+  		  <div id="postsContainer"></div>
         {{> infiniteScrollLoadingSpinner}}
       {{/eq}}
     {{/if}}
@@ -75,8 +75,8 @@
   			</div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="button" data-dismiss="modal">Close</button>
+        <button type="submit" class="button">Update</button>
       </div>
       </form>
     </div>

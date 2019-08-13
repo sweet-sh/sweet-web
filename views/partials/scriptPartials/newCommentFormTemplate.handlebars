@@ -7,13 +7,7 @@
       <p><br></p>
     </div>
   </div>
-    <div class="link-form-cont"> {{! this container is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid it down, as it needs to be display:flex}}
-    <div class="my-2 linkPreviewAddingForm">
-      <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="Enter a url..." />
-      <button class="btn btn-primary btn-fade ml-3 link-add">Please Add This Link He Is A Good Link</button>
-    </div>
-  </div>
-  <div class="form-row my-2 card p-1 replyEmojiWindow" style="display:none">
+  <div class="form-row my-2 p-1 emoji-picker" style="display:none">
       <button type="button" class="add-emoji">🍬</button>
       <button type="button" class="add-emoji">🍭</button>
       <button type="button" class="add-emoji">🍡</button>
@@ -56,14 +50,20 @@
       <button type="button" class="add-emoji">💯</button>
       <button type="button" class="add-emoji">🏳️‍🌈</button>
   </div>
+  <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
+    <div class="my-2 linkPreviewAddingForm">
+      <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="endless.horse" />
+      <button class="button grey-button ml-1 link-add" style="margin-left: 0.5rem;"><i class="fas fa-arrow-up"></i></button>
+    </div>
+  </div>
   <div id="replyControlsRow" class="form-row mt-2 post-controls">
     <div class="leftSideControls">
-      <button type="button" class="btn btn-primary btn-fade" id="postLinkButton"><i class="fas fa-link"></i></button>
-      <button type="button" class="btn btn-primary btn-fade" id="postImageButton"><i class="fas fa-image"></i></button>
-      <button type="button" class="btn btn-primary btn-fade replyEmojiWindowButton"><i class="far fa-smile"></i></button>
+      <button type="button" class="button grey-button" id="postLinkButton"><i class="fas fa-link"></i></button>
+      <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
+      <button type="button" class="button grey-button replyEmojiWindowButton"><i class="far fa-smile"></i></button>
     </div>
     <div class="rightSideControls">
-      <button type="submit" class="btn btn-primary btn-fade create-comment">Reply <i class="fas fa-chevron-right"></i></button>
+      <button type="submit" class="button create-comment">Reply <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
 </div>

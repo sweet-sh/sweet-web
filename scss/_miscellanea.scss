@@ -1,0 +1,225 @@
+/*miscellaneous! not a big fan of that label but, */
+
+[type=search] {
+    outline-offset: -2px;
+    -webkit-appearance: none
+}
+
+[type=search]::-webkit-search-cancel-button,
+[type=search]::-webkit-search-decoration {
+    -webkit-appearance: none
+}
+
+/*list-group is used for notifications list and boosters list*/
+.list-group-flush .list-group-item {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}
+
+.list-group {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: .75rem 1.25rem;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .125);
+}
+
+/*used in the "[x] is on sweet" messages to logged out users on community and profile pages*/
+/*and the flagged by trusted users alert and this user trusts/follows you on profile pages*/
+/*and the profile control buttons for when you view your own profile*/
+.w-100 {
+    width: 100% !important;
+}
+
+.d-flex {
+    display: -webkit-box !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+}
+
+#editBody #nav-tabContent {
+    border: 1px solid $medium-grey;
+}
+
+.subscribed-alert {
+    color: #909090;
+}
+
+.subscribed-alert a {
+    color: #6f6f6f;
+}
+
+#profileControlsDesktopMobile {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: space-between;
+}
+
+#profileControlsTablet {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    #profileControlsDesktopMobile {
+        display: none;
+    }
+
+    #profileControlsTablet {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (min-width: 992px) {
+    #profileControlsDesktopMobile {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #profileControlsTablet {
+        display: none;
+    }
+}
+
+.loader-ellips {
+    font-size: 15px;
+    /* change size here */
+    position: relative;
+    width: 4em;
+    height: 1em;
+    margin: 10px auto;
+}
+
+.loader-ellips__dot {
+    display: block;
+    width: 1em;
+    height: 1em;
+    border-radius: 0.5em;
+    position: absolute;
+    animation-duration: 0.5s;
+    animation-timing-function: ease;
+    animation-iteration-count: infinite;
+    background: #ababab;
+}
+
+.loader-ellips__dot:nth-child(1),
+.loader-ellips__dot:nth-child(2) {
+    left: 0;
+}
+
+.loader-ellips__dot:nth-child(3) {
+    left: 1.5em;
+}
+
+@keyframes reveal {
+    from {
+        transform: scale(0.001);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes slide {
+    to {
+        transform: translateX(1.5em)
+    }
+}
+
+.loader-ellips__dot:nth-child(1) {
+    animation-name: reveal;
+}
+
+.loader-ellips__dot:nth-child(2),
+.loader-ellips__dot:nth-child(3) {
+    animation-name: slide;
+}
+
+.loader-ellips__dot:nth-child(4) {
+    animation-name: reveal;
+    animation-direction: reverse;
+    left: 3em;
+}
+
+.page-load-status>* {
+    text-align: center;
+    height: 40px;
+    line-height: 40px;
+    margin-top: 20px;
+    color: #ababab;
+}
+
+#newPostsAvailable a {
+    color: #6c6c6c;
+}
+
+#newPostsAvailable,
+#checkNewPosts {
+    display: none;
+}
+
+#newPostsAvailable {
+    background: #ececec;
+    border-left: 1px solid #dfdfdf;
+    border-right: 1px solid #dfdfdf;
+    border-top: 1px solid #dfdfdf;
+    color: #6c6c6c;
+    box-shadow: rgba(0, 0, 0, 0.1) 2px 2px 4px inset;
+    font-weight: 500;
+    padding-bottom: .25rem;
+}
+
+.page-load-status {
+    display: block;
+}
+
+.infinite-scroll-last,
+.infinite-scroll-error {
+    display: none;
+}
+
+
+/*todo: is this used*/
+.bounce {
+    animation-name: bounce;
+    animation-timing-function: linear;
+    animation-duration: 100ms;
+}
+
+@keyframes bounce {
+    0% {
+        transform: translateY(0);
+    }
+
+    33% {
+        transform: translateY(-3px);
+    }
+
+    66% {
+        transform: translateY(3px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
