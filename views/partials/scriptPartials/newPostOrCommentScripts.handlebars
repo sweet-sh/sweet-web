@@ -34,6 +34,13 @@ $(function(){
     }
   })
 
+  $('body').on('focus', '.ql-editor', function(e) {
+      $(this).closest('.editable-text').addClass('focused');
+  })
+  $('body').on('focusout', '.ql-editor', function(e) {
+      $(this).closest('.editable-text').removeClass('focused');
+  })
+
   $("#postContentWarningsButton").click(function () {
     $("#postContentWarningsContainer").removeClass("bounce")
     if ($("#postContentWarningsContainer").is(":hidden")) {
