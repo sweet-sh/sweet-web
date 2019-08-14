@@ -10,8 +10,8 @@
       <div class="modal-body">
           <div class="contentForm" id="postEditForm">
           <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple style="display:none;">
-              <div class="form-row" style="margin-bottom:0.5rem" id="editPostContentWarningsContainer">
-                <input type="text" class="form-control" name="editPostContentWarnings" id="editPostContentWarnings" placeholder="Warn others about your post's content." value="{{contentWarnings}}" />
+              <div class="form-row" style="margin-bottom:0.5rem" id="postContentWarningsContainer"{{#if contentWarnings}} style="display:block;"{{/if}}>
+                <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." value="{{contentWarnings}}" />
               </div>
               <div class="editable-post-content editable-text" id="editPostContent">
                 {{{content}}}

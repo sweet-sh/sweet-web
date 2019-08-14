@@ -41,16 +41,17 @@ $(function(){
       $(this).closest('.editable-text').removeClass('focused');
   })
 
-  $("#postContentWarningsButton").click(function () {
-    $("#postContentWarningsContainer").removeClass("bounce")
-    if ($("#postContentWarningsContainer").is(":hidden")) {
-        $("#postContentWarningsContainer").slideDown("fast");
+  $('body').on('click',"#postContentWarningsButton",function () {
+    var postCWCont = $(this).closest('.contentForm').find("#postContentWarningsContainer");
+    postCWCont.removeClass("bounce")
+    if (postCWCont.is(":hidden")) {
+        postCWCont.slideDown("fast");
     }
-    else if ($("#postContentWarningsContainer").is(":visible") && !$("#postContentWarnings").val()) {
-        $("#postContentWarningsContainer").slideUp("fast");
+    else if (postCWCont.is(":visible") && !postCWCont.find("#postContentWarnings").val()) {
+        postCWCont.slideUp("fast");
     }
     else {
-        $("#postContentWarningsContainer").addClass("bounce")
+        postCWCont.addClass("bounce")
     }
   })
   $('body').on('change',"#postPrivacy-private, #editPostPrivacy-private", function(){
