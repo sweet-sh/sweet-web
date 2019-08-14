@@ -595,7 +595,12 @@ module.exports = function(app) {
 
         //only runs if cached html is out of date
         async function updateHTMLRecursive(displayContext) {
-            displayContext = await helper.updateHTMLCache(displayContext);
+            var html = await helper.renderHTMLContent(displayContext);
+            if(displayContext.cachedHTML){
+                displayContext.cachedHTML.fullContentHTML = html;
+            }else{
+                displayContext.cachedHTML = {fullContentHTML: html};
+            }
             if (displayContext.comments) {
                 for (comment of displayContext.comments) {
                     await updateHTMLRecursive(comment);

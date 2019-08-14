@@ -509,8 +509,8 @@ module.exports = function(app) {
                 }
 
                 comment.inlineElements = parsedResult.inlineElements;
-                comment = await helper.updateHTMLCache(comment);
-                var contentHTML = comment.cachedHTML.fullContentHTML;
+                var contentHTML = await helper.renderHTMLContent(comment)
+                comment.cachedHTML = {fullContentHTML: contentHTML};
 
                 numberOfComments = 0;
                 var depth = undefined;
@@ -1025,21 +1025,22 @@ module.exports = function(app) {
         Post.findOne({
             _id: req.params.postid
         })
-        .then(post => {
+        .then(async post => {
             if (post.author.equals(req.user._id)){
                 // This post has been written by the logged in user - we good
                 if (post.type == 'community') {
                     isCommunityPost = true;
                 }
+                var content = await helper.renderHTMLContent(post,true);
                 hbs.render('./views/partials/posteditormodal.handlebars', {
                     contentWarnings: post.contentWarnings,
-                    content: post.parsedContent,
                     privacy: post.privacy,
                     isCommunityPost: isCommunityPost,
                 })
                 .then(async html => {
                     var result = {
-                        editor: html
+                        editor: html,
+                        content: content
                     }
                     res.contentType('json');
                     res.send(JSON.stringify(result));
