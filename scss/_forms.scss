@@ -130,6 +130,7 @@ button.close {
 .ql-editor {
     overflow-y: inherit;
     min-height: 4rem;
+    padding: .55rem;
 }
 
 /* i forget what this does but it looks important */
@@ -141,6 +142,7 @@ button.close {
 
 .ql-editor.ql-blank::before {
     color: $placeholder;
+    left: .55rem;
 }
 
 .ql-bubble .ql-editor img {
@@ -237,6 +239,10 @@ button.close {
     background: $editor-background;
     cursor: text;
     min-height: 4em;
+
+    &.focused {
+        border-color: $light-pink;
+    }
 }
 
 .editable-text>p:last-child,

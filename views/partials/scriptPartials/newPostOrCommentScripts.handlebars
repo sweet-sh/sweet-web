@@ -32,6 +32,9 @@ $(function(){
     if(e.target.parentElement.id == "editor"){
       $(".post-controls").css('display', 'flex');
     }
+    $(this).closest('.editable-text').addClass('focused');
+  }).focusout(function (e) {
+    $(this).closest('.editable-text').removeClass('focused');
   })
 
   $("#postContentWarningsButton").click(function () {
