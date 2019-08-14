@@ -65,19 +65,18 @@ $(function(){
       $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i>");
     }
   });
-  $("#emojiWindowButton").click(function () {
-    $("#new-post-emoji-picker").slideToggle("fast");
-    $("#editor").find(".ql-editor").focus()
-  });
-  $('body').on('click', '.replyEmojiWindowButton', function() {
-    emojiPicker = $(this).closest('.new-comment-form').find('.emoji-picker')
-    editor = $(this).closest('.new-comment-form').find('.ql-editor')
-    emojiPicker.slideToggle("fast");
-    editor.focus()
+
+  // Emoji picker
+  $('body').on('click', '.show-emoji-picker', function() {
+      emojiPicker = $(this).closest('.new-comment-form, .contentForm').find('.emoji-picker')
+      editor = $(this).closest('.new-comment-form, .contentForm').find('.ql-editor')
+      emojiPicker.slideToggle("fast")
+      editor.focus()
   })
-  $("#new-post-emoji-picker>.add-emoji").click(function () {
-    $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
+  $('body').on('click', '.add-emoji', function() {
+      $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0].insertEmojiAtCursor(event.target.innerHTML)
   })
+
   $('body').on('click', '.reply-to-comment', function() {
     // First, check if the reply form is already open - if it is, just scroll to it
     var commentContainer = $(this).closest('.comment');
