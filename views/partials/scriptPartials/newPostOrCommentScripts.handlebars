@@ -46,30 +46,35 @@ $(function(){
         $("#postContentWarningsContainer").addClass("bounce")
     }
   })
-  $("#postPrivacy-private").change(function () {
+  $('body').on('change',"#postPrivacy-private, #editPostPrivacy-private", function(){
     if (this.checked) {
-      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i> Private");
-      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i>");
+      var cont = $(this).closest('.contentForm');
+      cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i> Private");
+      cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
     }
   });
-  $("#postPrivacy-public").change(function () {
+  $('body').on('change',"#postPrivacy-public, #editPostPrivacy-public", function(){
     if (this.checked) {
-      $("label[for='postPrivacy-public']").html("<i class='fas fa-eye'></i> Public");
-      $("label[for='postPrivacy-private']").html("<i class='fas fa-eye-slash'></i>");
+      var cont = $(this).closest('.contentForm');
+      cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i> Public");
+      cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
     }
   });
-  $("#emojiWindowButton").click(function () {
-    $("#new-post-emoji-picker").slideToggle("fast");
-    $("#editor").find(".ql-editor").focus()
+  $('body').on('click',"#emojiWindowButton", function(){
+    var cont = $(this).closest('.contentForm');
+    cont.find('.emoji-picker').slideToggle("fast");
+    cont.find(".ql-editor").focus();
   });
   $('body').on('click', '.replyEmojiWindowButton', function() {
     emojiPicker = $(this).closest('.new-comment-form').find('.emoji-picker')
     editor = $(this).closest('.new-comment-form').find('.ql-editor')
     emojiPicker.slideToggle("fast");
     editor.focus()
-  })
-  $("#new-post-emoji-picker>.add-emoji").click(function () {
-    $("#editor")[0].insertEmojiAtCursor(event.target.innerHTML);
+  });
+
+  $('body').on('click',".emoji-picker>.add-emoji", function () {
+    var cont = $(this).closest('.contentForm, .new-comment-form');
+    cont.find(".ql-container")[0].insertEmojiAtCursor(event.target.innerHTML);
   })
 
   $('body').on('click', '.edit-post', function() {

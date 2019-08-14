@@ -165,15 +165,8 @@ $(function() {
     $(this).text(
         text == "Show more" ? "Show less" : "Show more");
   })
-  $('body').on('click','.replyEmojiWindowButton', function() {
-    var commentFormContainer = $(this).closest('.new-comment-form');
-    commentFormContainer.find('.replyEmojiWindow').slideToggle("fast");
-    commentFormContainer.find('.ql-editor').focus();
 
-  })
-  $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
-    $(this).closest(".new-comment-form").find('.ql-container')[0].insertEmojiAtCursor(event.target.innerHTML);
-  })
+
 
     $('#boostersModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget)

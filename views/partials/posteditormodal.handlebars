@@ -30,18 +30,18 @@
               {{#unless isCommmunityPost}}
               <div class="leftSideControls">
                 <div class="switch-field" id="editVisibilityControls">
-                  <input type="radio" id="postPrivacy-public" name="editPostPrivacy" value="public" {{#eq privacy "public"}}checked{{/eq}} />
-                  <label for="postPrivacy-public"><i class='fas fa-eye'></i></label>
-                  <input type="radio" id="postPrivacy-private" name="editPostPrivacy" value="private" {{#eq privacy "private"}}checked{{/eq}}/>
-                  <label for="postPrivacy-private"><i class='fas fa-eye-slash'></i></label>
+                  <input type="radio" id="editPostPrivacy-public" name="editPostPrivacy" value="public" {{#eq privacy "public"}}checked{{/eq}} />
+                  <label for="editPostPrivacy-public" id="publicPrivacyLabel"><i class='fas fa-eye'></i></label>
+                  <input type="radio" id="editPostPrivacy-private" name="editPostPrivacy" value="private" {{#eq privacy "private"}}checked{{/eq}}/>
+                  <label for="editPostPrivacy-private" id="privatePrivacyLabel"><i class='fas fa-eye-slash'></i></label>
                 </div>
               </div>
               {{/unless}}
               <div class="rightSideControls">
-                <button type="button" class="button grey-button" id="editPostLinkButton"><i class="fas fa-link"></i></button>
-                <button type="button" class="button grey-button" id="editPostImageButton"><i class="fas fa-image"></i></button>
-                <button type="button" class="button grey-button" id="editEmojiWindowButton"><i class="far fa-smile"></i></button>
-                <button type="button" class="button grey-button" id="editPostContentWarningsButton"><i class="fas fa-info-circle"></i></button>
+                <button type="button" class="button grey-button" id="postLinkButton"><i class="fas fa-link"></i></button>
+                <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
+                <button type="button" class="button grey-button" id="emojiWindowButton"><i class="far fa-smile"></i></button>
+                <button type="button" class="button grey-button" id="postContentWarningsButton"><i class="fas fa-info-circle"></i></button>
               </div>
             </div>
           </div>
