@@ -350,59 +350,6 @@ module.exports = function(app) {
                     return;
                 }
 
-                if (post.imageVersion < 3 || !post.imageVersion) {
-                    for (const image of post.images) {
-                        if (post.imageVersion == 2) {
-                            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                                if (err) console.log("Image deletion error " + err)
-                            })
-                        } else {
-                            fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {
-                                if (err) console.log("Image deletion error " + err)
-                            })
-                        }
-                        Image.deleteOne({ "filename": image });
-                    }
-
-                } else {
-                    for (const ie of post.inlineElements) {
-                        if (ie.type == "image(s)") {
-                            for (const image of ie.images) {
-                                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                                    if (err) console.log("Image deletion error " + err)
-                                })
-                                Image.deleteOne({ "filename": image });
-                            }
-                        }
-                    }
-                }
-
-                // Delete tags (does not currently fix tag last updated time)
-                if (post.tags) {
-                    post.tags.forEach((tag) => {
-                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
-                            .then((tag) => {
-                                console.log("Deleted tag: " + tag)
-                            })
-                            .catch((err) => {
-                                console.log("Database error: " + err)
-                            })
-                    })
-                }
-
-                // Delete boosts
-                if (post.type == "original" && post.boosts) {
-                    post.boosts.forEach((boost) => {
-                        Post.deleteOne({ "_id": boost })
-                            .then((boost) => {
-                                console.log("Deleted boost: " + boost)
-                            })
-                            .catch((err) => {
-                                console.log("Database error: " + err)
-                            })
-                    })
-                }
-
                 function deleteImagesRecursive(postOrComment) {
                     if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
                         for (const il of postOrComment.inlineElements) {
@@ -437,6 +384,32 @@ module.exports = function(app) {
                 }
 
                 deleteImagesRecursive(post);
+
+                // Delete tags (does not currently fix tag last updated time)
+                if (post.tags) {
+                    post.tags.forEach((tag) => {
+                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
+                            .then((tag) => {
+                                console.log("Deleted tag: " + tag)
+                            })
+                            .catch((err) => {
+                                console.log("Database error: " + err)
+                            })
+                    })
+                }
+
+                // Delete boosts
+                if (post.type == "original" && post.boosts) {
+                    post.boosts.forEach((boost) => {
+                        Post.deleteOne({ "_id": boost })
+                            .then((boost) => {
+                                console.log("Deleted boost: " + boost)
+                            })
+                            .catch((err) => {
+                                console.log("Database error: " + err)
+                            })
+                    })
+                }
 
                 // Delete notifications
                 User.update({}, {

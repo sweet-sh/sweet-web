@@ -317,7 +317,7 @@ module.exports = {
                 var imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? "/images/uploads/" : "/api/image/display/";
                 if (forEditor) {
                     for (var i = 0; i < postOrComment.images.length; i++) {
-                        endHTML += (await ('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>'; //is this line long enough yet
+                        endHTML += (await hbs.render('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>'; //is this line long enough yet
                     }
                 } else {
                     //this is a post or comment from before the inlineElements array, render its images (with determined full urls) with the parallel arrays and put that at the end of html
