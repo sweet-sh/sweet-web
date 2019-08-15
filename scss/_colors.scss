@@ -3,11 +3,11 @@ $text: #1a1717; // Text for light mode.
 $background-white: #fff;
 $background-grey: #f9f9fa; // Page background
 
-$lightest-grey: #f3f3f3; // Form input backgrounds, comment content box backgrounds
-$light-grey: #efefef; // Subtle dividers, comment content box borders
 $medium-grey: #cecece; // Post borders
-$dark-grey: #aaa;
-$darkest-grey: #666; // Grey-colored text
+$lightest-grey: lighten($medium-grey, 15%); // Form input backgrounds, comment content box backgrounds
+$light-grey: lighten($medium-grey, 10%); // Subtle dividers, comment content box borders
+$dark-grey: darken($medium-grey, 15%);
+$darkest-grey: darken($medium-grey, 30%); // Grey-colored text
 
 $light-blue: #339fdb; // Links
 
@@ -41,3 +41,26 @@ $navigation-border: $dark-pink;
 $navigation-text: $darkest-grey;
 $navigation-active-text: $dark-pink;
 $navigation-hover-text: $sweet-red;
+
+.color-test {
+    margin-top: 80px;
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    &.medium-grey  {
+        background-color: $medium-grey;
+    }
+    &.lightest-grey {
+        background-color: $lightest-grey
+    }
+    &.light-grey {
+        background-color: $light-grey
+
+    }
+    &.dark-grey {
+        background-color: $dark-grey
+    }
+    &.darkest-grey {
+        background-color: $darkest-grey
+    }
+}
