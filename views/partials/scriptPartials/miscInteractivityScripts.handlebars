@@ -156,7 +156,7 @@ $(function() {
     }
     else {
       var pC = $(this).prev(".content");
-      pC.addClass("abbreviated-content").removeClass("content").animate({height:"20rem"},200);
+      pC.animate({height:"20rem"},200,"swing",function(){pC.addClass("abbreviated-content").removeClass("content")});
       var scroll = pC.offset().top;
       $("html, body").animate({ scrollTop: (scroll-200)+"px" },200); //-200 to roughly account for the navbar covering up the very top of the screen
       $(this).attr("data-state","contracted");

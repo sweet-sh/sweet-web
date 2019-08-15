@@ -643,7 +643,7 @@ module.exports = function(app) {
             })
         })
 
-        mTimes.then(async function() {
+        await mTimes.then(async function() {
             if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) || (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
                 await updateHTMLRecursive(post);
                 post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;

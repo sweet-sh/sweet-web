@@ -182,8 +182,8 @@ module.exports = function(app) {
             if (inline.type == "image(s)") {
                 //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
                 var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : user), req.user._id, imagePrivacy, req.user.settings.imageQuality);
-                inline.imageIsHorizontal = horizOrVertics.isHorizontal;
-                inline.imageIsVertical = horizOrVertics.isVertical;
+                inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
+                inline.imageIsVertical = horizOrVertics.imageIsVertical;
             }
         }
 
@@ -504,8 +504,8 @@ module.exports = function(app) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
                         var horizOrVertics = await helper.finalizeImages(inline.images, postType, req.user._id, postPrivacy, req.user.settings.imageQuality);
-                        inline.imageIsHorizontal = horizOrVertics.isHorizontal;
-                        inline.imageIsVertical = horizOrVertics.isVertical;
+                        inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
+                        inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }
                 }
 
@@ -1108,8 +1108,8 @@ module.exports = function(app) {
                     currentPostImages.push(e.images[i]);
                     if (!oldPostImages.includes(e.images[i])) {
                         var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
-                        e.imageIsVertical.push(horizOrVertic[0].imageIsVertical);
-                        e.imageIsVertical.push(horizOrVertic[0].imageIsVertical);
+                        e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
+                        e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
                     } else {
                         e.imageIsVertical.push(verticalityLookup[e.images[i]]);
                         e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
