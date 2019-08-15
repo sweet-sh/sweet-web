@@ -135,10 +135,10 @@ module.exports = function(app) {
                 Community.find().sort('-lastUpdated').then(communities => {
                     var publicCommunites = communities.filter(c => c.settings.visibility == "public" && c.settings.joinType == "open");
                     publicCommunites.sort(function() {
-                      return .5 - Math.random();
+                        return .5 - Math.random();
                     });
                     publicCommunites.length = 8;
-                    res.render('index', {layout: 'logged-out', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
+                    res.render('index', { layout: 'logged-out', userCount: users, communities: publicCommunites, communityCount: communities.length, sessionFlash: res.locals.sessionFlash });
                 })
             })
         }
@@ -596,10 +596,10 @@ module.exports = function(app) {
         //only runs if cached html is out of date
         async function updateHTMLRecursive(displayContext) {
             var html = await helper.renderHTMLContent(displayContext);
-            if(displayContext.cachedHTML){
+            if (displayContext.cachedHTML) {
                 displayContext.cachedHTML.fullContentHTML = html;
-            }else{
-                displayContext.cachedHTML = {fullContentHTML: html};
+            } else {
+                displayContext.cachedHTML = { fullContentHTML: html };
             }
             if (displayContext.comments) {
                 for (comment of displayContext.comments) {
@@ -613,17 +613,44 @@ module.exports = function(app) {
         }
 
         var galleryTemplatePath = "./views/partials/imagegallery.handlebars";
-        var galleryTemplateMTime = fs.statSync(galleryTemplatePath).mtime; //would probably be better asynchronous
+        var galleryTemplateMTime = undefined;
         var embedsTemplatePath = "./views/partials/embed.handlebars";
-        var embedTemplateMTime = fs.statSync(embedsTemplatePath).mtime;
+        var embedTemplateMTime = undefined;
 
-        if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) || (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
+        //non-blocking way to retrieve the last modified times for these templates so that we can check if the cached post html is up to data
+        var mTimes = new Promise(function(resolve, reject) {
+            fs.stat(galleryTemplatePath, (err, stats) => {
+                if (err) {
+                    console.err('could not get last modified time for image gallery template, post html will not be updated');
+                    reject(err);
+                } else {
+                    galleryTemplateMTime = stats.mtime;
+                    if (embedTemplateMTime) {
+                        resolve();
+                    }
+                }
+            })
+            fs.stat(embedsTemplatePath, (err, stats) => {
+                if (err) {
+                    console.err('could not get last modified time for embed/link preview template, post html will not be updated');
+                    reject(err);
+                } else {
+                    embedTemplateMTime = stats.mtime;
+                    if (galleryTemplateMTime) {
+                        resolve();
+                    }
+                }
+            })
+        })
 
-            await updateHTMLRecursive(post);
-            post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
-            post.cachedHTML.embedsMTime = embedTemplateMTime;
-            await post.save();
-        }
+        mTimes.then(async function() {
+            if ((!post.cachedHTML.imageGalleryMTime || post.cachedHTML.imageGalleryMTime < galleryTemplateMTime) || (!post.cachedHTML.embedsMTime || post.cachedHTML.embedsMTime < embedTemplateMTime)) {
+                await updateHTMLRecursive(post);
+                post.cachedHTML.imageGalleryMTime = galleryTemplateMTime;
+                post.cachedHTML.embedsMTime = embedTemplateMTime;
+                await post.save();
+            }
+        })
     }
 
     //Responds to requests for posts for feeds. API method, used within the public pages.
@@ -1110,9 +1137,9 @@ module.exports = function(app) {
                             var metadataImage = "https://sweet.sh/images/cake.svg";
                         }
                         var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
-                        if(firstLine && firstLine[1]){
+                        if (firstLine && firstLine[1]) {
                             firstLine = firstLine[1];
-                        }else{
+                        } else {
                             //todo: maybe look at the post's inline elements and if there's a link preview have this be "link to..." or if there's an image with a description use that
                             firstLine = "Just another ol' good post on sweet";
                         }

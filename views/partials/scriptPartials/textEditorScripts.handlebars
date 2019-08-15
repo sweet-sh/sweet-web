@@ -29,6 +29,7 @@
 
     //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
     function clearEmbed(e) {
+        //todo: if the images is a new one then call cleartempimage with its file name
         var m = $(this).parent().parent();
         if (m[0].request && m[0].request.readyState != 4) { //if the request is still in progress
             m[0].request.abort();

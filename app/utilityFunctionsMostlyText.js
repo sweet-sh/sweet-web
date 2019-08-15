@@ -15,6 +15,7 @@ const path = require('path')
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
+    //todo: cwsEnabled is no longer used, remove from the header and also everywhere this function is called
     parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
         if (typeof rawText != "string") { //it is an array of paragraphs and inline elements

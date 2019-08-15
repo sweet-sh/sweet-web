@@ -29,6 +29,9 @@ var inlineElementSchema = new mongoose.Schema({
   //used if image(s) (yeah, it's the same parallel arrays as the the old post formats):
   images: [String],
   imageDescriptions: [String],
+  //it would take a database transform for the old posts, but these fields should probably be combined into imageOrientationType or something. currently, if an image is vertical
+  //it has 'vertical-image' stored at the same index as it in the imageIsVertical array and a blank string otherwise, and the same for horizontality. imageOrientationType could just
+  //store 'vertical-image', 'horizontal-image', or a blank string.
   imageIsVertical: [String],
   imageIsHorizontal: [String],
 });
@@ -56,6 +59,9 @@ var commentSchema = new mongoose.Schema({
   //image parallel arrays
   images: [String],
   imageDescriptions: [String],
+  //it would take a database transform for the old posts, but these fields should probably be combined into imageOrientationType or something. currently, if an image is vertical
+  //it has 'vertical-image' stored at the same index as it in the imageIsVertical array and a blank string otherwise, and the same for horizontality. imageOrientationType could just
+  //store 'vertical-image', 'horizontal-image', or a blank string.
   imageIsVertical: [String],
   imageIsHorizontal: [String],
 
@@ -76,8 +82,8 @@ var boostSchema = new mongoose.Schema({
 })
 
 var postSchema = new mongoose.Schema({
-  type: String,
-  community: { type: Schema.Types.ObjectId, ref: 'Community' },
+  type: String, //"user" or "community"
+  community: { type: Schema.Types.ObjectId, ref: 'Community' }, //hopefully undefined if type=="user"
   authorEmail: {
     type: String,
     required: true
@@ -111,6 +117,7 @@ var postSchema = new mongoose.Schema({
   },
   mentions: [String],
   tags: [String],
+  //boosts of this post will produce seperate post documents in the database that are linked to here. they link back to the original post through the boostTarget field.
   boostsV2: [{type:boostSchema, required: true}],
   contentWarnings: String,
   commentsDisabled: Boolean,
@@ -119,6 +126,9 @@ var postSchema = new mongoose.Schema({
   //image parallel arrays (no positions, images were all put at the end):
   images: [String],
   imageDescriptions: [String],
+  //it would take a database transform for the old posts, but these fields should probably be combined into imageOrientationType or something. currently, if an image is vertical
+  //it has 'vertical-image' stored at the same index as it in the imageIsVertical array and a blank string otherwise, and the same for horizontality. imageOrientationType could just
+  //store 'vertical-image', 'horizontal-image', or a blank string.
   imageIsVertical: [String],
   imageIsHorizontal: [String],
 

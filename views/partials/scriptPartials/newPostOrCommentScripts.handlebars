@@ -98,20 +98,48 @@ $(function(){
           if (existingModal.length) {
               existingModal.remove();
           }
-          $.post("/createposteditor/" + postID, function(data) {
-                $('body').append(data.editor);
+          $.post("/createposteditor/" + postID, function(response) {
+                $('body').append(response.editor);
                 var editModal = $('#editPostModal');
+                //we have to first create the editor, then attach quill, then append the content, quill will get angry if we attach it to a div with embeds already in it
                 attachQuill(editModal.find('#editPostContent')[0]);
                 var newEditor = editModal.find('.ql-editor');
-                newEditor.empty();
-                newEditor.append(data.content);
+                newEditor.empty(); //bc the editor is automatically supplied with a blank line at the top at first
+                newEditor.append(response.content);
                 newEditor.find('.image-move').each(function(i, e) { e.addEventListener('touchstart', touchStartOnHandle, { passive: false }) });
                 newEditor.find('.image-move').on('mousedown', mousedownOnHandle);
                 newEditor.find('.image-clear').click(clearEmbed);
                 createImageGroups(newEditor);
-                $('#editPostModal').modal();
+                editModal[0].postContainer = postContainer[0]; //retrieved to set the new html contents of it upon edit submission
+                editModal.modal();
               })
           }
+  })
+
+  $('body').on('click', '#editPostSubmit', function(e) { //not tested
+      return false; //server-side code not finished yet
+      e.preventDefault();
+      var cont = $(this).closest('.contentForm');
+      var editor = cont.find('.ql-container');
+      if (editor.hasContent()) {
+          $(this).attr('disabled', true);
+          $(this).html('<i class="fas fa-spinner fa-spin"></i> Sending...')
+          var content = editor.getContents();
+          var editModal = $("#editPostModal");
+          var postContainer = editModal.postContainer;
+          var postID = editModal.attr('data-post-id');
+          $.post('/saveedits/' + postID, {
+              postContent: JSON.stringify(content),
+              postContentWarnings: cont.find('#postContentWarnings').val(),
+              postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') //todo: make sure this doesn't crash for community posts
+          }).done(function(newPostHTML) {
+              $(postContainer).children('.content').html(newPostHTML);
+              editModal.on('hidden', function() { editModal.remove() });
+              editModal.modal('hide');
+          })
+      } else {
+          bootbox.alert('this edit window appears to be... empty...');
+      }
   })
 
   $('body').on('click', '.reply-to-comment', function() {
@@ -200,6 +228,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
       return;
     }
     e.preventDefault();
+    $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
     let editor = $('#editor');
     let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
     if (editor[0].hasContent()) {
