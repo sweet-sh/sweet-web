@@ -86,14 +86,17 @@ $(function(){
   })
 
   $('body').on('click', '.edit-post', function() {
+    var button = $(this);
+      button.html('<i class="fas fa-spinner fa-spin"></i>');
       var existingModal = $("#editPostModal");
-      var postContainer = $(this).closest('.post');
+      var postContainer = button.closest('.post');
       var postID = postContainer.attr("data-post-id");
       //instead of removing the post editing modal right away, potentially causing a user to lose in-progress work, we'll keep it around
       //and ressurect it if the user goes to edit the same post again after closing it. if the user goes to edit a different post, though,
       //we'll assume that they don't need their work from the old one and remove it.
       if (existingModal.length && existingModal.attr('data-post-id') == postID) {
           existingModal.modal();
+          button.html('<i class="fas fa-pencil-alt"></i>');          
       } else {
           if (existingModal.length) {
               existingModal.remove();
@@ -111,31 +114,41 @@ $(function(){
                 newEditor.find('.image-clear').click(clearEmbed);
                 createImageGroups(newEditor);
                 editModal[0].postContainer = postContainer[0]; //retrieved to set the new html contents of it upon edit submission
+                button.html('<i class="fas fa-pencil-alt"></i>');
                 editModal.modal();
               })
           }
   })
-
-  $('body').on('click', '#editPostSubmit', function(e) { //not tested
-      return false; //server-side code not finished yet
+  $('body').on('click', '#editPostSubmit', function(e) {
       e.preventDefault();
-      var cont = $(this).closest('.contentForm');
-      var editor = cont.find('.ql-container');
+      var button = $(this)
+      var cont = button.closest('.modal-content');
+      var editor = cont.find('.ql-container')[0];
       if (editor.hasContent()) {
-          $(this).attr('disabled', true);
-          $(this).html('<i class="fas fa-spinner fa-spin"></i> Sending...')
+          button.attr('disabled', true);
+          button.html('<i class="fas fa-spinner fa-spin"></i> Sending...')
           var content = editor.getContents();
           var editModal = $("#editPostModal");
-          var postContainer = editModal.postContainer;
+          var postContainer = editModal[0].postContainer;
           var postID = editModal.attr('data-post-id');
+          var contentWarnings = cont.find('#postContentWarnings').val().trim();
           $.post('/saveedits/' + postID, {
               postContent: JSON.stringify(content),
-              postContentWarnings: cont.find('#postContentWarnings').val(),
+              postContentWarnings: contentWarnings,
               postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') //todo: make sure this doesn't crash for community posts
           }).done(function(newPostHTML) {
-              $(postContainer).children('.content').html(newPostHTML);
-              editModal.on('hidden', function() { editModal.remove() });
+              var contentContainer = $(postContainer).children('.content');
+              if(contentWarnings){
+                contentContainer.addClass('content-warning-post');
+              }
+              contentContainer.html(newPostHTML);
+              $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove();})
+              $("#editPostModal").modal('hide');
+          }).fail(function() {
               editModal.modal('hide');
+              bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again', function() { editModal.modal() });
+              button.attr('disabled', false);
+              button.html('Try again... <i class="fas fa-chevron-right"></i>');
           })
       } else {
           bootbox.alert('this edit window appears to be... empty...');
@@ -221,12 +234,8 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
   }
 })
 
-  var haveWeSentPost = false;
   //function for very specifically submitting a post, not a comment
   $("#postSubmit").click(function (e) {
-    if (haveWeSentPost) {
-      return;
-    }
     e.preventDefault();
     $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
     let editor = $('#editor');

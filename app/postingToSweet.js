@@ -1053,14 +1053,13 @@ module.exports = function(app) {
         if (!post.author._id.equals(req.user._id)) {
             return res.sendStatus(403);
         }
-        var parsedPost = helper.parseText(JSON.parse(req.body.postContent, req.body.postContentWarnings, true, true, true));
-        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
-            //ignore the edit if it results in an empty post; i'm going to assume that they hit submit by accident, basically
-            res.setStatus(200);
-            res.setContentType('text/html');
-            res.send(post.cachedHTML.fullContentHTML); //send back the original post so that they can see that no edits were actually made
-            return;
+        var parsedPost = await helper.parseText(JSON.parse(req.body.postContent, req.body.postContentWarnings, true, true, true));
+        if (!(parsedPost.inlineElements.length || parsedPost.text.trim())) {
+            //ignore the edit if it results in an empty post; it's an invalid request, the client side code also works to prevent this
+            return res.sendStatus(403);
         }
+
+        post.lastEdited = new Date();
 
         post.parsedContent = parsedPost.text;
 
@@ -1069,16 +1068,12 @@ module.exports = function(app) {
         //it would be a lot simpler, if computationally wasteful, to just re-compute the orientation of every image for every image instead of doing all of this to keep track
         //of how it was stored for images already in the post in potentially a completely different format and image order; if this code gives too much trouble probably just switch to that.
 
-        if (!post.imageVersion || post.imageVersion < 2) {
-            //we'll have image documents specifying their privacy and stuff in a second, so the images should be moved out of /public/images/uploads/ and into the cdn folder so that can be used and
-            //it's still true that images in inlineElements are always accessed through /api/image/display so it's not a crazy guessing game when displaying posts
-        }
-
         //create lookup tables: oldHorizontalImages[imageFileName] will contain the value of imageIsHorizontal corresponding to that filename, and the same for vertical ones
         var horizontalityLookup = {};
         var verticalityLookup = {};
+        var oldPostImages = [];
         if (post.images && post.images.length) {
-            var oldPostImages = post.images;
+            oldPostImages = post.images;
             if (post.imageIsHorizontal && post.imageIsVertical) {
                 oldPostImages.map((v, i) => {
                     horizontalityLookup[v] = post.imageIsHorizontal[i];
@@ -1086,13 +1081,12 @@ module.exports = function(app) {
                 })
             }
         } else if (post.inlineElements && post.inlineElements.length) {
-            var oldPostImages = [];
             post.inlineElements.filter(element => element.type == "image(s)").map(imagesElement => imagesElement.images.map(
                 (imageFilename, i) => {
                     oldPostImages.push(imageFilename);
-                    if (imageElement.imageIsHorizontal && imageElement.imageIsVertical) {
-                        horizontalityLookup[v] = imagesElement.imageIsHorizontal[i];
-                        verticalityLookup[v] = imagesElement.imageIsVertical[i];
+                    if (imagesElement.imageIsHorizontal && imagesElement.imageIsVertical) {
+                        horizontalityLookup[imageFilename] = imagesElement.imageIsHorizontal[i];
+                        verticalityLookup[imageFilename] = imagesElement.imageIsVertical[i];
                     }
                 }))
         }
@@ -1101,13 +1095,17 @@ module.exports = function(app) {
             var imagePrivacyChanged = false;
         } else {
             var imagePrivacy = req.body.postPrivacy;
-            var imagePrivacyChanged = (imagePrivacy == post.privacy);
+            var imagePrivacyChanged = !(imagePrivacy == post.privacy);
         }
         //finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
-        //todo: change image privacy in the image database document if imagePrivacy has changed from the unedited post
+        //change the privacy of old image documents if the post's privacy changed.
+        var currentPostImages = [];
         for (e of parsedPost.inlineElements) {
             if (e.type == "image(s)") {
-                for (var i = 0; i < e.image.length; i++) {
+                e.imageIsVertical = [];
+                e.imageIsHorizontal = [];
+                for (var i = 0; i < e.images.length; i++) {
+                    currentPostImages.push(e.images[i]);
                     if (!oldPostImages.includes(e.images[i])) {
                         var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
                         e.imageIsVertical.push(horizOrVertic[0].imageIsVertical);
@@ -1115,10 +1113,19 @@ module.exports = function(app) {
                     } else {
                         e.imageIsVertical.push(verticalityLookup[e.images[i]]);
                         e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
-                        if(imagePrivacyChanged){
-                            var imageDoc = Image.findOne({filename:e.images[i]});
+                        if (imagePrivacyChanged) {
+                            var imageDoc = await Image.findOne({ filename: e.images[i] });
                             imageDoc.privacy = imagePrivacy;
                             await imageDoc.save();
+                        }
+                        if (!post.imageVersion || post.imageVersion < 2) {
+                            //move images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
+                            await new Promise(function(resolve, reject) {
+                                fs.rename(global.appRoot + '/public/images/uploads/' + e.images[i], global.appRoot + '/cdn/images/' + e.images[i], function(err) { if (err) { reject(err) } else { resolve() } });
+                            }).catch(err => {
+                                console.error("could not move old image to new cdn location");
+                                console.error(err)
+                            });
                         }
                     }
                 }
@@ -1127,8 +1134,8 @@ module.exports = function(app) {
 
         var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v));
         for (image of deletedImages) {
-            Image.deleteOne({filename:image});
-            fs.unlink(global.appRoot+((!post.imageVersion || post.imageVersion < 2)?'/public/images/uploads/':'/cdn/images/')+filename);
+            Image.deleteOne({ filename: image });
+            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + filename);
         }
 
         post.inlineElements = parsedPost.inlineElements;
@@ -1140,15 +1147,31 @@ module.exports = function(app) {
 
         var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v));
         for (mention of newMentions) {
-            //todo: notify those that have permission to see the post
+            if (mention != req.user.username) {
+                var mentioned = await User.findOne({ username: mention });
+                if (post.community && (await User.findOne({ username: mention, communities: post.community }))) {
+                    notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
+                    notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                } else {
+                    notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
+                }
+            }
         }
         post.mentions = parsedPost.mentions;
 
         var newTags = parsedPost.tags.filter(v => !post.tags.includes(v));
-        for (tag of newTags) {
-            //todo: update the tag
+        for (const tag of newTags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id }, "$set": { "lastUpdated": post.lastEdited } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
+        }
+        var deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
+        for (const tag of deletedTags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$pull": { "posts": post._id } }).catch(err => console.error('could not remove edited post ' + post._id.toString() + ' from tag ' + tag + '\n' + err));
+
         }
         post.tags = parsedPost.tags;
+
+        //if the post is in a community, the community's last activity timestamp could be updated here, but maybe not, idk
 
         var newHTML = await helper.renderHTMLContent(post);
         post.cachedHTML.fullContentHTML = newHTML;
@@ -1159,9 +1182,16 @@ module.exports = function(app) {
             postPrivacy = req.body.postPrivacy;
         }
 
+        if(req.body.postContentWarnings){
+            //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
+            newHTML = '<aside class="content-warning">'+req.body.postContentWarnings+'</aside>'+
+            '<div class="abbreviated-content content-warning-content" style="height:0">'+newHTML+'</div>'+
+            '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
+        }
+
         post.save().then(() => {
             res.contentType("text/html");
-            res.setStatus(200);
+            res.status(200);
             res.send(newHTML);
         })
     })

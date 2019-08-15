@@ -1188,7 +1188,6 @@ module.exports = function(app) {
                         posts: displayedPosts,
                         flaggedUsers: flagged,
                         context: req.params.context,
-                        metadata: metadata,
                         canReply: canReply(),
                         oldesttimestamp: oldesttimestamp
                     });

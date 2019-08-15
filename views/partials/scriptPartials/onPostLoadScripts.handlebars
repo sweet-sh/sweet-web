@@ -89,6 +89,10 @@ $(function(){
             tribute.attach(newlyLoadedStuff.find(".ql-editor"));
         }
         {{/if}}
+
+        if($(document).height() <= $(window).height()){
+            $('#postsContainer').infiniteScroll("loadNextPage");
+        }
     });
 });
 </script>

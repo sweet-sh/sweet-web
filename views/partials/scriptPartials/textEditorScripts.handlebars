@@ -80,7 +80,7 @@
                 } else {
                     var linkInfo = JSON.parse(data);
                     if (linkInfo.image) {
-                        m.find(".link-preview-image").attr('src', linkInfo.image)
+                        m.find(".link-preview-image").replaceWith('<img class="link-preview-image" src="'+linkInfo.image+'" />')
                     } else {
                         m.find(".link-preview-image").replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
                     }
@@ -400,7 +400,6 @@
 
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
-                console.log(e.target);
                 var et = $(e.target);
                 if (et.hasClass('ql-editor')) {
                     var c = et.children();
