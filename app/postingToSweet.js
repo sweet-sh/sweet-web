@@ -1115,6 +1115,11 @@ module.exports = function(app) {
                     } else {
                         e.imageIsVertical.push(verticalityLookup[e.images[i]]);
                         e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
+                        if(imagePrivacyChanged){
+                            var imageDoc = Image.findOne({filename:e.images[i]});
+                            imageDoc.privacy = imagePrivacy;
+                            await imageDoc.save();
+                        }
                     }
                 }
             }
