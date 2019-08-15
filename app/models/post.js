@@ -122,7 +122,12 @@ var postSchema = new mongoose.Schema({
   contentWarnings: String,
   commentsDisabled: Boolean,
 
-  imageVersion: Number, //1: array of filenames accessible through /public/images/uploads/[filename]; 2=array of filenames accessible through /api/image/display/[filename] (which checks the user's permissions and the image's privacy;) and 3: image data stored in inlineElements instead
+  //1: array of filenames stored in /public/images/uploads/[filename] (and so publicly accessible through the url /images/uploads/[filename]);
+  //2=array of filenames stored in /cdn/images/[filename] accessible through /api/image/display/[filename] (which checks the user's permissions and the image's privacy;) and
+  //3: image data stored in inlineElements instead and accessible using that second url/path scheme
+  //comments may have an older imageVersion if the post was edited or a newer one if the comments are more recent than the post
+  imageVersion: Number,
+
   //image parallel arrays (no positions, images were all put at the end):
   images: [String],
   imageDescriptions: [String],

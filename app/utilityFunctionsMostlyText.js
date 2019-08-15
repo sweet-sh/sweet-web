@@ -314,7 +314,7 @@ module.exports = {
             }
             if (postOrComment.images && postOrComment.images.length) {
                 //if it's not a comment and it either has no registered image version or the registered image version is less than 2, it uses the old url scheme.
-                var imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? "/public/images/uploads/" : "/api/image/display/";
+                var imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? "/images/uploads/" : "/api/image/display/";
                 if (forEditor) {
                     for (var i = 0; i < postOrComment.images.length; i++) {
                         endHTML += (await ('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>'; //is this line long enough yet

@@ -511,7 +511,7 @@ module.exports = function(app) {
 
                 comment.inlineElements = parsedResult.inlineElements;
                 var contentHTML = await helper.renderHTMLContent(comment)
-                comment.cachedHTML = {fullContentHTML: contentHTML};
+                comment.cachedHTML = { fullContentHTML: contentHTML };
 
                 numberOfComments = 0;
                 var depth = undefined;
@@ -1021,41 +1021,40 @@ module.exports = function(app) {
 
     app.post('/createposteditor/:postid', isLoggedInOrRedirect, function(req, res) {
         Post.findOne({
-            _id: req.params.postid
-        })
-        .then(async post => {
-            if (post.author.equals(req.user._id)){
-                // This post has been written by the logged in user - we good
-                var isCommunityPost = (post.type == 'community');
-                var content = await helper.renderHTMLContent(post,true);
-                hbs.render('./views/partials/posteditormodal.handlebars', {
-                    contentWarnings: post.contentWarnings,
-                    privacy: post.privacy,
-                    isCommunityPost: isCommunityPost,
-                    postID: post._id.toString()
-                })
-                .then(async html => {
-                    var result = {
-                        editor: html,
-                        content: content
-                    }
-                    res.contentType('json');
-                    res.send(JSON.stringify(result));
-                })
-            }
-            else {
-                res.send('Hold up there scout')
-            }
-        })
+                _id: req.params.postid
+            })
+            .then(async post => {
+                if (post.author.equals(req.user._id)) {
+                    // This post has been written by the logged in user - we good
+                    var isCommunityPost = (post.type == 'community');
+                    var content = await helper.renderHTMLContent(post, true);
+                    hbs.render('./views/partials/posteditormodal.handlebars', {
+                            contentWarnings: post.contentWarnings,
+                            privacy: post.privacy,
+                            isCommunityPost: isCommunityPost,
+                            postID: post._id.toString()
+                        })
+                        .then(async html => {
+                            var result = {
+                                editor: html,
+                                content: content
+                            }
+                            res.contentType('json');
+                            res.send(JSON.stringify(result));
+                        })
+                } else {
+                    res.send('Hold up there scout')
+                }
+            })
     })
 
-    app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function(req, res){
+    app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function(req, res) {
         var post = await Post.findById(req.params.postid);
-        if(!post.author._id.equals(req.user._id)){
+        if (!post.author._id.equals(req.user._id)) {
             return res.sendStatus(403);
         }
         var parsedPost = helper.parseText(JSON.parse(req.body.postContent, req.body.postContentWarnings, true, true, true));
-        if(!(parsedResult.inlineElements.length || parsedResult.text.trim())){
+        if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
             //ignore the edit if it results in an empty post; i'm going to assume that they hit submit by accident, basically
             res.setStatus(200);
             res.setContentType('text/html');
@@ -1070,73 +1069,61 @@ module.exports = function(app) {
         //it would be a lot simpler, if computationally wasteful, to just re-compute the orientation of every image for every image instead of doing all of this to keep track
         //of how it was stored for images already in the post in potentially a completely different format and image order; if this code gives too much trouble probably just switch to that.
 
-        if(!post.imageVersion || post.imageVersion < 2){
+        if (!post.imageVersion || post.imageVersion < 2) {
             //we'll have image documents specifying their privacy and stuff in a second, so the images should be moved out of /public/images/uploads/ and into the cdn folder so that can be used and
             //it's still true that images in inlineElements are always accessed through /api/image/display so it's not a crazy guessing game when displaying posts
         }
 
-        //create lookup tables: oldHorizontalImages[imageFileName] will be set to true if that image was set as horizontal in the original post, and the same for vertical ones
-        var oldHorizontalImages = {};
-        var oldVerticalImages = {};
-        if(post.images && post.images.length){
+        //create lookup tables: oldHorizontalImages[imageFileName] will contain the value of imageIsHorizontal corresponding to that filename, and the same for vertical ones
+        var horizontalityLookup = {};
+        var verticalityLookup = {};
+        if (post.images && post.images.length) {
             var oldPostImages = post.images;
-            for(var i=0;i<post.images.length;i++){
-                if(post.imageIsVertical[i]){
-                    oldVerticalImages[post.images[i]] = true;
-                }else if(post.imageIsHorizontal[i]){
-                    oldHorizontalImages[post.images[i]] = true;
-                }
+            if (post.imageIsHorizontal && post.imageIsVertical) {
+                oldPostImages.map((v, i) => {
+                    horizontalityLookup[v] = post.imageIsHorizontal[i];
+                    verticalityLookup[v] = post.imageIsVertical[i];
+                })
             }
-        }else if(post.inlineElements && post.inlineElements.length){
+        } else if (post.inlineElements && post.inlineElements.length) {
             var oldPostImages = [];
-            for(ie of post.inlineElements){
-                if(ie.type=="image(s)"){
-                    oldPostImages.concat(ie.images);
-                    for(var i=0;i<ie.images.length;i++){
-                        if(ie.imageIsHorizontal[i]){
-                            oldHorizontalImages[ie.images[i]] = true;
-                        }else if(ie.imageIsHorizontal[i]){
-                            oldVerticalImages[ie.images[i]] = true;
-                        }
+            post.inlineElements.filter(element => element.type == "image(s)").map(imagesElement => imagesElement.images.map(
+                (imageFilename, i) => {
+                    oldPostImages.push(imageFilename);
+                    if (imageElement.imageIsHorizontal && imageElement.imageIsVertical) {
+                        horizontalityLookup[v] = imagesElement.imageIsHorizontal[i];
+                        verticalityLookup[v] = imagesElement.imageIsVertical[i];
                     }
-                }
-            }
+                }))
         }
         if (post.community) {
             var imagePrivacy = (await Community.findById(post.community)).settings.visibility;
             var imagePrivacyChanged = false;
         } else {
             var imagePrivacy = req.body.postPrivacy;
-            var imagePrivacyChanged = (imagePrivacy==post.privacy);
+            var imagePrivacyChanged = (imagePrivacy == post.privacy);
         }
         //finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
         //todo: change image privacy in the image database document if imagePrivacy has changed from the unedited post
-        for(e of parsedPost.inlineElements){
-            if(e.type=="image(s)"){
-                for(var i=0;i<e.image.length;i++){
-                    if(!oldPostImages.includes(e.images[i])){
+        for (e of parsedPost.inlineElements) {
+            if (e.type == "image(s)") {
+                for (var i = 0; i < e.image.length; i++) {
+                    if (!oldPostImages.includes(e.images[i])) {
                         var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
                         e.imageIsVertical.push(horizOrVertic[0].imageIsVertical);
                         e.imageIsVertical.push(horizOrVertic[0].imageIsVertical);
-                    }else{
-                        if(oldVerticalImages[e.images[i]]){
-                            e.imageIsVertical.push('vertical-image');
-                            e.imageIsHorizontal.push('');
-                        }else if(oldHorizontalImages[e.images[i]]){
-                            e.imageIsHorizontal.push('horizontal-image');
-                            e.imageIsVertical.push('');
-                        }else{
-                            e.imageIsHorizontal.push('');
-                            e.imageIsVertical.push('');
-                        }
+                    } else {
+                        e.imageIsVertical.push(verticalityLookup[e.images[i]]);
+                        e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
                     }
                 }
             }
         }
 
-        var deletedImages = oldPostImages.filter(v=>!currentPostImages.includes(v));
-        for(image of deletedImages){
-            //todo: unlink the image, delete the image document in the database
+        var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v));
+        for (image of deletedImages) {
+            Image.deleteOne({filename:image});
+            fs.unlink(global.appRoot+((!post.imageVersion || post.imageVersion < 2)?'/public/images/uploads/':'/cdn/images/')+filename);
         }
 
         post.inlineElements = parsedPost.inlineElements;
@@ -1145,15 +1132,15 @@ module.exports = function(app) {
         post.imageIsHorizontal = undefined;
         post.imageIsVertical = undefined;
         post.embeds = undefined;
-        
-        var newMentions = parsedPost.mentions.filter(v=>!post.mentions.includes(v));
-        for(mention of newMentions){
+
+        var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v));
+        for (mention of newMentions) {
             //todo: notify those that have permission to see the post
         }
         post.mentions = parsedPost.mentions;
 
-        var newTags = parsedPost.tags.filter(v=>!post.tags.includes(v));
-        for(tag of newTags){
+        var newTags = parsedPost.tags.filter(v => !post.tags.includes(v));
+        for (tag of newTags) {
             //todo: update the tag
         }
         post.tags = parsedPost.tags;
@@ -1163,11 +1150,11 @@ module.exports = function(app) {
 
         post.contentWarnings = req.body.postContentWarnings;
 
-        if(post.type=="user"){
+        if (post.type == "user") {
             postPrivacy = req.body.postPrivacy;
         }
 
-        post.save().then(()=>{
+        post.save().then(() => {
             res.contentType("text/html");
             res.setStatus(200);
             res.send(newHTML);
