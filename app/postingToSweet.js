@@ -1070,11 +1070,6 @@ module.exports = function(app) {
         //it would be a lot simpler, if computationally wasteful, to just re-compute the orientation of every image for every image instead of doing all of this to keep track
         //of how it was stored for images already in the post in potentially a completely different format and image order; if this code gives too much trouble probably just switch to that.
 
-        if(!post.imageVersion || post.imageVersion < 2){
-            //we'll have image documents specifying their privacy and stuff in a second, so the images should be moved out of /public/images/uploads/ and into the cdn folder so that can be used and
-            //it's still true that images in inlineElements are always accessed through /api/image/display so it's not a crazy guessing game when displaying posts
-        }
-
         //create lookup tables: oldHorizontalImages[imageFileName] will be set to true if that image was set as horizontal in the original post, and the same for vertical ones
         var oldHorizontalImages = {};
         var oldVerticalImages = {};
@@ -1111,6 +1106,8 @@ module.exports = function(app) {
         }
         //finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
         //todo: change image privacy in the image database document if imagePrivacy has changed from the unedited post
+        //this would also be a good place to move the image from public/uploads/images to the cdn folder so that inlineElements images can be relied on to be imageVersion==3,
+        //otherwise it would become much more difficult to figure out what url an image is accessible through when rendering a post
         for(e of parsedPost.inlineElements){
             if(e.type=="image(s)"){
                 for(var i=0;i<e.image.length;i++){
