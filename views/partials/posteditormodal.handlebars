@@ -1,4 +1,4 @@
-<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true">
+<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true" data-post-id="{{postID}}">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -13,9 +13,7 @@
               <div class="form-row" style="margin-bottom:0.5rem" id="postContentWarningsContainer"{{#if contentWarnings}} style="display:block;"{{/if}}>
                 <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." value="{{contentWarnings}}" />
               </div>
-              <div class="editable-post-content editable-text" id="editPostContent">
-                
-              </div>
+              <div class="editable-post-content editable-text" id="editPostContent"></div>
               <div class="form-row mt-2 p-1 emoji-picker" style="display:none">
                 {{> emojilist }}
               </div>

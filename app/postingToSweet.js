@@ -1036,6 +1036,7 @@ module.exports = function(app) {
                     contentWarnings: post.contentWarnings,
                     privacy: post.privacy,
                     isCommunityPost: isCommunityPost,
+                    postID: post._id.toString()
                 })
                 .then(async html => {
                     var result = {

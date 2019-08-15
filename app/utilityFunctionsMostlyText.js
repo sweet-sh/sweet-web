@@ -299,7 +299,7 @@ module.exports = {
                 lines.splice(il.position + addedLines, 0, html);
                 addedLines++;
             }
-            return lines.join('\n'); //\n just makes the result easier to read in case someone wants to look at it
+            return lines.join('');
         } else if ((postOrComment.images && postOrComment.images.length) || (postOrComment.embeds && postOrComment.embeds.length)) {
             var endHTML = "";
             if (postOrComment.embeds && postOrComment.embeds.length) {

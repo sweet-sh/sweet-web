@@ -86,26 +86,32 @@ $(function(){
   })
 
   $('body').on('click', '.edit-post', function() {
+      var existingModal = $("#editPostModal");
       var postContainer = $(this).closest('.post');
       var postID = postContainer.attr("data-post-id");
-      $.post("/createposteditor/" + postID, function(data) {
-        $('body').append(data.editor);
-        var editModal = $('#editPostModal');
-        attachQuill(editModal.find('#editPostContent')[0]);
-        var newEditor = editModal.find('.ql-editor');
-        newEditor.append(data.content);
-        newEditor.find('.image-move').each(function(i, e) { e.addEventListener('touchstart', touchStartOnHandle, { passive: false }) });
-        newEditor.find('.image-move').on('mousedown', mousedownOnHandle);
-        newEditor.find('.image-clear').click(clearEmbed);
-        createImageGroups(newEditor);
-        $('#editPostModal').modal();
-      })
-  })
-
-  // Always destroy editor modals when they're closed, so people can't get their
-  // edits back, HA HA
-  $('body').on('hidden.bs.modal', '#editPostModal', function (e) {
-      e.target.remove()
+      //instead of removing the post editing modal right away, potentially causing a user to lose in-progress work, we'll keep it around
+      //and ressurect it if the user goes to edit the same post again after closing it. if the user goes to edit a different post, though,
+      //we'll assume that they don't need their work from the old one and remove it.
+      if (existingModal.length && existingModal.attr('data-post-id') == postID) {
+          existingModal.modal();
+      } else {
+          if (existingModal.length) {
+              existingModal.remove();
+          }
+          $.post("/createposteditor/" + postID, function(data) {
+                $('body').append(data.editor);
+                var editModal = $('#editPostModal');
+                attachQuill(editModal.find('#editPostContent')[0]);
+                var newEditor = editModal.find('.ql-editor');
+                newEditor.empty();
+                newEditor.append(data.content);
+                newEditor.find('.image-move').each(function(i, e) { e.addEventListener('touchstart', touchStartOnHandle, { passive: false }) });
+                newEditor.find('.image-move').on('mousedown', mousedownOnHandle);
+                newEditor.find('.image-clear').click(clearEmbed);
+                createImageGroups(newEditor);
+                $('#editPostModal').modal();
+              })
+          }
   })
 
   $('body').on('click', '.reply-to-comment', function() {
