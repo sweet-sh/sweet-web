@@ -121,13 +121,13 @@
         </div>
         {{#contains this.subscribedUsers ../loggedInUserData._id}}
             <div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Receiving notifications (click to change)">
+                <button type="button" class="button post-toolbar-button unsubscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Receiving notifications (click to change)">
                     <i class="far fa-bell"></i>
                 </button>
             </div>
         {{else}}
             <div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Not receiving notifications (click to change)">
+                <button type="button" class="button post-toolbar-button subscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Not receiving notifications (click to change)">
                     <i class="far fa-bell-slash"></i>
                 </button>
             </div>

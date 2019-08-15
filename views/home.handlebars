@@ -26,7 +26,7 @@
                                 <div class="user-list">
                                   {{#each userRecommendations}}
                                     <div class="user-list-icon">
-                                        <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}" data-weight="{{this.weight}}">
+                                        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top" data-weight="{{this.weight}}">
                                             <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                                         </a>
                                         <a href="#" class="hide-recommendation" data-type="user" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
@@ -42,7 +42,7 @@
                                 <div class="user-list">
                                     {{#each popularCommunities}}
                                         <div class="user-list-icon">
-                                            <a href="/community/{{this.slug}}" data-toggle="tooltip" title="{{this.name}}"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
+                                            <a href="/community/{{this.slug}}" data-tooltip="{{this.name}}" class="tooltip-top"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
                                             <a href="#" class="hide-recommendation" data-type="community" data-target="{{this._id}}"><i class="fas fa-times-circle"></i></a>
                                         </div>
                                     {{/each}}

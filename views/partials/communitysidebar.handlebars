@@ -93,7 +93,7 @@
         <h5>Members</h5>
         <div id="membersList" class="user-list">
           {{#each communityData.members}}
-            <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
+            <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top">
                 <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                 {{#if this.isRecentlyActive}}
                     <i class="recently-active-marker fas fa-circle"></i>
