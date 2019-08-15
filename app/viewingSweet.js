@@ -1138,6 +1138,7 @@ module.exports = function(app) {
                         }
                         var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
                         if (firstLine && firstLine[1]) {
+                            //todo: add a .replace that strips out html formatting tags from this first line (first paragraph really). also maybe limit its length to like... 150 characters with an ellipsis at the end
                             firstLine = firstLine[1];
                         } else {
                             //todo: maybe look at the post's inline elements and if there's a link preview have this be "link to..." or if there's an image with a description use that
