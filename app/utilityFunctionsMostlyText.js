@@ -217,7 +217,7 @@ module.exports = {
             return result;
         },
         //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
-        //the non-first arguments are just stored in the image documents in the database. postType is "user" or "community"
+        //the non-first arguments are just stored in the image documents in the database. postType is "original" or "community"
         finalizeImages: async function(imageFileNames, postType, posterID, privacy, postImageQuality, imagesCurrentFolder = (global.appRoot + "/cdn/images/temp/")) {
             var imageIsVertical = [];
             var imageIsHorizontal = [];
@@ -231,7 +231,8 @@ module.exports = {
 
                 var metadata = await sharp('./cdn/images/' + imageFileName).metadata()
                 image = new Image({
-                    context: postType,
+                    //posts' types are either original or community; the image's contexts are either user or community, meaning the same things.
+                    context: postType=="original" ? "user" : "community",
                     filename: imageFileName,
                     privacy: privacy,
                     user: posterID,

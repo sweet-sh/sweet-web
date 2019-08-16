@@ -884,7 +884,7 @@ module.exports = function(app) {
         }
 
         post.lastEdited = new Date();
-
+        post.rawContent = req.body.postContent;
         post.parsedContent = parsedPost.text;
 
         //process images added to/deleted from the post, retrieve/find orientations. its spaghetti, i know. the imageIsVertical and imageIsHorizontal database fields should

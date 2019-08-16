@@ -79,7 +79,7 @@ var boostSchema = new mongoose.Schema({
 })
 
 var postSchema = new mongoose.Schema({
-    type: String, //"user" or "community"
+    type: String, //"original" or "community. note that the equivalent "context" field in image documents stores either "user" or "community".
     community: { type: DBReference, ref: 'Community' }, //hopefully undefined if type=="user"
     authorEmail: { type: String, required: true },
     author: { type: DBReference, ref: 'User' },
@@ -88,8 +88,8 @@ var postSchema = new mongoose.Schema({
     timestamp: { type: Date, required: true },
     lastUpdated: Date, //intially equal to timestamp, updated as comments are left
     lastEdited: Date, //initially undefined (although it wouldn't be crazy to set it equal to timestamp initially) and then changed when the post content is edited through the saveedits route in postingToSweet.js
-    rawContent: String,
-    parsedContent: String,
+    rawContent: String, //this was originally used to store plain text input i believe and then suddenly that wasn't a thing anymore and then it stored html input and now it stores a stringified object containing inlineElements objects
+    parsedContent: String, //this is the field that is used to store the text contents of the post in html form and is used to generate the full post html, which is stored in cachedHTML.fullContentHTML below
     comments: [commentSchema],
     boostTarget: { type: DBReference, ref: 'Post' },
     numberOfComments: Number,
