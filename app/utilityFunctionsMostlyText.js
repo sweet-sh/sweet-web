@@ -217,7 +217,7 @@ module.exports = {
         return result;
     },
     //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
-    //the non-first arguments are just stored in the image documents in the database. postType is "user" or "community"
+    //the non-first arguments are just stored in the image documents in the database. postType is "original" or "community"
     finalizeImages: async function(imageFileNames, postType, posterID, privacy, postImageQuality, imagesCurrentFolder = (global.appRoot + "/cdn/images/temp/")) {
         var imageIsVertical = [];
         var imageIsHorizontal = [];
@@ -354,7 +354,7 @@ function wordCount(str) {
 
 //the following is a function i wrote to parse quilljs' delta format and turn formatted text into html and inline elements into an array. it turned
 //out to be more complicated than necessary so right now we're actually just going to pull the html from the quill editor directly and process it in
-//the parseParagraphList function above. this function works well to the best of my knowledge and could still be used for turning quilljs deltas into 
+//the parseParagraphList function above. this function works well to the best of my knowledge and could still be used for turning quilljs deltas into
 //custom formatted html if such a need ever arises.
 
 //called by parse text to turn the quilljs delta format (which can be used for text with embeds) into html

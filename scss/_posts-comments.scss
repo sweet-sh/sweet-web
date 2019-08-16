@@ -93,6 +93,11 @@ article.post>header .post-header-right {
     overflow: hidden;
     width: 100%;
     justify-content: center;
+
+    .post-edited {
+        font-variant: small-caps;
+        text-transform: lowercase;
+    }
 }
 
 article.post>header h2.author-name {

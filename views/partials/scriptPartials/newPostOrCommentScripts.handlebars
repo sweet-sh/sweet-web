@@ -96,7 +96,7 @@ $(function(){
       //we'll assume that they don't need their work from the old one and remove it.
       if (existingModal.length && existingModal.attr('data-post-id') == postID) {
           existingModal.modal();
-          button.html('<i class="fas fa-pencil-alt"></i>');          
+          button.html('<i class="fas fa-pencil-alt"></i>');
       } else {
           if (existingModal.length) {
               existingModal.remove();
@@ -132,14 +132,24 @@ $(function(){
           var postContainer = editModal[0].postContainer;
           var postID = editModal.attr('data-post-id');
           var contentWarnings = cont.find('#postContentWarnings').val().trim();
+          var originalPrivacy = editModal.attr('data-original-privacy');
           $.post('/saveedits/' + postID, {
               postContent: JSON.stringify(content),
               postContentWarnings: contentWarnings,
               postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private')
           }).done(function(newPostHTML) {
+              var privacyChanged = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == originalPrivacy ? false : true);
               var contentContainer = $(postContainer).children('.content');
               if(contentWarnings){
                 contentContainer.addClass('content-warning-post');
+              }
+              if (privacyChanged){
+                  var newPrivacyHtml = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == "public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
+                  $(postContainer).find(".post-visibility").html(newPrivacyHtml)
+              }
+              postHasEditedTag = ($(postContainer).find(".metadata").html().endsWith('<span class="post-edited">Edited</span>'));
+              if (!postHasEditedTag){
+                  $(postContainer).find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
               }
               contentContainer.html(newPostHTML);
               $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove();})
@@ -151,7 +161,7 @@ $(function(){
               button.html('Try again... <i class="fas fa-chevron-right"></i>');
           })
       } else {
-          bootbox.alert('this edit window appears to be... empty...');
+          bootbox.alert('If you want to delete your post there is a... much better way to do that');
       }
   })
 
