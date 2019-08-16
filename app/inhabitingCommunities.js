@@ -151,7 +151,7 @@ module.exports = function(app, passport) {
                                 let recentlyActiveMembers = community.members.filter((member) => {
                                     console.log(member.lastUpdated)
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
-                                           !mutedMemberIds.includes(member._id.toString());
+                                        !mutedMemberIds.includes(member._id.toString());
                                 })
                                 let recentlyActiveMemberIds = recentlyActiveMembers.map(a => a._id.toString());
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
@@ -232,13 +232,8 @@ module.exports = function(app, passport) {
                             console.log("Saving image")
                             imageEnabled = true;
                             sharp(req.files.imageUpload.data)
-                                .resize({
-                                    width: 600,
-                                    height: 600
-                                })
-                                .jpeg({
-                                    quality: 70
-                                })
+                                .resize({ width: 600, height: 600 })
+                                .jpeg({ quality: 70 })
                                 .toFile('./public/images/communities/' + communityUrl + '.jpg')
                                 .catch(err => {
                                     console.error(err);
@@ -718,7 +713,7 @@ module.exports = function(app, passport) {
             parsedProposedValue = imageUrl
         } else if (req.body.reference == "name") { //this is where it gets complicated
             proposedValue = sanitize(req.body.proposedValue)
-            parsedProposedValue = (await helper.parseText(req.body.proposedValue, false, false, false, false, false)).text //don't need links and stuff
+            parsedProposedValue = proposedValue;
             var slug = helper.slugify(proposedValue);
             if (!parsedProposedValue || community.name == proposedValue) {
                 //not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
@@ -854,7 +849,7 @@ module.exports = function(app, passport) {
                                 var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
                                 let recentlyActiveMembers = community.members.filter((member) => {
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
-                                           !mutedMemberIds.includes(member._id.toString());
+                                        !mutedMemberIds.includes(member._id.toString());
                                 })
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
 
@@ -1034,8 +1029,8 @@ module.exports = function(app, passport) {
             })
             .then(async function(community) {
                 if (await isCommunityMember(community)) {
-                    community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
-                    community.welcomeMessageParsed = (await helper.parseText(req.body.communityWelcomeMessage)).text
+                    community.welcomeMessageRaw = req.body.proposedValue;
+                    community.welcomeMessageParsed = (await helper.parseText(req.body.proposedValue)).text
                     community.welcomeMessageAuthor = req.user._id
                     community.save()
                         .then(result => {

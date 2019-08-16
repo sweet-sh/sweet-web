@@ -1,16 +1,16 @@
 // Initialization ======================================================================
-const express = require('express'); //only used here
-const handlebars = require('express-handlebars'); //only used here
+const express = require('express');
+const handlebars = require('express-handlebars');
 const app = express();
 const port = process.env.PORT || 8686;
-const passport = require('passport'); //only used here
-const flash = require('connect-flash'); //only used here
-require('handlebars-helpers')(); //only used here
+const passport = require('passport');
+const flash = require('connect-flash');
+require('handlebars-helpers')();
 
-const compression = require('compression'); //only used here
+const compression = require('compression');
 app.use(compression());
 
-const expressValidator = require('express-validator'); //obvs only here
+const expressValidator = require('express-validator');
 app.use(expressValidator());
 
 const morgan = require('morgan');
@@ -20,8 +20,6 @@ const session = require('express-session');
 
 const fileUpload = require('express-fileupload');
 app.use(fileUpload());
-
-globals = require('./config/globals');
 
 // Set up our Express application
 app.use(morgan('dev')); // log every request to the console
@@ -135,7 +133,7 @@ app.on('SIGINT', function () {
   });
 });
 
-// utillized by routes code =================================================================================
+// utilized by routes code =================================================================================
 path = require('path');
 global.appRoot = path.resolve(__dirname);
 fs = require('fs');
@@ -144,7 +142,7 @@ moment.updateLocale('en', {
   relativeTime: {
       future: "in %s",
       past: "%s ago",
-      s: 'just like a second ago',
+      s: 'a second or two',
       ss: '%ds',
       m: "1m",
       mm: "%dm",
@@ -165,6 +163,7 @@ shortid = require('shortid');
 bcrypt = require('bcrypt-nodejs');
 Autolinker = require('autolinker');
 schedule = require('node-schedule');
+globals = require('./config/globals');
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');

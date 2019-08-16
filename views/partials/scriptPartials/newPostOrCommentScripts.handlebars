@@ -135,7 +135,7 @@ $(function(){
           $.post('/saveedits/' + postID, {
               postContent: JSON.stringify(content),
               postContentWarnings: contentWarnings,
-              postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') //todo: make sure this doesn't crash for community posts
+              postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private')
           }).done(function(newPostHTML) {
               var contentContainer = $(postContainer).children('.content');
               if(contentWarnings){

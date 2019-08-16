@@ -1,5 +1,4 @@
 {{#each posts}}
-{{#if canDisplay}}
 <article class="post" data-post-id="{{this._id}}">
     <aside class="notifications">
         {{#if recentlyCommented}}
@@ -163,5 +162,4 @@
     <div id="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
     {{/if}}
 </article>
-{{/if}}
 {{/each}}

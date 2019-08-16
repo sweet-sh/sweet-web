@@ -129,7 +129,7 @@ module.exports = function(app) {
     //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, error response if not logged in.
     app.post("/createpost", isLoggedInOrErrorResponse, async function(req, res) {
 
-        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true);
+        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent));
 
         if (req.body.communityId) {
             var imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility;
@@ -306,7 +306,7 @@ module.exports = function(app) {
         var commentId = mongoose.Types.ObjectId();
 
         var rawContent = req.body.commentContent;
-        var parsedResult = await helper.parseText(JSON.parse(rawContent), false, true, true, true);
+        var parsedResult = await helper.parseText(JSON.parse(rawContent));
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
             res.status(400).send('bad post op');
@@ -647,13 +647,12 @@ module.exports = function(app) {
     app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
         Post.findOne({ "_id": req.params.postid })
             .then((post) => {
-                commentsByUser = 0;
-                latestTimestamp = 0;
-                numberOfComments = 0;
+                var commentsByUser = 0;
+                var latestTimestamp = 0;
+                var numberOfComments = 0;
+                var target = undefined;
 
                 function findNested(array, id, parent) {
-                    var foundElement;
-                    var parentElement = (parent ? parent : post)
                     array.forEach((element) => {
                         if (!element.deleted) {
                             numberOfComments++;
@@ -664,25 +663,21 @@ module.exports = function(app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
-                        element.numberOfSiblings = (parent ? parentElement.replies.length - 1 : post.comments.length - 1);
-                        element.parent = parentElement;
-                        if (element._id && element._id.equals(id)) {
-                            foundElement = element;
+                        element.numberOfSiblings = (parent ? parent.replies.length - 1 : post.comments.length - 1);
+                        element.parent = parent;
+                        if (!target && element._id && element._id.equals(id)) {
+                            target = element;
                             commentsByUser--;
                             numberOfComments--;
                             console.log('numberOfComments', numberOfComments)
                         }
                         if (element.replies) {
-                            var found = findNested(element.replies, id, element)
-                            if (found) {
-                                foundElement = found;
-                            }
+                            findNested(element.replies, id, element)
                         }
                     })
-                    return foundElement;
                 }
 
-                var target = findNested(post.comments, req.params.commentid);
+                findNested(post.comments, req.params.commentid, post);
                 if (target) {
                     post.numberOfComments = numberOfComments;
                 }
@@ -731,7 +726,6 @@ module.exports = function(app) {
 
                 post.save()
                     .then((comment) => {
-                        // todo: check if post's lastUpdated is changed somewhere? relocatePost(ObjectId(req.params.postid))?
                         post.lastUpdated = latestTimestamp;
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
                         if (commentsByUser == 0) {
@@ -809,9 +803,6 @@ module.exports = function(app) {
                     })
                     boostedPost.boostsV2.push(boost);
 
-                    // don't think so
-                    //boostedPost.subscribedUsers.push(req.user._id.toString());
-
                     boostedPost.save().then(() => {
                         //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
                         if (!boostedPost.unsubscribedUsers.includes(boostedPost.author._id.toString()) && !boostedPost.author._id.equals(req.user._id)) {
@@ -828,15 +819,7 @@ module.exports = function(app) {
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
     app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
-        Post.findOne({
-                '_id': req.params.postid
-            }, {
-                boostsV2: 1,
-                privacy: 1,
-                author: 1,
-                url: 1,
-                timestamp: 1
-            })
+        Post.findOne({ '_id': req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
             .then((boostedPost) => {
                 var boost = boostedPost.boostsV2.find(b => {
                     return b.booster.equals(req.user._id)
@@ -889,7 +872,7 @@ module.exports = function(app) {
         if (!post.author._id.equals(req.user._id)) {
             return res.sendStatus(403);
         }
-        var parsedPost = await helper.parseText(JSON.parse(req.body.postContent, req.body.postContentWarnings, true, true, true));
+        var parsedPost = await helper.parseText(JSON.parse(req.body.postContent));
         if (!(parsedPost.inlineElements.length || parsedPost.text.trim())) {
             //ignore the edit if it results in an empty post; it's an invalid request, the client side code also works to prevent this
             return res.sendStatus(403);
@@ -967,7 +950,7 @@ module.exports = function(app) {
         var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v));
         for (image of deletedImages) {
             Image.deleteOne({ filename: image });
-            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + filename);
+            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + filename, (err) => { console.error('could not delete unused image from edited post:\n' + err) });
         }
 
         post.inlineElements = parsedPost.inlineElements;
@@ -1047,10 +1030,8 @@ function cleanTempFolder() {
             }
         });
     });
-    setTimeout(cleanTempFolder, 3600000);
 }
-
-setTimeout(cleanTempFolder, 3600000); //clean temp image folder every hour
+setInterval(cleanTempFolder, 3600000); //clean temp image folder every hour
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {

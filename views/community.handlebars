@@ -147,7 +147,7 @@
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-welcomeMessageEditor" role="tabpanel" aria-labelledby="nav-welcomeMessageEditor-tab">
-                <form action="/api/community/welcomemessage/update/{{communityData._id}}" method="post">
+                <form id="welcomeMessageForm" action="/api/community/welcomemessage/update/{{communityData._id}}" method="post">
                   <input type="hidden" name="reference" value="welcomeMessage" />
                   <div class="form-group">
                     <label for="communityWelcomeMessage">Welcome message</label>
@@ -157,7 +157,8 @@
                     <p class="small">
                       Unlike other community settings, the welcome message is changed immediately, with no vote.
                     </p>
-                    <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="communityWelcomeMessage" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
+                    <div class="form-control" style="height:auto;" id="welcomeMessageHtml">{{{communityData.welcomeMessageRaw}}}</div>
+                    <input type="hidden" name="proposedValue" id="welcomeMessage">
                   </div>
                   <button type="submit" class="button updateWelcomeMessage">Update</button>
                 </form>
@@ -330,6 +331,7 @@
 
 attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
 attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
+attachQuill(document.getElementById("welcomeMessageHtml"),"Write something. Highlight to format",true);
 
 $("#rulesForm").submit(function(e){
   $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());
@@ -338,6 +340,11 @@ $("#rulesForm").submit(function(e){
 
 $("#descriptionForm").submit(function(e){
   $(this).find("#communityDescription").val($(this).find("#communityDescriptionHtml").find(".ql-editor").html());
+  return true;
+})
+
+$("#welcomeMessageForm").submit(function(e){
+  $(this).find("#welcomeMessage").val($(this).find("#welcomeMessageHtml").find(".ql-editor").html());
   return true;
 })
 

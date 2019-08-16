@@ -10,8 +10,7 @@ const request = require('request');
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
-    //todo: cwsEnabled is no longer used, remove from the header and also everywhere this function is called
-    parseText: async function(rawText, cwsEnabled = false, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
+    parseText: async function(rawText, mentionsEnabled = true, hashtagsEnabled = true, urlsEnabled = true) {
         console.log("Parsing content")
         if (typeof rawText != "string") { //it is an array of paragraphs and inline elements
             var parsedParagraphList = await this.parseParagraphList(rawText);
@@ -39,8 +38,6 @@ module.exports = {
         if (hashtagsEnabled) {
             rawText = rawText.replace(hashtagRegex, hashtagReplace);
         }
-
-        rawText = sanitize(rawText);
 
         rawText = this.sanitizeHtmlForSweet(rawText);
 

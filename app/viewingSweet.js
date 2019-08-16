@@ -946,37 +946,14 @@ module.exports = function(app) {
                         }
                     }
 
-                    displayedPost = {
-                        canDisplay: canDisplay, //todo: remove here and in template, if this is false then the post should not have been added thanks to the continue;
-                        _id: displayContext._id,
+                    var displayedPost = Object.assign(displayContext, {
                         deleteid: displayContext._id,
-                        type: displayContext.type,
-                        owner: displayContext.author.username,
-                        author: {
-                            email: displayContext.author.email,
-                            _id: displayContext.author._id,
-                            username: displayContext.author.username,
-                            displayName: displayContext.author.displayName,
-                            imageEnabled: displayContext.author.imageEnabled,
-                            image: displayContext.author.image,
-                        },
-                        url: displayContext.url,
-                        privacy: displayContext.privacy,
                         parsedTimestamp: parsedTimestamp,
-                        lastUpdated: displayContext.lastUpdated,
                         internalPostHTML: displayContext.cachedHTML.fullContentHTML,
-                        commentsDisabled: displayContext.commentsDisabled,
-                        comments: displayContext.comments,
-                        numberOfComments: displayContext.numberOfComments,
-                        contentWarnings: displayContext.contentWarnings,
-                        community: displayContext.community,
                         headerBoosters: boostsForHeader,
                         recentlyCommented: false, // This gets set below
                         lastCommentAuthor: "", // As does this
-                        subscribedUsers: displayContext.subscribedUsers,
-                        unsubscribedUsers: displayContext.unsubscribedUsers,
-                        hasImages: (displayContext.images && displayContext.images.length > 0),
-                    }
+                    })
 
                     //these are only a thing for logged in users
                     if (req.isAuthenticated()) {
@@ -987,11 +964,9 @@ module.exports = function(app) {
                     }
 
                     //get timestamps and full image urls for each comment
-                    latestTimestamp = 0;
-                    lastCommentAuthor = "";
-                    recentlyCommented = false;
-                    sixHoursAgo = moment(new Date()).subtract(6, 'hours');
-                    threeHoursAgo = moment(new Date()).subtract(3, 'hours');
+                    var latestTimestamp = 0;
+                    var sixHoursAgo = moment(new Date()).subtract(6, 'hours');
+                    var threeHoursAgo = moment(new Date()).subtract(3, 'hours');
 
                     function parseComments(element, level) {
                         if (!level) level = 1;
@@ -1040,7 +1015,7 @@ module.exports = function(app) {
                             }
                             comment.level = level;
                             if (comment.replies) {
-                                var runOnReplies = parseComments(comment.replies, level + 1)
+                                parseComments(comment.replies, level + 1)
                             }
                         });
                         if (moment(latestTimestamp).isAfter(sixHoursAgo)) {
@@ -1073,7 +1048,6 @@ module.exports = function(app) {
                         }
                     } else {
                         if (req.params.context == "single") {
-                            console.log(displayedPosts[0].type)
                             if (displayedPosts[0].type == "community" && !isMember) {
                                 return false;
                             } else {
@@ -1092,20 +1066,23 @@ module.exports = function(app) {
                     // We can only get the post metadata if the post array is filled (and it'll only be filled
                     // if the post was able to be displayed, so this checks to see if we should display
                     // our vague error message on the frontend)
+                    var displayedPost = displayedPosts[0];
                     if (typeof displayedPost !== 'undefined') {
                         var canDisplay = true;
-                        //todo: use the first image from the post if it has one, its address and location in the post document will be based on displayedPost.imageVersion
-                        if (displayedPost.author.imageEnabled) {
-                            var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image
+                        var image = undefined;
+                        if(displayedPost.inlineElements && displayedPost.inlineElements.length && (image=(displayedPost.inlineElements.find(v=>v.type=="image(s)").images[0]))){
+                            var metadataImage = "https://sweet.sh/api/image/display/"+image;
+                        }else if(displayedPost.images && displayedPost.images.length){
+                            var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/")+displayedPost.images[0];
+                        }else if (displayedPost.author.imageEnabled) {
+                            var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image;
                         } else {
                             var metadataImage = "https://sweet.sh/images/cake.svg";
                         }
                         var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
                         if (firstLine && firstLine[1]) {
-                            //todo: add a .replace that strips out html formatting tags from this first line (first paragraph really). also maybe limit its length to like... 150 characters with an ellipsis at the end
-                            firstLine = firstLine[1];
+                            firstLine = firstLine[1].replace(/<.*?>/g,'').substring(0,100)+(firstLine[1].length>100?'...':'');
                         } else {
-                            //todo: maybe look at the post's inline elements and if there's a link preview have this be "link to..." or if there's an image with a description use that
                             firstLine = "Just another ol' good post on sweet";
                         }
                         metadata = {
@@ -1114,9 +1091,7 @@ module.exports = function(app) {
                             image: metadataImage,
                             url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
                         }
-
-                        var post = displayedPosts[0]; //hopefully there's only one...
-                        if (post.community && req.isAuthenticated() && post.community.members.some(m => { return m.equals(req.user._id) })) {
+                        if (displayedPost.community && req.isAuthenticated() && displayedPost.community.members.some(m => { return m.equals(req.user._id) })) {
                             var isMember = true;
                         } else {
                             var isMember = false;
@@ -1135,7 +1110,7 @@ module.exports = function(app) {
                         canDisplay: canDisplay,
                         loggedIn: req.isAuthenticated(),
                         loggedInUserData: loggedInUserData,
-                        posts: [post], // This is so it loads properly inside the posts_v2 partial
+                        posts: [displayedPost], // This is so it loads properly inside the posts_v2 partial
                         flaggedUsers: flagged,
                         metadata: metadata,
                         isMuted: isMuted,

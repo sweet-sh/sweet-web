@@ -59,7 +59,11 @@
                     <img class="post-single-image" src="/images/communities/staging/{{this.proposedValue}}"/>
                 </div>
             {{else}}
+            {{#eq this.reference "name"}}
+                <div class="message proposal-box">{{this.parsedProposedValue}}</div>
+            {{else}}
                 <div class="message proposal-box">{{{this.parsedProposedValue}}}</div>
+            {{/eq}}
             {{/eq}}
         {{/eq}}
         <div class="vote-display mb-3">
