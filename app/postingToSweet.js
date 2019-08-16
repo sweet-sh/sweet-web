@@ -147,7 +147,7 @@ module.exports = function(app) {
             }
         }
 
-        newPostUrl = shortid.generate();
+        var newPostUrl = shortid.generate();
         let postCreationTime = new Date();
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
@@ -176,11 +176,13 @@ module.exports = function(app) {
             subscribedUsers: [req.user._id]
         });
 
+        var newPostId = post._id;
+
         for (mention of parsedResult.mentions) {
             if (mention != req.user.username) {
                 User.findOne({ username: mention }).then(async mentioned => {
                     if (isCommunityPost) {
-                        if (mentioned.communities.includes(post.community)) {
+                        if (mentioned.communities.some(v=>v.equals(post.community))) {
                             notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
                         }
                     } else if (req.body.postPrivacy == "private") {
@@ -195,17 +197,13 @@ module.exports = function(app) {
         }
 
         for (tag of parsedResult.tags) {
-            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId.toString() }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
         }
 
         if (isCommunityPost) {
             Community.findOneAndUpdate({ _id: req.body.communityId }, { $set: { lastUpdated: new Date() } })
         }
 
-        //non-community post
-        if (!req.body.communityId) {
-            var newPostId = post._id;
-        }
         await post.save();
         res.status(200).send("" + (postCreationTime.getTime() + 1));
     });
@@ -966,15 +964,15 @@ module.exports = function(app) {
             if (mention != req.user.username) {
                 User.findOne({ username: mention }).then(async mentioned => {
                     if (post.community) {
-                        if (mentioned.communities.includes(post.community)) {
-                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        if (mentioned.communities.some(v=>v.equals(post.community))) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post');
                         }
                     } else if (req.body.postPrivacy == "private") {
                         if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
-                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post');
                         }
                     } else {
-                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + post.url, 'post')
                     }
                 })
             }
@@ -983,11 +981,11 @@ module.exports = function(app) {
 
         var newTags = parsedPost.tags.filter(v => !post.tags.includes(v));
         for (const tag of newTags) {
-            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id }, "$set": { "lastUpdated": post.lastEdited } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id.toString() }, "$set": { "lastUpdated": post.lastEdited } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
         }
         var deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
         for (const tag of deletedTags) {
-            Tag.findOneAndUpdate({ name: tag }, { "$pull": { "posts": post._id } }).catch(err => console.error('could not remove edited post ' + post._id.toString() + ' from tag ' + tag + '\n' + err));
+            Tag.findOneAndUpdate({ name: tag }, { "$pull": { "posts": post._id.toString() } }).catch(err => console.error('could not remove edited post ' + post._id.toString() + ' from tag ' + tag + '\n' + err));
 
         }
         post.tags = parsedPost.tags;

@@ -107,6 +107,9 @@ $(function(){
                 //we have to first create the editor, then attach quill, then append the content, quill will get angry if we attach it to a div with embeds already in it
                 attachQuill(editModal.find('#editPostContent')[0]);
                 var newEditor = editModal.find('.ql-editor');
+                if(tribute){
+                  tribute.attach(newEditor);
+                }
                 newEditor.empty(); //bc the editor is automatically supplied with a blank line at the top at first
                 newEditor.append(response.content);
                 newEditor.find('.image-move').each(function(i, e) { e.addEventListener('touchstart', touchStartOnHandle, { passive: false }) });
@@ -138,7 +141,7 @@ $(function(){
               postContentWarnings: contentWarnings,
               postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private')
           }).done(function(newPostHTML) {
-              var privacyChanged = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == originalPrivacy ? false : true);
+              var privacyChanged = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') !== originalPrivacy);
               var contentContainer = $(postContainer).children('.content');
               if(contentWarnings){
                 contentContainer.addClass('content-warning-post');
@@ -147,7 +150,7 @@ $(function(){
                   var newPrivacyHtml = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == "public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
                   $(postContainer).find(".post-visibility").html(newPrivacyHtml)
               }
-              postHasEditedTag = ($(postContainer).find(".metadata").html().endsWith('<span class="post-edited">Edited</span>'));
+              postHasEditedTag = !!($(postContainer).find(".metadata").find('.post-edited').length);
               if (!postHasEditedTag){
                   $(postContainer).find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
               }

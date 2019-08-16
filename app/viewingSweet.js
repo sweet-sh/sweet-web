@@ -375,20 +375,19 @@ module.exports = function(app) {
         })
     })
 
-    //Responds to post requests (?) for the users that follow the logged in user
+    //Responds to post requests (?) for the users that follow the logged in user. used to build the @ mention list for tribute to auto-suggest stuff.
     //Input: none
     //Output: JSON data describing the users that follow the logged in user or a redirect from isLoggedInOrRedirect.
-    //Should be isLoggedInOrErrorResponse? Because jQuery intercepts the response, the browser won't automatically handle it?
     app.post('/api/user/followers', isLoggedInOrRedirect, function(req, res) {
         followedUserData = []
         Relationship.find({ fromUser: req.user._id, value: "follow" }).populate("toUser").then((followedUsers) => {
                 followedUsers.forEach(relationship => {
                     var follower = {
-                        key: (relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
+                        key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
                         value: relationship.toUser.username,
                         image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
                     }
-                    followedUserData.push(follower)
+                    followedUserData.push(follower);
                 })
                 res.setHeader('content-type', 'text/plain');
                 res.end(JSON.stringify({ followers: followedUserData }));
