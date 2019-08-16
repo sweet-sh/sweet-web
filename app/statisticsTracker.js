@@ -1,7 +1,3 @@
-const fs = require('fs');
-const path = require('path')
-const bcrypt = require('bcrypt-nodejs')
-
 module.exports = function (app, mongoose) {
 
     //Fun stats tracker. Non-interactive.

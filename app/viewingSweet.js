@@ -1,40 +1,4 @@
-const moment = require('moment');
-const sanitizeHtml = require('sanitize-html');
-const notifier = require('./notifier.js');
-const sanitize = require('mongo-sanitize');
-const fs = require('fs');
-
 var auth = require('../config/auth.js'); //used on the settings page to set up push notifications
-
-//just used for error log thing at the very end
-const path = require('path')
-const bcrypt = require('bcrypt-nodejs');
-
-sanitizeHtmlOptions = {
-    allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
-    allowedAttributes: {
-        'a': ['href', 'data-*', 'target', 'rel']
-    }
-}
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
 
 // APIs
 
@@ -407,7 +371,7 @@ module.exports = function(app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'search',
-            query: sanitize(sanitizeHtml(req.params.query, sanitizeHtmlOptions))
+            query: sanitize(req.params.query)
         })
     })
 

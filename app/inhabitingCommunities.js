@@ -1,37 +1,4 @@
-var moment = require('moment');
-
-const notifier = require('./notifier.js');
-
-CommunityPlaceholder = mongoose.model('Community Placeholder');
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-const today = moment().clone().startOf('day');
-const thisyear = moment().clone().startOf('year');
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
-var shortid = require('shortid');
-const fs = require('fs');
-
-const schedule = require('node-schedule');
+const CommunityPlaceholder = mongoose.model('Community Placeholder');
 
 //this is never read from but it could be someday i guess
 const expiryTimers = [];
@@ -103,6 +70,8 @@ module.exports = function(app, passport) {
     });
 
     app.get('/community/:slug', function(req, res) {
+        const today = moment().clone().startOf('day');
+        const thisyear = moment().clone().startOf('year');
         if (req.isAuthenticated()) {
             isLoggedIn = true;
         } else {

@@ -1,8 +1,5 @@
 const nodemailer = require("nodemailer");
 const nodemailerHbs = require('nodemailer-express-handlebars');
-const path = require('path');
-const schedule = require('node-schedule'); //no longer used!
-const fs = require('fs');
 const moment = require('moment-timezone');
 const auth = require(global.appRoot + '/config/auth.js');
 

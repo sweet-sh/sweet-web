@@ -1,15 +1,13 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
 // var optionSchema = new mongoose.Schema({
 //   title: String,
 //   votes: Number,
-//   voters: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+//   voters: [{ type: DBReference, ref: 'User' }]
 // });
 
 var commentSchema = new mongoose.Schema({
   authorEmail: String,
-  author: { type: Schema.Types.ObjectId, ref: 'User' },
+  author: { type: DBReference, ref: 'User' },
   timestamp: Date,
   rawContent: String,
   parsedContent: String,
@@ -20,13 +18,13 @@ var commentSchema = new mongoose.Schema({
 var voteSchema = new mongoose.Schema({
   status: String, //'active' or 'expired'
   type: String, //no longer used, i believe
-  community: { type: Schema.Types.ObjectId, ref: 'Community' },
+  community: { type: DBReference, ref: 'Community' },
   reference: String, //what is possibly being changed: description, rules, joinType, visibility, voteLength, image, or name
   parsedReference: String, //a human-readble (non-camelCase) equivalent to one of the above
   proposedValue: String,
   parsedProposedValue: String,
   creatorEmail: String,
-  creator: { type: Schema.Types.ObjectId, ref: 'User' },
+  creator: { type: DBReference, ref: 'User' },
   url: String,
   timestamp: Date,
   lastUpdated: Date,
@@ -38,7 +36,7 @@ var voteSchema = new mongoose.Schema({
   tags: [String],
   commentsDisabled: Boolean,
   votes: Number,
-  voters: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  voters: [{ type: DBReference, ref: 'User' }],
   voteThreshold: Number,
   expiryTime: Date,
 });

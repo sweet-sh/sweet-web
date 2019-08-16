@@ -1,43 +1,3 @@
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var notifier = require('./notifier.js');
-var mongoose = require('mongoose');
-var path = require('path');
-
-const url = require('url');
-
-sanitizeHtmlOptions = {
-    allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
-    allowedAttributes: {
-        'a': ['href', 'data-*', 'target', 'rel']
-    }
-}
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
-var shortid = require('shortid');
-const fs = require('fs');
-const request = require('request');
-
 // APIs
 
 var apiConfig = require('../config/apis.js');
@@ -164,11 +124,10 @@ module.exports = function(app) {
     })
 
     //Responds to post requests that create a new post.
-    //Input: in req.body: the post's privacy level, filenames for its images, descriptions for its images, the post body, and a communityid
-    //if it's a community post.
-    //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
-    //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
+    //Input: if the post contains no inlineElements, a simple string with its html contents. otherwise, an array of paragraphs and inline element objects ready to be parsed by the function
+    //parseText calls to parse it.
+    //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, error response if not logged in.
+    app.post("/createpost", isLoggedInOrErrorResponse, async function(req, res) {
 
         var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true);
 
@@ -189,153 +148,66 @@ module.exports = function(app) {
 
         newPostUrl = shortid.generate();
         let postCreationTime = new Date();
-        var postPrivacy = req.body.postPrivacy;
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
         }
+        var isCommunityPost = !!req.body.communityId;
 
-        function savePost() { //todo: combine code for community and non-community posts, there's a lot that's duplicated that doesn't need to be
-            //non-community post
-            if (!req.body.communityId) {
-                var post = new Post({
-                    type: 'original',
-                    authorEmail: req.user.email,
-                    author: req.user._id,
-                    url: newPostUrl,
-                    privacy: postPrivacy,
-                    timestamp: postCreationTime,
-                    lastUpdated: postCreationTime,
-                    rawContent: req.body.postContent,
-                    parsedContent: parsedResult.text,
-                    numberOfComments: 0,
-                    mentions: parsedResult.mentions,
-                    tags: parsedResult.tags,
-                    contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                    imageVersion: 3,
-                    inlineElements: parsedResult.inlineElements,
-                    subscribedUsers: [req.user._id],
-                    //todo: check if this does anything anymore, i forget
-                    boostsV2: [{
-                        booster: req.user._id,
-                        timestamp: postCreationTime
-                    }]
-                });
+        var post = new Post({
+            type: isCommunityPost ? 'community' : 'original',
+            community: isCommunityPost ? req.body.communityId : undefined,
+            authorEmail: req.user.email,
+            author: req.user._id,
+            url: newPostUrl,
+            privacy: isCommunityPost ? 'public' : req.body.postPrivacy,
+            timestamp: postCreationTime,
+            lastUpdated: postCreationTime,
+            rawContent: req.body.postContent,
+            parsedContent: parsedResult.text,
+            numberOfComments: 0,
+            mentions: parsedResult.mentions,
+            tags: parsedResult.tags,
+            contentWarnings: req.body.postContentWarnings,
+            imageVersion: 3,
+            inlineElements: parsedResult.inlineElements,
+            subscribedUsers: [req.user._id],
+            //todo: check if this does anything anymore, i forget
+            boostsV2: [{
+                booster: req.user._id,
+                timestamp: postCreationTime
+            }]
+        });
 
-                var newPostId = post._id;
-                post.save()
-                    .then(async () => {
-                        parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
-                        });
-                        if (postPrivacy == "private") {
-                            console.log("This post is private!")
-                            // Make sure to only notify mentioned people if they are trusted
-                            Relationship.find({
-                                    from: req.user.email,
-                                    value: "trust"
-                                }, { 'to': 1 })
-                                .then((emails) => {
-                                    let emailsArray = emails.map(({
-                                        to
-                                    }) => to)
-                                    parsedResult.mentions.forEach(function(mention) {
-                                        User.findOne({ username: mention })
-                                            .then((user) => {
-                                                if (emailsArray.includes(user.email)) {
-                                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                                }
-                                            })
-                                    })
-                                })
-                                .catch((err) => {
-                                    console.log("Error in profileData.")
-                                    console.log(err);
-                                });
-                        } else if (postPrivacy == "public") {
-                            console.log("This post is public!")
-                            // This is a public post, notify everyone
-                            parsedResult.mentions.forEach(function(mention) {
-                                if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                    User.findOne({ username: mention })
-                                        .then((user) => {
-                                            if (user) {
-                                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                            }
-                                        })
-                                }
-                            });
-                        }
-                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send("" + (postCreationTime.getTime() + 1));
-                    })
-                    .catch((err) => {
-                        console.log("Error creating new post: " + err)
-                    });
-
-                //community post
-            } else {
-                let communityId = req.body.communityId;
-
-                const post = new Post({
-                    type: 'community',
-                    community: communityId,
-                    authorEmail: req.user.email,
-                    author: req.user._id,
-                    url: newPostUrl,
-                    privacy: 'public',
-                    timestamp: postCreationTime,
-                    lastUpdated: postCreationTime,
-                    rawContent: req.body.postContent,
-                    parsedContent: parsedResult.text,
-                    numberOfComments: 0,
-                    mentions: parsedResult.mentions,
-                    tags: parsedResult.tags,
-                    contentWarnings: sanitize(req.body.postContentWarnings),
-                    imageVersion: 3,
-                    inlineElements: parsedResult.inlineElements,
-                    subscribedUsers: [req.user._id],
-                    boostsV2: [{
-                        booster: req.user._id,
-                        timestamp: postCreationTime
-                    }],
-                });
-
-                var newPostId = post._id;
-                post.save()
-                    .then(async () => {
-                        parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
-                                if (error) return
-                            });
-                        });
-                        // Notify everyone mentioned that belongs to this community
-                        parsedResult.mentions.forEach(function(mention) {
-                            if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                User.findOne({
-                                        username: mention,
-                                        communities: { $in: [communityId] }
-                                    })
-                                    .then((user) => {
-                                        notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                    })
-                            }
-                        });
-                        Community.findOneAndUpdate({ _id: communityId }, {
-                            $set: { lastUpdated: new Date() }
-                        }).then(community => {
-                            console.log("Updated community!")
-                        })
-                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send("" + (postCreationTime.getTime() + 1));
-                    })
-                    .catch((err) => {
-                        console.log("Database error when attempting to save new post: " + err)
-                    });
+        for (mention of parsedResult.mentions) {
+            if (mention != req.user.username) {
+                User.findOne({ username: mention }).then(async mentioned => {
+                    if (isCommunityPost && mentioned.communities.includes(post.community)) {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    } else {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
+                    }
+                })
             }
         }
-        savePost();
+
+        for (tag of parsedResult.tags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
+        }
+
+        if (isCommunityPost) {
+            Community.findOneAndUpdate({ _id: req.body.communityId }, { $set: { lastUpdated: new Date() } })
+        }
+
+        //non-community post
+        if (!req.body.communityId) {
+            var newPostId = post._id;
+        }
+        await post.save();
+        res.status(200).send("" + (postCreationTime.getTime() + 1));
     });
 
     //Responds to requests that delete posts.
@@ -390,10 +262,10 @@ module.exports = function(app) {
                     post.tags.forEach((tag) => {
                         Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
                             .then((tag) => {
-                                console.log("Deleted tag: " + tag)
+                                console.log("Deleted post from tag: " + tag)
                             })
                             .catch((err) => {
-                                console.log("Database error: " + err)
+                                console.log("Database error while attempting to delete post from tag: " + err)
                             })
                     })
                 }
@@ -406,22 +278,13 @@ module.exports = function(app) {
                                 console.log("Deleted boost: " + boost)
                             })
                             .catch((err) => {
-                                console.log("Database error: " + err)
+                                console.log("Database error while attempting to delete boost while deleting post: " + err)
                             })
                     })
                 }
 
                 // Delete notifications
-                User.update({}, {
-                        $pull: {
-                            notifications: {
-                                subjectId: post._id
-                            }
-                        }
-                    }, { multi: true })
-                    .then(response => {
-                        console.log(response)
-                    })
+                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log(response) })
             })
             .then(() => {
                 Post.deleteOne({ "_id": req.params.postid })
@@ -429,7 +292,7 @@ module.exports = function(app) {
                         res.sendStatus(200);
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Error while attempting to delete post: " + err)
                     });
             });
     });
@@ -442,7 +305,7 @@ module.exports = function(app) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
 
-        var rawContent = sanitize(req.body.commentContent);
+        var rawContent = req.body.commentContent;
         var parsedResult = await helper.parseText(JSON.parse(rawContent), false, true, true, true);
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
@@ -1083,6 +946,11 @@ module.exports = function(app) {
                         var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
                         e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
                         e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
+                    } else if (!post.imageVersion || post.imageVersion < 2) {
+                        //finalize images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
+                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/');
+                        e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
+                        e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
                     } else {
                         e.imageIsVertical.push(verticalityLookup[e.images[i]]);
                         e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
@@ -1090,15 +958,6 @@ module.exports = function(app) {
                             var imageDoc = await Image.findOne({ filename: e.images[i] });
                             imageDoc.privacy = imagePrivacy;
                             await imageDoc.save();
-                        }
-                        if (!post.imageVersion || post.imageVersion < 2) {
-                            //move images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
-                            await new Promise(function(resolve, reject) {
-                                fs.rename(global.appRoot + '/public/images/uploads/' + e.images[i], global.appRoot + '/cdn/images/' + e.images[i], function(err) { if (err) { reject(err) } else { resolve() } });
-                            }).catch(err => {
-                                console.error("could not move old image to new cdn location");
-                                console.error(err)
-                            });
                         }
                     }
                 }
@@ -1121,14 +980,15 @@ module.exports = function(app) {
         var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v));
         for (mention of newMentions) {
             if (mention != req.user.username) {
-                var mentioned = await User.findOne({ username: mention });
-                if (post.community && (await User.findOne({ username: mention, communities: post.community }))) {
-                    notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
-                } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
-                    notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
-                } else {
-                    notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
-                }
+                User.findOne({ username: mention }).then(async mentioned => {
+                    if (post.community && mentioned.communities.includes(post.community)) {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    } else {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
+                    }
+                })
             }
         }
         post.mentions = parsedPost.mentions;
@@ -1155,11 +1015,11 @@ module.exports = function(app) {
             postPrivacy = req.body.postPrivacy;
         }
 
-        if(req.body.postContentWarnings){
+        if (req.body.postContentWarnings) {
             //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
-            newHTML = '<aside class="content-warning">'+req.body.postContentWarnings+'</aside>'+
-            '<div class="abbreviated-content content-warning-content" style="height:0">'+newHTML+'</div>'+
-            '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
+            newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
+                '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
+                '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
         }
 
         post.save().then(() => {

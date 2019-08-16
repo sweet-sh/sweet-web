@@ -1,38 +1,4 @@
 const reservedUsernames = require('../config/reserved-usernames.js')
-var bcrypt = require('bcrypt-nodejs');
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var Autolinker = require('autolinker');
-var notifier = require('./notifier.js');
-
-sanitizeHtmlOptions = {
-    allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
-    allowedAttributes: {
-        'a': ['href', 'data-*', 'target', 'rel']
-    }
-}
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
 
 // APIs
 
@@ -248,7 +214,7 @@ module.exports = function (app, passport) {
                 let parsedAbout = req.user.aboutParsed;
                 if (req.body.about != req.user.aboutRaw) {
                     // Parse about section
-                    let splitAbout = req.body.about.substring(0, 500).split(/\r\n|\r|\n/gi);
+                    let splitAbout = helper.escapeHTMLChars(req.body.about).substring(0, 500).split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
                     splitAbout.forEach(function (line) {
                         if (line != "") {
@@ -256,7 +222,7 @@ module.exports = function (app, passport) {
                             line = Autolinker.link(line);
                             var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
                             var mentionReplace = '$1<a href="/$2">@$2</a>';
-                            var hashtagRegex = /(^|[^#\w])#(\w{1,60})\b/g
+                            var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
                             var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
                             line = line.replace(mentionRegex, mentionReplace).replace(hashtagRegex, hashtagReplace);
                             parsedAboutArray.push(line);
@@ -264,13 +230,15 @@ module.exports = function (app, passport) {
                     })
                     parsedAbout = parsedAboutArray.join('');
                 }
-                user.displayName = sanitize(sanitizeHtml(req.body.displayName.substring(0, 50), sanitizeHtmlOptions));
-                user.pronouns = sanitize(sanitizeHtml(req.body.pronouns.substring(0, 50), sanitizeHtmlOptions));
-                user.aboutRaw = sanitize(req.body.about.substring(0, 500));
-                user.aboutParsed = sanitize(sanitizeHtml(parsedAbout, sanitizeHtmlOptions));
-                user.location = sanitize(sanitizeHtml(req.body.location.substring(0, 50), sanitizeHtmlOptions));
-                user.websiteRaw = sanitize(req.body.website.substring(0, 50));
-                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website.substring(0, 50)), sanitizeHtmlOptions));
+                //the assumption is that when handlebars displays these, it'll automatically escape the html so that the browser doesn't render it, so there's no
+                //need to do that here to the input except with the parsed stuff above and the website link, which are going to be displayed with html intact at some point
+                user.displayName = req.body.displayName.substring(0, 50);
+                user.pronouns = req.body.pronouns.substring(0, 50);
+                user.aboutRaw = req.body.about.substring(0, 500);
+                user.aboutParsed = parsedAbout;
+                user.location = req.body.location.substring(0, 50);
+                user.websiteRaw = req.body.website.substring(0, 50);
+                user.websiteParsed = Autolinker.link(helper.escapeHTMLChars(req.body.website.substring(0, 50)));
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {

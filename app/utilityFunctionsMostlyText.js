@@ -1,6 +1,4 @@
-const Autolinker = require('autolinker');
-var sanitize = require('mongo-sanitize');
-var sanitizeHtml = require('sanitize-html');
+//these requires are not in server.js bc they're only used here
 const urlp = require('url');
 const metascraper = require('metascraper')([
     require('metascraper-description')(),
@@ -9,9 +7,6 @@ const metascraper = require('metascraper')([
     require('metascraper-url')()
 ]);
 const request = require('request');
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path')
 
 module.exports = {
     // Parses new post and new comment content. Input: a text string. Output: a parsed text string.
@@ -226,16 +221,17 @@ module.exports = {
     },
     //moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
     //the non-first arguments are just stored in the image documents in the database. postType is "user" or "community"
-    finalizeImages: async function(imageFileNames, postType, posterID, privacy, postImageQuality) {
+    finalizeImages: async function(imageFileNames, postType, posterID, privacy, postImageQuality, imagesCurrentFolder = (global.appRoot + "/cdn/images/temp/")) {
         var imageIsVertical = [];
         var imageIsHorizontal = [];
         for (const imageFileName of imageFileNames) {
-            fs.renameSync("./cdn/images/temp/" + imageFileName, "./cdn/images/" + imageFileName, function(e) {
-                if (e) {
-                    console.log("could not move " + imageFileName + " out of temp");
-                    console.log(e);
-                }
+            await new Promise((resolve, reject) => {
+                fs.rename(imagesCurrentFolder + imageFileName, "./cdn/images/" + imageFileName, function(e) {
+                    if (e) { console.error("could not move " + imageFileName + " out of temp\n" + e); }
+                    resolve();
+                })
             })
+
             var metadata = await sharp('./cdn/images/' + imageFileName).metadata()
             image = new Image({
                 context: postType,
@@ -252,7 +248,7 @@ module.exports = {
                 imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? "vertical-image" : "");
                 imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? "horizontal-image" : "");
             } else {
-                console.log("image " + './cdn/images/' + imageFileName + " not found! Oh no")
+                console.log("image " + './cdn/images/' + imageFileName + " not found when determining orientation! Oh no")
                 imageIsVertical.push("");
                 imageIsHorizontal.push("");
             }

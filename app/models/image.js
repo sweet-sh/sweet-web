@@ -1,6 +1,3 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
 var imageSchema = new mongoose.Schema({
   context: String,
   filename: {type: String, unique: true},

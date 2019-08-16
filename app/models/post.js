@@ -1,6 +1,3 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
 //this is used by older posts instead of the below inlineElementSchema
 var embedSchema = new mongoose.Schema({
     type: String, //"video" always
@@ -49,7 +46,7 @@ var linkPreviewCacheSchema = new mongoose.Schema({
 
 var commentSchema = new mongoose.Schema({
     authorEmail: String,
-    author: { type: Schema.Types.ObjectId, ref: 'User' },
+    author: { type: DBReference, ref: 'User' },
     timestamp: Date,
     rawContent: String,
     parsedContent: String,
@@ -76,16 +73,16 @@ var commentSchema = new mongoose.Schema({
 commentSchema.add({ replies: [commentSchema] });
 
 var boostSchema = new mongoose.Schema({
-    booster: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    booster: { type: DBReference, ref: 'User', required: true },
     timestamp: { type: Date, required: true },
-    boost: { type: Schema.Types.ObjectId, ref: 'Post' }
+    boost: { type: DBReference, ref: 'Post' }
 })
 
 var postSchema = new mongoose.Schema({
     type: String, //"user" or "community"
-    community: { type: Schema.Types.ObjectId, ref: 'Community' }, //hopefully undefined if type=="user"
+    community: { type: DBReference, ref: 'Community' }, //hopefully undefined if type=="user"
     authorEmail: { type: String, required: true },
-    author: { type: Schema.Types.ObjectId, ref: 'User' },
+    author: { type: DBReference, ref: 'User' },
     url: { type: String, required: true },
     privacy: { type: String, required: true },
     timestamp: { type: Date, required: true },
@@ -94,7 +91,7 @@ var postSchema = new mongoose.Schema({
     rawContent: String,
     parsedContent: String,
     comments: [commentSchema],
-    boostTarget: { type: Schema.Types.ObjectId, ref: 'Post' },
+    boostTarget: { type: DBReference, ref: 'Post' },
     numberOfComments: Number,
     mentions: [String],
     tags: [String],
