@@ -49,7 +49,7 @@
                 {{/contains}}
             </h2>
             <aside class="metadata">
-                <span class="post-timestamp">
+                <span class="post-timestamp" title="posted {{this.fullTimestamp}}">
                     {{this.parsedTimestamp}}
                 </span>
                 &nbsp;&middot;&nbsp;
@@ -58,7 +58,7 @@
                 </span>
                 {{#if lastEdited}}
                 &nbsp;&middot;&nbsp;
-                <span class="post-edited">Edited</span>
+                <span class="post-edited" title="edited {{this.fullEditedTimestamp}}">Edited</span>
                 {{/if}}
             </aside>
         </div>

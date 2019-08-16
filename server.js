@@ -154,6 +154,12 @@ moment.updateLocale('en', {
       MM: "%dmon",
       y: "1y",
       yy: "%dy"
+  },
+  calendar: {
+    sameDay: '[today at] h:mm a [UTC]Z',
+    lastDay: '[yesterday at] h:mm a [UTC]Z',
+    lastWeek: '[last] dddd [at] h:mm a [UTC]Z',
+    sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
 });
 sanitize = require('mongo-sanitize');
