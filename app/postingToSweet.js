@@ -183,10 +183,14 @@ module.exports = function(app) {
         for (mention of parsedResult.mentions) {
             if (mention != req.user.username) {
                 User.findOne({ username: mention }).then(async mentioned => {
-                    if (isCommunityPost && mentioned.communities.includes(post.community)) {
-                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
-                    } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
-                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    if (isCommunityPost) {
+                        if (mentioned.communities.includes(post.community)) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        }
+                    } else if (req.body.postPrivacy == "private") {
+                        if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        }
                     } else {
                         notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
                     }
@@ -964,10 +968,14 @@ module.exports = function(app) {
         for (mention of newMentions) {
             if (mention != req.user.username) {
                 User.findOne({ username: mention }).then(async mentioned => {
-                    if (post.community && mentioned.communities.includes(post.community)) {
-                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
-                    } else if (req.body.postPrivacy == "private" && (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id }))) {
-                        notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                    if (post.community) {
+                        if (mentioned.communities.includes(post.community)) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        }
+                    } else if (req.body.postPrivacy == "private") {
+                        if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        }
                     } else {
                         notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
                     }
