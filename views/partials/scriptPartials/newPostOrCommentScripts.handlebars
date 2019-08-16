@@ -152,7 +152,8 @@ $(function(){
                   $(postContainer).find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
               }
               contentContainer.html(newPostHTML);
-              $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove();})
+              //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
+              $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove(); $('body').off('hidden.bs.modal'); })
               $("#editPostModal").modal('hide');
           }).fail(function() {
               editModal.modal('hide');

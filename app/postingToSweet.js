@@ -173,12 +173,7 @@ module.exports = function(app) {
             contentWarnings: req.body.postContentWarnings,
             imageVersion: 3,
             inlineElements: parsedResult.inlineElements,
-            subscribedUsers: [req.user._id],
-            //todo: check if this does anything anymore, i forget
-            boostsV2: [{
-                booster: req.user._id,
-                timestamp: postCreationTime
-            }]
+            subscribedUsers: [req.user._id]
         });
 
         for (mention of parsedResult.mentions) {

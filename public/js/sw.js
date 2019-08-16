@@ -8,7 +8,7 @@ self.addEventListener('push', function(event) {
     const options = {
       body: parsedData.body,
       icon: parsedData.imageURL,
-      badge: parsedData.imageURL,
+      badge: "https://sweet.sh/favicon-32x32.png",
       tag: parsedData.link
     };
     event.waitUntil(self.registration.showNotification(title, options));
