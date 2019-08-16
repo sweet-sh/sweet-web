@@ -18,6 +18,7 @@ textarea {
     border-radius: 3px;
     border: 1px solid $medium-grey;
     background: $editor-background;
+    color: $text;
 
     @include transition;
 

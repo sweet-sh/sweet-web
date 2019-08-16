@@ -22,6 +22,9 @@ $light-pink: lighten($sweet-red, 40%);
 $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
 $dark-pink: lighten($sweet-red, 20%);
 
+$bg-color: $background-grey;
+$dot-color: darken($background-grey, 5%);
+
 $highlight: $lightest-pink;
 $placeholder: $dark-grey;
 $editor-background: lighten($lightest-grey, 2%);

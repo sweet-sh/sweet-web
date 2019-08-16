@@ -64,15 +64,25 @@ $(function() {
   })
 
   //not currently used
-  $("#darkModeToggle").click(function(e){
+  $(".switch-style").click(function(e){
     e.preventDefault();
-    if ($(this).hasClass('notification-active')){
-      $("#darkModeStylesheet").attr("href","")
-      $(this).removeClass('notification-active')
+    var currentStyle = $(this).attr('data-style');
+    console.log("Blorp")
+    if (currentStyle == "light"){
+        $( "body" ).fadeOut( function() {
+            $("#dark-mode-stylesheet").attr("href","/css/dark-mode.css");
+            $( this ).fadeIn();
+        } );
+        $(this).attr('data-style','dark');
+        $(this).html('<i class="fas fa-fw fa-sun"></i> light mode')
     }
     else {
-      $("#darkModeStylesheet").attr("href","/css/darkmode.css")
-      $(this).addClass('notification-active')
+        $( "body" ).fadeOut( function() {
+            $("#dark-mode-stylesheet").attr("href","");
+            $( this ).fadeIn();
+        } );
+        $(this).attr('data-style','light');
+        $(this).html('<i class="fas fa-fw fa-moon"></i> cyberpunk mode')
     }
   })
 
