@@ -245,12 +245,12 @@ module.exports = function(app, passport) {
 
                     const community = new Community({
                         created: new Date(),
-                        name: sanitize(newCommunityData.communityName),
+                        name: newCommunityData.communityName,
                         slug: newCommunitySlug,
                         url: communityUrl,
-                        descriptionRaw: sanitize(newCommunityData.communityDescription),
+                        descriptionRaw: newCommunityData.communityDescription,
                         descriptionParsed: parsedDesc,
-                        rulesRaw: sanitize(newCommunityData.communityRules),
+                        rulesRaw: newCommunityData.communityRules,
                         rulesParsed: parsedRules,
                         image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
                         imageEnabled: imageEnabled,
@@ -689,7 +689,7 @@ module.exports = function(app, passport) {
         let parsedReference = parsedReferences[req.body.reference]
         var allowedChange = true; //is there a change? and is it allowed?
         if (req.body.reference == "description" || req.body.reference == "rules") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = (await helper.parseText(req.body.proposedValue)).text
             if (req.body.reference == "description") {
                 allowedChange = (community.descriptionRaw != proposedValue);
@@ -697,11 +697,11 @@ module.exports = function(app, passport) {
                 allowedChange = (community.rulesRaw != proposedValue);
             }
         } else if (req.body.reference == "joinType") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = parsedJoinType[req.body.proposedValue]
             allowedChange = (parsedProposedValue && community.settings.joinType != proposedValue); //parsedProposedValue will be undefined if req.body.proposedValue wasn't one of the allowed values
         } else if (req.body.reference == "visibility") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = parsedVisibility[req.body.proposedValue]
             allowedChange = (parsedProposedValue && community.settings.visibility != proposedValue);
         } else if (req.body.reference == "voteLength") {
@@ -712,7 +712,7 @@ module.exports = function(app, passport) {
             proposedValue = imageUrl
             parsedProposedValue = imageUrl
         } else if (req.body.reference == "name") { //this is where it gets complicated
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = proposedValue;
             var slug = helper.slugify(proposedValue);
             if (!parsedProposedValue || community.name == proposedValue) {

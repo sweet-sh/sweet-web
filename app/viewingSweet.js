@@ -371,7 +371,7 @@ module.exports = function(app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'search',
-            query: sanitize(req.params.query)
+            query: req.params.query
         })
     })
 

@@ -25,6 +25,8 @@ app.use(fileUpload());
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
+const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
+app.use(mongoSanitize());
 
 // View engine (Handlebars)
 hbs = handlebars.create({
@@ -162,7 +164,6 @@ moment.updateLocale('en', {
     sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
 });
-sanitize = require('mongo-sanitize');
 sanitizeHtml = require('sanitize-html');
 sharp = require('sharp');
 shortid = require('shortid');
