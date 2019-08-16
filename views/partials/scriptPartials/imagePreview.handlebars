@@ -1,6 +1,6 @@
 {{#if editing}}
 {{! if creating a new post, the front end quill stuff will take care of wrapping the thing in a container. but if we're generating an editable version we have to do it ourselves}}
-<div contenteditable="false" class="image-preview-container" image-url="{{image}}">
+<div contenteditable="false" class="image-preview-container slidable-embed" image-url="{{image}}" imagealreadysaved="true" fullsavedurl="{{imageUrl}}">
 {{/if}}
 <div class="image-preview"{{#if editing}} style="background-image:url({{imageUrl}});"{{/if}}>
         {{#unless editing}}
