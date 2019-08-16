@@ -121,6 +121,7 @@ module.exports = function(app) {
                 }
             });
         }
+        res.sendStatus(200);
     })
 
     //Responds to post requests that create a new post.

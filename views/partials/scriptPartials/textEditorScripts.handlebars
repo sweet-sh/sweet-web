@@ -29,15 +29,18 @@
 
     //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
     function clearEmbed(e) {
-        //todo: if the images is a new one then call cleartempimage with its file name
-        var m = $(this).parent().parent();
-        m.closest('.ql-container')[0].__quill.focus();
-        m.closest('.ql-container')[0].__quill.updateContents(); //slightly hacky way to get quill to save the image description so it'll put it back if this deletion is undone
-        if (m[0].request && m[0].request.readyState != 4) { //if the request is still in progress
-            m[0].request.abort();
+        var container = $(this).closest('.slidable-embed');
+        if(container.hasClass('image-preview-container') && !container.attr('imagealreadysaved')){
+            $.post('/cleartempimage',{imageURL: container.attr('image-url')});
         }
-        var postform = m.closest('.new-comment-form, .contentForm');
-        m.remove();
+        var quillController = container.closest('.ql-container')[0].__quill;
+        quillController.updateContents(); //slightly hacky way to get quill to save the image description so it'll put it back if this deletion is undone
+        quillController.focus();
+        if (container[0].request && container[0].request.readyState != 4) { //if the request is still in progress
+            container[0].request.abort();
+        }
+        var postform = container.closest('.new-comment-form, .contentForm');
+        container.remove();
         updateSubmitButtonState(postform);
         createImageGroups(postform.find('.ql-editor'));
     }
@@ -146,6 +149,8 @@
                 node.setAttribute('imagealreadysaved','true');
                 node.setAttribute('fullsavedurl',url);
                 node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
+                node.setAttribute('id', 'embed' + newEmbedId);
+                newEmbedId++;
                 var n = $(node);
                 n.addClass('slidable-embed');
                 n.find(".fader").remove();
@@ -180,7 +185,7 @@
             var fr = new FileReader();
             fr.onload = function(e) {
                 var m = $("#embed" + id)
-                if (m) { //our preview window might have already been eliminated by a cancel operation
+                if (m.length) { //our preview window might have already been eliminated by a cancel operation
                     m.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
                 }
             }
@@ -264,7 +269,7 @@
 
         //quill calls this function to find out what attributes it should put for this embed in the object it returns when you call getContents() on it
         static formats(node) {
-            return { description: $(node).find('#postImageDescription').val(), imageURL: node.getAttribute('image-url'), id: node.getAttribute('id') };
+            return { description: $(node).find('#postImageDescription').val(), imageURL: node.getAttribute('image-url') };
         }
 
         //when quill recreates one of these after undoing it will reapply the formats established by the method above
@@ -273,8 +278,6 @@
                 $(this.domNode).find("#postImageDescription").val(value);
             }else if(name=="imageURL"){
                 this.domNode.setAttribute('image-url',value);
-            }else if(name=="id"){
-                this.domNode.setAttribute('id',value);
             }
         }
     }
