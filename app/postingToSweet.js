@@ -336,7 +336,7 @@ module.exports = function(app) {
                     var postType = "community";
                     var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
                 } else {
-                    var postType = "user";
+                    var postType = "original";
                     var postPrivacy = post.privacy;
                 }
 
@@ -872,6 +872,7 @@ module.exports = function(app) {
     })
 
     app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function(req, res) {
+        console.log("postPrivacy", req.body.postPrivacy)
         var post = await Post.findById(req.params.postid);
         if (!post.author._id.equals(req.user._id)) {
             return res.sendStatus(403);
@@ -1002,8 +1003,8 @@ module.exports = function(app) {
 
         post.contentWarnings = req.body.postContentWarnings;
 
-        if (post.type == "user") {
-            postPrivacy = req.body.postPrivacy;
+        if (post.type == "original") {
+            post.privacy = req.body.postPrivacy;
         }
 
         if (req.body.postContentWarnings) {
@@ -1012,7 +1013,7 @@ module.exports = function(app) {
                 '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
                 '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
         }
-
+        console.log(post)
         post.save().then(() => {
             res.contentType("text/html");
             res.status(200);

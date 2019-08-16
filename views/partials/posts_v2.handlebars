@@ -54,8 +54,12 @@
                 </span>
                 &nbsp;&middot;&nbsp;
                 <span class="post-visibility">
-                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i>
+                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash"></i>{{/eq}}
                 </span>
+                {{#if lastEdited}}
+                &nbsp;&middot;&nbsp;
+                <span class="post-edited">Edited</span>
+                {{/if}}
             </aside>
         </div>
     </header>
