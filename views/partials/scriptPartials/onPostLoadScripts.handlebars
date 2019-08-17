@@ -7,13 +7,11 @@ needPostsOlderThan = new Date().getTime();
 // Globally defining the check height function (should this go somewhere ... else?)
 function showMoreAndImageLightboxing(e) {
     var contentCont = $(e.find('.content')[0]);
-    if (e.height() > 550) {
-        if (!contentCont.hasClass('content-warning-post')) {
-            var content = contentCont.children();
-            content.remove();
-            contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
-            contentCont.children('.abbreviated-content').append(content);
-        }
+    if (contentCont.height() > 550 && !contentCont.hasClass('content-warning-post')) {
+        var content = contentCont.children();
+        content.remove();
+        contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button show-more" data-state="contracted">Show more</button>');
+        contentCont.children('.abbreviated-content').append(content);
     }
     var images = contentCont.find('.post-images a');
     if(images.length){
