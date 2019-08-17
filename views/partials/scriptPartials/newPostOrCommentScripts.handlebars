@@ -165,7 +165,7 @@ $(function(){
               var wst = $(window).scrollTop();
               var wheight = $(window).height();
               var wsb = wst + wheight;
-              if(wst+75 > posttop){ //scroll down to put the top of the post into view
+              if(wst+75 > posttop){ //scroll up to put the top of the post into view
                 $('html').animate({scrollTop: (Math.max(0,posttop-100))});
               }else if(postbottom > wsb && postheight < wheight){ //scroll down to put the bottom of the post into view unless that will move the top of the post offscreen
                 $('html').animate({scrollTop: wst+(postbottom-wsb)+10});
