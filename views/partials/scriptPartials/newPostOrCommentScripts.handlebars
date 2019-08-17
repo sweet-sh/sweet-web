@@ -155,19 +155,21 @@ $(function(){
                   postContainer.find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
               }
               contentContainer.html(newPostHTML);
-              //scroll to the newly edited post if the top or bottom is offscreen
-              var posttop = postContainer.offset().top;
-              var postbottom = posttop+postContainer.outerHeight();
-              var wst = $(window).scrollTop();
-              var wsb = wst + $(window).height();
-              if(wst+75 > posttop){
-                $('html').animate({scrollTop: (Math.max(0,posttop-100))});
-              }else if(postbottom > wsb){
-                $('html').animate({scrollTop: wst+(postbottom-wsb)+10});
-              }
               //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
               $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove(); $('body').off('hidden.bs.modal'); })
               $("#editPostModal").modal('hide');
+              //scroll to the newly edited post if the top or bottom is offscreen
+              var posttop = postContainer.offset().top;
+              var postbottom = posttop+postContainer.outerHeight();
+              var postheight = postbottom-posttop;
+              var wst = $(window).scrollTop();
+              var wheight = $(window).height();
+              var wsb = wst + wheight;
+              if(wst+75 > posttop){ //scroll down to put the top of the post into view
+                $('html').animate({scrollTop: (Math.max(0,posttop-100))});
+              }else if(postbottom > wsb && postheight < wheight){ //scroll down to put the bottom of the post into view unless that will move the top of the post offscreen
+                $('html').animate({scrollTop: wst+(postbottom-wsb)+10});
+              }
           }).fail(function() {
               editModal.modal('hide');
               bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again', function() { editModal.modal() });
