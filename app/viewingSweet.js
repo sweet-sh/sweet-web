@@ -112,6 +112,9 @@ module.exports = function(app) {
     //Input: flash message
     //Output: rendering of the login page with the flash message included.
     app.get('/login', function(req, res) {
+        if(req.isAuthenticated()){
+            return res.redirect('back');
+        }
         res.render('login', {
             layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
@@ -122,6 +125,9 @@ module.exports = function(app) {
     //Input: flash message
     //Output: rendering of the signup page with the flash message included.
     app.get('/signup', function(req, res) {
+        if(req.isAuthenticated()){
+            return res.redirect('back');
+        }
         res.render('signup', {
             layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
