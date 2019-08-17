@@ -79,7 +79,7 @@ var boostSchema = new mongoose.Schema({
 })
 
 var postSchema = new mongoose.Schema({
-    type: String, //"original" or "community. note that the equivalent "context" field in image documents stores either "user" or "community".
+    type: String, //"original", "community", or "boost". note that the equivalent "context" field in image documents stores either "user", "community", or "user"
     community: { type: DBReference, ref: 'Community' }, //hopefully undefined if type=="user"
     authorEmail: { type: String, required: true },
     author: { type: DBReference, ref: 'User' },

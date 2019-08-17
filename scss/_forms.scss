@@ -321,7 +321,7 @@ button.close {
 }
 
 .rightSideControls button:not(:last-child),
-.leftSideControls button:not(:last-child), {
+.leftSideControls button:not(:last-child) {
     margin-right: 0.15rem;
 }
 
@@ -413,8 +413,11 @@ button.close {
 }
 
 .image-preview-container {
+    border-radius: 0.25rem;
+    padding: 7px;
+    background: linear-gradient(35deg, $dark-pink 0%, $dark-pink 35%, $sweet-red 45%, white 55%, $sweet-red 65%, $dark-pink 75%, $dark-pink 100%);
     display: flex;
-    height: 100px;
+    height: 125px;
     width: 100%;
     margin-bottom: 0.5rem;
     cursor: default;
@@ -430,8 +433,7 @@ button.close {
     -ms-user-select: none;
     /* Internet Explorer/Edge */
     user-select: none;
-    /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+    /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 .ipc-group {
@@ -439,6 +441,8 @@ button.close {
     border-right: solid thin $light-pink;
     padding: 0.3rem;
     margin-bottom: 0;
+    border-radius: 0px;
+    background: linear-gradient(90deg, $dark-pink 0%, $dark-pink 35%, $sweet-red 45%, white 55%, $sweet-red 65%, $dark-pink 75%, $dark-pink 100%);
 }
 
 .ipc-group-top {
@@ -460,12 +464,12 @@ button.close {
     transition: all 0.2s ease;
     height: 100%;
     border-radius: 4px;
+    border: solid 1px $sweet-red;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
+    background-color: #ffffffee;
     background-image: url("/images/imagePreviewWindowDefault.jpg");
-    background-color: $editor-background;
-    border: 1px dashed $medium-grey;
     margin: 0;
     object-fit: contain;
     position: relative;
@@ -475,11 +479,7 @@ button.close {
     display: none;
 }
 
-#imagePreviewContainer {
-    display: none;
-    text-align: center;
-}
-
+/* todo: update the name of these controls: these are the same controls for the image previews and the link preview previews */
 .image-preview-controls {
     display: flex;
     flex-direction: column;
@@ -495,11 +495,27 @@ button.close {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+}
+
+.image-preview-container .image-preview-controls>div{
+    color:white;
 }
 
 .image-preview-controls>div:hover {
-    color: $darkest-grey;
+    color: black;
+}
+
+.image-preview-container .image-preview-controls>div:hover {
+    color: $sweet-red;
+}
+
+.image-clear {
+    cursor: pointer;
+}
+
+.image-move {
+    cursor: grab;
+    touch-action: none;
 }
 
 #postImageDescription {
@@ -517,8 +533,8 @@ button.close {
     opacity: .75;
 }
 
-.image-move {
-    touch-action: none;
+.embedspacer {
+    background: white;
 }
 
 /* uploader for other images (profile picture, community icon...i think that's it? */
