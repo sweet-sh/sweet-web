@@ -132,7 +132,7 @@ $(function(){
           button.html('<i class="fas fa-spinner fa-spin"></i> Sending...')
           var content = editor.getContents();
           var editModal = $("#editPostModal");
-          var postContainer = editModal[0].postContainer;
+          var postContainer = $(editModal[0].postContainer);
           var postID = editModal.attr('data-post-id');
           var contentWarnings = cont.find('#postContentWarnings').val().trim();
           var originalPrivacy = editModal.attr('data-original-privacy');
@@ -142,19 +142,29 @@ $(function(){
               postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private')
           }).done(function(newPostHTML) {
               var privacyChanged = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') !== originalPrivacy);
-              var contentContainer = $(postContainer).children('.content');
+              var contentContainer = postContainer.children('.content');
               if(contentWarnings){
                 contentContainer.addClass('content-warning-post');
               }
               if (privacyChanged){
                   var newPrivacyHtml = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == "public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
-                  $(postContainer).find(".post-visibility").html(newPrivacyHtml)
+                  postContainer.find(".post-visibility").html(newPrivacyHtml)
               }
-              postHasEditedTag = !!($(postContainer).find(".metadata").find('.post-edited').length);
+              postHasEditedTag = !!(postContainer.find(".metadata").find('.post-edited').length);
               if (!postHasEditedTag){
-                  $(postContainer).find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
+                  postContainer.find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
               }
               contentContainer.html(newPostHTML);
+              //scroll to the newly edited post if the top or bottom is offscreen
+              var posttop = postContainer.offset().top;
+              var postbottom = posttop+postContainer.outerHeight();
+              var wst = $(window).scrollTop();
+              var wsb = wst + $(window).height();
+              if(wst+75 > posttop){
+                $('html').animate({scrollTop: (Math.max(0,posttop-100))});
+              }else if(postbottom > wsb){
+                $('html').animate({scrollTop: wst+(postbottom-wsb)+10});
+              }
               //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
               $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove(); $('body').off('hidden.bs.modal'); })
               $("#editPostModal").modal('hide');
@@ -188,7 +198,7 @@ $(function(){
     newForm.attr('data-comment-type','child').attr('data-post-id',postID).attr('data-comment-id',commentID);
     newForm.appendTo(commentContainer);
     attachQuill(newForm.find('.editable-text')[0],"Reply to this post with a good reply")
-    tribute.attach($(".ql-editor"));
+    tribute.attach(newForm.find(".ql-editor"));
     //Scroll to newly created form
     if (newForm[0].getBoundingClientRect().bottom > $(window).height()-50){
         $("html, body").animate({ scrollTop: newForm.offset().top-200 }, 200);
@@ -305,7 +315,12 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         if (data!='nope'){
           commentEditor.html('');
           var appendedComment = $(data.comment).hide().appendTo(commentsContainer).fadeIn();
-          $('html').animate({scrollTop: (Math.max(0,appendedComment.offset().top-100))});
+          //scroll to place the comment at the top if its top or bottom is offscreen
+          var acTop = appendedComment.offset().top;
+          var acBottom = acTop + appendedComment.outerHeight();
+          if(acTop-100 < $(window).scrollTop() || acBottom > $(window).scrollTop()+$(window).height()){
+            $('html').animate({scrollTop: (Math.max(0,acTop-100))});
+          }
           //add the lightbox listener to the newly appended comment images
           var commentimages = appendedComment.find('.post-images a');
           if(commentimages.length){
