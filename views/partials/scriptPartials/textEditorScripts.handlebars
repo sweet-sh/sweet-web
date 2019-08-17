@@ -181,16 +181,9 @@
             var n = $(node);
             n.addClass("still-loading");
             n.addClass('slidable-embed');
-            //create filereader that will obtain us the preview
-            var fr = new FileReader();
-            fr.onload = function(e) {
-                var m = $("#embed" + id)
-                if (m.length) { //our preview window might have already been eliminated by a cancel operation
-                    m.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
-                }
-            }
-            fr.fileType = file.type;
-            fr.readAsDataURL(file);
+            //generate "virtual url" for the file and use it to display the preview of the image
+            var fileURL = URL.createObjectURL(file);
+            n.find('.image-preview')[0].style.backgroundImage = "url(" + fileURL + ")";
 
             //make the image-uploading ajax request
             var fd = new FormData();
