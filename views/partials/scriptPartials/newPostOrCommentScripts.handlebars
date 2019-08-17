@@ -57,14 +57,22 @@ $(function(){
   $('body').on('change',"#postPrivacy-private, #editPostPrivacy-private", function(){
     if (this.checked) {
       var cont = $(this).closest('.contentForm');
-      cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i> Private");
+      if($(window).width() > 350){
+        cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i> Private");
+      }else{
+        cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
+      }
       cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
     }
   });
   $('body').on('change',"#postPrivacy-public, #editPostPrivacy-public", function(){
     if (this.checked) {
       var cont = $(this).closest('.contentForm');
-      cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i> Public");
+      if($(window).width() > 350){
+        cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i> Public");
+      }else{
+        cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
+      }
       cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
     }
   });

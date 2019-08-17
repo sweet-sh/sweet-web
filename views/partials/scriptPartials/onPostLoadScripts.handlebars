@@ -74,7 +74,7 @@ $(function(){
 
         if(newlyLoadedStuff.find('img.link-preview-image').length > 0){
             newlyLoadedStuff.find('img.link-preview-image').on('error',function(){
-                $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                $(this).replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
             })
         }
         

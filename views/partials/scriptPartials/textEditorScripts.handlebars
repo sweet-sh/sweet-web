@@ -72,7 +72,7 @@
             n.addClass('still-loading');
             n.addClass('slidable-embed');
             n.find('.link-preview-image').on('error', function(e) {
-                $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                $(this).replaceWith('<div class="link-preview-image""><i class="fas fa-link"></i></div>');
             })
             node.request = $.post("/api/newpostform/linkpreviewdata", { url: url }, function(data, status, jqXHR) {
                 var m = $("#embed" + id);
@@ -87,7 +87,7 @@
                     if (linkInfo.image) {
                         m.find(".link-preview-image").replaceWith('<img class="link-preview-image" src="'+linkInfo.image+'" />')
                     } else {
-                        m.find(".link-preview-image").replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                        m.find(".link-preview-image").replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
                     }
                     m.find('.link-preview-title').html(linkInfo.title);
                     m.find('.link-preview-description').html(linkInfo.description);

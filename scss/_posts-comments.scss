@@ -555,25 +555,17 @@ article.comment>header .author-username {
     line-height: 27px;
 }
 
-
-@media(max-width:500px) {
-    .link-preview-container {
-        height: 75px;
-    }
-
-    .link-preview-image {
-        max-width: 100px;
-    }
-}
-
 .link-preview-image {
     border-radius: 2px;
     align-self: center;
     max-height: 100%;
-    max-width: 140px;
-    width: 140px !important;
+    width: 140px;
     object-fit: contain;
-    min-width: 140px;
+}
+
+div.link-preview-image {
+    font-size:50px;
+    text-align:center;
 }
 
 .link-preview-description {
@@ -585,6 +577,20 @@ article.comment>header .author-username {
     font-weight: 300;
     font-size: 0.9em;
     font-variant: small-caps;
+}
+
+@media(max-width:500px) {
+    .link-preview-container {
+        height: 75px;
+    }
+
+    .link-preview-image {
+        max-width: 75px;
+    }
+    
+    div.link-preview-image {
+        font-size:40px;
+    }
 }
 
 .embedded-video-cont {

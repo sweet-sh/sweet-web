@@ -396,6 +396,12 @@ section {
     position: fixed;
 }
 
+@media(max-width:600px){
+    .fixed-container {
+        display:none;
+    }
+}
+
 .fixed-container>section {
     border: 1px solid $medium-grey;
     background: $aside-background;
