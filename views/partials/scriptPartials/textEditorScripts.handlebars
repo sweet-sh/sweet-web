@@ -162,13 +162,19 @@
             }
             
             var file = fileOrUrl;
+
+            console.log(file.lastModified);
+            console.log(new Date().getTime());
+            console.log(file.name);
             
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
-                return null;
+                throw "image unsupported";
+                return undefined;
             } else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
                 bootbox.alert("Sorry, but this file appears to be too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-                return null;
+                throw "image unsupported";
+                return undefined;
             }
             let node = super.create();
             node.setAttribute('id', 'embed' + newEmbedId);
@@ -247,6 +253,27 @@
                         m.find('.fader').remove();
                         m.attr('image-url', serverResponse.url);
                         updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
+                        setTimeout(function() {
+                            var o = $("#embed" + id);
+                            if (o.length) {
+                                if (!$(".bootbox-alert.show").length) { //so if multiple images are expiring (almost) at once it only creates one alert
+                                    bootbox.alert("hey your images are expired and stuff whoops sorry! you get one hour. reupload i guess");
+                                }
+                                var text = o.find("#postImageDescription").val();
+                                if (text.trim()) {
+                                    o.replaceWith("<p>Image: " + text.trim() + (file.name ? " ("+file.name+")" : "") + "</p>");
+                                } else if (file.name) { //image.png is the placeholder for pasted images at least on chrome + firefox
+                                    if (file.name != "image.png") {
+                                        o.replaceWith("<p>Image: " + file.name + "</p>");
+                                    } else {
+                                        o.replaceWith("<p>Pasted image</p>");
+                                    }
+                                } else {
+                                    o.replaceWith("<p>Image</p>");
+                                }
+                                createImageGroups(o.parent());
+                            }
+                        }, 60 * 60 * 1000);
                     }
                 }
             });
@@ -496,8 +523,8 @@
                         break;
                     } else {
                         if (items[i].type.indexOf("image") === 0) {
-                            element.addImage(items[i].getAsFile());
                             e.preventDefault();
+                            element.addImage(items[i].getAsFile());
                         }
                     }
                 }
