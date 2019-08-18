@@ -822,4 +822,13 @@
             $(kids[kids.length - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
         }
     }
+
+    window.addEventListener("beforeunload", function(event) {
+        $("div.image-preview-container:not(.still-loading)").each(function(i,e){
+            if(!e.getAttribute('imagealreadysaved')){
+                $.post('/cleartempimage',{imageURL: e.getAttribute('image-url')});
+            }
+        })
+    });
+
 </script>
