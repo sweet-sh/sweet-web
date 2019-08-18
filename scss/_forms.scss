@@ -441,7 +441,7 @@ button.close {
 
 .image-preview-container {
     border-radius: 0.25rem;
-    padding: 7px 2px;
+    padding: 7px 3px;
     border: solid 1px $medium-grey;
     display: flex;
     height: 125px;
@@ -523,24 +523,30 @@ button.close {
     height: 100%;
 }
 
-.image-preview-controls>div {
-    text-decoration: none;
-    width: 1.5em;
-    font-size: 2em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    &:hover, &.in-use{
-        color: $darker-pink;
+.image-preview-controls {
+    &>div{
+        text-decoration: none;
+        width: 1.3em;
+        font-size: 2em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $editor-background;
+        &:hover, &.in-use{
+            color: $darker-pink;
+        }
+    }
+/* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
+    & path {
+        stroke: $dark-pink;
+        stroke-width: 15;
+      }
+    & svg {
+        filter: drop-shadow(3px 3px 1px $medium-grey);
     }
 }
 
-/* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
-.image-preview-controls path{
-    stroke: $dark-pink;
-    stroke-width: 15;
-  }
+.image-preview-controls 
 
 .image-clear {
     cursor: pointer;

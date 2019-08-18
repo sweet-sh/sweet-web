@@ -660,17 +660,19 @@
         floatingVersion.css("left", spacer.offset().left + "px");
         floatingVersion.css("top", getTop(spacer) + "px");
 
-        var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
-        selectedEmbed.removeClass(groupClasses);
-        var above = selectedEmbed.prev('.image-preview-container');
-        while (above.length) {
-            above.removeClass(groupClasses);
-            above = above.prev('.image-preview-container');
-        }
-        var below = selectedEmbed.next('.image-preview-container');
-        while (below.length) {
-            below.removeClass(groupClasses);
-            below = below.next('.image-preview-container');
+        if(selectedEmbed.hasClass('ipc-group')){
+            var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
+            selectedEmbed.removeClass(groupClasses);
+            var above = selectedEmbed.prev('.image-preview-container');
+            while (above.length) {
+                above.removeClass(groupClasses);
+                above = above.prev('.image-preview-container');
+            }
+            var below = selectedEmbed.next('.image-preview-container');
+            while (below.length) {
+                below.removeClass(groupClasses);
+                below = below.next('.image-preview-container');
+            }
         }
 
         spacer.addClass("embedspacer");
