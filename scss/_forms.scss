@@ -433,10 +433,10 @@ button.close {
 
 /* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
 .slidable-embed {
-    background: $lightest-grey!important;
+    background: $editor-background!important;
 }
 .slidable-embed:hover {
-    background:$light-grey!important;
+    background:$background-white!important;
 }
 
 .image-preview-container {
@@ -448,7 +448,7 @@ button.close {
     width: 100%;
     margin-bottom: 0.5rem;
     cursor: default;
-    transition: scale .1s ease-in-out, opacity .1s ease-in-out, padding .05s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
+    transition: scale .1s ease-in-out, opacity .1s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
     -webkit-touch-callout: none;
     /* iOS Safari */
     -webkit-user-select: none;
@@ -473,7 +473,7 @@ button.close {
     border: solid 1px $medium-grey;
     border-left: solid 1px $medium-grey;
     border-right: solid 1px $medium-grey;
-    padding: 0.3rem;
+    border-top-width: 0;
     margin-bottom: 0;
     border-radius: 0px;
 }
@@ -485,6 +485,7 @@ button.close {
 }
 
 .ipc-group-bottom {
+    border-top-width: 0;
     border-bottom: solid 1px $medium-grey;
     border-bottom-left-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
@@ -500,8 +501,6 @@ button.close {
     background-position: center;
     background-repeat: no-repeat;
     background-image: url("/images/imagePreviewWindowDefault.jpg");
-    background-color: $editor-background;
-    border-radius: 0.25rem;
     margin: 0;
     object-fit: contain;
     position: relative;
@@ -558,11 +557,7 @@ button.close {
     margin: 0 0 0 10px;
     text-align: left;
     resize: none;
-    background: $editor-background;
-}
-
-#postImageDescription:hover, #postImageDescription:focus {
-    background:white;
+    background: white;
 }
 
 @media(max-width:500px){
