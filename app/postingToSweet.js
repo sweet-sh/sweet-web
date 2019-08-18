@@ -80,15 +80,15 @@ module.exports = function(app) {
                         var finalFormat = "png";
                     }
 
-                    if(finalFormat!="gif"){
-                        //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
-                        //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
-                        var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
-                        thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
-                        thumbnails[thumbID] = thumbnail;
-                        thumbnails[thumbID+"type"] = finalFormat;
-                    }else{
-                        var thumbnail = undefined;
+                    //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
+                    //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                    var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                    thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                    thumbnails[""+thumbID] = thumbnail;
+                    thumbnails[thumbID+"type"] = finalFormat;
+                    var response = { url: imageUrl + '.' + finalFormat };
+                    if(thumbnail){
+                        response.thumbnail = "/api/image/thumbnailretrieval/"+thumbID++;
                     }
 
                     await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
@@ -96,10 +96,7 @@ module.exports = function(app) {
                             console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-                    var response = { url: imageUrl + '.' + finalFormat };
-                    if(thumbnail){
-                        response.thumbnail = "/api/image/thumbnailretrieval/"+thumbID++;
-                    }
+
                     res.setHeader('content-type', 'text/plain');
                     res.end(JSON.stringify(response));
                 } else {
@@ -119,6 +116,8 @@ module.exports = function(app) {
         if(thumbnails[req.params.id]){
             res.setHeader('content-type', 'image/'+thumbnails[req.params.id+"type"]);
             res.end(thumbnails[req.params.id]);
+            delete thumbnails[req.params.id];
+            delete thumbnails[req.params.id+"type"];
         }else{
             res.sendStatus(404);
         }
