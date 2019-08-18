@@ -17,6 +17,7 @@ $bright-green: #46e146; // Recently active user markers
 
 $sweet-red: #ce1717; // The Best Red (TM). Hovers, buttons, etc.
 $dark-red: darken($sweet-red, 10%);
+$lighter-pink: lighten($sweet-red, 50%);
 $lightest-pink: #fffafc;
 $light-pink: lighten($sweet-red, 40%);
 $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications

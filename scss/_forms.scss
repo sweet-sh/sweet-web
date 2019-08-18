@@ -431,10 +431,18 @@ button.close {
     cursor: text;
 }
 
+/* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
+.slidable-embed {
+    background: $lightest-grey!important;
+}
+.slidable-embed:hover {
+    background:$light-grey!important;
+}
+
 .image-preview-container {
     border-radius: 0.25rem;
-    padding: 7px;
-    background: linear-gradient(35deg, $dark-pink 0%, $dark-pink 35%, $sweet-red 45%, white 55%, $sweet-red 65%, $dark-pink 75%, $dark-pink 100%);
+    padding: 7px 2px;
+    border: solid 1px $medium-grey;
     display: flex;
     height: 125px;
     width: 100%;
@@ -462,22 +470,22 @@ button.close {
 }
 
 .ipc-group {
-    border-left: solid thin $light-pink;
-    border-right: solid thin $light-pink;
+    border: solid 1px $medium-grey;
+    border-left: solid 1px $medium-grey;
+    border-right: solid 1px $medium-grey;
     padding: 0.3rem;
     margin-bottom: 0;
     border-radius: 0px;
-    background: linear-gradient(90deg, $dark-pink 0%, $dark-pink 35%, $sweet-red 45%, white 55%, $sweet-red 65%, $dark-pink 75%, $dark-pink 100%);
 }
 
 .ipc-group-top {
-    border-top: solid thin $light-pink;
+    border-top: solid 1px $medium-grey;
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem;
 }
 
 .ipc-group-bottom {
-    border-bottom: solid thin $light-pink;
+    border-bottom: solid 1px $medium-grey;
     border-bottom-left-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
     margin-bottom: 0.5rem;
@@ -488,13 +496,12 @@ button.close {
     overflow: hidden;
     transition: all 0.2s ease;
     height: 100%;
-    border-radius: 4px;
-    border: solid 1px $sweet-red;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #ffffffee;
     background-image: url("/images/imagePreviewWindowDefault.jpg");
+    background-color: $editor-background;
+    border-radius: 0.25rem;
     margin: 0;
     object-fit: contain;
     position: relative;
@@ -514,7 +521,6 @@ button.close {
 
 .image-preview-controls>div {
     text-decoration: none;
-    color: $dark-grey;
     width: 1.5em;
     font-size: 2em;
     display: flex;
@@ -522,17 +528,18 @@ button.close {
     justify-content: center;
 }
 
-.image-preview-container .image-preview-controls>div{
-    color:white;
+.image-preview-controls>div{
+    color: white;
 }
 
 .image-preview-controls>div:hover {
-    color: black;
+    color: $darker-pink;
 }
 
-.image-preview-container .image-preview-controls>div:hover {
-    color: $sweet-red;
-}
+.image-preview-controls path{
+    stroke: $dark-pink;
+    stroke-width: 15;
+  }
 
 .image-clear {
     cursor: pointer;
@@ -551,6 +558,11 @@ button.close {
     margin: 0 0 0 10px;
     text-align: left;
     resize: none;
+    background: $editor-background;
+}
+
+#postImageDescription:hover, #postImageDescription:focus {
+    background:white;
 }
 
 @media(max-width:500px){
