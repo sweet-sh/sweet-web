@@ -434,9 +434,9 @@ button.close {
 /* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
 .slidable-embed {
     background: $editor-background!important;
-}
-.slidable-embed:hover {
-    background:$background-white!important;
+    &:hover {
+        background:$background-white!important;
+    }
 }
 
 .image-preview-container {
@@ -448,7 +448,7 @@ button.close {
     width: 100%;
     margin-bottom: 0.5rem;
     cursor: default;
-    transition: scale .1s ease-in-out, opacity .1s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
+    transition: scale .1s ease-in-out, opacity .1s ease-in-out, border .1s ease-in-out;
     -webkit-touch-callout: none;
     /* iOS Safari */
     -webkit-user-select: none;
@@ -461,6 +461,10 @@ button.close {
     /* Internet Explorer/Edge */
     user-select: none;
     /* Non-prefixed version, currently supported by Chrome and Opera */
+
+    &:not(.ipc-group){ //smoothly transition when separating the group; immediately snap-to when adding to the group
+        transition: margin-bottom .05s ease-in-out;
+    }
 }
 
 @media (max-width: 500px) {
@@ -525,16 +529,13 @@ button.close {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.image-preview-controls>div{
     color: white;
+    &:hover, &.in-use{
+        color: $darker-pink;
+    }
 }
 
-.image-preview-controls>div:hover {
-    color: $darker-pink;
-}
-
+/* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
 .image-preview-controls path{
     stroke: $dark-pink;
     stroke-width: 15;
@@ -573,6 +574,7 @@ button.close {
 
 .embedspacer {
     background: white;
+    border: dashed 1px $medium-grey;
 }
 
 /* uploader for other images (profile picture, community icon...i think that's it? */

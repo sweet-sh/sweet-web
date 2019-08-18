@@ -575,6 +575,7 @@
 
     function mousedownOnHandle(mouseDownEvent) {
         mouseDownEvent.preventDefault();
+        $(this).addClass('in-use');
         var selectedEmbed = $(this).parent().parent();
 
         //turms selectedEmbed into a spacer element. floatyEmbed is going to contain the embed now instead.
@@ -648,10 +649,16 @@
     //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
     function prepareEmbedForMoving(selectedEmbed) {
 
+        var spacer = selectedEmbed;
+
         var floatingVersion = selectedEmbed.clone(false);
         floatingVersion.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
         floatingVersion.find('.image-move').on('mousedown', mousedownOnHandle);
         floatingVersion.find('.image-clear').click(clearEmbed);
+        
+        floatingVersion.css("width", spacer.outerWidth(true) + "px");
+        floatingVersion.css("left", spacer.offset().left + "px");
+        floatingVersion.css("top", getTop(spacer) + "px");
 
         var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
         selectedEmbed.removeClass(groupClasses);
@@ -666,24 +673,18 @@
             below = below.next('.image-preview-container');
         }
 
-        var spacer = selectedEmbed;
-
         spacer.addClass("embedspacer");
         spacer.attr('id', '');
-
-        floatingVersion.css("width", spacer.outerWidth(true) + "px");
-        floatingVersion.css("left", spacer.offset().left + "px");
-        floatingVersion.css("top", getTop(spacer) + "px");
 
         $('body').append(floatingVersion);
 
         //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
         floatingVersion.css("position", "fixed");
         floatingVersion.css("z-index", 2147483647); // over 9000
+        floatingVersion.removeClass(groupClasses);
 
         floatingVersion.addClass("onthemove");
 
-        spacer.css("border", "dashed")
         spacer.empty();
 
         floatingVersion[0].scrollPrompterId = setInterval(function() { scrollPrompter(floatingVersion, spacer.closest('.ql-editor')) }, 50);
@@ -780,6 +781,7 @@
             $('.embedspacer').after($('.onthemove'));
             floatingEmbed.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
             floatingEmbed.removeClass("onthemove");
+            floatingEmbed.find('.image-move').removeClass('in-use');
             var spacer = $('.embedspacer');
             spacer.remove();
             createImageGroups(floatingEmbed.closest('.ql-editor'));
