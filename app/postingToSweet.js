@@ -10,11 +10,13 @@ module.exports = function(app) {
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
-    //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
-    //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
-    var thumbnails = {};
-    var thumbID = 0;
-    app.post("/api/image/v2", isLoggedInOrRedirect, async function(req, res) {
+    //or resized, compressed, maybe flattened, and saved according to the user's image uploa settings. Saves to the temp folder; when a post or comment is actually completed,
+    //it's moved to the image folder that post images are loaded from upon being displayed. A thumbnail version is also saved in the thumbnails object, for retrieval through the
+    //below function at /api/image/thumbnailretrieval/:id. A response is sent back with the image's future filename, which identifies it so it can be folded into the saved post when
+    //the post is submitted, and also the url for retrieving the thumbnail.
+    var thumbnails = {}; //stores array buffers with unique keys and the types of the images they represent at id+"type"
+    var thumbID = 0; //used to create unique keys in the thumbnails object for each successive generated thumbnail; incremented every time it's used
+    app.post("/api/image/v2", isLoggedInOrErrorResponse, async function(req, res) {
         var imageQualitySettingsArray = {
             'standard': {
                 resize: 1200,
@@ -117,6 +119,8 @@ module.exports = function(app) {
         if(thumbnails[req.params.id]){
             res.setHeader('content-type', 'image/'+thumbnails[req.params.id+"type"]);
             res.end(thumbnails[req.params.id]);
+        }else{
+            res.sendStatus(404);
         }
     })
 
