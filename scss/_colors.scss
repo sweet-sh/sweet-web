@@ -20,7 +20,7 @@ $dark-red: darken($sweet-red, 10%);
 $lightest-pink: #fffafc;
 $light-pink: lighten($sweet-red, 40%);
 $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
-$dark-pink: lighten($sweet-red, 20%);
+$dark-pink: lighten($sweet-red, 20%); // ...why is dark pink darker than darker pink
 
 $highlight: $lightest-pink;
 $placeholder: $dark-grey;
