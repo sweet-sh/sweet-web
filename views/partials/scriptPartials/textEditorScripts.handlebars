@@ -30,7 +30,7 @@
     //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
     function clearEmbed(e) {
         var container = $(this).closest('.slidable-embed');
-        if(container.hasClass('image-preview-container') && !container.attr('imagealreadysaved')){
+        if(container.hasClass('image-preview-container') && !container.attr('imagealreadysaved') && !container.hasClass('still-loading')){
             $.post('/cleartempimage',{imageURL: container.attr('image-url')});
         }
         var quillController = container.closest('.ql-container')[0].__quill;
@@ -231,7 +231,18 @@
                         m.find('.image-clear').click();
                     } else {
                         if (serverResponse.thumbnail) {
-                            m.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+                            $.get({
+                                url: serverResponse.thumbnail,
+                                success: function(data) {
+                                    m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit                                
+                                },
+                                processData: false,
+                                xhr: function() {
+                                    var uploader = new XMLHttpRequest();
+                                    uploader.responseType = 'blob';
+                                    return uploader;
+                                }
+                            })
                         }
                         m.find('.fader').remove();
                         m.attr('image-url', serverResponse.url);

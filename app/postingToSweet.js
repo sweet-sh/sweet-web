@@ -12,6 +12,8 @@ module.exports = function(app) {
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
     //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
+    var thumbnails = {};
+    var thumbID = 0;
     app.post("/api/image/v2", isLoggedInOrRedirect, async function(req, res) {
         var imageQualitySettingsArray = {
             'standard': {
@@ -76,17 +78,26 @@ module.exports = function(app) {
                         var finalFormat = "png";
                     }
 
-                //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
-                    //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
-                    var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
-                    thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                    if(finalFormat!="gif"){
+                        //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
+                        //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                        var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                        thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                        thumbnails[thumbID] = thumbnail;
+                        thumbnails[thumbID+"type"] = finalFormat;
+                    }else{
+                        var thumbnail = undefined;
+                    }
 
                     await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
                         .catch(err => {
                             console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-                    var response = { url: imageUrl + '.' + finalFormat, thumbnail: "data:image/" + finalFormat + ";base64," + thumbnail.toString('base64')};
+                    var response = { url: imageUrl + '.' + finalFormat };
+                    if(thumbnail){
+                        response.thumbnail = "/api/image/thumbnailretrieval/"+thumbID++;
+                    }
                     res.setHeader('content-type', 'text/plain');
                     res.end(JSON.stringify(response));
                 } else {
@@ -99,6 +110,13 @@ module.exports = function(app) {
                 res.setHeader('content-type', 'text/plain');
                 res.end(JSON.stringify({ error: "filesize" }));
             }
+        }
+    })
+
+    app.get("/api/image/thumbnailretrieval/:id",function(req,res){
+        if(thumbnails[req.params.id]){
+            res.setHeader('content-type', 'image/'+thumbnails[req.params.id+"type"]);
+            res.end(thumbnails[req.params.id]);
         }
     })
 
