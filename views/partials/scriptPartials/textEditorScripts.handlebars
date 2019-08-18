@@ -661,29 +661,19 @@
         floatingVersion.css("top", getTop(spacer) + "px");
 
         if(selectedEmbed.hasClass('ipc-group')){
-            var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
-            selectedEmbed.removeClass(groupClasses);
-            var above = selectedEmbed.prev('.image-preview-container');
-            while (above.length) {
-                above.removeClass(groupClasses);
-                above = above.prev('.image-preview-container');
-            }
-            var below = selectedEmbed.next('.image-preview-container');
-            while (below.length) {
-                below.removeClass(groupClasses);
-                below = below.next('.image-preview-container');
-            }
+            createImageGroups(selectedEmbed.parent());
         }
 
         spacer.addClass("embedspacer");
         spacer.attr('id', '');
+        spacer.removeClass('ipc-group ipc-group-top ipc-group-bottom')
 
         $('body').append(floatingVersion);
 
         //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
         floatingVersion.css("position", "fixed");
         floatingVersion.css("z-index", 2147483647); // over 9000
-        floatingVersion.removeClass(groupClasses);
+        floatingVersion.removeClass('ipc-group ipc-group-top ipc-group-bottom');
 
         floatingVersion.addClass("onthemove");
 
@@ -771,6 +761,8 @@
                 }
             }
         }
+
+        createImageGroups(spacer.parent());
     }
 
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot. it's all called to just
@@ -792,27 +784,29 @@
 
     function createImageGroups(qlEditorElement) {
         var kids = qlEditorElement.children();
-        kids.removeClass('ipc-group ipc-group-top ipc-group-bottom'); //reset. this is not very well optimized, the loop below could be added to to just remove specific    classes where necessary
         var containersInARow = 0;
         for (var i = 0; i < kids.length; i++) {
-            if ($(kids[i]).hasClass('image-preview-container')) {
+            var kid = $(kids[i]);
+            if (kid.hasClass('image-preview-container') && !kid.hasClass('embedspacer')) {
                 containersInARow++;
                 if (containersInARow > 1) {
                     if (containersInARow == 2) {
-                        $(kids[i - 1]).addClass('ipc-group ipc-group-top');
+                        $(kids[i - 1]).addClass('ipc-group ipc-group-top').removeClass('ipc-group-bottom');
                     } else {
-                        $(kids[i - 1]).addClass('ipc-group');
+                        $(kids[i - 1]).addClass('ipc-group').removeClass('ipc-group-top ipc-group-bottom');
                     }
                 }
             } else {
                 if (containersInARow > 1) {
-                    $(kids[i - 1]).addClass('ipc-group ipc-group-bottom');
+                    $(kids[i - 1]).addClass('ipc-group ipc-group-bottom').removeClass('ipc-group-top');
+                }else if(containersInARow==1){
+                    $(kids[i - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
                 }
                 containersInARow = 0;
             }
         }
         if (containersInARow > 1) {
-            $(kids[kids.length - 1]).addClass('ipc-group ipc-group-bottom');
+            $(kids[kids.length - 1]).addClass('ipc-group ipc-group-bottom').removeClass('ipc-group-top');
         } else if (containersInARow == 1) {
             $(kids[kids.length - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
         }

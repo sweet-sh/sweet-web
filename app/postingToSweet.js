@@ -76,7 +76,7 @@ module.exports = function(app) {
                         var finalFormat = "png";
                     }
 
-                    //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or a is png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
+                //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
                     //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
                     var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
                     thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
