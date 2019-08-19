@@ -155,7 +155,7 @@ module.exports = function(app) {
         for (var inline of parsedResult.inlineElements) {
             if (inline.type == "image(s)") {
                 //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : user), req.user._id, imagePrivacy, req.user.settings.imageQuality);
+                var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : req.body.isDraft ? "draft" : "original"), req.body.communityId, req.user._id, imagePrivacy, req.user.settings.imageQuality);
                 inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
                 inline.imageIsVertical = horizOrVertics.imageIsVertical;
             }
@@ -351,7 +351,7 @@ module.exports = function(app) {
                 for (var inline of parsedResult.inlineElements) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality);
                         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
                         inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }
@@ -925,6 +925,9 @@ module.exports = function(app) {
         if (post.community) {
             var imagePrivacy = (await Community.findById(post.community)).settings.visibility;
             var imagePrivacyChanged = false;
+        } else if(post.type=="draft"){
+            var imagePrivacy = "private";
+            var imagePrivacyChanged = false;
         } else {
             var imagePrivacy = req.body.postPrivacy;
             var imagePrivacyChanged = !(imagePrivacy == post.privacy);
@@ -939,12 +942,12 @@ module.exports = function(app) {
                 for (var i = 0; i < e.images.length; i++) {
                     currentPostImages.push(e.images[i]);
                     if (!oldPostImages.includes(e.images[i])) {
-                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
+                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
                         e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
                         e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
                     } else if (!post.imageVersion || post.imageVersion < 2) {
                         //finalize images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
-                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/');
+                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/');
                         e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
                         e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
                     } else {
@@ -1029,6 +1032,7 @@ module.exports = function(app) {
             post.lastEdited = undefined;
             post.type = "original";
             newHTML = "<p>Pᴏsᴛ Pᴜʙʟɪsʜᴇᴅ</p>";
+
         }
 
         console.log(post)
