@@ -540,6 +540,41 @@ module.exports = function(app) {
         }
     })
 
+    app.get('/drafts/:olderthanthis', isLoggedInOrRedirect, function(req,res){
+        Post.find({type:"draft",author:req.user._id,timestamp:{$lt:new Date(parseInt(req.params.olderthanthis))}})
+        .sort('-timestamp').limit(10).populate('author').then(async posts=>{
+            if(!posts.length){
+                res.sendStatus(404);
+            }else{
+                for(var post of posts){
+                    await keepCachedHTMLUpToDate(post);
+                    post.internalPostHTML = post.cachedHTML.fullContentHTML;
+                    post.commentsDisabled = true;
+                    post.isYourPost = true;
+                    var momentTimestamp = moment(post.timestamp);
+                    if (momentTimestamp.isSame(moment(), 'd')) {
+                        post.parsedTimestamp = momentTimestamp.fromNow();
+                    } else if (momentTimestamp.isSame(moment(), 'y')) {
+                        post.parsedTimestamp = momentTimestamp.format('D MMM');
+                    } else {
+                        post.parsedTimestamp = momentTimestamp.format('D MMM YYYY');
+                    }
+                    post.fullTimestamp = momentTimestamp.calendar();
+                }
+                res.render('partials/posts_v2', {
+                    layout: false,
+                    loggedIn: true,
+                    loggedInUserData: req.user,
+                    posts: posts,
+                    context: "drafts",
+                    canReply: false,
+                    isMuted: false,
+                    oldesttimestamp: posts[posts.length-1].timestamp.getTime()+""
+                })
+            }
+        })
+    })
+
     //Responds to a get response for a specific post.
     //Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
     //Outputs: showposts handles it!
@@ -685,13 +720,15 @@ module.exports = function(app) {
                             $in: myCommunities
                         }
                     }
-                ]
+                ],
+                type: {$ne: 'draft'}
             };
             var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
         } else if (req.params.context == "user") {
             //if we're on a user's page, obviously we want their posts:
             var matchPosts = {
                 author: req.params.identifier,
+                type: {$ne: 'draft'}
             }
             //but we also only want posts if they're non-community or they come from a community that we belong to:
             if (req.isAuthenticated()) {
@@ -729,7 +766,7 @@ module.exports = function(app) {
             function getTag() {
                 return Tag.findOne({ name: req.params.identifier })
                     .then((tag) => {
-                        var matchPosts = { _id: { $in: tag.posts } }
+                        var matchPosts = { _id: { $in: tag.posts }, type: {$ne: "draft"} }
                         return matchPosts;
                     })
             }
@@ -739,7 +776,8 @@ module.exports = function(app) {
             var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }));
             var matchPosts = {
                 author: author ? author._id : undefined, //won't find anything if the author corresponding to the username couldn't be found
-                url: req.params.identifier
+                url: req.params.identifier,
+                type: {$ne:"draft"}
             }
             var sortMethod = "-lastUpdated" //this shouldn't matter oh well
         }
@@ -750,7 +788,7 @@ module.exports = function(app) {
         }
 
         if (req.params.context != "single") {
-            //in feeds, we only want posts older than ("less than") the paramater sent in, with age being judged by the currently active sorting method.
+            //in feeds, we only want posts older than ("less than") the parameter sent in, with age being judged by the currently active sorting method.
             matchPosts[sortMethod.substring(1, sortMethod.length)] = { $lt: olderthanthis };
         }
 
@@ -1244,11 +1282,7 @@ module.exports = function(app) {
             visibleSidebarArray: ['profileOnly', 'profileAndPosts']
         });
     });
-
-    app.get("/api/suggestions/users", isLoggedInOrRedirect, function(req, res) {
-
-    })
-
+    
     //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
     //to seen=true
     //Input:

@@ -105,6 +105,7 @@ select {
     &.outline-button {
         color: $darkest-grey;
         background-color: $light-grey;
+        margin-bottom: .75rem;
         &:hover {
             background: $dark-grey;
             color: $background-white;

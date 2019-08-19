@@ -88,23 +88,40 @@
 
 
 <script>
-  function startInfiniteScroll(){
-$('#postsContainer').infiniteScroll({
-  path: function() {
-    if ($(".oldesttimestamp").length) {
-        //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-        return '/showposts/user/{{profileData._id}}/' + $(".oldesttimestamp").last().html();
+    draftsMode = false;
+    function startInfiniteScroll() {
+        $('#postsContainer').infiniteScroll({
+            path: function() {
+                if ($(".oldesttimestamp").length) {
+                    //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+                    return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
+                }
+                //and then this is for when the feed is currently empty and being loaded/reloaded
+                return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
+            },
+            append: '.post',
+            prefill: true,
+            history: false,
+            status: '.page-load-status'
+        });
     }
-    //and then this is for when the feed is currently empty and being loaded/reloaded
-    return '/showposts/user/{{profileData._id}}/' + needPostsOlderThan;
-  },
-  append: '.post',
-  prefill: true,
-  history: false,
-  status: '.page-load-status'
-});
-  }
-  startInfiniteScroll();
+    startInfiniteScroll();
+    {{#if isOwnProfile}}
+    $(function() {
+        $("#switch-to-drafts").click(function(e) {
+            e.preventDefault();
+            if(!draftsMode){
+              draftsMode = true;
+              $(this).html('<i class="far fa-sticky-note"></i> Posts');
+              restartInfiniteScroll();
+            }else{
+              draftsMode = false;
+              $(this).html('<i class="fas fa-drafting-compass"></i> Drafts');
+              restartInfiniteScroll();
+            }
+        })
+    })
+    {{/if}}
 </script>
 
 {{> profilescripts}}

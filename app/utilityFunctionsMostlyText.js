@@ -230,7 +230,7 @@ module.exports = {
                 })
 
                 var metadata = await sharp('./cdn/images/' + imageFileName).metadata()
-                image = new Image({
+                var image = new Image({
                     //posts' types are either original or community; the image's contexts are either user or community, meaning the same things.
                     context: postType=="original" ? "user" : "community",
                     filename: imageFileName,

@@ -8,6 +8,8 @@ function restartInfiniteScroll(timestamp){
   if(!timestamp){
     timestamp = new Date().getTime();
   }
+  $(".infinite-scroll-last, .infinite-scroll-error").css('display','none');
+  $(".infinite-scroll-request").css('display','block');
   var postsContainer = $('#postsContainer');
     postsContainer.fadeOut(250,function(){
       postsContainer.html("");
@@ -15,6 +17,7 @@ function restartInfiniteScroll(timestamp){
       postsContainer.infiniteScroll("destroy");
       postsContainer[0].fadedOut = true;
       startInfiniteScroll();
+      $(".page-load-status").css('display','block');
     });
   }
 
@@ -62,6 +65,7 @@ $(function(){
         cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
       }
       cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
+      cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
     }
   });
   $('body').on('change',"#postPrivacy-public, #editPostPrivacy-public", function(){
@@ -73,6 +77,19 @@ $(function(){
         cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
       }
       cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
+      cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
+    }
+  });
+  $('body').on('change',"#pseudoPrivacy-draft, #editPseudoPrivacy-draft", function(){
+    if (this.checked) {
+      var cont = $(this).closest('.contentForm');
+      if($(window).width() > 350){
+        cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i> Draft");
+      }else{
+        cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
+      }
+      cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
+      cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
     }
   });
   $('body').on('click',"#emojiWindowButton", function(){
@@ -143,23 +160,32 @@ $(function(){
           var postID = editModal.attr('data-post-id');
           var contentWarnings = cont.find('#postContentWarnings').val().trim();
           var originalPrivacy = editModal.attr('data-original-privacy');
+          var currentPrivacy = ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private');
+          var wasDraft = editModal.attr('data-is-draft');
+          var isDraft = $("#editPseudoPrivacy-draft").is(":checked");
           $.post('/saveedits/' + postID, {
               postContent: JSON.stringify(content),
               postContentWarnings: contentWarnings,
-              postPrivacy: ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private')
+              postPrivacy: currentPrivacy,
+              isDraft: isDraft ? true : ""
           }).done(function(newPostHTML) {
-              var privacyChanged = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') !== originalPrivacy);
+              var privacyChanged = (currentPrivacy !== originalPrivacy || (wasDraft && !isDraft));
               var contentContainer = postContainer.children('.content');
               if(contentWarnings){
                 contentContainer.addClass('content-warning-post');
               }
               if (privacyChanged){
-                  var newPrivacyHtml = (($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private') == "public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
+                  var newPrivacyHtml = (isDraft ? '<i class="fa fa-drafting-compass"></i>' : currentPrivacy=="public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
                   postContainer.find(".post-visibility").html(newPrivacyHtml)
               }
-              postHasEditedTag = !!(postContainer.find(".metadata").find('.post-edited').length);
-              if (!postHasEditedTag){
-                  postContainer.find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
+              if(wasDraft && !isDraft){
+                postContainer.find(".metadata").find('.post-edited').remove();
+                postContainer.find('.toolbar').remove();
+              }else{
+                postHasEditedTag = !!(postContainer.find(".metadata").find('.post-edited').length);
+                if (!postHasEditedTag && !(wasDraft && !isDraft)){
+                    postContainer.find(".metadata").append('&nbsp;&middot;&nbsp;<span class="post-edited">Edited</span>');
+                }
               }
               contentContainer.html(newPostHTML);
               //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
@@ -280,7 +306,8 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         type: 'POST',
         data: {
           communityId: $('#postForm').attr("communityId"),
-          postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'),
+          isDraft: $("#pseudoPrivacy-draft").is(":checked"),
+          postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
           postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
           postContentWarnings: $('#postContentWarnings').val(),
         }
@@ -289,11 +316,17 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         $("#postContentWarningsContainer").slideUp("fast");
         $("#new-post-emoji-picker").slideUp("fast");
         $(".link-form-cont").slideUp("fast");
-        editor.find(".ql-editor").html("");
-        haveWeSentPost = false;
-        restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
+        var innerEditor = editor.find(".ql-editor");
+        innerEditor.html("");
+        if(!$("#pseudoPrivacy-draft").is(":checked") || draftsMode){
+          restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
+        }else{
+          innerEditor.attr("data-placeholder", "Post saved to drafts");
+          innerEditor.focus(function(){
+            innerEditor.attr("data-placeholder", editor[0].__quill.options.placeholder); //it's late. this will retrieve the editor's original placeholder
+          })
+        }
       });
-      haveWeSentPost = true;
     } else {
       bootbox.alert("This post appears to be... empty");
     }

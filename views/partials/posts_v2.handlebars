@@ -1,5 +1,6 @@
 {{#each posts}}
 <article class="post" data-post-id="{{this._id}}">
+    {{#isnt this.type "draft"}}
     <aside class="notifications">
         {{#if recentlyCommented}}
             {{#isnt lastCommentAuthor.username ../loggedInUserData.username}}
@@ -28,6 +29,7 @@
             {{/if}}
         {{/isnt}}
     </aside>
+    {{/isnt}}
     <header>
         <div class="post-header-left">
             <a href="/{{this.author.username}}">
@@ -54,7 +56,11 @@
                 </span>
                 &nbsp;&middot;&nbsp;
                 <span class="post-visibility">
+                    {{#eq this.type "draft"}}
+                    <i class="fas fa-drafting-compass"></i>
+                    {{else}}
                     {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash"></i>{{/eq}}
+                    {{/eq}}
                 </span>
                 {{#if lastEdited}}
                 &nbsp;&middot;&nbsp;
@@ -114,6 +120,7 @@
                 {{/isnt}}
             {{/if}}
         {{/eq}}
+        {{#isnt this.type "draft"}}
         <div class="toolbar-button-container">
             <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
                 <span class="fa-layers">
@@ -135,6 +142,7 @@
                 </button>
             </div>
         {{/contains}}
+        {{/isnt}}
         {{#if isYourPost}}
             <div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button edit-post">

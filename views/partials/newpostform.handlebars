@@ -24,6 +24,8 @@
         <label for="postPrivacy-public" id="publicPrivacyLabel"><i class='fas fa-eye'></i></label>
         <input type="radio" id="postPrivacy-private" name="postPrivacy" value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}checked{{/eq}}/>
         <label for="postPrivacy-private" id="privatePrivacyLabel"><i class='fas fa-eye-slash'></i></label>
+        <input type="radio" id="pseudoPrivacy-draft" name="postPrivacy" value="draft"/>
+        <label for="pseudoPrivacy-draft" id="draftLabel"><i class='fas fa-drafting-compass'></i></label>
       </div>
     </div>
     {{/unless}}

@@ -209,7 +209,7 @@ $(function() {
     bootbox.confirm("Are you sure you want to delete this post?", function(result){
       if (result == true) {
         let divToDelete = element.closest(".post");
-        $.post("/deletepost/"+element.attr("id"), function(data) {
+        $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
           divToDelete.fadeOut(function() {
             divToDelete.remove();
           });

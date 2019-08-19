@@ -171,7 +171,7 @@ module.exports = function(app) {
         var isCommunityPost = !!req.body.communityId;
 
         var post = new Post({
-            type: isCommunityPost ? 'community' : 'original',
+            type: isCommunityPost ? 'community' : req.body.isDraft ? 'draft' : 'original',
             community: isCommunityPost ? req.body.communityId : undefined,
             authorEmail: req.user.email,
             author: req.user._id,
@@ -863,6 +863,7 @@ module.exports = function(app) {
                             contentWarnings: post.contentWarnings,
                             privacy: post.privacy,
                             isCommunityPost: isCommunityPost,
+                            isDraft: post.type=="draft",
                             postID: post._id.toString()
                         })
                         .then(async html => {
@@ -880,7 +881,6 @@ module.exports = function(app) {
     })
 
     app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function(req, res) {
-        console.log("postPrivacy", req.body.postPrivacy)
         var post = await Post.findById(req.params.postid);
         if (!post.author._id.equals(req.user._id)) {
             return res.sendStatus(403);
@@ -1010,17 +1010,27 @@ module.exports = function(app) {
         post.cachedHTML.fullContentHTML = newHTML;
 
         post.contentWarnings = req.body.postContentWarnings;
-
-        if (post.type == "original") {
-            post.privacy = req.body.postPrivacy;
-        }
-
+        
         if (req.body.postContentWarnings) {
             //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
             newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
                 '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
                 '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
         }
+
+        if (post.type == "original" || post.type == "draft") {
+            post.privacy = req.body.postPrivacy;
+        }
+
+        if(post.type == "draft" && !req.body.isDraft){
+            var timePublished = new Date();
+            post.timestamp = timePublished;
+            post.lastUpdated = timePublished;
+            post.lastEdited = undefined;
+            post.type = "original";
+            newHTML = "<p>Pᴏsᴛ Pᴜʙʟɪsʜᴇᴅ</p>";
+        }
+
         console.log(post)
         post.save().then(() => {
             res.contentType("text/html");
