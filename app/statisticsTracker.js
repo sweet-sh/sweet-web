@@ -36,7 +36,7 @@ module.exports = function (app, mongoose) {
                                 "<hr>" +
                                 "<h5>Last 24 hours</h5>" +
                                 "<strong>Posts</strong> " + posts.length + "<br>" +
-                            "<br>" +
+                            "<br>";
                             res.status(200).send(funstats);
                         })
                     })
