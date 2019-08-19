@@ -185,7 +185,7 @@ module.exports = function(app) {
             authorEmail: req.user.email,
             author: req.user._id,
             url: newPostUrl,
-            privacy: isCommunityPost ? 'public' : isDraft ? "private" : req.body.postPrivacy,
+            privacy: isCommunityPost ? 'public' : req.body.isDraft ? "private" : req.body.postPrivacy,
             timestamp: postCreationTime,
             lastUpdated: postCreationTime,
             rawContent: req.body.postContent,
