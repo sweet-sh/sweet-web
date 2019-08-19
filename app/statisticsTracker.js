@@ -25,18 +25,6 @@ module.exports = function (app, mongoose) {
                                 $gte: new Date(new Date().setDate(new Date().getDate() - 1))
                             }
                         }).then(posts => {
-                            var daysImages = 0;
-                            var daysReplies = 0;
-                            posts.forEach(post => {
-                                var imageCount = post.images.length;
-                                post.comments.forEach(comment => {
-                                    if (comment.images) {
-                                        imageCount += comment.images.length;
-                                    }
-                                })
-                                daysImages += imageCount;
-                                daysReplies += post.comments.length;
-                            });
                             var funstats =
                                 "<strong>Uptime</strong> " + uptime + "<br>" +
                                 "<strong>Active sessions</strong> " + numberOfActiveSessions + "<br>" +
@@ -48,8 +36,6 @@ module.exports = function (app, mongoose) {
                                 "<hr>" +
                                 "<h5>Last 24 hours</h5>" +
                                 "<strong>Posts</strong> " + posts.length + "<br>" +
-                                "<strong>Images</strong> " + daysImages + "<br>" +
-                                "<strong>Comments</strong> " + daysReplies;
                             "<br>" +
                             res.status(200).send(funstats);
                         })
@@ -110,13 +96,13 @@ module.exports = function (app, mongoose) {
     app.get("/admin/allstats", function (req, res) {
         if (req.isAuthenticated()) {
             res.render('asyncPage', {
-                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph", "/admin/justactiveusersgraph"],
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
                 loggedIn: true,
                 loggedInUserData: req.user
             });
         } else {
             res.render('asyncPage', {
-                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph", "/admin/justactiveusersgraph"],
+                getUrl: ["/admin/juststats", "/admin/justpostgraph", "/admin/justusergraph"],
                 loggedIn: false
             });
         }
@@ -410,6 +396,78 @@ async function rebuildUserTable(startDate) {
     userCountByDay = [];
 }
 
+
+
+//this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
+//decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
+//should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
+async function parseTableForGraph(filename, collection, callbackForCurrentY, endOfDay = true) {
+    var jsonVersion = [];
+    //reads in file values
+    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
+        if (line && line !== "\n") {
+            var lineComps = line.split(",");
+            jsonVersion.push({
+                label: lineComps[0],
+                year: lineComps[1],
+                month: lineComps[2],
+                date: lineComps[3],
+                hour: endOfDay ? 23 : 0,
+                minute: endOfDay ? 59 : 0,
+                second: endOfDay ? 59 : 0,
+                y: lineComps[4]
+            });
+        }
+    };
+    //add in a datapoint representing the current exact second, if we have a source to obtain it from
+    var now = new Date();
+    if (collection) {
+        var numberOfDocs = await collection.countDocuments();
+    } else if (callbackForCurrentY) {
+        var numberOfDocs = await callbackForCurrentY();
+    } else {
+        return jsonVersion;
+    }
+    jsonVersion.push({
+        label: numberOfDocs == 69 ? "nice" : now.toLocaleString(),
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        date: now.getDate(),
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+        second: now.getSeconds(),
+        y: numberOfDocs
+    });
+    return jsonVersion;
+}
+
+//this takes the datpoints type thing above and takes the derivative by subtracting the last date
+function getPerDayRate(datapoints) {
+    var newpoints = [];
+    var previousPoint = undefined;
+    for (const point of datapoints) {
+        var y = point.y;
+        if (previousPoint) {
+            y -= previousPoint;
+        }
+        newpoints.push({
+            label: point.label,
+            year: point.year,
+            month: point.month,
+            date: point.date,
+            hour: point.hour,
+            minute: point.minute,
+            second: point.second,
+            y: y
+        });
+        previousPoint = point.y;
+    }
+    return newpoints;
+}
+
+//==============================================the following doesn't work right now bc it doesn't look at nested comments======================================================
+
+
 //Creates a file that contains dates and the number of users that made a post or comment during the [interval] day period ending at that date. Starts from the earliest post or the
 //last line in the existing file (startDate). This function figures out how many users were active during each [interval] day interval starting at the end of the day that
 //the first post was posted on and finishing on the most recent date that's the start date plus a multiple of [interval].
@@ -560,71 +618,4 @@ async function getActiveUsersSinceLastSave() {
     var lastLineSplit = lastLine.split(',');
     var lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 0, 0, 0, 0);
     return await getActiveUsersForInterval(lastSave, new Date());
-}
-
-//this is called when the file is finished and it's time to turn it's csv data into json for handlebars to parse. there's probably a
-//decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
-//should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
-async function parseTableForGraph(filename, collection, callbackForCurrentY, endOfDay = true) {
-    var jsonVersion = [];
-    //reads in file values
-    for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
-        if (line && line !== "\n") {
-            var lineComps = line.split(",");
-            jsonVersion.push({
-                label: lineComps[0],
-                year: lineComps[1],
-                month: lineComps[2],
-                date: lineComps[3],
-                hour: endOfDay ? 23 : 0,
-                minute: endOfDay ? 59 : 0,
-                second: endOfDay ? 59 : 0,
-                y: lineComps[4]
-            });
-        }
-    };
-    //add in a datapoint representing the current exact second, if we have a source to obtain it from
-    var now = new Date();
-    if (collection) {
-        var numberOfDocs = await collection.countDocuments();
-    } else if (callbackForCurrentY) {
-        var numberOfDocs = await callbackForCurrentY();
-    } else {
-        return jsonVersion;
-    }
-    jsonVersion.push({
-        label: numberOfDocs == 69 ? "nice" : now.toLocaleString(),
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        date: now.getDate(),
-        hour: now.getHours(),
-        minute: now.getMinutes(),
-        second: now.getSeconds(),
-        y: numberOfDocs
-    });
-    return jsonVersion;
-}
-
-//this takes the datpoints type thing above and takes the derivative by subtracting the last date
-function getPerDayRate(datapoints) {
-    var newpoints = [];
-    var previousPoint = undefined;
-    for (const point of datapoints) {
-        var y = point.y;
-        if (previousPoint) {
-            y -= previousPoint;
-        }
-        newpoints.push({
-            label: point.label,
-            year: point.year,
-            month: point.month,
-            date: point.date,
-            hour: point.hour,
-            minute: point.minute,
-            second: point.second,
-            y: y
-        });
-        previousPoint = point.y;
-    }
-    return newpoints;
 }

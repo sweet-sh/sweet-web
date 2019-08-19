@@ -1021,10 +1021,6 @@ module.exports = function(app) {
                 '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
         }
 
-        if (post.type == "original" || post.type == "draft") {
-            post.privacy = req.body.postPrivacy;
-        }
-
         if(post.type == "draft" && !req.body.isDraft){
             var timePublished = new Date();
             post.timestamp = timePublished;
@@ -1032,7 +1028,14 @@ module.exports = function(app) {
             post.lastEdited = undefined;
             post.type = "original";
             newHTML = "<p>Pᴏsᴛ Pᴜʙʟɪsʜᴇᴅ</p>";
+        }
 
+        if (post.type == "original") {
+            post.privacy = req.body.postPrivacy;
+        }else if(post.type == "draft"){
+            post.privacy = "private"; //the client should send is this in req.body.postPrivacy but, just to be sure
+        }else if(post.type == "community"){
+            post.privacy = "public";
         }
 
         console.log(post)
