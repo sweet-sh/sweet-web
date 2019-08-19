@@ -146,9 +146,18 @@ module.exports = function(app) {
 
         var parsedResult = await helper.parseText(JSON.parse(req.body.postContent));
 
+        //don't save mentions or tags for draft posts, this means that notifications and tag adding will be deferred until the post is published and at that point
+        //all of the mentions and tags will register as "new" and so the right actions will occur then
+        if(req.body.isDraft){
+            parsedResult.mentions = [];
+            parsedResult.tags = [];
+        }
+
         if (req.body.communityId) {
             var imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility;
-        } else {
+        } else if(req.body.isDraft){
+            var imagePrivacy = "private"; //this should already be stored in req.body.postPrivacy but just in case
+        }else{
             var imagePrivacy = req.body.postPrivacy;
         }
 
@@ -176,7 +185,7 @@ module.exports = function(app) {
             authorEmail: req.user.email,
             author: req.user._id,
             url: newPostUrl,
-            privacy: isCommunityPost ? 'public' : req.body.postPrivacy,
+            privacy: isCommunityPost ? 'public' : isDraft ? "private" : req.body.postPrivacy,
             timestamp: postCreationTime,
             lastUpdated: postCreationTime,
             rawContent: req.body.postContent,
@@ -894,6 +903,13 @@ module.exports = function(app) {
         post.lastEdited = new Date();
         post.rawContent = req.body.postContent;
         post.parsedContent = parsedPost.text;
+
+        //don't save mentions or tags for draft posts, this means that notifications and tag adding will be deferred until the post is published and at that point
+        //all of the mentions and tags will register as "new" and so the right actions will occur then
+        if(req.body.isDraft){
+            parsedPost.mentions = [];
+            parsedPost.tags = [];
+        }
 
         //process images added to/deleted from the post, retrieve/find orientations. its spaghetti, i know. the imageIsVertical and imageIsHorizontal database fields should
         //really be combined into a single imageOrientationType field that just stores either 'vertical-image', 'horizontal-image', or a blank string for each image.
