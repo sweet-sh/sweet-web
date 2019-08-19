@@ -1027,7 +1027,7 @@ module.exports = function(app) {
             post.lastUpdated = timePublished;
             post.lastEdited = undefined;
             post.type = "original";
-            newHTML = "<p>Pᴏsᴛ Pᴜʙʟɪsʜᴇᴅ</p>";
+            newHTML = "<p>ǹ̵̡͎̗͕̝̬̯̰̘̑̿̾̎̊͑͌̕͝͝ͅj̸̲̦̩̒̀̍̅̊̅̒͐̽;̴̰͙̭̻̙͕̾̅̍͆̀̂̾̽̎͜j̴̭̥̮͙̥̺̮͐̿̂̉͌͒͛͌̐̈́̽̈́̎̈́̚;̴̢̜̦̩̼̞͓̬͙̈̍̆̀̂̂͘̕͝j̷̯̹̙̗̗̚̕ḱ̸̬̞̥̟̟̞̮̬̣̘̣̠̊̈́;̴̡̛̣̬͓̰͕̗̭̞͓̥͕̓̈͆̎͂͝k̴̦̰̹̦̤̞̱̲̼̼͗̊͛̋̈́͊j̸͉̥̙̇̉͂͊;̶̨̘͉̻̺̜̲̿͂̀̀͝ͅl̷̢̮̳̝̳̘̺̜͇̟̳̊̆̿̇̍͆k̸͉̲̪͚̞͓̩̦͍͚͉̅̑̉͆̍̆̋̈́́̄͗̋͛̿j̶̨̧̛̗͓͍̙̲̯̦̋̃̔̀̾́̆̿ͅ;̶̪́̈́̄̋̆l̵͚͙̐̒͑̒̓̋̅̑͒̇̾̓̐̕k̴̢̨̖̰̙̲̆͜j̷̲̫̲͙̪̲̳͔̏̿͝ͅ</p>";
         }
 
         if (post.type == "original") {
@@ -1040,7 +1040,7 @@ module.exports = function(app) {
 
         console.log(post)
         post.save().then(() => {
-            res.contentType("text/html");
+            res.contentType("text/html; charset=utf-8");
             res.status(200);
             res.send(newHTML);
         })
