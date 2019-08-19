@@ -364,7 +364,7 @@ button.close {
     background-color: $editor-background;
     color: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
+    // box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
 }
 
 @media(max-width:500px){
@@ -438,16 +438,18 @@ button.close {
 
 /* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
 .slidable-embed {
-    background: $editor-background!important;
+    transition: background 0.15s ease;
+    background: lighten($dark-pink, 5%) !important;
     &:hover {
-        background:$background-white!important;
+        background: lighten($dark-pink, 10%) !important;
     }
 }
 
 .image-preview-container {
     border-radius: 0.25rem;
     padding: 7px 3px;
-    border: solid 1px $medium-grey;
+    // border: solid 1px $medium-grey;
+    background: lighten($dark-pink, 5%);
     display: flex;
     height: 125px;
     width: 100%;
@@ -470,6 +472,14 @@ button.close {
     &:not(.ipc-group){ //smoothly transition when separating the group; immediately snap-to when adding to the group
         transition: margin-bottom .05s ease-in-out;
     }
+
+    textarea {
+        border-color: $sweet-red;
+
+        &:focus {
+            background: $light-pink;
+        }
+    }
 }
 
 @media (max-width: 500px) {
@@ -480,23 +490,35 @@ button.close {
 
 /* ipc-group = image preview container group */
 .ipc-group {
-    border: solid 1px $medium-grey;
-    border-left: solid 1px $medium-grey;
-    border-right: solid 1px $medium-grey;
-    border-top-width: 0;
+// <<<<<<< Updated upstream
+//     border: solid 1px $medium-grey;
+//     border-left: solid 1px $medium-grey;
+//     border-right: solid 1px $medium-grey;
+//     border-top-width: 0;
+//     margin-bottom: 0;
+//     border-radius: 0px;
+// }
+//
+// .ipc-group-top {
+//     border-top: solid 1px $medium-grey;
+// =======
+    border-left: solid thin $sweet-red;
+    border-right: solid thin $sweet-red;
+    padding: 0.3rem;
     margin-bottom: 0;
     border-radius: 0px;
+    background: lighten($dark-pink, 5%);
 }
 
 .ipc-group-top {
-    border-top: solid 1px $medium-grey;
+    border-top: solid thin $sweet-red;
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem;
 }
 
 .ipc-group-bottom {
     border-top-width: 0;
-    border-bottom: solid 1px $medium-grey;
+    border-bottom: solid thin $sweet-red;
     border-bottom-left-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
     margin-bottom: 0.5rem;
@@ -538,7 +560,7 @@ button.close {
         justify-content: center;
         color: $editor-background;
         &:hover, &.in-use{
-            color: $darker-pink;
+            color: $light-pink;
         }
     }
 /* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
@@ -546,12 +568,9 @@ button.close {
         stroke: $dark-pink;
         stroke-width: 15;
       }
-    & svg {
-        filter: drop-shadow(3px 3px 1px $medium-grey);
-    }
 }
 
-.image-preview-controls 
+.image-preview-controls
 
 .image-clear {
     cursor: pointer;
