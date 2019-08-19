@@ -56,6 +56,8 @@ module.exports = function(app) {
                                         sendImageFile()
                                     } else {
                                         // User not a member of this community
+                                        console.log(req);
+                                        console.log(image);
                                         console.log("User not a community member!")
                                         res.status('404')
                                         res.redirect('/404');
@@ -112,7 +114,7 @@ module.exports = function(app) {
     //Input: flash message
     //Output: rendering of the login page with the flash message included.
     app.get('/login', function(req, res) {
-        if(req.isAuthenticated()){
+        if (req.isAuthenticated()) {
             return res.redirect('back');
         }
         res.render('login', {
@@ -125,7 +127,7 @@ module.exports = function(app) {
     //Input: flash message
     //Output: rendering of the signup page with the flash message included.
     app.get('/signup', function(req, res) {
-        if(req.isAuthenticated()){
+        if (req.isAuthenticated()) {
             return res.redirect('back');
         }
         res.render('signup', {
@@ -186,7 +188,7 @@ module.exports = function(app) {
                 .then(tags => {
                     return tags;
                 })
-           //console.timeEnd('popularHashtags')
+            //console.timeEnd('popularHashtags')
 
             // Trusted and followed users of people the user
             // trusts or follows are retrieved and placed in
@@ -209,7 +211,7 @@ module.exports = function(app) {
                 }
             }
             recommendedUserIds = Object.keys(recommendedUsers)
-           //console.timeEnd('recommendedUsers')
+            //console.timeEnd('recommendedUsers')
 
             usersKnown = Object.keys(primaryRelationships)
 
@@ -260,8 +262,8 @@ module.exports = function(app) {
                                 userRecommendations: userData,
                                 popularHashtags: popularHashtags
                             }
-                           //console.timeEnd('userFunctions')
-                           //console.timeEnd('getRecommendationsFunction')
+                            //console.timeEnd('userFunctions')
+                            //console.timeEnd('getRecommendationsFunction')
                             return results;
                         })
                 });
@@ -540,38 +542,94 @@ module.exports = function(app) {
         }
     })
 
-    app.get('/drafts/:olderthanthis', isLoggedInOrRedirect, function(req,res){
-        Post.find({type:"draft",author:req.user._id,timestamp:{$lt:new Date(parseInt(req.params.olderthanthis))}})
-        .sort('-timestamp').limit(10).populate('author').then(async posts=>{
-            if(!posts.length){
-                res.sendStatus(404);
-            }else{
-                for(var post of posts){
-                    await keepCachedHTMLUpToDate(post);
-                    post.internalPostHTML = post.cachedHTML.fullContentHTML;
-                    post.commentsDisabled = true;
-                    post.isYourPost = true;
-                    var momentTimestamp = moment(post.timestamp);
-                    if (momentTimestamp.isSame(moment(), 'd')) {
-                        post.parsedTimestamp = momentTimestamp.fromNow();
-                    } else if (momentTimestamp.isSame(moment(), 'y')) {
-                        post.parsedTimestamp = momentTimestamp.format('D MMM');
-                    } else {
-                        post.parsedTimestamp = momentTimestamp.format('D MMM YYYY');
+    app.get('/drafts/:olderthanthis', isLoggedInOrRedirect, function(req, res) {
+        Post.find({ type: "draft", author: req.user._id, timestamp: { $lt: new Date(parseInt(req.params.olderthanthis)) } })
+            .sort('-timestamp').limit(10).populate('author').then(async posts => {
+                if (!posts.length) {
+                    res.sendStatus(404);
+                } else {
+                    for (var post of posts) {
+                        await keepCachedHTMLUpToDate(post);
+                        post.internalPostHTML = post.cachedHTML.fullContentHTML;
+                        post.commentsDisabled = true;
+                        post.isYourPost = true;
+                        var momentTimestamp = moment(post.timestamp);
+                        if (momentTimestamp.isSame(moment(), 'd')) {
+                            post.parsedTimestamp = momentTimestamp.fromNow();
+                        } else if (momentTimestamp.isSame(moment(), 'y')) {
+                            post.parsedTimestamp = momentTimestamp.format('D MMM');
+                        } else {
+                            post.parsedTimestamp = momentTimestamp.format('D MMM YYYY');
+                        }
+                        post.fullTimestamp = momentTimestamp.calendar();
                     }
-                    post.fullTimestamp = momentTimestamp.calendar();
+                    res.render('partials/posts_v2', {
+                        layout: false,
+                        loggedIn: true,
+                        loggedInUserData: req.user,
+                        posts: posts,
+                        context: "drafts",
+                        canReply: false,
+                        isMuted: false,
+                        oldesttimestamp: posts[posts.length - 1].timestamp.getTime() + ""
+                    })
                 }
-                res.render('partials/posts_v2', {
-                    layout: false,
-                    loggedIn: true,
-                    loggedInUserData: req.user,
-                    posts: posts,
-                    context: "drafts",
-                    canReply: false,
-                    isMuted: false,
-                    oldesttimestamp: posts[posts.length-1].timestamp.getTime()+""
-                })
+            })
+    })
+
+    //this function checks if there are some newer posts than the given timestamp for the user's home feed. it duplicates some query logic from /showposts to do this.
+    app.get("/heyaretherenewposts/:newerthanthis", isLoggedInOrRedirect, async function(req, res) {
+        var myFollowedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: "follow" })).map(v => v.toUser));
+        var myMutedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: "mute" })).map(v => v.toUser));
+        var usersWhoTrustMe = ((await Relationship.find({ toUser: req.user._id, value: "trust" })).map(v => v.fromUser));
+        var query = {
+            $and: [
+                { $or: [{ author: { $in: myFollowedUserIds } }, { community: { $in: req.user.communities } }] },
+                { $or: [{ privacy: "public" }, { author: { $in: usersWhoTrustMe } }] },
+                { $or: [{ type: { $ne: "community" } }, { community: { $in: req.user.communities } }] },
+                { author: { $not: { $in: myMutedUserIds } } },
+                { type: { $ne: "draft" } }
+            ],
+        };
+        var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "lastUpdated" : "timestamp";
+        var newerThanDate = new Date(parseInt(req.params.newerthanthis));
+        var newerThanQuery = {};
+        newerThanQuery[sortMethod] = { $gt: newerThanDate };
+        query.$and.push(newerThanQuery);
+        Post.find(query).then(async posts => {
+
+            //if we're sorting by last updated, comments can prompt posts to look new, but we only want those with a comment that's newer than our newerthan timesamp
+            //AND wasn't left by the logged in user, who knows about their own comments. so, we search recursively for that.
+            function findNewComment(postOrComment) {
+                if (postOrComment.timestamp > newerThanDate && !postOrComment.author.equals(req.user._id)) {
+                    return true;
+                }
+                if (postOrComment.replies && postOrComment.replies.length) {
+                    for (const r of postOrComment.replies) {
+                        if (findNewComment(r)) {
+                            return true;
+                        }
+                    }
+                } else if (postOrComment.comments && postOrComment.comments.length) {
+                    for (const c of postOrComment.comments) {
+                        if (findNewComment(c)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
+
+            res.setHeader("content-type", "text/plain")
+
+            for (const post of posts) {
+                var postCommunity = post.community ? (await Community.findById(post.community)) : undefined;
+                if ((sortMethod == "lastUpdated" && findNewComment(post)) && (post.type != "community" || (req.user.communitues.some(v=>v.equals(post.community)) && !postCommunity.mutedMembers.includes(post.author)))) {
+                    res.send("yeah");
+                    return;
+                }
+            }
+            res.send("no i guess not");
         })
     })
 
@@ -721,14 +779,14 @@ module.exports = function(app) {
                         }
                     }
                 ],
-                type: {$ne: 'draft'}
+                type: { $ne: 'draft' }
             };
             var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
         } else if (req.params.context == "user") {
             //if we're on a user's page, obviously we want their posts:
             var matchPosts = {
                 author: req.params.identifier,
-                type: {$ne: 'draft'}
+                type: { $ne: 'draft' }
             }
             //but we also only want posts if they're non-community or they come from a community that we belong to:
             if (req.isAuthenticated()) {
@@ -766,7 +824,7 @@ module.exports = function(app) {
             function getTag() {
                 return Tag.findOne({ name: req.params.identifier })
                     .then((tag) => {
-                        var matchPosts = { _id: { $in: tag.posts }, type: {$ne: "draft"} }
+                        var matchPosts = { _id: { $in: tag.posts }, type: { $ne: "draft" } }
                         return matchPosts;
                     })
             }
@@ -777,7 +835,7 @@ module.exports = function(app) {
             var matchPosts = {
                 author: author ? author._id : undefined, //won't find anything if the author corresponding to the username couldn't be found
                 url: req.params.identifier,
-                type: {$ne:"draft"}
+                type: { $ne: "draft" }
             }
             var sortMethod = "-lastUpdated" //this shouldn't matter oh well
         }
@@ -1115,18 +1173,18 @@ module.exports = function(app) {
                     if (typeof displayedPost !== 'undefined') {
                         var canDisplay = true;
                         var image = undefined;
-                        if(displayedPost.inlineElements && displayedPost.inlineElements.length && (image=(displayedPost.inlineElements.find(v=>v.type=="image(s)").images[0]))){
-                            var metadataImage = "https://sweet.sh/api/image/display/"+image;
-                        }else if(displayedPost.images && displayedPost.images.length){
-                            var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/")+displayedPost.images[0];
-                        }else if (displayedPost.author.imageEnabled) {
+                        if (displayedPost.inlineElements && displayedPost.inlineElements.length && (image = (displayedPost.inlineElements.find(v => v.type == "image(s)").images[0]))) {
+                            var metadataImage = "https://sweet.sh/api/image/display/" + image;
+                        } else if (displayedPost.images && displayedPost.images.length) {
+                            var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + displayedPost.images[0];
+                        } else if (displayedPost.author.imageEnabled) {
                             var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image;
                         } else {
                             var metadataImage = "https://sweet.sh/images/cake.svg";
                         }
                         var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
                         if (firstLine && firstLine[1]) {
-                            firstLine = firstLine[1].replace(/<.*?>/g,'').substring(0,100)+(firstLine[1].length>100?'...':'');
+                            firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '');
                         } else {
                             firstLine = "Just another ol' good post on sweet";
                         }
@@ -1282,7 +1340,7 @@ module.exports = function(app) {
             visibleSidebarArray: ['profileOnly', 'profileAndPosts']
         });
     });
-    
+
     //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
     //to seen=true
     //Input:
