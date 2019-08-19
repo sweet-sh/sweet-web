@@ -982,7 +982,7 @@ module.exports = function(app) {
         var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v));
         for (image of deletedImages) {
             Image.deleteOne({ filename: image });
-            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + filename, (err) => { console.error('could not delete unused image from edited post:\n' + err) });
+            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { console.error('could not delete unused image from edited post:\n' + err) });
         }
 
         post.inlineElements = parsedPost.inlineElements;

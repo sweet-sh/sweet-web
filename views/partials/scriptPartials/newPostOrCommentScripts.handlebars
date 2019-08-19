@@ -182,13 +182,13 @@ $(function(){
               isDraft: isDraft ? true : ""
           }).done(function(newPostHTML) {
               var privacyChanged = (currentPrivacy !== originalPrivacy || (wasDraft && !isDraft));
-              var contentContainer = postContainer.children('.content');
+              var contentContainer = postContainer.children('.content').first();
               if(contentWarnings){
                 contentContainer.addClass('content-warning-post');
               }
               if (privacyChanged){
                   var newPrivacyHtml = (isDraft ? '<i class="fa fa-pencil-ruler"></i>' : currentPrivacy=="public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
-                  postContainer.find(".post-visibility").html(newPrivacyHtml)
+                  postContainer.find(".post-visibility").html(newPrivacyHtml);
               }
               if(wasDraft && !isDraft){
                 postContainer.find(".metadata").find('.post-edited').remove();
@@ -200,6 +200,7 @@ $(function(){
                 }
               }
               contentContainer.html(newPostHTML);
+              contentContainer.find('.post-images a').simpleLightbox();
               //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
               $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove(); $('body').off('hidden.bs.modal'); })
               $("#editPostModal").modal('hide');
