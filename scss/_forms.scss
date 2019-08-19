@@ -120,6 +120,23 @@ button.close {
     -webkit-appearance: none;
 }
 
+.button-group {
+    display: flex;
+    align-items: flex-start;
+
+    .button {
+        margin-bottom: 0;
+        border-radius: 0;
+
+        &:first-child {
+            border-radius: 3px 3px 0 0;
+        }
+        &:last-child {
+            border-radius: 0 0 3px 3px;
+        }
+    }
+}
+
 /* new post/comment form stuff*/
 
 /* quill editor stuff*/
