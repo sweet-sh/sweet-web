@@ -117,7 +117,7 @@
               restartInfiniteScroll();
             }else{
               draftsMode = false;
-              $(this).html('<i class="fas fa-drafting-compass"></i> Drafts');
+              $(this).html('<i class="fas fa-pencil-ruler"></i> Drafts');
               //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
               $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked",true);
               restartInfiniteScroll();

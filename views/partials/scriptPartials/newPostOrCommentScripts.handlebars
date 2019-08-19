@@ -66,7 +66,8 @@ $(function(){
         cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
       }
       cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
-      cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
+      cont.find("#draftLabel").html("<i class='fas fa-pencil-ruler'></i>");
+      cont.find("#postSubmit").html("Send <i class='fas fa-chevron-right'></i>").removeClass('save-draft-button');
     }
   });
   $('body').on('change',"#postPrivacy-public, #editPostPrivacy-public", function(){
@@ -78,19 +79,21 @@ $(function(){
         cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
       }
       cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
-      cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
+      cont.find("#draftLabel").html("<i class='fas fa-pencil-ruler'></i>");
+      cont.find("#postSubmit").html("Send <i class='fas fa-chevron-right'></i>").removeClass('save-draft-button');
     }
   });
   $('body').on('change',"#pseudoPrivacy-draft, #editPseudoPrivacy-draft", function(){
     if (this.checked) {
       var cont = $(this).closest('.contentForm');
       if($(window).width() > 350){
-        cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i> Draft");
+        cont.find("#draftLabel").html("<i class='fas fa-pencil-ruler'></i> Draft");
       }else{
-        cont.find("#draftLabel").html("<i class='fas fa-drafting-compass'></i>");
+        cont.find("#draftLabel").html("<i class='fas fa-pencil-ruler'></i>");
       }
       cont.find("#privatePrivacyLabel").html("<i class='fas fa-eye-slash'></i>");
       cont.find("#publicPrivacyLabel").html("<i class='fas fa-eye'></i>");
+      cont.find("#postSubmit").html("Save <i class='fas fa-chevron-right'></i>").addClass('save-draft-button');
     }
   });
   $('body').on('click',"#emojiWindowButton", function(){
@@ -176,7 +179,7 @@ $(function(){
                 contentContainer.addClass('content-warning-post');
               }
               if (privacyChanged){
-                  var newPrivacyHtml = (isDraft ? '<i class="fa fa-drafting-compass"></i>' : currentPrivacy=="public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
+                  var newPrivacyHtml = (isDraft ? '<i class="fa fa-pencil-ruler"></i>' : currentPrivacy=="public" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>');
                   postContainer.find(".post-visibility").html(newPrivacyHtml)
               }
               if(wasDraft && !isDraft){

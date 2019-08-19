@@ -16,8 +16,10 @@
         if (postForm.find('.still-loading').length == 0) {
             var button = postForm.find('.create-comment, #postSubmit');
             button.attr('disabled', false);
-            if (button.hasClass('create-comment')) {
-                button.html("Reply");
+            if (button.hasClass('save-draft-button')) {
+                button.html('Save <i class="fas fa-chevron-right"></i>');
+            } else if (button.hasClass('create-comment')) {
+                button.html('Reply <i class="fas fa-chevron-right"></i>');
             } else if (button.attr('id') == "postSubmit") {
                 button.html('Send <i class="fas fa-chevron-right"></i>');
             }
@@ -160,13 +162,13 @@
                 n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
                 return node;
             }
-            
+
             var file = fileOrUrl;
 
             console.log(file.lastModified);
             console.log(new Date().getTime());
             console.log(file.name);
-            
+
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
                 throw "image unsupported";
@@ -240,7 +242,7 @@
                             $.get({
                                 url: serverResponse.thumbnail,
                                 success: function(data) {
-                                    m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit                                
+                                    m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
                                 },
                                 processData: false,
                                 xhr: function() {
@@ -374,7 +376,7 @@
             }
             return delta;
         })
-        //save the most recent cursor position when the editor loses focus for emoji picker placement. 
+        //save the most recent cursor position when the editor loses focus for emoji picker placement.
         quill.on('selection-change', function(range, oldRange, source) {
             if (!range) {
                 element.lastCursorPos = oldRange.index;
@@ -693,7 +695,7 @@
         floatingVersion.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
         floatingVersion.find('.image-move').on('mousedown', mousedownOnHandle);
         floatingVersion.find('.image-clear').click(clearEmbed);
-        
+
         floatingVersion.css("width", spacer.outerWidth(true) + "px");
         floatingVersion.css("left", spacer.offset().left + "px");
         floatingVersion.css("top", getTop(spacer) + "px");
