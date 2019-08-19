@@ -584,9 +584,9 @@ module.exports = function(app) {
         var usersWhoTrustMe = ((await Relationship.find({ toUser: req.user._id, value: "trust" })).map(v => v.fromUser));
         var query = {
             $and: [
-                { $or: [{ author: { $in: myFollowedUserIds } }, { community: { $in: req.user.communities } }] },
+                { $or: [
+                    {$and:[{ author: { $in: myFollowedUserIds } }, { $or: [{ type: { $ne: "community" } }, { community: { $in: req.user.communities } }] } ]}, { community: { $in: req.user.communities } }] },
                 { $or: [{ privacy: "public" }, { author: { $in: usersWhoTrustMe } }] },
-                { $or: [{ type: { $ne: "community" } }, { community: { $in: req.user.communities } }] },
                 { author: { $not: { $in: myMutedUserIds } } },
                 { type: { $ne: "draft" } }
             ],
@@ -624,7 +624,7 @@ module.exports = function(app) {
 
             for (const post of posts) {
                 var postCommunity = post.community ? (await Community.findById(post.community)) : undefined;
-                if ((sortMethod == "lastUpdated" && findNewComment(post)) && (post.type != "community" || (req.user.communities.some(v=>v.equals(post.community)) && !postCommunity.mutedMembers.includes(post.author)))) {
+                if ((sortMethod == "lastUpdated" && findNewComment(post)) && (post.type != "community" || !postCommunity.mutedMembers.includes(post.author))) {
                     res.send("yeah");
                     return;
                 }
