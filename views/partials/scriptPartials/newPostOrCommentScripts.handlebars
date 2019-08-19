@@ -306,7 +306,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         type: 'POST',
         data: {
           communityId: $('#postForm').attr("communityId"),
-          isDraft: $("#pseudoPrivacy-draft").is(":checked"),
+          isDraft: $("#pseudoPrivacy-draft").is(":checked") ? true : "",
           postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
           postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
           postContentWarnings: $('#postContentWarnings').val(),
@@ -318,7 +318,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         $(".link-form-cont").slideUp("fast");
         var innerEditor = editor.find(".ql-editor");
         innerEditor.html("");
-        if(!$("#pseudoPrivacy-draft").is(":checked") || draftsMode){
+        if(!$("#pseudoPrivacy-draft").is(":checked") || (typeof draftsMode!="undefined" && draftsMode)){
           restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
         }else{
           innerEditor.attr("data-placeholder", 'Post saved to drafts. View it by going to your profile page and clicking the "drafts" button by your profile picture.');

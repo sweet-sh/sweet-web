@@ -369,7 +369,7 @@ button.close {
 
 @media(max-width:500px){
     .switch-field label {
-        padding: 8px 8px;   
+        padding: 8px 5px;
         overflow: hidden;
         font-size: 0.8rem;
     }
@@ -391,6 +391,10 @@ button.close {
 
 .switch-field label:last-of-type {
     border-radius: 0 4px 4px 0;
+}
+
+.switch-field svg {
+    width: 1.25em!important; //force the three visibility icons to the same width
 }
 
 /* specifically new comment form stuff*/
