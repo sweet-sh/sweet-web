@@ -257,7 +257,7 @@
                             var o = $("#embed" + id);
                             if (o.length) {
                                 if (!$(".bootbox-alert.show").length) { //so if multiple images are expiring (almost) at once it only creates one alert
-                                    bootbox.alert("hey your images are expired and stuff whoops sorry! you get one hour. reupload i guess");
+                                    bootbox.alert("hey your images are expired and stuff whoops sorry! this tab has apparently been open for a week. or maybe linear time has ceased to function. i guess you can reupload? you probably weren't going to finish this post anyway? geez");
                                 }
                                 var text = o.find("#postImageDescription").val();
                                 if (text.trim()) {
@@ -273,7 +273,7 @@
                                 }
                                 createImageGroups(o.parent());
                             }
-                        }, 60 * 60 * 1000);
+                        }, 7*24*60*60*1000);
                     }
                 }
             });

@@ -1030,12 +1030,16 @@ module.exports = function(app) {
     })
 };
 
+//scan the temp folder every day and delete images that are more than a week old. just in case someone leaves their post editor open for that long. this generous
+//time limit is enabled by the fact that the vast, vast majority of temp images are going to be specifically cleared by the /cleartempimage route above; the only
+//images that are going to be picked up by this function are those uploaded by users whose device loses power, whose device loses internet connection and doesn't
+//regain it before they close the tab, and maybe those that are using a really weird browser or extensions.
 function cleanTempFolder() {
     fs.readdir("./cdn/images/temp", function(err, files) {
         files.forEach(file => {
             if (file != ".gitkeep" && file != "") {
                 fs.stat("./cdn/images/temp/" + file, function(err, s) {
-                    if (Date.now() - s.mtimeMs > 3600000) {
+                    if (Date.now() - s.mtimeMs > 7*24*60*60*1000) {
                         fs.unlink("./cdn/images/temp/" + file, function(e) {
                             if (e) {
                                 console.log("couldn't clean temp file " + file);
@@ -1048,7 +1052,8 @@ function cleanTempFolder() {
         });
     });
 }
-setInterval(cleanTempFolder, 3600000); //clean temp image folder every hour
+cleanTempFolder();
+setInterval(cleanTempFolder, 24*60*60*1000);
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {
