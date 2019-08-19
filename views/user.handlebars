@@ -113,11 +113,11 @@
             if(!draftsMode){
               draftsMode = true;
               $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text)
-              $(this).html('<i class="far fa-sticky-note"></i> Posts');
+              $(this).html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
               restartInfiniteScroll();
             }else{
               draftsMode = false;
-              $(this).html('<i class="fas fa-pencil-ruler"></i> Drafts');
+              $(this).html('<i class="fas fa-pencil-ruler"></i> See drafts');
               //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
               $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked",true);
               restartInfiniteScroll();

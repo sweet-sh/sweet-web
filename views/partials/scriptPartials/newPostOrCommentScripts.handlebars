@@ -124,7 +124,11 @@ $(function(){
       //we'll assume that they don't need their work from the old one and remove it.
       if (existingModal.length && existingModal.attr('data-post-id') == postID) {
           existingModal.modal();
-          button.html('<i class="fas fa-fw fa-pencil-alt"></i> Edit');
+          if (button.hasClass('edit-draft-post')){
+              button.html('<i class="fas fa-fw fa-pencil-alt"></i>');
+          } else {
+              button.html('<i class="fas fa-fw fa-pencil-alt"></i> Edit');
+          }
       } else {
           if (existingModal.length) {
               existingModal.remove();
@@ -145,7 +149,11 @@ $(function(){
                 newEditor.find('.image-clear').click(clearEmbed);
                 createImageGroups(newEditor);
                 editModal[0].postContainer = postContainer[0]; //retrieved to set the new html contents of it upon edit submission
-                button.html('<i class="fas fa-fw fa-pencil-alt"></i> Edit');
+                if (button.hasClass('edit-draft-post')){
+                    button.html('<i class="fas fa-fw fa-pencil-alt"></i>');
+                } else {
+                    button.html('<i class="fas fa-fw fa-pencil-alt"></i> Edit');
+                }
                 editModal.modal();
               })
           }

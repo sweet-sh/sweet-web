@@ -51,7 +51,7 @@
                 {{/contains}}
             </h2>
             <aside class="metadata">
-                <span class="post-timestamp" title="posted {{this.fullTimestamp}}">
+                <span class="post-timestamp" title="Posted {{this.fullTimestamp}}">
                     {{this.parsedTimestamp}}
                 </span>
                 &nbsp;&middot;&nbsp;
@@ -64,7 +64,7 @@
                 </span>
                 {{#if lastEdited}}
                 &nbsp;&middot;&nbsp;
-                <span class="post-edited" title="last edited {{this.fullEditedTimestamp}}">Edited</span>
+                <span class="post-edited" title="Last edited {{this.fullEditedTimestamp}}">Edited</span>
                 {{/if}}
             </aside>
         </div>
@@ -146,7 +146,7 @@
         {{#if isYourPost}}
         {{#eq type "draft"}}
             <div class="leftSideControls">
-                <button type="button" class="button post-toolbar-button edit-post">
+                <button type="button" class="button post-toolbar-button edit-post edit-draft-post">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
             </div>

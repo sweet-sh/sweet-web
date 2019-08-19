@@ -1013,7 +1013,7 @@ module.exports = function(app) {
         post.cachedHTML.fullContentHTML = newHTML;
 
         post.contentWarnings = req.body.postContentWarnings;
-        
+
         if (req.body.postContentWarnings) {
             //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
             newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
