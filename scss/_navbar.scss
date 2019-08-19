@@ -333,6 +333,17 @@
     top: 46px;
 }
 
+#post-extra-controls-dropdown {
+    text-transform: uppercase;
+    font-size: 0.9rem;
+
+    + .dropdown-menu .dropdown-item {
+        padding: .5rem 1rem;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+}
+
 @media (min-width: 576px) {
     #notificationsContainer {
         min-width: 360px;

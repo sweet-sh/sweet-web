@@ -144,16 +144,19 @@
         {{/contains}}
         {{/isnt}}
         {{#if isYourPost}}
-            <div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button edit-post">
-                    <i class="fas fa-pencil-alt"></i>
-                </button>
-            </div>
-        	<div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
-                    <i class="far fa-trash-alt"></i>
-                </button>
-            </div>
+        <div class="toolbar-button-container dropdown">
+          <button id="post-extra-controls-dropdown" class="button post-toolbar-button dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="text-transform:lowercase;font-variant:small-caps;">
+            More
+          </button>
+          <div class="dropdown-menu" aria-labelledby="post-extra-controls-dropdown">
+              <button  type="button" class="dropdown-item edit-post">
+                  <i class="fas fa-fw fa-pencil-alt"></i> Edit
+              </button>
+              <button type="button" class="dropdown-item delete-post" id="{{this.deleteid}}">
+                  <i class="far fa-fw fa-trash-alt"></i> Delete
+              </button>
+          </div>
+        </div>
         {{/if}}
     </footer>
     {{#unless this.commentsDisabled}}
