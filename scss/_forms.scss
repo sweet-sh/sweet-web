@@ -127,12 +127,14 @@ button.close {
     .button {
         margin-bottom: 0;
         border-radius: 0;
+        border-bottom: 1px solid darken($light-grey, 8%);
 
         &:first-child {
             border-radius: 3px 3px 0 0;
         }
         &:last-child {
             border-radius: 0 0 3px 3px;
+            border-bottom: 0;
         }
     }
 }
