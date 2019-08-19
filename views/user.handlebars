@@ -112,14 +112,25 @@
             e.preventDefault();
             if(!draftsMode){
               draftsMode = true;
+              $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text)
               $(this).html('<i class="far fa-sticky-note"></i> Posts');
               restartInfiniteScroll();
             }else{
               draftsMode = false;
               $(this).html('<i class="fas fa-drafting-compass"></i> Drafts');
+              //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
+              $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked",true);
               restartInfiniteScroll();
             }
-            //todo: scroll down to post container if it's currently off-screen
+            //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
+            var postsContainer = $("#postsContainer");
+            if(getTop(postsContainer) > $(window).scrollTop()+$(window).height()){
+              function scrollToCont(){
+                $('html').animate({scrollTop:getTop($("#postForm")) - $("#topNav").outerHeight()}, 200);
+                postsContainer.off("append.infiniteScroll", scrollToCont);
+              }
+              postsContainer.on("append.infiniteScroll", scrollToCont);
+            }
         })
     })
     {{/if}}

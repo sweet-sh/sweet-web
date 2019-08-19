@@ -326,9 +326,10 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
           }
           restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
         }else{
-          innerEditor.attr("data-placeholder", 'Post saved to drafts. View it by going to your profile page and clicking the "drafts" button by your profile picture.'); //todo: shorten (at least for mobile)
+          innerEditor.attr("data-placeholder", 'Post saved to drafts; view those through your profile.');
           innerEditor.focus(function(){
-            innerEditor.attr("data-placeholder", editor[0].__quill.options.placeholder); //it's late. this will retrieve the editor's original placeholder
+            innerEditor.attr("data-placeholder", editor[0].__quill.options.placeholder); //this will retrieve the editor's original placeholder and looks weird
+            innerEditor.off("focus"); //don't need to reset the placeholder more than once
           })
         }
       });

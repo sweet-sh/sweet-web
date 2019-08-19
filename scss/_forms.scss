@@ -490,18 +490,6 @@ button.close {
 
 /* ipc-group = image preview container group */
 .ipc-group {
-// <<<<<<< Updated upstream
-//     border: solid 1px $medium-grey;
-//     border-left: solid 1px $medium-grey;
-//     border-right: solid 1px $medium-grey;
-//     border-top-width: 0;
-//     margin-bottom: 0;
-//     border-radius: 0px;
-// }
-//
-// .ipc-group-top {
-//     border-top: solid 1px $medium-grey;
-// =======
     border-left: solid thin $sweet-red;
     border-right: solid thin $sweet-red;
     padding: 0.3rem;

@@ -144,6 +144,18 @@
         {{/contains}}
         {{/isnt}}
         {{#if isYourPost}}
+        {{#eq type "draft"}}
+            <div class="leftSideControls">
+                <button type="button" class="button post-toolbar-button edit-post">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+            <div class="rightSideControls">
+                <button type="button" class="button post-toolbar-button delete-post">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            </div>
+        {{else}}
         <div class="toolbar-button-container dropdown">
           <button id="post-extra-controls-dropdown" class="button post-toolbar-button dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="text-transform:lowercase;font-variant:small-caps;">
             More
@@ -157,6 +169,7 @@
               </button>
           </div>
         </div>
+        {{/eq}}
         {{/if}}
     </footer>
     {{#unless this.commentsDisabled}}
