@@ -567,7 +567,7 @@ button.close {
         justify-content: center;
         color: $editor-background;
         &:hover, &.in-use{
-            filter: drop-shadow(3px 3px 1px $dark-pink);
+            filter: drop-shadow(2px 2px 1px $dark-pink);
         }
     }
 /* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
