@@ -624,7 +624,7 @@ module.exports = function(app) {
 
             for (const post of posts) {
                 var postCommunity = post.community ? (await Community.findById(post.community)) : undefined;
-                if ((sortMethod == "lastUpdated" && findNewComment(post)) && (post.type != "community" || (req.user.communitues.some(v=>v.equals(post.community)) && !postCommunity.mutedMembers.includes(post.author)))) {
+                if ((sortMethod == "lastUpdated" && findNewComment(post)) && (post.type != "community" || (req.user.communities.some(v=>v.equals(post.community)) && !postCommunity.mutedMembers.includes(post.author)))) {
                     res.send("yeah");
                     return;
                 }
