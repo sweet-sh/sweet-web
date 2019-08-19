@@ -560,7 +560,7 @@ button.close {
         justify-content: center;
         color: $editor-background;
         &:hover, &.in-use{
-            color: $light-pink;
+            filter: drop-shadow(3px 3px 1px $dark-pink);
         }
     }
 /* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
@@ -569,8 +569,6 @@ button.close {
         stroke-width: 15;
       }
 }
-
-.image-preview-controls
 
 .image-clear {
     cursor: pointer;
