@@ -14,6 +14,7 @@ function restartInfiniteScroll(timestamp){
     postsContainer.fadeOut(250,function(){
       postsContainer.html("");
       needPostsOlderThan = timestamp;
+      pageLoadTime = timestamp;
       postsContainer.infiniteScroll("destroy");
       postsContainer[0].fadedOut = true;
       startInfiniteScroll();
