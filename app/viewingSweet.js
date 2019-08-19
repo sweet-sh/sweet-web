@@ -150,7 +150,7 @@ module.exports = function(app) {
     //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
     app.get('/home', isLoggedInOrRedirect, async function(req, res) {
         async function getRecommendations() {
-            console.time('getRecommendationsFunction')
+            //console.time('getRecommendationsFunction')
             popularCommunities = [];
             recommendedUsers = {};
             relationshipWeights = {
@@ -179,14 +179,14 @@ module.exports = function(app) {
                         return users;
                     })
             }
-            console.time('popularHashtags')
+            //console.time('popularHashtags')
             popularHashtags = await Tag.find()
                 .limit(5)
                 .sort('-lastUpdated')
                 .then(tags => {
                     return tags;
                 })
-            console.timeEnd('popularHashtags')
+           //console.timeEnd('popularHashtags')
 
             // Trusted and followed users of people the user
             // trusts or follows are retrieved and placed in
@@ -194,7 +194,7 @@ module.exports = function(app) {
             // score of 2, following gives a score of 0.5.
             // (The scores have been arbitrarily selected.)
 
-            console.time('recommendedUsers')
+            //console.time('recommendedUsers')
             primaryRelationships = await getRelationships(req.user._id, ["trust", "follow"]);
             for (const primaryUser in primaryRelationships) {
                 const secondaryRelationships = await getRelationships(primaryUser, ["trust", "follow"])
@@ -209,7 +209,7 @@ module.exports = function(app) {
                 }
             }
             recommendedUserIds = Object.keys(recommendedUsers)
-            console.timeEnd('recommendedUsers')
+           //console.timeEnd('recommendedUsers')
 
             usersKnown = Object.keys(primaryRelationships)
 
@@ -235,7 +235,7 @@ module.exports = function(app) {
                     _id: req.user._id
                 })
                 .then(user => {
-                    console.time('userFunctions')
+                    //console.time('userFunctions')
                     popularCommunities = popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
 
                     if (popularCommunities.length > 16)
@@ -260,8 +260,8 @@ module.exports = function(app) {
                                 userRecommendations: userData,
                                 popularHashtags: popularHashtags
                             }
-                            console.timeEnd('userFunctions')
-                            console.timeEnd('getRecommendationsFunction')
+                           //console.timeEnd('userFunctions')
+                           //console.timeEnd('getRecommendationsFunction')
                             return results;
                         })
                 });

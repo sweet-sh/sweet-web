@@ -88,15 +88,23 @@
 
 
 <script>
+  function startInfiniteScroll(){
 $('#postsContainer').infiniteScroll({
   path: function() {
+    if ($(".oldesttimestamp").length) {
+        //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+        return '/showposts/user/{{profileData._id}}/' + $(".oldesttimestamp").last().html();
+    }
+    //and then this is for when the feed is currently empty and being loaded/reloaded
     return '/showposts/user/{{profileData._id}}/' + needPostsOlderThan;
   },
   append: '.post',
   prefill: true,
-  history: true, //to be clear, this should not work
+  history: false,
   status: '.page-load-status'
 });
+  }
+  startInfiniteScroll();
 </script>
 
 {{> profilescripts}}

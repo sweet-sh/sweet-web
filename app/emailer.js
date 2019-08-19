@@ -36,7 +36,9 @@ nodemailerHbsOptions = {
 transporter.use('compile', nodemailerHbs(nodemailerHbsOptions));
 
 function emailLog(message) {
-    console.log(message);
+    if(process.env.NODE_ENV == "production"){
+        console.log(message);
+    }
     fs.appendFileSync("emailLog.txt", message + '\n');
 }
 

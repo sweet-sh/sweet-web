@@ -24,7 +24,7 @@
 $(function(){
   $('#resultsContainer').on('load.infiniteScroll', function (event, response, path) {
       var newlyLoadedStuff = $(response);
-      needPostsOlderThan = newlyLoadedStuff.find("#oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
+      needPostsOlderThan = newlyLoadedStuff.find(".oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
   })
 
   $('#resultsContainer').infiniteScroll({

@@ -70,8 +70,6 @@ $(function(){
             }
         })
 
-        needPostsOlderThan = newlyLoadedStuff.last().find("#oldesttimestamp").html(); //the new oldest-post-loaded timestamp is provided by the server in this element
-
         if(newlyLoadedStuff.find('img.link-preview-image').length > 0){
             newlyLoadedStuff.find('img.link-preview-image').on('error',function(){
                 $(this).replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
@@ -87,10 +85,6 @@ $(function(){
             tribute.attach(newlyLoadedStuff.find(".ql-editor"));
         }
         {{/if}}
-
-        if($(document).height() <= $(window).height()){
-            $('#postsContainer').infiniteScroll("loadNextPage");
-        }
     });
 });
 </script>

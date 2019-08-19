@@ -149,7 +149,6 @@ module.exports = function(app, passport) {
                                 // majority margin required for a vote to pass based on the number of those members
                                 var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
                                 let recentlyActiveMembers = community.members.filter((member) => {
-                                    console.log(member.lastUpdated)
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
                                         !mutedMemberIds.includes(member._id.toString());
                                 })
