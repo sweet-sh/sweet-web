@@ -806,6 +806,9 @@ section {
         max-width: 500px;
         margin: 1.75rem auto;
     }
+    #editPostModal>.modal-dialog {
+        max-width: 600px;
+    }
 }
 
 .modal-content {
