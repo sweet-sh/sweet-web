@@ -925,7 +925,7 @@ module.exports = function(app) {
         if (post.community) {
             var imagePrivacy = (await Community.findById(post.community)).settings.visibility;
             var imagePrivacyChanged = false;
-        } else if(post.type=="draft"){
+        } else if(req.body.isDraft){
             var imagePrivacy = "private";
             var imagePrivacyChanged = false;
         } else {
