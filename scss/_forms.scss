@@ -462,6 +462,12 @@ button.close {
     &:hover {
         background: lighten($dark-pink, 10%) !important;
     }
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 .image-preview-container {
@@ -474,18 +480,6 @@ button.close {
     margin-bottom: 0.5rem;
     cursor: default;
     transition: scale .1s ease-in-out, opacity .1s ease-in-out, border .1s ease-in-out;
-    -webkit-touch-callout: none;
-    /* iOS Safari */
-    -webkit-user-select: none;
-    /* Safari */
-    -khtml-user-select: none;
-    /* Konqueror HTML */
-    -moz-user-select: none;
-    /* Firefox */
-    -ms-user-select: none;
-    /* Internet Explorer/Edge */
-    user-select: none;
-    /* Non-prefixed version, currently supported by Chrome and Opera */
 
     &:not(.ipc-group){ //smoothly transition when separating the group; immediately snap-to when adding to the group
         transition: margin-bottom .05s ease-in-out;
