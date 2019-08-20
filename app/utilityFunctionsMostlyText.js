@@ -63,7 +63,7 @@ module.exports = {
                 inlineElements: inlineElements
             }
 
-            //console.log(JSON.stringify(parsedStuff, null, 4));
+        //console.log(JSON.stringify(parsedStuff, null, 4));
 
             return parsedStuff;
         },
