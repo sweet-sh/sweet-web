@@ -49,12 +49,12 @@
           </div>
           <div class="form-group">
             <label for="communityDescription">Description</label>
-            <div class="form-control" style="height:auto;" id="communityDescriptionHtml">{{sessionFlash.newCommunityData.communityDescription}}</div>
+            <div class="form-control editable-text" style="height:auto;" id="communityDescriptionHtml">{{sessionFlash.newCommunityData.communityDescription}}</div>
             <input type="hidden" name="communityDescription" id="communityDescription">
           </div>
           <div class="form-group">
             <label for="communityRules">Rules</label>
-            <div class="form-control" style="height:auto;" id="communityRulesHtml">{{#if  sessionFlash.newCommunityData.communityRules}}{{sessionFlash.newCommunityData.communityRules}}{{else}}Please follow the guidelines laid out in the Community Covenant, available to read here: https://community-covenant.net/version/1/0/{{/if}}</div>
+            <div class="form-control editable-text" style="height:auto;" id="communityRulesHtml">{{#if  sessionFlash.newCommunityData.communityRules}}{{sessionFlash.newCommunityData.communityRules}}{{else}}Please follow the guidelines laid out in the Community Covenant, available to read here: https://community-covenant.net/version/1/0/{{/if}}</div>
             <input type="hidden" name="communityRules" id="communityRules">
           </div>
           <div class="form-group">
