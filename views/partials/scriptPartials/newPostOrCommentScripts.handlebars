@@ -200,7 +200,10 @@ $(function(){
                 }
               }
               contentContainer.html(newPostHTML);
-              contentContainer.find('.post-images a').simpleLightbox();
+              var images = contentContainer.find('.post-images a');
+              if(images.length){
+                images.simpleLightbox();
+              }
               //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
               $('body').on('hidden.bs.modal', '#editPostModal', function(e) {e.target.remove(); $('body').off('hidden.bs.modal'); })
               $("#editPostModal").modal('hide');
@@ -313,7 +316,8 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
     let editor = $('#editor');
     let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
     if (editor[0].hasContent()) {
-      $(this).attr('disabled');
+      var button = $(this);
+      button.attr('disabled', true);
       $.ajax({
         url: '/createpost',
         type: 'POST',
@@ -331,6 +335,7 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
         $(".link-form-cont").slideUp("fast");
         var innerEditor = editor.find(".ql-editor");
         innerEditor.html("");
+        button.attr('disabled', false);
         //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
         if(!$("#pseudoPrivacy-draft").is(":checked") || (typeof draftsMode!="undefined" && draftsMode)){
           if(!$("#pseudoPrivacy-draft").is(":checked") && typeof draftsMode!= "undefined" && draftsMode){
@@ -345,6 +350,9 @@ $("body").on('keyup',"#linkPreviewUrlEntry", function(e){
             innerEditor.off("focus"); //don't need to reset the placeholder more than once
           })
         }
+      }).fail(function(){
+        bootbox.alert("this post failed to post! maybe try again in a bit?");
+        button.attr('disabled',false);
       });
     } else {
       bootbox.alert("This post appears to be... empty");
