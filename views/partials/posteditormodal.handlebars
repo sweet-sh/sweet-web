@@ -25,7 +25,7 @@
             </div>
             <div id="editorControlsRow" class="mt-2 post-controls">
               {{! Hide this div in communities}}
-              {{#unless isCommmunityPost}}
+              {{#unless isCommunityPost}}
               <div class="leftSideControls">
                 <div class="switch-field" id="editVisibilityControls">
                   <input type="radio" id="editPostPrivacy-public" name="editPostPrivacy" value="public" {{#eq privacy "public"}}checked{{/eq}} />
