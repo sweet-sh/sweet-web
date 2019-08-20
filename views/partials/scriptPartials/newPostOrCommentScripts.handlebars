@@ -260,23 +260,27 @@ $(function(){
 $(function(){
   $("body").on('click', '#postImageButton', function (e) {
     let ourFileInputGuy = $(this).closest('.contentForm, .new-comment-form').children('.file-input');
-    //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
-    if (!ourFileInputGuy[0].changeEventAttached) {
-      ourFileInputGuy.change(function(e){
-        var n = $(this).parent().find('.ql-container')[0];
-        for(var i=0; i < this.files.length; i++){
-          if(n.imagesAdded() > 3){
-            bootbox.alert("we only take 4 images at a time right now, sorry");
-            break;
-          }else{
-            n.addImage(this.files[i]);
+    var n = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];    
+    if(n.imagesAdded()<4){
+      //attach the function to the file input object events when necessary. can't do them all at once 'cause they're not loaded all at once
+      if (!ourFileInputGuy[0].changeEventAttached) {
+        ourFileInputGuy.change(function(e){
+          for(var i=0; i < this.files.length; i++){
+            if(n.imagesAdded() > 3){
+              bootbox.alert("we only take 4 images at a time right now, sorry");
+              break;
+            }else{
+              n.addImage(this.files[i]);
+            }
           }
-        }
-        $(this).val(''); //ensures change event will fire, even if the user picks the same image again
-      });
-      ourFileInputGuy[0].changeEventAttached = true;
+          $(this).val(''); //ensures change event will fire, even if the user picks the same image again
+        });
+        ourFileInputGuy[0].changeEventAttached = true;
+      }
+      ourFileInputGuy.click();
+    }else{
+      bootbox.alert("we only take 4 images at a time right now, sorry");
     }
-    ourFileInputGuy.click();
   })
 
 $("body").on('click', '#postLinkButton', function(e) {
