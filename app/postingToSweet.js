@@ -1053,7 +1053,6 @@ module.exports = function(app) {
             post.privacy = "public";
         }
 
-        console.log(post)
         post.save().then(() => {
             res.contentType("text/html; charset=utf-8");
             res.status(200);

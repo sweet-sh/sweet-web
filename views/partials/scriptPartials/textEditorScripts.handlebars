@@ -737,22 +737,22 @@
     //auto-scrolls when the floating element is less than 100px away from the top or bottom and the top or bottom of the editor is offscreen.
     //called through setInterval, which is started in prepareEmbedForMoving, and then canceled in endMovement
     function scrollPrompter(floatingEmbed, editor) {
-        var t = floatingEmbed.offset().top;
+        var t = getTop(floatingEmbed)
         var h = floatingEmbed.outerHeight();
         var b = t + h;
-        var et = editor.offset().top;
+        var et = getTop(editor);
         var eb = et + editor.outerHeight();
         var modal = editor.closest('.modal');
         var w = $(window);
         var wst = w.scrollTop();
         var wh = w.height();
-        if (t < wst + 100 && et < wst + 50) {
+        if (t < 100 && et < 50) {
             if(modal.length){
                 modal.scrollTop(modal.scrollTop()-10);
             }else{
                 w.scrollTop(wst - 10);
             }
-        } else if (b > wh - 100 && eb > (wst + wh)) {
+        } else if (b > wh - 100 && eb > wh) {
             if(modal.length){
                 modal.scrollTop(modal.scrollTop()+10);
             }else{

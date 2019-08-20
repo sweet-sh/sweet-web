@@ -6,7 +6,7 @@ var oldAlert = bootbox.alert;
 bootbox.alert = function(alertString) {
     var editModal = $("#editPostModal");
     oldAlert(alertString);
-    if (editModal) {
+    if (editModal.length) {
         var body = $("body");
         var obvs = new MutationObserver(function(e) {
             body.addClass("modal-open");
