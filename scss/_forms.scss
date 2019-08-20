@@ -467,7 +467,6 @@ button.close {
 .image-preview-container {
     border-radius: 0.25rem;
     padding: 7px 3px;
-    // border: solid 1px $medium-grey;
     background: lighten($dark-pink, 5%);
     display: flex;
     height: 125px;
@@ -511,7 +510,7 @@ button.close {
 .ipc-group {
     border-left: solid thin $sweet-red;
     border-right: solid thin $sweet-red;
-    padding: 0.3rem;
+    //padding: 0.3rem;
     margin-bottom: 0;
     border-radius: 0px;
     background: lighten($dark-pink, 5%);

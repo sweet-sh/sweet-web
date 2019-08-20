@@ -810,7 +810,6 @@ module.exports = function(app) {
                     privacy: 'public',
                     timestamp: boostedTimestamp,
                     lastUpdated: boostedTimestamp,
-                    //add field back to schema so this works
                     boostTarget: boostedPost._id
                 })
                 boost.save().then(savedBoost => {

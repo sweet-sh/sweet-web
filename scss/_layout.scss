@@ -847,6 +847,11 @@ section {
     background-color: $element-background;
 }
 
+//this type of modal should always display over others
+.bootbox-alert {
+    z-index: 1060;
+}
+
 .modal-title {
     margin-bottom: 0;
     line-height: 1.5;

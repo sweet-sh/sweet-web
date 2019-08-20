@@ -520,11 +520,11 @@
                 // event.originalEvent.clipboard for newer chrome versions
                 var items = (event.clipboardData || event.originalEvent.clipboardData).items;
                 for (var i = 0; i < items.length; i++) {
-                    if (element.imagesAdded() > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
-                        break;
-                    } else {
-                        if (items[i].type.indexOf("image") === 0) {
+                    if (items[i].type.indexOf("image") === 0) {
+                        if (element.imagesAdded() > 3) {
+                            bootbox.alert("sorry, we only take 4 images at once atm");
+                            break;
+                        } else {
                             e.preventDefault();
                             element.addImage(items[i].getAsFile());
                         }
