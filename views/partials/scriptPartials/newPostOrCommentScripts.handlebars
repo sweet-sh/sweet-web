@@ -96,7 +96,7 @@ $(function(){
       cont.find("#postSubmit").html("Save <i class='fas fa-chevron-right'></i>").addClass('save-draft-button');
     }
   });
-  $('body').on('click',"#emojiWindowButton", function(){
+  $('body').on('click',".show-emoji-picker", function(){
     var cont = $(this).closest('.contentForm');
     cont.find('.emoji-picker').slideToggle("fast");
     cont.find(".ql-editor").focus();
