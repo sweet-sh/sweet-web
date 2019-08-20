@@ -10,7 +10,7 @@ module.exports = function(app) {
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
-    //or resized, compressed, maybe flattened, and saved according to the user's image uploa settings. Saves to the temp folder; when a post or comment is actually completed,
+    //or resized, compressed, maybe flattened, and saved according to the user's image upload settings. Saves to the temp folder; when a post or comment is actually completed,
     //it's moved to the image folder that post images are loaded from upon being displayed. A thumbnail version is also saved in the thumbnails object, for retrieval through the
     //below function at /api/image/thumbnailretrieval/:id. A response is sent back with the image's future filename, which identifies it so it can be folded into the saved post when
     //the post is submitted, and also the url for retrieving the thumbnail.
@@ -1042,7 +1042,7 @@ module.exports = function(app) {
             post.lastUpdated = timePublished;
             post.lastEdited = undefined;
             post.type = "original";
-            newHTML = '<p style="color:#ce1717">this post was published!</p>'; //the color is $sweet-red from _colors.scss
+            newHTML = '<p style="font-weight:300;font-style:italic;color:#ce1717;">This post was published!</p>'; //the color is $sweet-red from _colors.scss
         }
 
         if (post.type == "original") {
