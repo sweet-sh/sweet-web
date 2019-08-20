@@ -143,19 +143,19 @@ moment = require('moment');
 moment.updateLocale('en', {
   relativeTime: {
       future: "in %s",
-      past: "%s ago",
-      s: 'a second or two',
-      ss: '%ds',
-      m: "1m",
-      mm: "%dm",
-      h: "1h",
-      hh: "%dh",
-      d: "1d",
-      dd: "%dd",
-      M: "1mon",
-      MM: "%dmon",
-      y: "1y",
-      yy: "%dy"
+      past: "%s",
+      s: "just now",
+      ss: '%ds ago',
+      m: "1m ago",
+      mm: "%dm ago",
+      h: "1h ago",
+      hh: "%dh ago",
+      d: "1d ago",
+      dd: "%dd ago",
+      M: "1mon ago",
+      MM: "%dmon ago",
+      y: "1y ago",
+      yy: "%dy ago"
   },
   calendar: {
     sameDay: '[today at] h:mm a [UTC]Z',
