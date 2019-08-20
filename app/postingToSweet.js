@@ -985,6 +985,7 @@ module.exports = function(app) {
         }
 
         post.inlineElements = parsedPost.inlineElements;
+        post.imageVersion = 3;
         post.images = undefined;
         post.imageDescriptions = undefined;
         post.imageIsHorizontal = undefined;
