@@ -684,7 +684,7 @@ module.exports = function(app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
-                        element.numberOfSiblings = (parent ? parent.replies.length - 1 : post.comments.length - 1);
+                        element.numberOfSiblings = (parent.replies ? parent.replies.length - 1 : post.comments.length - 1);
                         element.parent = parent;
                         if (!target && element._id && element._id.equals(id)) {
                             target = element;
@@ -775,9 +775,6 @@ module.exports = function(app) {
                     .catch((error) => {
                         console.error(error)
                     })
-            })
-            .catch((err) => {
-                console.log("Database error: " + err)
             })
     });
 
