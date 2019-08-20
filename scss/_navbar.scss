@@ -52,10 +52,10 @@
 }
 
 #navbarSearchField {
-    color: $navigation-text;
-    background: $lightest-grey;
-    border-color: $medium-grey;
     width: 180px;
+    &::placeholder {
+      color: $navigation-text;
+    }
 }
 
 #topNav .nav-link,
