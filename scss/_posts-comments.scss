@@ -515,7 +515,7 @@ article.comment>header .author-username {
 .link-preview-container {
     display: flex;
     height: 100px;
-    padding: 10px 3px;
+    padding: 10px 5px;
     color: $text;
     font-weight: 500;
     border: 1px solid $medium-grey;
@@ -528,6 +528,17 @@ article.comment>header .author-username {
 .link-preview-container:hover {
     text-decoration: none;
     background: $lightest-grey;
+}
+
+.link-preview-icon {
+    position: absolute;
+    font-size: 30px;
+    color: white;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+
+.link-preview-container:hover .link-preview-icon {
+    color:#eee;
 }
 
 .link-preview-container::before {

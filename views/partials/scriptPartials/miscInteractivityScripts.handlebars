@@ -21,6 +21,7 @@ bootbox.alert = function(alertString) {
     }
 }
 
+//check for posts every minute (function declared globally for console debugging purposes)
 {{#eq activePage "home"}}
 var pageLoadTime = new Date().getTime();
 function checkForNewPosts(){
@@ -68,7 +69,10 @@ $(function() {
          $('#bodyContainer, #topNav').css('filter','none');
     });
 
-
+  // Reload notifications container every minute (hack until we set up WebSockets)
+  window.setInterval(function(){
+    $("#notificationsContainer").load("/api/notification/display");
+  }, 60000);
   $("#notificationsContainer").load( "/api/notification/display" );
 
   if ($('#notificationsPageLink').hasClass('active')){
@@ -124,18 +128,6 @@ $(function() {
     event.preventDefault();
     var searchQuery = $('#navbarSearchField').val();
     window.location.href = '/search/' +	searchQuery
-  });
-
-  // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
-  window.setInterval(function(){
-    $("#notificationsContainer").load("/api/notification/display");
-  }, 60000);
-
-  $('body').on('mouseover', '.link-preview-container', function() {
-      $(this).find('.link-preview-icon').css('color','#eee');
-  });
-  $('body').on('mouseout', '.link-preview-container', function() {
-      $(this).find('.link-preview-icon').css('color','white');
   });
 
   $('body').on('click', '.show-comments', function() {
