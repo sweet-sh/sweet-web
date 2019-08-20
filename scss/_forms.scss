@@ -658,3 +658,12 @@ button.close {
 #settingsForm h4 {
     color: $dark-pink;
 }
+
+// Hacky way to get send button in community post forms sit on the right
+#bottomPostControlsRow div:only-child {
+    width: 100%;
+
+    button:last-child {
+        float: right;
+    }
+}
