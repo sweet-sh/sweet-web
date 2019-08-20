@@ -167,11 +167,11 @@
 
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
-                throw "image unsupported";
+                throw (file.name ? file.name : "") +" of unsupported mime type";                
                 return undefined;
             } else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
                 bootbox.alert("Sorry, but this file appears to be too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-                throw "image unsupported";
+                throw (file.name ? file.name : "") +" too large";
                 return undefined;
             }
             let node = super.create();
@@ -458,7 +458,12 @@
                 } else {
                     var addEmbedAt = quill.getLength();
                 }
-                quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+                try{
+                    quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+                }catch(err){
+                    console.log("image type/size unsupported!");
+                    console.log(err);
+                }
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
                 createImageGroups($(element).children('.ql-editor'));
             }
