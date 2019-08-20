@@ -54,7 +54,8 @@
 #navbarSearchField {
     width: 180px;
     &::placeholder {
-      color: $navigation-text;
+      color: $placeholder;
+      opacity: 1;
     }
 }
 

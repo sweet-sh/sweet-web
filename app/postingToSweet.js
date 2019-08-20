@@ -1033,7 +1033,7 @@ module.exports = function(app) {
             //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
             newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
                 '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
-                '<button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>';
+                '<button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>';
         }
 
         if(post.type == "draft" && !req.body.isDraft){
