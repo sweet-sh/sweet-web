@@ -379,7 +379,7 @@ module.exports = {
 
         //the following is a function i wrote to parse quilljs' delta format and turn formatted text into html and inline elements into an array. it turned
         //out to be more complicated than necessary so right now we're actually just going to pull the html from the quill editor directly and process it in
-        //the parseParagraphList function above. this function works well to the best of my knowledge and could still be used for turning quilljs deltas into 
+        //the parseParagraphList function above. this function works well to the best of my knowledge and could still be used for turning quilljs deltas into
         //custom formatted html if such a need ever arises.
 
         //called by parse text to turn the quilljs delta format (which can be used for text with embeds) into html
