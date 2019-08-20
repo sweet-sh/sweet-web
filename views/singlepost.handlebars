@@ -1,6 +1,6 @@
 <section id="homeBody" class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="container commentsList single-post-container" id="postsContainer">
+        <div class="single-post-container" id="postsContainer">
             {{#if canDisplay}}
                 {{> posts_v2 }}
             {{else}}
@@ -26,48 +26,14 @@
 
 <script>
 $(function() {
-  // $(".comments").show();
   if ($('.post-images').length > 0) {
       var imagesLoaded = $('.post-single-image').length;
       console.log("images loaded: " + imagesLoaded);
       var imagesLightboxed = 0;
-
-      var $images = $('.post-images a');
-      var $imagesGrouped = $images.filter('[data-group]');
-      var $imagesAlone = $images.not($imagesGrouped);
-      var params = {
-          // your params
-      };
-
-      // Handle standalone images
-      $imagesAlone.each(function (index, element) {
-          $(element).simpleLightbox();
-          imagesLightboxed++;
-      });
-
-      // Handle grouped images
-      if ($imagesGrouped.length > 0) {
-          // Select all groups
-          var groupNames = $imagesGrouped.map(function () {
-              return $(this).data('group');
-          }).get();
-          groupNames = $.unique(groupNames);
-
-          // Apply on each group
-          $.each(groupNames, function (key, value) {
-              var filteredGroup = $imagesGrouped.filter(function () { //could this be .find instead of .filter so that it just finds the one instance and stops
-                  return $(this).data('group') == value;
-              })
-              filteredGroup.simpleLightbox();
-              imagesLightboxed += filteredGroup.length;
-          });
-          console.log("images lightboxed: " + imagesLightboxed)
-          if (imagesLightboxed != imagesLoaded) {
-              console.log("not all images lightboxed!!!!!!");
-          }
-          //$.post("/admin/clientsideerrors",{errortext: "not all images lightboxed: "+imagesLoaded+" loaded, "+imagesLightboxed+" lightboxed"})
-      }
-  }
+      //i think when you're looking at a single post it makes perfect sense to be able to slideshow through all the images in the post + comments at once  
+      $('.post-images a').simpleLightbox();
+    }
+  
 {{#if loggedIn}}
     var commentForm = undefined;
     if(commentForm = document.getElementsByClassName('editable-text')[0]){

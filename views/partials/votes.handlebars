@@ -59,7 +59,11 @@
                     <img class="post-single-image" src="/images/communities/staging/{{this.proposedValue}}"/>
                 </div>
             {{else}}
-                <div class="alert alert-light text-dark proposal-box">{{{this.parsedProposedValue}}}</div>
+            {{#eq this.reference "name"}}
+                <div class="message proposal-box">{{this.parsedProposedValue}}</div>
+            {{else}}
+                <div class="message proposal-box">{{{this.parsedProposedValue}}}</div>
+            {{/eq}}
             {{/eq}}
         {{/eq}}
         <div class="vote-display mb-3">
@@ -67,12 +71,12 @@
         </div>
         {{#unless ../isMuted}}
             {{#contains this.voters ../loggedInUserData._id}}
-                <button class="btn btn-outline-dark mb-2 withdrawVoteButton community-action-button" data-vote-id="{{this._id}}">Withdraw your vote</button>
+                <button class="button mb-2 withdrawVoteButton community-action-button" data-vote-id="{{this._id}}">Withdraw your vote</button>
             {{else}}
-                <button class="btn btn-outline-secondary mb-2 castVoteButton community-action-button" data-vote-id="{{this._id}}">Vote for this proposal</button>
+                <button class="button mb-2 castVoteButton community-action-button" data-vote-id="{{this._id}}">Vote for this proposal</button>
             {{/contains}}
             {{#eq ../loggedInUserData.email this.creatorEmail}}
-                <button class="btn btn-outline-dark mb-2 deleteVoteButton community-action-button" data-vote-id="{{this._id}}">Delete proposal</button>
+                <button class="button mb-2 deleteVoteButton community-action-button" data-vote-id="{{this._id}}">Delete proposal</button>
             {{/eq}}
         {{/unless}}
     </section>

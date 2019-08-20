@@ -4,14 +4,14 @@
   </div>
   <div class="col-md-7">
     {{#if isBanned}}
-      <div class="alert alert-danger text-center">
+      <div class="message text-center">
         You have been banned from this community.
       </div>
     {{else}}
       <div id="mainBody" class="community-container">
         {{#unless loggedIn}}
-        <div class="alert alert-success w-100 text-center" style="font-size:1.4em;">
-          <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a lightweight social network built on trust and community. <a class="alert-link" href="/signup">Sign up now</a>!
+        <div class="message w-100 text-center" style="font-size:1.4em;">
+          <strong>{{ communityData.name }}</strong> is a community on <strong>sweet</strong>, a utopian social network. <a class="message-link" href="/signup">Join now</a>!
         </div>
         {{/unless}}
         {{> message }}
@@ -19,22 +19,22 @@
           {{#unless isMuted}}
             {{> newpostform }}
           {{else}}
-            <div class="alert alert-secondary text-center">
+            <div class="message text-center">
               You have been muted in this community. You are unable to post and your posts and votes have been made invisible. If you are unmuted, your posts and votes will be restored.
             </div>
           {{/unless}}
         {{/and}}
         {{#unless isMember}}
           {{#eq communityData.settings.visibility "public"}}
-            <div class="container commentsList" id="postsContainer"></div>
+            <div id="postsContainer"></div>
           {{else}}
-            <div class="alert alert-secondary text-center">
+            <div class="message text-center">
               This community's posts are only visible to its members.
             </div>
           {{/eq}}
         {{else}}
           {{#if communityData.welcomeMessageParsed}}
-            <div class="container commentsList" id="welcome-message-container">
+            <div id="welcome-message-container">
               {{{ communityData.welcomeMessageParsed }}}
               <footer>
                   <div class="updated-by-text">
@@ -57,11 +57,11 @@
             </div>
           {{/if}}
           {{#gt votes.length 0 }}
-            <div class="container commentsList" id="votesContainer">
+            <div id="votesContainer">
               {{> votes}}
             </div>
           {{/gt}}
-          <div class="container commentsList" id="postsContainer"></div>
+          <div id="postsContainer"></div>
           {{> infiniteScrollLoadingSpinner}}
         {{/unless}}
       </div>
@@ -69,7 +69,7 @@
       <div id="requestsBody" class="community-container">
         <h3 class="page-header mx-2">Membership requests</h3>
 
-        <div class="container" id="resultsContainer">
+        <div class="compact-container" id="resultsContainer">
           {{#each communityData.membershipRequests}}
             <div class="content-box">
               <div class="row">
@@ -84,8 +84,8 @@
                       {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                     </div>
                     <div class="ml-auto mt-2 mt-lg-0">
-                      <button type="button" class="btn btn-success community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
-                      <button type="button" class="btn btn-danger community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
+                      <button type="button" class="button community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
+                      <button type="button" class="button community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
                     </div>
                   </div>
                 </div>
@@ -98,7 +98,7 @@
         <h3 class="page-header mx-2">Community editor</h3>
         <div class="row">
           <div class="col-md-4">
-            <div class="nav flex-md-column nav-pills" id="nav-tab" role="tablist" aria-orientation="vertical">
+            <div class="nav" id="community-editor-tabs" role="tablist" aria-orientation="vertical">
               <a class="nav-item nav-link active" id="nav-nameEditor-tab" data-toggle="tab" href="#nav-nameEditor" role="tab" aria-controls="nav-nameEditor" aria-selected="true">Name</a>
               <a class="nav-item nav-link" id="nav-descriptionEditor-tab" data-toggle="tab" href="#nav-descriptionEditor" role="tab" aria-controls="nav-descriptionEditor" aria-selected="false">Description</a>
               <a class="nav-item nav-link" id="nav-rulesEditor-tab" data-toggle="tab" href="#nav-rulesEditor" role="tab" aria-controls="nav-rulesEditor" aria-selected="false">Rules</a>
@@ -121,7 +121,7 @@
                   <div class="form-group">
                     Your community's URL will be: <span class="text-info">https://sweet.sh/community/<span id="communitySlug"></span></span>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-descriptionEditor" role="tabpanel" aria-labelledby="nav-descriptionEditor-tab">
@@ -129,10 +129,10 @@
                   <input type="hidden" name="reference" value="description" />
                   <div class="form-group">
                     <label for="communityDescription">Description</label>
-                    <div class="form-control" style="height:auto;" id="communityDescriptionHtml">{{{communityData.descriptionRaw}}}</div>
+                    <div class="form-control editable-text" style="height:auto;" id="communityDescriptionHtml">{{{communityData.descriptionRaw}}}</div>
                     <input type="hidden" name="proposedValue" id="communityDescription">
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-rulesEditor" role="tabpanel" aria-labelledby="nav-rulesEditor-tab">
@@ -140,14 +140,14 @@
                   <input type="hidden" name="reference" value="rules" />
                   <div class="form-group">
                     <label for="communityRules">Rules</label>
-                    <div class="form-control" style="height:auto;" id="communityRulesHtml">{{{communityData.rulesRaw}}}</div>
+                    <div class="form-control editable-text" style="height:auto;" id="communityRulesHtml">{{{communityData.rulesRaw}}}</div>
                     <input type="hidden" name="proposedValue" id="communityRules">
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-welcomeMessageEditor" role="tabpanel" aria-labelledby="nav-welcomeMessageEditor-tab">
-                <form action="/api/community/welcomemessage/update/{{communityData._id}}" method="post">
+                <form id="welcomeMessageForm" action="/api/community/welcomemessage/update/{{communityData._id}}" method="post">
                   <input type="hidden" name="reference" value="welcomeMessage" />
                   <div class="form-group">
                     <label for="communityWelcomeMessage">Welcome message</label>
@@ -157,9 +157,10 @@
                     <p class="small">
                       Unlike other community settings, the welcome message is changed immediately, with no vote.
                     </p>
-                    <textarea class="form-control editable-post-content editable-text" id="communityWelcomeMessage" name="communityWelcomeMessage" rows="3">{{communityData.welcomeMessageRaw}}</textarea>
+                    <div class="form-control editable-text" style="height:auto;" id="welcomeMessageHtml">{{{communityData.welcomeMessageRaw}}}</div>
+                    <input type="hidden" name="proposedValue" id="welcomeMessage">
                   </div>
-                  <button type="submit" class="btn btn-primary updateWelcomeMessage">Update</button>
+                  <button type="submit" class="button updateWelcomeMessage">Update</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-imageEditor" role="tabpanel" aria-labelledby="nav-imageEditor-tab">
@@ -173,7 +174,7 @@
                       <input type="file" name="proposedValue" id="image-upload" />
                     </div>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button" id="community-image-button">Create vote</button>
+                  <button type="submit" class="button community-action-button" id="community-image-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-visibilityEditor" role="tabpanel" aria-labelledby="nav-visibilityEditor-tab">
@@ -186,7 +187,7 @@
                       <option value="private" {{#eq communityData.settings.visibility "private"}}selected{{/eq}}>Private (posts visible only to members)</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-joinTypeEditor" role="tabpanel" aria-labelledby="nav-joinTypeEditor-tab">
@@ -200,7 +201,7 @@
                       <!-- <option value="closed" {{#eq communityData.settings.joinType "closed"}}selected{{/eq}}>Closed (only invited users can join)</option> -->
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
               <div class="tab-pane fade" id="nav-voteLengthEditor" role="tabpanel" aria-labelledby="nav-voteLengthEditor-tab">
@@ -216,7 +217,7 @@
                       <option value="30" {{#eq communityData.settings.voteLength 30}}selected{{/eq}}>30 days</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary community-action-button">Create vote</button>
+                  <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
               </div>
             </div>
@@ -225,36 +226,30 @@
       </div>
       <div id="membersBody" class="community-container">
         <h3 class="page-header mx-2">Member manager</h3>
-        <div class="container" id="resultsContainer">
+        <div class="compact-container" id="resultsContainer">
           {{#each communityData.members}}
             {{#contains this.mutedCommunities ../communityData._id}}
             {{else}}
               <div class="content-box">
-                <div class="row">
-                  <div class="col commentContent">
-                    <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
-                      <div class="d-flex align-items-center">
-                        <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
-                        {{#if this.displayName}}
-                          <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                        {{else}}
-                          <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                        {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                      </div>
-                      <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-dark community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
-                        <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
-                      </div>
-                    </div>
+                  <div class="content-box-header">
+                      <img class="postAuthorImage mr-2" src="/images/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                      {{#if this.displayName}}
+                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                      {{else}}
+                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                   </div>
-                </div>
+                  <div class="content-box-actions">
+                        <button type="button" class="button community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
+                        <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                  </div>
               </div>
             {{/contains}}
           {{/each}}
         </div>
         {{#if communityData.mutedMembers}}
           <h5 class="mt-4 px-2">Muted users</h5>
-          <div class="container" id="resultsContainer">
+          <div class="compact-container" id="resultsContainer">
             {{#each communityData.mutedMembers}}
               <div class="content-box">
                 <div class="row">
@@ -269,11 +264,11 @@
                         {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                       </div>
                       <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-dark community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
+                        <button type="button" class="button community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
                         {{#if this.isBanned}}
-                          <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                          <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
                         {{else}}
-                          <button type="button" class="btn btn-danger community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                          <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
                         {{/if}}
                       </div>
                     </div>
@@ -285,7 +280,7 @@
         {{/if}}
         {{#if communityData.bannedMembers}}
           <h5 class="mt-4 px-2">Banned users</h5>
-          <div class="container" id="resultsContainer">
+          <div class="compact-container" id="resultsContainer">
             {{#each communityData.bannedMembers}}
               <div class="content-box">
                 <div class="row">
@@ -300,7 +295,7 @@
                         {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
                       </div>
                       <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="btn btn-success community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                        <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
                       </div>
                     </div>
                   </div>
@@ -317,17 +312,24 @@
 
 {{#unless isBanned}}
 <script>
-  //called immediately below only atm
-  function startInfiniteScroll(){
-    $('#postsContainer').infiniteScroll({
-      path: function() {
-        return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
-      },
-      append: '.post',
-      prefill: true,
-      history: true, //to be clear, this should not work
-      status: '.page-load-status'
-    });
+  //called immediately below and in restartInfiniteScroll
+  function startInfiniteScroll() {
+      $('#postsContainer').infiniteScroll({
+        //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value
+          //if we've just gotten to this page, or if we've just made a post the feed is emptied and needPostsOlderThan is set so that the new post loads on top of the feed
+          path: function() {
+              if ($(".oldesttimestamp").length) {
+                  //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+                  return '/showposts/community/{{communityData._id}}/' + $(".oldesttimestamp").last().html();
+              }
+              //this is for when the feed is currently empty and is being loaded/reloaded
+              return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
+          },
+          append: '.post',
+          prefill: true,
+          history: false,
+          status: '.page-load-status'
+      });
   }
   startInfiniteScroll();
 
@@ -335,6 +337,7 @@
 
 attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
 attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
+attachQuill(document.getElementById("welcomeMessageHtml"),"Write something. Highlight to format",true);
 
 $("#rulesForm").submit(function(e){
   $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());
@@ -343,6 +346,11 @@ $("#rulesForm").submit(function(e){
 
 $("#descriptionForm").submit(function(e){
   $(this).find("#communityDescription").val($(this).find("#communityDescriptionHtml").find(".ql-editor").html());
+  return true;
+})
+
+$("#welcomeMessageForm").submit(function(e){
+  $(this).find("#welcomeMessage").val($(this).find("#welcomeMessageHtml").find(".ql-editor").html());
   return true;
 })
 

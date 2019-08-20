@@ -1,4 +1,71 @@
-    <img src="/icons/bee.svg" id="sweetIndexLogo" alt="sweet logo"/>
+<div class="row">
+    <div class="col-md-8">
+        <h1>sweet <img class="bee-logo" src="/icons/bee-color.svg" /></h1>
+        <p class="subtitle">
+            a utopian social network
+        </p>
+        <p>
+            Home to <strong>{{userCount}}</strong> people and <strong>{{communityCount}}</strong> communities
+        </p>
+        <div class='logged-out-communites-list'>
+
+            {{#each communities}}
+                <a href="/community/{{this.slug}}">
+                    <img src="https://sweet.sh/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}"/>
+                    {{this.name}}
+                </a>
+            {{/each}}
+        </div>
+        <p style="text-align: center;">
+            <a class="button large-button button-centered" href="/about">Learn more</a>
+        </p>
+    </div>
+    <div class="col-md-4">
+
+        {{> message }}
+
+        <form  class="logged-out-form" action="/login" method="post">
+            <div class="form-group">
+                <input type="text" name="email" placeholder="Email" {{#if sessionFlash.email}}value="{{ sessionFlash.email }}"{{/if}}>
+                <label for="email">Email</label>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password">
+                <label for="password">Password</label>
+            </div>
+
+            <button class="button large-button full-width-button" type="submit">Log in</button>
+            <a class="help-link" href="/forgot-password">Forgot password?</a>
+        </form>
+
+        <form class="logged-out-form" action="/signup" method="post">
+            <p class="sidebar-text">Join sweet for ad-free, safer, democratically governed communites; queer- and trans-friendly spaces; flexible privacy settings; and the Internet's best post editor.</p>
+
+            <div class="form-group">
+                <input type="text" name="email" placeholder="Email" {{#if sessionFlash.email}}value="{{ sessionFlash.email }}"{{/if}}>
+                <label for="email">Email</label>
+                <small class="help-text">We don't spam you or share your data.</small>
+            </div>
+            <div class="form-group">
+                <input type="text" name="username" placeholder="Username" maxlength="20" {{#if sessionFlash.username}}value="{{ sessionFlash.username }}"{{/if}}>
+                <label for="username">Username</label>
+                <small class="help-text">Lowercase letters, numbers, - (dash) and _ (underscore) only. 20 characters maximum.</small>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Password">
+                <label for="password">Password</label>
+            </div>
+            <div class="form-group">
+                <input type="password" name="passwordrepeat" placeholder="Repeat password">
+                <label for="passwordrepeat">Repeat password</label>
+            </div>
+
+            <button class="button large-button full-width-button" type="submit">Sign up</button>
+        </form>
+    </div>
+</div>
+
+<!-- <img src="/icons/bee.svg" id="sweetIndexLogo" alt="sweet logo"/>
 <div class="container">
   <hgroup style="min-height: 120px; margin-bottom: 1rem;">
     <h1 class="mb-2" style="font-size: 3.5rem;"><strong>welcome to sweet</strong></h1>
@@ -27,4 +94,4 @@
   <p>
     <strong>have fun and be kind. x</strong>
   </p>
-</div>
+</div> -->

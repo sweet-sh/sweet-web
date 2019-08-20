@@ -1,38 +1,4 @@
 const reservedUsernames = require('../config/reserved-usernames.js')
-var bcrypt = require('bcrypt-nodejs');
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var Autolinker = require('autolinker');
-var notifier = require('./notifier.js');
-
-sanitizeHtmlOptions = {
-    allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
-    allowedAttributes: {
-        'a': ['href', 'data-*', 'target', 'rel']
-    }
-}
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
 
 // APIs
 
@@ -51,7 +17,7 @@ module.exports = function (app, passport) {
 
         if (reservedUsernames.includes(req.body.username)) {
             req.session.sessionFlash = {
-                type: 'warning',
+                type: 'alert',
                 message: "This username is unavailable.",
                 username: req.body.username,
                 email: req.body.email
@@ -77,7 +43,7 @@ module.exports = function (app, passport) {
                         return elem.msg
                     }).join("<hr>");
                     req.session.sessionFlash = {
-                        type: 'warning',
+                        type: 'alert',
                         message: errors,
                         username: req.body.username,
                         email: req.body.email
@@ -85,7 +51,6 @@ module.exports = function (app, passport) {
                     res.redirect(301, '/signup');
                 } else {
                     req.session.sessionFlash = {
-                        type: 'info',
                         message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
                     }
                     passport.authenticate('signup', {
@@ -105,8 +70,9 @@ module.exports = function (app, passport) {
     //Output: either a redirect back to the login html page with a sessionflash message "Please check you email and password" (which shows up twice in fact if
     //you didn't enter an email) or you are successfully logged in by passport.
     app.post('/login', function (req, res) {
-        req.checkBody('email', 'Please check your email and password.').isEmail().notEmpty();
-        // req.checkBody('password', 'Please enter a password.').notEmpty();
+        req.checkBody('email', 'Please enter a valid email.').isEmail();
+        req.checkBody('email', 'Please fill in your email.').notEmpty();
+        req.checkBody('password', 'Please fill in your password.').notEmpty();
 
         req.getValidationResult().then(function (result) {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
@@ -117,15 +83,16 @@ module.exports = function (app, passport) {
                     return elem.msg
                 }).join("<hr>");
                 req.session.sessionFlash = {
-                    type: 'warning',
-                    message: errors
+                    type: 'alert',
+                    message: errors,
+                    email: req.body.email
                 }
                 res.redirect(301, '/login');
             } else {
                 passport.authenticate('login', {
                     successRedirect: '/home',
                     failureRedirect: '/login',
-                    failureFlash: true
+                    failureFlash: true,
                 })(req, res);
             }
         });
@@ -218,7 +185,7 @@ module.exports = function (app, passport) {
             console.log(req.files.imageUpload.data.length)
             if (req.files.imageUpload.data.length > 3145728) {
                 req.session.sessionFlash = {
-                    type: 'warning',
+                    type: 'alert',
                     message: 'File too large. The file size limit is 3MB.'
                 }
                 return res.redirect('back');
@@ -247,7 +214,7 @@ module.exports = function (app, passport) {
                 let parsedAbout = req.user.aboutParsed;
                 if (req.body.about != req.user.aboutRaw) {
                     // Parse about section
-                    let splitAbout = req.body.about.substring(0, 500).split(/\r\n|\r|\n/gi);
+                    let splitAbout = helper.escapeHTMLChars(req.body.about).substring(0, 500).split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
                     splitAbout.forEach(function (line) {
                         if (line != "") {
@@ -255,7 +222,7 @@ module.exports = function (app, passport) {
                             line = Autolinker.link(line);
                             var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
                             var mentionReplace = '$1<a href="/$2">@$2</a>';
-                            var hashtagRegex = /(^|[^#\w])#(\w{1,60})\b/g
+                            var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
                             var hashtagReplace = '$1<a href="/tag/$2">#$2</a>';
                             line = line.replace(mentionRegex, mentionReplace).replace(hashtagRegex, hashtagReplace);
                             parsedAboutArray.push(line);
@@ -263,13 +230,15 @@ module.exports = function (app, passport) {
                     })
                     parsedAbout = parsedAboutArray.join('');
                 }
-                user.displayName = sanitize(sanitizeHtml(req.body.displayName.substring(0, 50), sanitizeHtmlOptions));
-                user.pronouns = sanitize(sanitizeHtml(req.body.pronouns.substring(0, 50), sanitizeHtmlOptions));
-                user.aboutRaw = sanitize(req.body.about.substring(0, 500));
-                user.aboutParsed = sanitize(sanitizeHtml(parsedAbout, sanitizeHtmlOptions));
-                user.location = sanitize(sanitizeHtml(req.body.location.substring(0, 50), sanitizeHtmlOptions));
-                user.websiteRaw = sanitize(req.body.website.substring(0, 50));
-                user.websiteParsed = sanitize(sanitizeHtml(Autolinker.link(req.body.website.substring(0, 50)), sanitizeHtmlOptions));
+                //the assumption is that when handlebars displays these, it'll automatically escape the html so that the browser doesn't render it, so there's no
+                //need to do that here to the input except with the parsed stuff above and the website link, which are going to be displayed with html intact at some point
+                user.displayName = req.body.displayName.substring(0, 50);
+                user.pronouns = req.body.pronouns.substring(0, 50);
+                user.aboutRaw = req.body.about.substring(0, 500);
+                user.aboutParsed = parsedAbout;
+                user.location = req.body.location.substring(0, 50);
+                user.websiteRaw = req.body.website.substring(0, 50);
+                user.websiteParsed = Autolinker.link(helper.escapeHTMLChars(req.body.website.substring(0, 50)));
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {
@@ -395,7 +364,7 @@ module.exports = function (app, passport) {
     //Output: redirect to /login with a 301 code and "No token provided" in the flash message.
     app.get('/verify-email', function (req, res) {
         req.session.sessionFlash = {
-            type: 'warning',
+            type: 'alert',
             message: "No token provided."
         }
         res.redirect(301, '/login');
@@ -406,6 +375,7 @@ module.exports = function (app, passport) {
     //Output: rendering of verify-email with the token as a hidden input on the page and the email autofilled from sessionFlash.
     app.get('/verify-email/:verificationtoken', function (req, res) {
         res.render('verify-email', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash,
             token: req.params.verificationtoken
         });
@@ -427,7 +397,7 @@ module.exports = function (app, passport) {
                     return elem.msg
                 }).join("<hr>");
                 req.session.sessionFlash = {
-                    type: 'warning',
+                    type: 'alert',
                     message: errors,
                     email: req.body.email
                 }
@@ -444,7 +414,7 @@ module.exports = function (app, passport) {
                         if (!user) {
                             console.log("No such user")
                             req.session.sessionFlash = {
-                                type: 'warning',
+                                type: 'alert',
                                 message: "Email verification token invalid or has expired. Enter your email below to resend the token."
                             }
                             res.redirect(301, '/resend-token');
@@ -453,7 +423,6 @@ module.exports = function (app, passport) {
                             user.save()
                                 .then(user => {
                                     req.session.sessionFlash = {
-                                        type: 'success',
                                         message: "Your email has been verified successfully. Please log in below."
                                     }
                                     res.redirect(301, '/login');
@@ -462,7 +431,7 @@ module.exports = function (app, passport) {
                                     console.log("Cannot save user")
                                     console.error(err)
                                     req.session.sessionFlash = {
-                                        type: 'warning',
+                                        type: 'alert',
                                         message: "An error occured while verifying your token. Please try again."
                                     }
                                     res.redirect(301, '/verify-email/' + req.body.verificationToken);
@@ -473,7 +442,7 @@ module.exports = function (app, passport) {
                         console.log("Cannot access database")
                         console.error(err)
                         req.session.sessionFlash = {
-                            type: 'warning',
+                            type: 'alert',
                             message: "Email verification token invalid or has expired. Enter your email below to resend the token."
                         }
                         res.redirect(301, '/resend-token');
@@ -487,6 +456,7 @@ module.exports = function (app, passport) {
     //Output: renders resend-token with flash message
     app.get('/resend-token', function (req, res) {
         res.render('resend-token', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });
@@ -501,14 +471,12 @@ module.exports = function (app, passport) {
             .then(user => {
                 if (!user) { // There is no user registered with this email.
                     req.session.sessionFlash = {
-                        type: 'success',
                         message: "A new token has been sent to " + req.body.email + ". Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.",
                         email: req.body.email
                     }
                     res.redirect(301, '/resend-token');
                 } else if (user.isVerified) { // This email address is aleady verified.
                     req.session.sessionFlash = {
-                        type: 'success',
                         message: "A new token has been sent to " + req.body.email + ". Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.",
                         email: req.body.email
                     }
@@ -533,7 +501,6 @@ module.exports = function (app, passport) {
                             sgMail.send(msg)
                                 .then(user => {
                                     req.session.sessionFlash = {
-                                        type: 'success',
                                         message: "A new token has been sent to " + req.body.email + ". Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page."
                                     }
                                     res.redirect(301, '/resend-token');
@@ -541,7 +508,7 @@ module.exports = function (app, passport) {
                         })
                         .catch(err => {
                             req.session.sessionFlash = {
-                                type: 'warning',
+                                type: 'alert',
                                 message: "There has been a problem sending your token. Please try again in a few minutes.",
                                 email: req.body.email
                             }
@@ -551,7 +518,7 @@ module.exports = function (app, passport) {
             })
             .catch(err => {
                 req.session.sessionFlash = {
-                    type: 'warning',
+                    type: 'alert',
                     message: "There has been a problem sending your token. Please try again in a few minutes.",
                     email: req.body.email
                 }
@@ -564,6 +531,7 @@ module.exports = function (app, passport) {
     //Output: renders forgot-password with flash message
     app.get('/forgot-password', function (req, res) {
         res.render('forgot-password', {
+            layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
         });
     });
@@ -583,13 +551,14 @@ module.exports = function (app, passport) {
                 if (!user) {
                     console.log("Wrong token on GET")
                     req.session.sessionFlash = {
-                        type: 'warning',
+                        type: 'alert',
                         message: "Password reset token is invalid or has expired."
                     }
                     res.redirect(301, '/forgot-password');
                 } else {
                     console.log("Correct token")
                     res.render('reset-password', {
+                        layout: 'logged-out',
                         sessionFlash: res.locals.sessionFlash,
                         resetToken: req.params.token
                     });
@@ -612,7 +581,7 @@ module.exports = function (app, passport) {
             .then(user => {
                 if (!user) { // No account with this email address exists.
                     req.session.sessionFlash = {
-                        type: 'warning',
+                        type: 'alert',
                         message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.',
                         email: req.body.email
                     }
@@ -634,14 +603,13 @@ module.exports = function (app, passport) {
                         sgMail.send(msg)
                             .then(user => {
                                 req.session.sessionFlash = {
-                                    type: 'info',
                                     message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
                                 }
                                 res.redirect(301, '/forgot-password');
                             })
                             .catch(error => {
                                 req.session.sessionFlash = {
-                                    type: 'warning',
+                                    type: 'alert',
                                     message: "There has been a problem sending your recovery email. Please try again in a few minutes.",
                                     email: req.body.email
                                 }
@@ -651,7 +619,7 @@ module.exports = function (app, passport) {
                     })
                     .catch(error => {
                         req.session.sessionFlash = {
-                            type: 'warning',
+                            type: 'alert',
                             message: "There has been a problem sending your recovery email. Please try again in a few minutes.",
                             email: req.body.email
                         }
@@ -680,7 +648,7 @@ module.exports = function (app, passport) {
                 if (!user) {
                     console.log("Wrong token (apparently)")
                     req.session.sessionFlash = {
-                        type: 'warning',
+                        type: 'alert',
                         message: "Password reset token is invalid or has expired."
                     }
                     res.redirect(301, '/forgot-password');
@@ -696,7 +664,7 @@ module.exports = function (app, passport) {
                                 return elem.msg
                             }).join("<hr>");
                             req.session.sessionFlash = {
-                                type: 'warning',
+                                type: 'alert',
                                 message: errors,
                                 username: req.body.username,
                                 email: req.body.email
@@ -719,7 +687,6 @@ module.exports = function (app, passport) {
                                     sgMail.send(msg)
                                         .then(user => {
                                             req.session.sessionFlash = {
-                                                type: 'info',
                                                 message: 'Your password has been successfully changed. You can now log in with your email and new password.'
                                             }
                                             res.redirect(301, '/login');
@@ -727,7 +694,7 @@ module.exports = function (app, passport) {
                                 })
                                 .catch(error => {
                                     req.session.sessionFlash = {
-                                        type: 'warning',
+                                        type: 'alert',
                                         message: "There has been a problem updating your password. Please try again in a few minutes."
                                     }
                                     res.redirect(301, '/reset-password/' + req.body.token);

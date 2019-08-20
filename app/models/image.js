@@ -1,8 +1,5 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
 var imageSchema = new mongoose.Schema({
-  context: String,
+  context: String, //either "user" or "community", corresponding to the post schema's type field's values "original" and "community"
   filename: {type: String, unique: true},
   privacy: String,
   accessToken: String,

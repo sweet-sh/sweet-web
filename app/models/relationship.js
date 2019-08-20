@@ -1,6 +1,3 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
 // define the schema for our user model
 var relationshipSchema = new mongoose.Schema({
   from: {
@@ -11,8 +8,8 @@ var relationshipSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  fromUser: { type: Schema.Types.ObjectId, ref: 'User' },
-  toUser: { type: Schema.Types.ObjectId, ref: 'User' },
+  fromUser: { type: DBReference, ref: 'User' },
+  toUser: { type: DBReference, ref: 'User' },
   value: {
 		type: String,
 		required: true //currently implemented possible values: follow, trust, flag, mute

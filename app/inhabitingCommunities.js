@@ -1,37 +1,4 @@
-var moment = require('moment');
-
-const notifier = require('./notifier.js');
-
-CommunityPlaceholder = mongoose.model('Community Placeholder');
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-const today = moment().clone().startOf('day');
-const thisyear = moment().clone().startOf('year');
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
-var shortid = require('shortid');
-const fs = require('fs');
-
-const schedule = require('node-schedule');
+const CommunityPlaceholder = mongoose.model('Community Placeholder');
 
 //this is never read from but it could be someday i guess
 const expiryTimers = [];
@@ -103,6 +70,8 @@ module.exports = function(app, passport) {
     });
 
     app.get('/community/:slug', function(req, res) {
+        const today = moment().clone().startOf('day');
+        const thisyear = moment().clone().startOf('year');
         if (req.isAuthenticated()) {
             isLoggedIn = true;
         } else {
@@ -180,9 +149,8 @@ module.exports = function(app, passport) {
                                 // majority margin required for a vote to pass based on the number of those members
                                 var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
                                 let recentlyActiveMembers = community.members.filter((member) => {
-                                    console.log(member.lastUpdated)
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
-                                           !mutedMemberIds.includes(member._id.toString());
+                                        !mutedMemberIds.includes(member._id.toString());
                                 })
                                 let recentlyActiveMemberIds = recentlyActiveMembers.map(a => a._id.toString());
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
@@ -263,13 +231,8 @@ module.exports = function(app, passport) {
                             console.log("Saving image")
                             imageEnabled = true;
                             sharp(req.files.imageUpload.data)
-                                .resize({
-                                    width: 600,
-                                    height: 600
-                                })
-                                .jpeg({
-                                    quality: 70
-                                })
+                                .resize({ width: 600, height: 600 })
+                                .jpeg({ quality: 70 })
                                 .toFile('./public/images/communities/' + communityUrl + '.jpg')
                                 .catch(err => {
                                     console.error(err);
@@ -281,12 +244,12 @@ module.exports = function(app, passport) {
 
                     const community = new Community({
                         created: new Date(),
-                        name: sanitize(newCommunityData.communityName),
+                        name: newCommunityData.communityName,
                         slug: newCommunitySlug,
                         url: communityUrl,
-                        descriptionRaw: sanitize(newCommunityData.communityDescription),
+                        descriptionRaw: newCommunityData.communityDescription,
                         descriptionParsed: parsedDesc,
-                        rulesRaw: sanitize(newCommunityData.communityRules),
+                        rulesRaw: newCommunityData.communityRules,
                         rulesParsed: parsedRules,
                         image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
                         imageEnabled: imageEnabled,
@@ -725,7 +688,7 @@ module.exports = function(app, passport) {
         let parsedReference = parsedReferences[req.body.reference]
         var allowedChange = true; //is there a change? and is it allowed?
         if (req.body.reference == "description" || req.body.reference == "rules") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = (await helper.parseText(req.body.proposedValue)).text
             if (req.body.reference == "description") {
                 allowedChange = (community.descriptionRaw != proposedValue);
@@ -733,11 +696,11 @@ module.exports = function(app, passport) {
                 allowedChange = (community.rulesRaw != proposedValue);
             }
         } else if (req.body.reference == "joinType") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = parsedJoinType[req.body.proposedValue]
             allowedChange = (parsedProposedValue && community.settings.joinType != proposedValue); //parsedProposedValue will be undefined if req.body.proposedValue wasn't one of the allowed values
         } else if (req.body.reference == "visibility") {
-            proposedValue = sanitize(req.body.proposedValue)
+            proposedValue = req.body.proposedValue
             parsedProposedValue = parsedVisibility[req.body.proposedValue]
             allowedChange = (parsedProposedValue && community.settings.visibility != proposedValue);
         } else if (req.body.reference == "voteLength") {
@@ -748,8 +711,8 @@ module.exports = function(app, passport) {
             proposedValue = imageUrl
             parsedProposedValue = imageUrl
         } else if (req.body.reference == "name") { //this is where it gets complicated
-            proposedValue = sanitize(req.body.proposedValue)
-            parsedProposedValue = (await helper.parseText(req.body.proposedValue, false, false, false, false, false)).text //don't need links and stuff
+            proposedValue = req.body.proposedValue
+            parsedProposedValue = proposedValue;
             var slug = helper.slugify(proposedValue);
             if (!parsedProposedValue || community.name == proposedValue) {
                 //not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
@@ -885,7 +848,7 @@ module.exports = function(app, passport) {
                                 var currentFortnight = moment().clone().subtract(14, 'days').startOf('day');
                                 let recentlyActiveMembers = community.members.filter((member) => {
                                     return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
-                                           !mutedMemberIds.includes(member._id.toString());
+                                        !mutedMemberIds.includes(member._id.toString());
                                 })
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
 
@@ -1065,8 +1028,8 @@ module.exports = function(app, passport) {
             })
             .then(async function(community) {
                 if (await isCommunityMember(community)) {
-                    community.welcomeMessageRaw = sanitize(req.body.communityWelcomeMessage)
-                    community.welcomeMessageParsed = (await helper.parseText(req.body.communityWelcomeMessage)).text
+                    community.welcomeMessageRaw = req.body.proposedValue;
+                    community.welcomeMessageParsed = (await helper.parseText(req.body.proposedValue)).text
                     community.welcomeMessageAuthor = req.user._id
                     community.save()
                         .then(result => {

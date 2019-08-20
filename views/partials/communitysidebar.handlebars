@@ -3,7 +3,7 @@
 </div>
 
 <h3 class="page-header community-name">
-  <a href="/community/{{communityData.slug}}" class="text-dark">{{ communityData.name }}</a>
+  <a href="/community/{{communityData.slug}}">{{ communityData.name }}</a>
 </h3>
 
 <div class="community-tags">
@@ -35,17 +35,17 @@
         {{! Muted and not a member}}
         {{#eq communityData.settings.joinType "open"}}
         </ul>
-          <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+          <button type="button" id="joinButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
         {{/eq}}
         {{#eq communityData.settings.joinType "approval"}}
           {{#if hasRequested}}
           </ul>
-            <div class="alert alert-secondary text-center">
+            <div class="message text-center">
               You have asked to join this community. You will be notified if your request is approved.
             </div>
           {{else}}
           </ul>
-            <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+            <button type="button" id="requestButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
           {{/if}}
         {{/eq}}
       {{/if}}
@@ -70,17 +70,17 @@
           {{#unless isMember}}
             {{#eq communityData.settings.joinType "open"}}
             </ul>
-              <button type="button" id="joinButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
+              <button type="button" id="joinButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Join community</button>
             {{/eq}}
             {{#eq communityData.settings.joinType "approval"}}
               {{#if hasRequested}}
               </ul>
-                <div class="alert alert-secondary text-center">
+                <div class="message text-center">
                   You have asked to join this community. You will be notified if your request is approved.
                 </div>
               {{else}}
               </ul>
-                <button type="button" id="requestButton" class="btn btn-success btn-block mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
+                <button type="button" id="requestButton" class="button full-width-button mb-4 community-action-button"><i class="fas fa-door-open"></i> Request to join community</button>
               {{/if}}
             {{/eq}}
           {{else}}
@@ -93,7 +93,7 @@
         <h5>Members</h5>
         <div id="membersList" class="user-list">
           {{#each communityData.members}}
-            <a href="/{{this.username}}" data-toggle="tooltip" title="@{{this.username}}">
+            <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top">
                 <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                 {{#if this.isRecentlyActive}}
                     <i class="recently-active-marker fas fa-circle"></i>

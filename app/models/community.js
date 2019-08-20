@@ -1,6 +1,3 @@
-var mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
 // define the schema for our user model
 var communitySchema = new mongoose.Schema({
   created: Date,
@@ -14,7 +11,7 @@ var communitySchema = new mongoose.Schema({
   rulesParsed: String,
   welcomeMessageRaw: String,
   welcomeMessageParsed: String,
-  welcomeMessageAuthor: { type: Schema.Types.ObjectId, ref: 'User' },
+  welcomeMessageAuthor: { type: DBReference, ref: 'User' },
   image: String,
   imageEnabled: Boolean,
   settings: {
@@ -23,16 +20,16 @@ var communitySchema = new mongoose.Schema({
     voteThreshold: Number,
     voteLength: Number
   },
-  members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  members: [{ type: DBReference, ref: 'User' }],
   membersCount: Number,
   requestsCount: Number,
-  bannedMembers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  mutedMembers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  bannedMembers: [{ type: DBReference, ref: 'User' }],
+  mutedMembers: [{ type: DBReference, ref: 'User' }],
   mutedMembersCount: Number,
   votingMembersCount: Number,
-  membershipRequests: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-  votes: [{ type: Schema.Types.ObjectId, ref: 'Vote' }]
+  membershipRequests: [{ type: DBReference, ref: 'User' }],
+  posts: [{ type: DBReference, ref: 'Post' }],
+  votes: [{ type: DBReference, ref: 'Vote' }]
 });
 
 communitySchema.pre('validate', function (next) {
@@ -59,8 +56,8 @@ communitySchema.index({slug:1});
 var communityPlaceholderSchema = new mongoose.Schema({
   name: String,
   slug: String,
-  community: { type: Schema.Types.ObjectId, ref: 'Community' },
-  vote: { type: Schema.Types.ObjectId, ref: 'Vote' }
+  community: { type: DBReference, ref: 'Community' },
+  vote: { type: DBReference, ref: 'Vote' }
 })
 
 //just retrieve this with mongoose.model('Community Placeholder') in the one place in which it is needed

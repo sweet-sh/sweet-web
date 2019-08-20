@@ -127,6 +127,7 @@ module.exports = [
                   "domain",
                   "download",
                   "downloads",
+                  "drafts",
                   "ecommerce",
                   "edit",
                   "editor",

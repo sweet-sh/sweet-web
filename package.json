@@ -4,7 +4,10 @@
   "description": "A lightweight, trust- and community-based social network",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "watch-sass": "node-sass --source-map true --output-style compressed scss/index.scss public/css/style.css --watch",
+    "generate-dark-mode": "node-sass --source-map true --output-style compressed scss/dark-mode.scss public/css/dark-mode.css --watch",
+    "start": "nodemon server.js & npm run watch-sass",
+    "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
@@ -21,6 +24,7 @@
     "express-fileupload": "^1.1.3-alpha.1",
     "express-handlebars": "^3.0.2",
     "express-messages": "^1.0.1",
+    "express-mongo-sanitize": "^1.3.2",
     "express-session": "^1.15.6",
     "express-validator": "^5.3.1",
     "got": "^9.6.0",
@@ -33,7 +37,6 @@
     "method-override": "^3.0.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.25",
-    "mongo-sanitize": "^1.0.1",
     "mongoose": "^5.4.19",
     "morgan": "^1.9.1",
     "node-schedule": "^1.3.2",
@@ -46,5 +49,9 @@
     "sharp": "^0.22.0",
     "shortid": "^2.2.14",
     "web-push": "^3.3.5"
+  },
+  "devDependencies": {
+    "node-sass": "^4.12.0",
+    "nodemon": "^1.19.1"
   }
 }

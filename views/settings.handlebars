@@ -7,7 +7,7 @@
             <h4>Basic settings</h4>
             <div class="form-group">
                 <label for="timezone">Select your timezone (or the nearest equivalent):</label>
-                <select class="form-control" name="timezone" id="timezone">
+                <select name="timezone" id="timezone">
                     {{!-- the defaulted selected timezone for this section is chosen by javascript at the bottom of the page --}}
                 	<option id="guessed-timezone" value="auto">...loading default timezone...</option>
                 	<option value="-12:00">(GMT -12:00) Eniwetok, Kwajalein</option>
@@ -44,7 +44,7 @@
             <h4>Privacy</h4>
             <div class="form-group">
                 <label for="profileVisibility">Profile page and public posts visibility</label>
-                <select name="profileVisibility" class="form-control" id="profileVisibility">
+                <select name="profileVisibility" id="profileVisibility">
                     <option value="invisible" {{#eq loggedInUserData.settings.profileVisibility "invisible"}}selected{{/eq}}>Visible to logged in users only</option>
                     <option value="profileOnly" {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible to logged out users</option>
                     <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
@@ -54,7 +54,7 @@
             <h4 id="email_settings">Emails</h4>
             <div class="form-group">
                     <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="sendMentionEmails" id="sendMentionEmails" {{#if loggedInUserData.settings.sendMentionEmails}}checked{{/if}}>
+                            <input type="checkbox" name="sendMentionEmails" id="sendMentionEmails" {{#if loggedInUserData.settings.sendMentionEmails}}checked{{/if}}>
                             <label class="form-check-label" for="sendMentionEmails">
                                     Receive an email when someone mentions you
                             </label>
@@ -63,7 +63,7 @@
             <div class="form-group">
                 <label for="profileVisibility">Frequency of digest emails</label>
                 <p class="form-text small mt-0">sweet can send you a daily or weekly digest email with a summary of your unseen notifications.</p>
-                <select name="digestEmailFrequency" class="form-control" id="digestEmailFrequency">
+                <select name="digestEmailFrequency" id="digestEmailFrequency">
                     <option value="off" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}selected{{/eq}}>Do not send digest emails</option>
                     <option value="daily" {{#eq loggedInUserData.settings.digestEmailFrequency "daily"}}selected{{/eq}}>Send a daily digest email</option>
                     <option value="weekly" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}selected{{/eq}}>Send a weekly digest email</option>
@@ -110,20 +110,20 @@
                         {{#eq loggedInUserData.settings.emailTime "00:00"}}{{else}}<option value="00:00">12:00 am</option>{{/eq}}
                     </select>
                 </div>
-                <p class="form-text small text-success">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
+                <p class="small text-warning">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
             </div>
             <hr />
             <h4>Posting</h4>
             <div class="form-group">
                 <label for="newPostPrivacy">Default privacy for new posts</label>
-                <select name="newPostPrivacy" class="form-control" id="newPostPrivacy">
+                <select name="newPostPrivacy" id="newPostPrivacy">
                     <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>Public</option>
                     <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>Private</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="newPostPrivacy">Quality of uploaded images</label>
-                <select name="imageQuality" class="form-control" id="imageQuality">
+                <select name="imageQuality" id="imageQuality">
                     <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>Standard (up to 1200px standard quality JPGs)</option>
                     <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up to 2048px high quality JPGs/PNGs)</option>
                     <option value="ridiculous" {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to 4096px high quality JPGs/PNGs)</option>
@@ -134,57 +134,51 @@
             <h4>Viewing</h4>
             <div class="form-group">
                 <label for="homeTagTimelineSorting">Sorting of posts in Home and Tag timelines</label>
-                <select name="homeTagTimelineSorting" class="form-control" id="homeTagTimelineSorting">
+                <select name="homeTagTimelineSorting" id="homeTagTimelineSorting">
                     <option value="chronological" {{#eq loggedInUserData.settings.homeTagTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
                     <option value="fluid" {{#eq loggedInUserData.settings.homeTagTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="userTimelineSorting">Sorting of posts in User timelines</label>
-                <select name="userTimelineSorting" class="form-control" id="userTimelineSorting">
+                <select name="userTimelineSorting" id="userTimelineSorting">
                     <option value="chronological" {{#eq loggedInUserData.settings.userTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
                     <option value="fluid" {{#eq loggedInUserData.settings.userTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="communityTimelineSorting">Sorting of posts in Community timelines</label>
-                <select name="communityTimelineSorting" class="form-control" id="communityTimelineSorting">
+                <select name="communityTimelineSorting" id="communityTimelineSorting">
                     <option value="chronological" {{#eq loggedInUserData.settings.communityTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
                     <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
-                    <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
-                            <label class="form-check-label" for="flashRecentComments">
-                                    Flash recent comments
-                            </label>
-                    </div>
+                <input type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
+                <label class="form-check-label" for="flashRecentComments">
+                        Flash recent comments
+                </label>
             </div>
             <div class="pushNotifSubStuff" style="margin:20px 0;">
-                <button style="white-space:normal;" type="button" id="notifs-button" class="btn btn-secondary">Click to subscribe this browser to sweet push notifications!</button>
+                <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to sweet push notifications!</button>
                 <p class="form-text small">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
             </div>
             <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <hr />
             <h4 id="discovery-settings">Discovery</h4>
             <div class="form-group">
-                    <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="showRecommendations" id="showRecommendations" {{#if loggedInUserData.settings.showRecommendations}}checked{{/if}}>
-                            <label class="form-check-label" for="showRecommendations">
-                                    Show recommended people and communities next to the home feed
-                            </label>
-                    </div>
+                <input type="checkbox" name="showRecommendations" id="showRecommendations" {{#if loggedInUserData.settings.showRecommendations}}checked{{/if}}>
+                <label class="form-check-label" for="showRecommendations">
+                        Show recommended people and communities next to the home feed
+                </label>
             </div>
             <div class="form-group">
-                    <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="showHashtags" id="showHashtags" {{#if loggedInUserData.settings.showHashtags}}checked{{/if}}>
-                            <label class="form-check-label" for="showHashtags">
-                                    Show recent hashtags next to the home feed
-                            </label>
-                    </div>
+                <input type="checkbox" name="showHashtags" id="showHashtags" {{#if loggedInUserData.settings.showHashtags}}checked{{/if}}>
+                <label class="form-check-label" for="showHashtags">
+                        Show recent hashtags next to the home feed
+                </label>
             </div>
-            <button type="submit" class="btn btn-secondary">Save settings</button>
+            <button type="submit" class="button">Save settings</button>
         </form>
     </div>
 </div>

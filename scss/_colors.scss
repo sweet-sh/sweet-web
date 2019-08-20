@@ -1,0 +1,68 @@
+$text: #1a1717; // Text for light mode.
+
+$background-white: #fff;
+$background-grey: #f9f9fa; // Page background
+
+$medium-grey: #cecece; // Post borders
+$lightest-grey: lighten($medium-grey, 15%); // Form input backgrounds, comment content box backgrounds
+$light-grey: lighten($medium-grey, 10%); // Subtle dividers, comment content box borders
+$dark-grey: darken($medium-grey, 15%);
+$darkest-grey: darken($medium-grey, 30%); // Grey-colored text
+
+$light-blue: #339fdb; // Links
+
+$light-yellow: #fcfaea; // Recent comment flash
+
+$bright-green: #46e146; // Recently active user markers
+
+$sweet-red: #ce1717; // The Best Red (TM). Hovers, buttons, etc.
+$dark-red: darken($sweet-red, 10%);
+$lighter-pink: lighten($sweet-red, 50%);
+$lightest-pink: #fffafc;
+$light-pink: lighten($sweet-red, 40%);
+$darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
+$dark-pink: lighten($sweet-red, 20%); // ...why is dark pink darker than darker pink
+// Because darker pink is darker than light pink, but dark pink is as dark as pink gets
+
+$highlight: $lightest-pink;
+$placeholder: $dark-grey;
+$editor-background: lighten($lightest-grey, 2%);
+
+$navbar-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+$dropdown-shadow: 0 3px 8px rgba(0, 0, 0, .25);
+$post-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+$button-shadow: 2px 2px 3px rgba(0,0,0,0.15);
+$button-shadow-hover: 1px 1px 1px rgba(0,0,0,0.2);
+
+$navigation-background: $background-white;
+$element-background: $background-white;
+$page-background: $background-grey;
+$aside-background: $lightest-pink;
+
+$navigation-border: $dark-pink;
+$navigation-text: $darkest-grey;
+$navigation-active-text: $dark-pink;
+$navigation-hover-text: $sweet-red;
+
+.color-test {
+    margin-top: 80px;
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    &.medium-grey  {
+        background-color: $medium-grey;
+    }
+    &.lightest-grey {
+        background-color: $lightest-grey
+    }
+    &.light-grey {
+        background-color: $light-grey
+
+    }
+    &.dark-grey {
+        background-color: $dark-grey
+    }
+    &.darkest-grey {
+        background-color: $darkest-grey
+    }
+}

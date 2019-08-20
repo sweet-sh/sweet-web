@@ -1,0 +1,19 @@
+{{#if editing}}
+{{! if creating a new post, the front end quill stuff will take care of wrapping the thing in a container. but if we're generating an editable version we have to do it ourselves}}
+<div contenteditable="false" class="image-preview-container slidable-embed" image-url="{{image}}" imagealreadysaved="true" fullsavedurl="{{imageUrl}}">
+{{/if}}
+<div class="image-preview"{{#if editing}} style="background-image:url({{imageUrl}});"{{/if}}>
+        {{#unless editing}}
+        <div class="fader" style="position: absolute;top: 0;display: flex;flex-direction:column;color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-scrollDirection:column;">
+            <div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress>
+        </div>
+        {{/unless}}
+    </div>
+    <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers.">{{#if editing}}{{description}}{{/if}}</textarea>
+    <div class="image-preview-controls">
+        <div class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></div>
+        <div class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
+    </div>
+    {{#if editing}}
+    </div>
+    {{/if}}

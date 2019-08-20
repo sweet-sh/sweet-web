@@ -296,7 +296,7 @@ h6 {
 .pane {
     padding: 15px;
     background: #fff;
-    border: 1px solid #dee2e6;
+    border: 1px solid #dfdfdf;
 }
 
 .justify-content-center {
@@ -417,6 +417,23 @@ h6 {
     padding-left: 15px;
 }
 
+@media (min-width: 992px) {
+    .col-lg-7 {
+        -ms-flex: 0 0 58.333333%;
+        flex: 0 0 58.333333%;
+        max-width: 58.333333%;
+    }
+}
+
+@media (min-width: 768px) {
+    .col-md-7 {
+        -ms-flex: 0 0 58.333333%;
+        flex: 0 0 58.333333%;
+        max-width: 58.333333%;
+    }
+}
+
+/* This is such a hot mess of a hack, I'm sorry */
 .col-md-4 h4,
 .col-md-4 h5,
 .col-md-4 h6 {
@@ -526,11 +543,16 @@ h6 {
     padding-bottom: 0px;
 }
 
+
+#resultsContainer,
+#directoryResults {
+    border: 1px solid #dfdfdf;
+    background: white;
+}
+
 #resultsContainer,
 #directoryResults,
 #postsContainer {
-    border: 1px solid #dfdfdf;
-    background: white;
     padding: 0;
 }
 
@@ -621,54 +643,54 @@ h6 {
 /* suggested users and hashtags stuff */
 
 .fixed-container {
-  position: fixed;
+    position: fixed;
 }
 
-.fixed-container > section {
-  border: 1px solid #cecece;
-  background: #fffafc;
-  padding: 0.5rem 1rem 1rem 1rem;
-  width: 350px;
-  margin-bottom: 1rem;
+.fixed-container>section {
+    border: 1px solid #cecece;
+    background: #fffafc;
+    padding: 0.5rem 1rem 1rem 1rem;
+    width: 350px;
+    margin-bottom: 1rem;
 }
 
 .hashtags p:nth-child(7) {
-  margin-bottom: 0;
-  padding-bottom: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .discovery-help-links {
-  font-size: small;
-  margin-top: 0.75rem;
-  display: block;
-  width: 100%;
-  text-align: right;
+    font-size: small;
+    margin-top: 0.75rem;
+    display: block;
+    width: 100%;
+    text-align: right;
 }
 
 .recommendations-help-text {
-  display: none;
+    display: none;
 }
 
 .hide-recommendation {
-  position: relative !important;
-  right: 11px;
-  bottom: -21px;
-  color: #333;
-  font-size: 0.75rem;
-  background: white;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  line-height: 12px;
+    position: relative !important;
+    right: 11px;
+    bottom: -21px;
+    color: #333;
+    font-size: 0.75rem;
+    background: white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
 }
 
 .hashtags-list {
-  display: flex;
-  flex-wrap: wrap;
+    display: flex;
+    flex-wrap: wrap;
 }
 
-.hashtags-list > * {
-  margin-right: 0.5rem;
+.hashtags-list>* {
+    margin-right: 0.5rem;
 }
 
 /*navbar, including notifications list stuff*/
@@ -1026,23 +1048,8 @@ h6 {
     height: 35px;
 }
 
-/*post images*/
 
-.comment .content .post-images.one-image {
-    display: inline-block;
-}
-
-.comment .content .post-images .post-single-image {
-    max-height: 200px;
-}
-
-.comment .content .post-images img.post-single-image.vertical-image {
-    max-height: 350px;
-}
-
-.comment .content .post-images.one-image.vertical-image {
-    max-height: 350px;
-}
+/* ====== POST IMAGES ======= */
 
 /*
 STRUCTURE
@@ -1055,7 +1062,7 @@ div.post-images > 1 or more (a > img.post-single-image)
     grid-column-gap: 2px;
     grid-row-gap: 2px;
     max-height: 450px;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.5rem;
 }
 
 /* Base style for individual images */
@@ -1094,6 +1101,61 @@ div.post-images > 1 or more (a > img.post-single-image)
     width: 100%;
 }
 
+/* Two images */
+.post-images.two-images {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100%;
+}
+
+/* Three and four images */
+.post-images.three-images,
+.post-images.four-images {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.post-images.three-images>*:first-child {
+    grid-row-end: span 2;
+}
+
+/* Images in multi-image containers expand to fill their whole cell */
+.post-images.two-images .post-single-image,
+.post-images.three-images .post-single-image,
+.post-images.four-images .post-single-image {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    max-height: 450px;
+}
+
+/* Hack of sorts to fit images to maximum height of multi-image container */
+.post-images a {
+    min-height: 100%;
+}
+
+.comment .post-images {
+    max-width: 480px;
+    max-height: 200px;
+    margin-top: 0.35rem;
+}
+
+.comment .post-images.one-image {
+    display: inline-block;
+}
+
+.comment .post-images .post-single-image {
+    max-height: 200px;
+}
+
+.comment .post-images img.post-single-image.vertical-image {
+    max-height: 350px;
+}
+
+.comment.post-images.one-image.vertical-image {
+    max-height: 350px;
+}
+
+
 /* new post/comment form stuff*/
 
 /* quill editor stuff*/
@@ -1108,13 +1170,14 @@ div.post-images > 1 or more (a > img.post-single-image)
 }
 
 /* i forget what this does but it looks important */
-.ql-container.ql-bubble:not(.ql-disabled) a:hover::before, .ql-container.ql-bubble:not(.ql-disabled) a:hover::after {
-  visibility:hidden;
-  display:none;
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::before,
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::after {
+    visibility: hidden;
+    display: none;
 }
 
 .ql-bubble .ql-editor img {
-  max-width: fit-content;
+    max-width: fit-content;
 }
 
 /*used to dim non-droppable areas while drag-and-dropping images into the editor*/
@@ -1383,43 +1446,59 @@ div.post-images > 1 or more (a > img.post-single-image)
 }
 
 
-/*post image adder stuff (🐍)*/
+/*post image + link preview adder stuff (🐍)*/
+/* actually, most of the link preview stuff is in its own section as the css also applies to the real link previews in the posts */
 
-/* image previews within the quill editor stuff */
+.slidable-embed {
+    cursor: default;
+}
+
+.slidable-embed .link-preview-title,
+.slidable-embed .link-preview-domain,
+.slidable-embed .link-preview-description {
+    cursor: text;
+}
 
 .image-preview-container {
-  display: flex;
-  height: 100px;
-  width: 100%;
-  margin-bottom: 0.5rem;
-  cursor: default;
-  transition: scale .1s ease-in-out, opacity .1s ease-in-out, padding .05s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+    display: flex;
+    height: 100px;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    cursor: default;
+    transition: scale .1s ease-in-out, opacity .1s ease-in-out, padding .05s ease-in-out, margin-bottom .05s ease-in-out, border .1s ease-in-out;
+    -webkit-touch-callout: none;
+    /* iOS Safari */
+    -webkit-user-select: none;
+    /* Safari */
+    -khtml-user-select: none;
+    /* Konqueror HTML */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
- }
+}
 
- .ipc-group {
-  border-left: solid thin lightblue;
-   border-right: solid thin lightblue;
-   padding: 0.3rem;
-   margin-bottom: 0!important;
- }
+.ipc-group {
+    border-left: solid thin lightblue;
+    border-right: solid thin lightblue;
+    padding: 0.3rem;
+    margin-bottom: 0;
+}
 
- .ipc-group-top {
-  border-top: solid thin lightblue;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+.ipc-group-top {
+    border-top: solid thin lightblue;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
 }
 
 .ipc-group-bottom {
- border-bottom: solid thin lightblue;
- border-bottom-left-radius: 0.5rem;
- border-bottom-right-radius: 0.5rem;
+    border-bottom: solid thin lightblue;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .image-preview {
@@ -1452,7 +1531,7 @@ div.post-images > 1 or more (a > img.post-single-image)
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    height:100%;
+    height: 100%;
 }
 
 .image-preview-controls>div {
@@ -1727,7 +1806,7 @@ article.post {
 /* Prevent double border on first post in feed */
 /* But then add it back when it's the only one! */
 article.post:first-child:not(:only-child) {
-  border-top: 0;
+    border-top: 0;
 }
 
 article.post>.content {
@@ -1752,28 +1831,6 @@ article.post>.toolbar {
     max-width: 390px;
 }
 
-/*
-article.post>.toolbar>div {
-    display: flex;
-    flex: 1;
-}
-
-article.post>.toolbar>div:first-child {
-    justify-content: flex-start;
-}
-
-article.post>.toolbar>div:last-child {
-    justify-content: flex-end;
-}
-
-article.post>.toolbar>div:first-child * {
-    justify-content: flex-start;
-}
-
-article.post>.toolbar>div:last-child * {
-    justify-content: flex-end;
-}
-*/
 
 article.post:hover {
     box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
@@ -1820,7 +1877,7 @@ article.post:hover {
     content: "";
     position: absolute;
     z-index: 1;
-    bottom: 17.5rem;
+    top: 17.5rem;
     left: 0;
     pointer-events: none;
     width: 100%;
@@ -1830,15 +1887,15 @@ article.post:hover {
 
 
 .comment .abbreviated-content:not(.content-warning-content)::after {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  bottom: 17.5rem;
-  left: 0;
-  pointer-events: none;
-  width: 100%;
-  height: 3rem;
-  background-image: linear-gradient(to bottom, rgba(255,255,255, 0), rgba(245,245,245, 1) 90%);
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 17.5rem;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 3rem;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(245, 245, 245, 1) 90%);
 }
 
 .button.show-more {
@@ -1924,14 +1981,16 @@ section.comments>.comments-container>.comment:first-child {
 }
 
 section.comments:not(.single-post-comments) {
-  display: none;
+    display: none;
 }
 
 article.comment {
-  margin-top: .75rem;
+    margin-top: .75rem;
 }
-div.comments-container > article.comment:first-child {
-    margin-top: 0; /* Otherwise comments section jumps when appearing??  */
+
+div.comments-container>article.comment:first-child {
+    margin-top: 0;
+    /* Otherwise comments section jumps when appearing??  */
 }
 
 article.comment:last-child {
@@ -1970,17 +2029,17 @@ article.comment>header .timestamp {
 }
 
 article.comment>.content {
-  margin-top: 0.25rem;
-  background: #f6f6f6;
-  padding: 0.5rem;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  max-width: 480px;
-  position: relative;
+    margin-top: 0.25rem;
+    background: #f6f6f6;
+    padding: 0.5rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    max-width: 480px;
+    position: relative;
 }
 
 article.comment>.content.comment-deleted-content,
-article.comment > .content.comment-muted-content {
+article.comment>.content.comment-muted-content {
     margin-top: 0;
 }
 
@@ -2529,8 +2588,7 @@ select.form-control:not([size]):not([multiple]) {
     border-radius: 4px;
     margin: 0 0 0.5em 0;
     background-color: #ffffff;
-    align-items:center;
-    cursor:default;
+    align-items: center;
 }
 
 .link-preview-container:hover {
@@ -2539,15 +2597,11 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .link-preview-container::before {
-  display:none;
+    display: none;
 }
 
 .link-preview-container::after {
-  display:none;
-}
-
-.link-preview-title, .link-preview-domain, .link-preview-description {
-  cursor:text;
+    display: none;
 }
 
 .link-preview-text-container {
@@ -2568,13 +2622,14 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 
-@media(max-width:500px){
-  .link-preview-container{
-    height:75px;
-  }
-  .link-preview-image {
-      max-width: 100px;
-  }
+@media(max-width:500px) {
+    .link-preview-container {
+        height: 75px;
+    }
+
+    .link-preview-image {
+        max-width: 100px;
+    }
 }
 
 .link-preview-image {
@@ -2599,26 +2654,26 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .embedded-video-cont {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  max-width: 100%;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
 }
 
 .embedded-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .embedded-video-preview-container {
-  display:flex;
-  justify-content:center;
-  position:relative;
-  height: 78px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    height: 78px;
 }
 
 
@@ -2748,48 +2803,51 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .tag {
-  font-weight: 300;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  border: 1px solid;
-  border-radius: 4px;
-  line-height: 1rem;
-  padding: 0.15rem 0.25rem;
-  margin-right: 0.25rem;
-  background: #efefef;
+    font-weight: 300;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 1px solid;
+    border-radius: 4px;
+    line-height: 1rem;
+    padding: 0.15rem 0.25rem;
+    margin-right: 0.25rem;
+    background: #efefef;
 }
 
 .tag.tag-green {
-  border-color: #28a745;
-  background: #eaffea;
-  color: #28a745;
+    border-color: #28a745;
+    background: #eaffea;
+    color: #28a745;
 }
 
 #nav-tabContent,
 #communitiesTabContent {
     background: white;
-    border-left: 1px solid #dee2e6;
-    border-right: 1px solid #dee2e6;
-    border-bottom: 1px solid #dee2e6;
+    border-left: 1px solid #dfdfdf;
+    border-right: 1px solid #dfdfdf;
+    border-bottom: 1px solid #dfdfdf;
     padding: 15px;
     margin-top: 0;
 }
 
 #votesContainer {
-  padding: 0;
-  border-bottom: 1px solid #cecece;
-  margin-bottom: 1rem;
+    padding: 0;
+    border-bottom: 1px solid #cecece;
+    margin-bottom: 1rem;
 }
+
 .post.vote {
-  background: none;
-  border: 0;
-  border-bottom: 1px solid #cecece;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid #cecece;
 }
+
 .post.vote:hover {
-  box-shadow: none;
+    box-shadow: none;
 }
+
 .post.vote:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 /*todo: what is this*/
@@ -2823,7 +2881,7 @@ select.form-control:not([size]):not([multiple]) {
 .nav-tabs .nav-link.active {
     color: #495057;
     background-color: #fff;
-    border-color: #dee2e6 #dee2e6 #fff;
+    border-color: #dfdfdf #dfdfdf #fff;
 }
 
 .nav-tabs .nav-link {
@@ -2844,7 +2902,7 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 .nav-tabs {
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #dfdfdf;
 }
 
 .nav-tabs .nav-item {
@@ -3098,7 +3156,7 @@ select.form-control:not([size]):not([multiple]) {
 }
 
 #editBody #nav-tabContent {
-    border: 1px solid #dee2e6;
+    border: 1px solid #dfdfdf;
 }
 
 .subscribed-alert {
@@ -3137,12 +3195,6 @@ select.form-control:not([size]):not([multiple]) {
     }
 }
 
-.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-
 .alert {
     position: relative;
     padding: .75rem 1.25rem;
@@ -3150,6 +3202,13 @@ select.form-control:not([size]):not([multiple]) {
     border: 1px solid transparent;
     border-radius: .25rem;
 }
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
 
 .alert-secondary {
     color: #383d41;
@@ -3270,13 +3329,27 @@ select.form-control:not([size]):not([multiple]) {
 
 /*todo: is this used*/
 .bounce {
-  animation-name: bounce;
-  animation-timing-function: linear;
-  animation-duration: 100ms;
+    animation-name: bounce;
+    animation-timing-function: linear;
+    animation-duration: 100ms;
 }
+
 @keyframes bounce {
-  0%   { transform: translateY(0); }
-  33%  { transform: translateY(-3px); }
-  66%  { transform: translateY(3px); }
-  100% { transform: translateY(0); }
+    0% {
+        transform: translateY(0);
+    }
+
+    33% {
+        transform: translateY(-3px);
+    }
+
+    66% {
+        transform: translateY(3px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
 }
+
+/* Raph got up to here hooray! */

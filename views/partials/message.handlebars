@@ -1,5 +1,5 @@
 {{#if sessionFlash.message}}
-  <div class="alert alert-{{ sessionFlash.type }}">
+  <div class="message {{sessionFlash.type}}" style="max-width: 500px; margin: 1rem auto 0 auto;">
     {{{ sessionFlash.message }}}
   </div>
 {{/if}}

@@ -59,7 +59,7 @@ function(req, email, password, done) {
         return done(err);
       if (user) {
         req.session.sessionFlash = {
-          type: 'warning',
+          type: 'alert',
           message: 'Sorry, this username is taken.',
           username: req.body.username,
           email: req.body.email
@@ -78,7 +78,7 @@ function(req, email, password, done) {
             // check to see if there is already a user with that email
             if (user) {
               req.session.sessionFlash = {
-                type: 'warning',
+                type: 'alert',
                 message: 'An account with this email already exists. Is it yours?',
                 username: req.body.username,
                 email: req.body.email
@@ -128,7 +128,7 @@ function(req, email, password, done) {
                 })
                 .catch(error => {
                   req.session.sessionFlash = {
-                    type: 'warning',
+                    type: 'alert',
                     message: "There has been a problem sending your account verification email. Please try again in a few minutes.",
                     username: req.body.username,
                     email: req.body.email
@@ -169,23 +169,25 @@ function(req, email, password, done) {
             // if no user is found, return the message
             if (!user) {
               req.session.sessionFlash = {
-                type: 'warning',
-                message: 'Please check your email and password.'
+                type: 'alert',
+                message: 'Please check your email and password.',
+                email: req.body.email
               }
               return done(null, false);
             }
             // if the user is found but the password is wrong
             if (!user.validPassword(password)) {
               req.session.sessionFlash = {
-                type: 'warning',
-                message: 'Please check your email and password.'
+                type: 'alert',
+                message: 'Please check your email and password.',
+                email: req.body.email
               }
               return done(null, false);
             }
             if (!user.isVerified) {
               req.session.sessionFlash = {
-                type: 'warning',
-                message: 'Your email address has not been verified. <a class="alert-link" href="https://sweet.sh/resend-token">Need a new verification token?</a>'
+                type: 'alert',
+                message: 'Your email address has not been verified. <a class="message-link" href="https://sweet.sh/resend-token">Need a new verification token?</a>'
               }
               return done(null, false);
             }

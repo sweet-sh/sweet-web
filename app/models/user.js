@@ -1,7 +1,3 @@
-var mongoose = require('mongoose');
-var bcrypt   = require('bcrypt-nodejs');
-const Schema = mongoose.Schema;
-
 var notificationSchema = new mongoose.Schema({
   category: String,
   sourceId: String,
@@ -69,9 +65,9 @@ var userSchema = new mongoose.Schema({
   },
   notifications: [notificationSchema],
   pushNotifSubscriptions: [String],
-  communities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
-  bannedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
-  mutedCommunities: [{ type: Schema.Types.ObjectId, ref: 'Community' }],
+  communities: [{ type: DBReference, ref: 'Community' }],
+  bannedCommunities: [{ type: DBReference, ref: 'Community' }],
+  mutedCommunities: [{ type: DBReference, ref: 'Community' }],
   hiddenRecommendedUsers: [String],
   hiddenRecommendedCommunities: [String]
 });

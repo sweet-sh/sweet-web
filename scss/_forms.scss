@@ -1,0 +1,672 @@
+.form-group {
+    margin-bottom: 1rem;
+}
+
+input, select {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+    display: inline-block;
+    width: 100%;
+    padding: 0.55rem;
+    border-radius: 3px;
+    border: 1px solid $medium-grey;
+    background: $editor-background;
+
+    @include transition;
+
+    &:focus {
+        border-color: $light-pink;
+    }
+}
+
+textarea {
+    resize: vertical;
+    line-height: 1.5;
+}
+
+select {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 0;
+    margin: 0.5rem 0;
+}
+
+.form-text {
+    color: $darkest-grey;
+}
+
+// select {
+//     width: 100%;
+// }
+
+// Sweet custom button classes - to be used for all button-style objects on the site
+
+.button {
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    line-height: 1;
+    color: $background-white;
+    background: $dark-pink;
+    border: $dark-pink;
+    border-radius: 3px;
+    box-shadow: $button-shadow;
+    padding: .75rem .75rem;
+    margin: 0;
+
+    @include transition;
+
+    &:hover {
+        cursor: pointer;
+        background: $sweet-red;
+        box-shadow: $button-shadow-hover;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    &.full-width-button {
+        width: 100%
+    }
+
+    &.large-button {
+        font-size: 1.15rem;
+    }
+
+    &.smol-button {
+        font-size: 0.7rem;
+        padding: .35rem;
+    }
+
+
+    &.grey-button {
+        background: $dark-grey;
+
+        &:hover {
+            background: $darkest-grey;
+        }
+    }
+
+    &.lowercase-button {
+        text-transform: none;
+    }
+
+    &.uppercase-button {
+        text-transform: uppercase;
+    }
+
+    &.outline-button {
+        color: $darkest-grey;
+        background-color: $light-grey;
+        margin-bottom: .75rem;
+        &:hover {
+            background: $dark-grey;
+            color: $background-white;
+        }
+    }
+}
+
+button.close {
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    -webkit-appearance: none;
+}
+
+.button-group {
+    display: flex;
+    align-items: flex-start;
+
+    .button {
+        margin-bottom: 0;
+        border-radius: 0;
+        border-bottom: 1px solid darken($light-grey, 8%);
+
+        &:first-child {
+            border-radius: 3px 3px 0 0;
+        }
+        &:last-child {
+            border-radius: 0 0 3px 3px;
+            border-bottom: 0;
+        }
+    }
+}
+
+/* new post/comment form stuff*/
+
+/* quill editor stuff*/
+
+.ql-tooltip {
+    z-index: 1000;
+}
+
+.ql-editor {
+    overflow-y: inherit;
+    min-height: 4rem;
+    padding: .55rem;
+}
+
+/* i forget what this does but it looks important */
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::before,
+.ql-container.ql-bubble:not(.ql-disabled) a:hover::after {
+    visibility: hidden;
+    display: none;
+}
+
+.ql-editor.ql-blank::before {
+    color: $placeholder;
+    left: .55rem;
+}
+
+.ql-bubble .ql-editor img {
+    max-width: fit-content;
+}
+
+.ql-bubble .ql-editor blockquote {
+    border-left: 2px solid $medium-grey;
+    color: darken($dark-grey, 10%);
+    padding-left: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+/*used to dim non-droppable areas while drag-and-dropping images into the editor*/
+#bodyFader {
+    z-index: 355;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #00000055;
+    display: none;
+}
+
+.ql-container {
+    font-family: inherit;
+    padding: 0;
+    background-color: $editor-background;
+    z-index: 356;
+    /*one higher than #bodyFader, as these are the droppable areas*/
+}
+
+.ql-editor.ql-blank::before {
+    font-style: normal;
+}
+
+.ql-editor p {
+    margin-bottom: 0.5em;
+}
+
+.ql-editor ul {
+    margin-bottom: 0.5em;
+}
+
+.link-form-cont {
+    display: none;
+    overflow: hidden;
+    /* this mysteriously smooths out the jquery slide down animation, which happens to this element */
+    margin: 0 -3px;
+    padding-bottom: 3px;
+    /* Given the overflow hidden above, this allows the selected glow to show properly */
+}
+
+.linkPreviewAddingForm {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 0 3px;
+}
+
+.link-add {
+    white-space: nowrap;
+}
+
+#searchForm,
+#postForm {
+    border: 1px solid $medium-grey;
+    background: $element-background;
+    padding: 15px;
+    margin-bottom: 1rem;
+}
+
+#searchForm {
+    display: flex;
+}
+
+#postForm:hover {
+    box-shadow: $post-shadow;
+}
+
+#postForm .form-row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.editable-text {
+    width: 100%;
+    padding: 0;
+    border-radius: .25rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border: 2px solid $medium-grey;
+    background: $editor-background;
+    cursor: text;
+    min-height: 4em;
+
+    &.focused {
+        border-color: $light-pink;
+    }
+}
+
+.editable-text>p:last-child,
+.editable-text>div:last-child>p {
+    margin-bottom: 0;
+}
+
+
+#postContentWarningsContainer {
+    display: none;
+}
+
+.emoji-picker {
+    display: flex;
+    cursor: default;
+    flex-direction: row;
+    justify-content: flex-start;
+    border: 1px solid $medium-grey;
+    background: $element-background;
+    padding: 5px;
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+@media(max-width:500px){
+    button.show-emoji-picker{
+        display:none;
+    }
+}
+
+.add-emoji {
+    padding: 2px 0.15rem 0 0.15rem;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: $element-background;
+}
+
+.add-emoji:hover {
+    border-color: $medium-grey;
+    transform: scale(1.2);
+}
+
+@media (max-width: 575.98px) {
+
+    .post-controls {
+        flex-direction: row;
+        align-content: flex-start;
+        align-items: flex-start !important;
+    }
+
+    .post-controls>div {
+        margin-bottom: 5px;
+    }
+
+    .leftSideControls {
+        order: 1;
+    }
+
+    .rightSideControls {
+        order: 2;
+    }
+
+    #emojiWindowButton {
+        display: none;
+    }
+
+    .replyEmojiWindowButton {
+        display: none;
+    }
+}
+
+.post-controls {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#editorControlsRow,
+#replyControlsRow {
+    display: flex;
+}
+
+.rightSideControls button:not(:last-child),
+.leftSideControls button:not(:last-child) {
+    margin-right: 0.15rem;
+}
+
+@media(max-width:500px){
+    #bottomPostControlsRow {
+        font-size: 0.75rem;
+    }
+}
+
+/* only used for post visibility controls*/
+.switch-field {
+    display: flex;
+    position: relative;
+    height: 38px;
+}
+
+.switch-field input {
+    position: absolute !important;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    width: 1px;
+    border: 0;
+    overflow: hidden;
+}
+
+.switch-field label {
+    font-size: 14px;
+    text-align: center;
+    padding: 8px 16px;
+    margin-right: -1px;
+    margin-bottom: 0;
+    transition: all 0.1s ease-in-out;
+    background-color: $editor-background;
+    color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    // box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@media(max-width:500px){
+    .switch-field label {
+        padding: 8px 5px;
+        overflow: hidden;
+        font-size: 0.8rem;
+    }
+}
+
+.switch-field input:checked+label {
+    background-color: $dark-pink;
+    color: white;
+    box-shadow: none;
+}
+
+.switch-field label:hover {
+    cursor: pointer;
+}
+
+.switch-field label:first-of-type {
+    border-radius: 4px 0 0 4px;
+}
+
+.switch-field label:last-of-type {
+    border-radius: 0 4px 4px 0;
+}
+
+.switch-field svg {
+    width: 1.25em!important; //force the three visibility icons to the same width
+}
+
+/* specifically new comment form stuff*/
+
+#replyControlsRow {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.new-comment-form {
+    background-color: $lightest-grey;
+    padding: .75rem 1rem;
+    border: 1px solid $light-grey;
+    border-radius: 4px;
+    margin: 0 0 1rem;
+}
+
+.comment .new-comment-form {
+    background-color: transparent;
+    box-shadow: none;
+    padding-left: 10%;
+    padding-right: 0.5rem;
+    padding-bottom: 0;
+    padding-top: 0.5rem;
+    border: none;
+    margin: 0;
+}
+
+/*post image + link preview adder stuff (🐍)*/
+/* actually, most of the link preview stuff is in its own section as the css also applies to the real link previews in the posts */
+
+.slidable-embed {
+    cursor: default;
+}
+
+.slidable-embed .link-preview-title,
+.slidable-embed .link-preview-domain,
+.slidable-embed .link-preview-description {
+    cursor: text;
+}
+
+/* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
+.slidable-embed {
+    transition: background 0.15s ease;
+    background: lighten($dark-pink, 5%) !important;
+    &:hover {
+        background: lighten($dark-pink, 10%) !important;
+    }
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+.image-preview-container {
+    border-radius: 0.25rem;
+    padding: 7px 3px;
+    background: lighten($dark-pink, 5%);
+    display: flex;
+    height: 125px;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    cursor: default;
+    transition: scale .1s ease-in-out, opacity .1s ease-in-out, border .1s ease-in-out;
+
+    &:not(.ipc-group){ //smoothly transition when separating the group; immediately snap-to when adding to the group
+        transition: margin-bottom .05s ease-in-out;
+    }
+
+    textarea {
+        border-color: $sweet-red;
+
+        &:focus {
+            background: $light-pink;
+        }
+    }
+}
+
+@media (max-width: 500px) {
+    .image-preview-container{
+        height: 90px;
+    }
+}
+
+/* ipc-group = image preview container group */
+.ipc-group {
+    border-left: solid thin $sweet-red;
+    border-right: solid thin $sweet-red;
+    //padding: 0.3rem;
+    margin-bottom: 0;
+    border-radius: 0px;
+    background: lighten($dark-pink, 5%);
+}
+
+.ipc-group-top {
+    border-top: solid thin $sweet-red;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+}
+
+.ipc-group-bottom {
+    border-top-width: 0;
+    border-bottom: solid thin $sweet-red;
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.image-preview {
+    flex: 1;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url("/images/imagePreviewWindowDefault.jpg");
+    margin: 0;
+    object-fit: contain;
+    position: relative;
+}
+
+#postImageUpload {
+    display: none;
+}
+
+/* todo: update the name of these controls: these are the same controls for the image previews and the link preview previews */
+.image-preview-controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height: 100%;
+}
+
+.image-preview-controls {
+    &>div{
+        text-decoration: none;
+        width: 1.3em;
+        font-size: 2em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $editor-background;
+        &:hover, &.in-use{
+            filter: drop-shadow(2px 2px 1px $dark-pink);
+        }
+    }
+/* affects the svg paths of the font-awesome icons within the .image-preview-control div (gives them outlines) */
+    & path {
+        stroke: $dark-pink;
+        stroke-width: 15;
+      }
+}
+
+.image-clear {
+    cursor: pointer;
+}
+
+.image-move {
+    cursor: grab;
+    touch-action: none;
+}
+
+#postImageDescription {
+    position: relative;
+    transition: all 0.2s ease;
+    height: 100%;
+    width: 60%;
+    margin: 0 0 0 10px;
+    text-align: left;
+    resize: none;
+    background: white;
+}
+
+@media(max-width:500px){
+    #postImageDescription {
+        font-size: 0.85rem;
+    }
+}
+
+.onthemove {
+    transform: scale(.99);
+    opacity: .75;
+}
+
+.embedspacer {
+    background: white;
+    border: dashed 1px $medium-grey;
+}
+
+/* uploader for other images (profile picture, community icon...i think that's it? */
+.file-input {
+    display: none;
+}
+
+.newimageform {
+    display: none;
+}
+
+#image-preview {
+    width: 260px;
+    height: 260px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: $element-background;
+    color: $lightest-grey;
+    border: 1px dashed $light-grey;
+}
+
+#image-preview input {
+    line-height: 260px;
+    font-size: 260px;
+    position: absolute;
+    opacity: 0;
+    z-index: 10;
+}
+
+#image-preview label {
+    position: absolute;
+    z-index: 5;
+    opacity: 0.8;
+    cursor: pointer;
+    width: 200px;
+    height: 50px;
+    font-size: 20px;
+    line-height: 50px;
+    text-transform: uppercase;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    text-align: center;
+    border-radius: 5px;
+    background-color: $light-grey;
+    color: $darkest-grey;
+}
+
+#settingsForm h4 {
+    color: $dark-pink;
+}
+
+// Hacky way to get send button in community post forms sit on the right
+#bottomPostControlsRow div:only-child {
+    width: 100%;
+
+    button:last-child {
+        float: right;
+    }
+}

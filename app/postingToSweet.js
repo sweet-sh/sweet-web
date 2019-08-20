@@ -1,43 +1,3 @@
-var moment = require('moment');
-var sanitizeHtml = require('sanitize-html');
-var notifier = require('./notifier.js');
-var mongoose = require('mongoose');
-var path = require('path');
-
-const url = require('url');
-
-sanitizeHtmlOptions = {
-    allowedTags: ['em', 'strong', 'a', 'p', 'br', 'div', 'span'],
-    allowedAttributes: {
-        'a': ['href', 'data-*', 'target', 'rel']
-    }
-}
-
-moment.updateLocale('en', {
-    relativeTime: {
-        future: "in %s",
-        past: "%s ago",
-        s: '1s',
-        ss: '%ds',
-        m: "1m",
-        mm: "%dm",
-        h: "1h",
-        hh: "%dh",
-        d: "1d",
-        dd: "%dd",
-        M: "1mon",
-        MM: "%dmon",
-        y: "1y",
-        yy: "%dy"
-    }
-});
-
-var sanitize = require('mongo-sanitize');
-const sharp = require('sharp');
-var shortid = require('shortid');
-const fs = require('fs');
-const request = require('request');
-
 // APIs
 
 var apiConfig = require('../config/apis.js');
@@ -50,9 +10,13 @@ module.exports = function(app) {
     //New image upload reciever.
     //Inputs: image data.
     //Outputs: if the image is under the max size for its file type (currently 5 MB for .gifs and 10 MB for .jpgs) it is saved (if it's a .gif),
-    //or saved as a 1200 pixel wide jpg with compression level 85 otherwise. Saves to the temp folder; when a post or comment is actually completed,
-    //it's moved to the image folder that post images are loaded from upon being displayed. Or isLoggedInOrRedirect redirects you
-    app.post("/api/image/v2", isLoggedInOrRedirect, async function(req, res) {
+    //or resized, compressed, maybe flattened, and saved according to the user's image upload settings. Saves to the temp folder; when a post or comment is actually completed,
+    //it's moved to the image folder that post images are loaded from upon being displayed. A thumbnail version is also saved in the thumbnails object, for retrieval through the
+    //below function at /api/image/thumbnailretrieval/:id. A response is sent back with the image's future filename, which identifies it so it can be folded into the saved post when
+    //the post is submitted, and also the url for retrieving the thumbnail.
+    var thumbnails = {}; //stores array buffers with unique keys and the types of the images they represent at id+"type"
+    var thumbID = 0; //used to create unique keys in the thumbnails object for each successive generated thumbnail; incremented every time it's used
+    app.post("/api/image/v2", isLoggedInOrErrorResponse, async function(req, res) {
         var imageQualitySettingsArray = {
             'standard': {
                 resize: 1200,
@@ -116,13 +80,15 @@ module.exports = function(app) {
                         var finalFormat = "png";
                     }
 
-                    //if the image is being rotated according to exif data or a is png with transparency being removed, send the client a thumbnail showing these changes
-                    if ((imageMeta.orientation && imageMeta.orientation !== 1) || (imageFormat == "png" && imageMeta.hasAlpha && finalFormat == "jpeg")) {
-                        //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
-                        var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
-                        thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
-                    } else {
-                        var thumbnail = undefined;
+                    //send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
+                    //IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
+                    var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true });
+                    thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
+                    thumbnails[""+thumbID] = thumbnail;
+                    thumbnails[thumbID+"type"] = finalFormat;
+                    var response = { url: imageUrl + '.' + finalFormat };
+                    if(thumbnail){
+                        response.thumbnail = "/api/image/thumbnailretrieval/"+thumbID++;
                     }
 
                     await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) //to temp
@@ -130,10 +96,7 @@ module.exports = function(app) {
                             console.error("could not temp save uploaded image:")
                             console.error(err);
                         });
-                    var response = { url: imageUrl + '.' + finalFormat }
-                    if (thumbnail) {
-                        response.thumbnail = "data:image/" + finalFormat + ";base64," + thumbnail.toString('base64');
-                    }
+
                     res.setHeader('content-type', 'text/plain');
                     res.end(JSON.stringify(response));
                 } else {
@@ -149,11 +112,22 @@ module.exports = function(app) {
         }
     })
 
+    app.get("/api/image/thumbnailretrieval/:id",function(req,res){
+        if(thumbnails[req.params.id]){
+            res.setHeader('content-type', 'image/'+thumbnails[req.params.id+"type"]);
+            res.end(thumbnails[req.params.id]);
+            delete thumbnails[req.params.id];
+            delete thumbnails[req.params.id+"type"];
+        }else{
+            res.sendStatus(404);
+        }
+    })
+
     //Responds to post requests that inform the server that a post that images were uploaded for will not be posted by deleting those images.
     //Inputs: image file name
     //Outputs: the image presumably in the temp folder with that filename is deleted
     app.post("/cleartempimage", isLoggedInOrErrorResponse, function(req, res) {
-        if (req.body.imageURL != "" && !req.body.imageURL.includes("/")) {
+        if (req.body.imageURL.match(/^(\w|-){7,14}.(jpeg|jpg|png|gif)$/)) { //makes sure the incoming imageURL matches the shortid format and then a . and then an image extension
             fs.unlink("./cdn/images/temp/" + req.body.imageURL, function(e) {
                 if (e) {
                     console.log("could not delete image " + "./cdn/images/temp/" + req.body.imageURL);
@@ -161,180 +135,100 @@ module.exports = function(app) {
                 }
             });
         }
+        res.sendStatus(200);
     })
 
     //Responds to post requests that create a new post.
-    //Input: in req.body: the post's privacy level, filenames for its images, descriptions for its images, the post body, and a communityid
-    //if it's a community post.
-    //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, redirect
-    //if not logged in.
-    app.post("/createpost", isLoggedInOrRedirect, async function(req, res) {
+    //Input: if the post contains no inlineElements, a simple string with its html contents. otherwise, an array of paragraphs and inline element objects ready to be parsed by the function
+    //parseText calls to parse it.
+    //Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, error response if not logged in.
+    app.post("/createpost", isLoggedInOrErrorResponse, async function(req, res) {
 
-        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent), req.body.postContentWarnings, true, true, true);
+        var parsedResult = await helper.parseText(JSON.parse(req.body.postContent));
+
+        //don't save mentions or tags for draft posts, this means that notifications and tag adding will be deferred until the post is published and at that point
+        //all of the mentions and tags will register as "new" and so the right actions will occur then
+        if(req.body.isDraft){
+            parsedResult.mentions = [];
+            parsedResult.tags = [];
+        }
 
         if (req.body.communityId) {
-            var privacy = (await Community.findById(req.body.communityId)).settings.visibility;
-        } else {
-            var privacy = req.body.postPrivacy;
+            var imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility;
+        } else if(req.body.isDraft){
+            var imagePrivacy = "private"; //this should already be stored in req.body.postPrivacy but just in case
+        }else{
+            var imagePrivacy = req.body.postPrivacy;
         }
 
         for (var inline of parsedResult.inlineElements) {
             if (inline.type == "image(s)") {
                 //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : user), req.user._id, privacy, req.user.settings.imageQuality);
-                inline.imageIsHorizontal = horizOrVertics.isHorizontal;
-                inline.imageIsVertical = horizOrVertics.isVertical;
+                var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? "community" : req.body.isDraft ? "draft" : "original"), req.body.communityId, req.user._id, imagePrivacy, req.user.settings.imageQuality);
+                inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
+                inline.imageIsVertical = horizOrVertics.imageIsVertical;
             }
         }
 
-        newPostUrl = shortid.generate();
+        var newPostUrl = shortid.generate();
         let postCreationTime = new Date();
-        var postPrivacy = req.body.postPrivacy;
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { //in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
             res.status(400).send('bad post op');
             return;
         }
+        var isCommunityPost = !!req.body.communityId;
 
-        function savePost() { //todo: combine code for community and non-community posts, there's a lot that's duplicated that doesn't need to be
-            //non-community post
-            if (!req.body.communityId) {
-                var post = new Post({
-                    type: 'original',
-                    authorEmail: req.user.email,
-                    author: req.user._id,
-                    url: newPostUrl,
-                    privacy: postPrivacy,
-                    timestamp: postCreationTime,
-                    lastUpdated: postCreationTime,
-                    rawContent: req.body.postContent,
-                    parsedContent: parsedResult.text,
-                    numberOfComments: 0,
-                    mentions: parsedResult.mentions,
-                    tags: parsedResult.tags,
-                    contentWarnings: sanitize(sanitizeHtml(req.body.postContentWarnings, sanitizeHtmlOptions)),
-                    imageVersion: 3,
-                    inlineElements: parsedResult.inlineElements,
-                    subscribedUsers: [req.user._id],
-                    boostsV2: [{
-                        booster: req.user._id,
-                        timestamp: postCreationTime
-                    }]
-                });
+        var post = new Post({
+            type: isCommunityPost ? 'community' : req.body.isDraft ? 'draft' : 'original',
+            community: isCommunityPost ? req.body.communityId : undefined,
+            authorEmail: req.user.email,
+            author: req.user._id,
+            url: newPostUrl,
+            privacy: isCommunityPost ? 'public' : req.body.isDraft ? "private" : req.body.postPrivacy,
+            timestamp: postCreationTime,
+            lastUpdated: postCreationTime,
+            rawContent: req.body.postContent,
+            parsedContent: parsedResult.text,
+            numberOfComments: 0,
+            mentions: parsedResult.mentions,
+            tags: parsedResult.tags,
+            contentWarnings: req.body.postContentWarnings,
+            imageVersion: 3,
+            inlineElements: parsedResult.inlineElements,
+            subscribedUsers: [req.user._id]
+        });
 
-                var newPostId = post._id;
-                post.save()
-                    .then(async () => {
-                        parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
-                        });
-                        if (postPrivacy == "private") {
-                            console.log("This post is private!")
-                            // Make sure to only notify mentioned people if they are trusted
-                            Relationship.find({
-                                    from: req.user.email,
-                                    value: "trust"
-                                }, { 'to': 1 })
-                                .then((emails) => {
-                                    let emailsArray = emails.map(({
-                                        to
-                                    }) => to)
-                                    parsedResult.mentions.forEach(function(mention) {
-                                        User.findOne({ username: mention })
-                                            .then((user) => {
-                                                if (emailsArray.includes(user.email)) {
-                                                    notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                                }
-                                            })
-                                    })
-                                })
-                                .catch((err) => {
-                                    console.log("Error in profileData.")
-                                    console.log(err);
-                                });
-                        } else if (postPrivacy == "public") {
-                            console.log("This post is public!")
-                            // This is a public post, notify everyone
-                            parsedResult.mentions.forEach(function(mention) {
-                                if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                    User.findOne({ username: mention })
-                                        .then((user) => {
-                                            if (user) {
-                                                notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                            }
-                                        })
-                                }
-                            });
+        var newPostId = post._id;
+
+        for (mention of parsedResult.mentions) {
+            if (mention != req.user.username) {
+                User.findOne({ username: mention }).then(async mentioned => {
+                    if (isCommunityPost) {
+                        if (mentioned.communities.some(v=>v.equals(post.community))) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
                         }
-                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send("" + (postCreationTime.getTime() + 1));
-                    })
-                    .catch((err) => {
-                        console.log("Error creating new post: " + err)
-                    });
-
-                //community post
-            } else {
-                let communityId = req.body.communityId;
-
-                const post = new Post({
-                    type: 'community',
-                    community: communityId,
-                    authorEmail: req.user.email,
-                    author: req.user._id,
-                    url: newPostUrl,
-                    privacy: 'public',
-                    timestamp: postCreationTime,
-                    lastUpdated: postCreationTime,
-                    rawContent: req.body.postContent,
-                    parsedContent: parsedResult.text,
-                    numberOfComments: 0,
-                    mentions: parsedResult.mentions,
-                    tags: parsedResult.tags,
-                    contentWarnings: sanitize(req.body.postContentWarnings),
-                    imageVersion: 3,
-                    inlineElements: parsedResult.inlineElements,
-                    subscribedUsers: [req.user._id],
-                    boostsV2: [{
-                        booster: req.user._id,
-                        timestamp: postCreationTime
-                    }],
-                });
-
-                var newPostId = post._id;
-                post.save()
-                    .then(async () => {
-                        parsedResult.tags.forEach((tag) => {
-                            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId } }, { upsert: true, new: true }, function(error, result) {
-                                if (error) return
-                            });
-                        });
-                        // Notify everyone mentioned that belongs to this community
-                        parsedResult.mentions.forEach(function(mention) {
-                            if (mention != req.user.username) { //don't get notified from mentioning yourself
-                                User.findOne({
-                                        username: mention,
-                                        communities: { $in: [communityId] }
-                                    })
-                                    .then((user) => {
-                                        notifier.notify('user', 'mention', user._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
-                                    })
-                            }
-                        });
-                        Community.findOneAndUpdate({ _id: communityId }, {
-                            $set: { lastUpdated: new Date() }
-                        }).then(community => {
-                            console.log("Updated community!")
-                        })
-                        //the client will now ask for posts just older than this, which means this new post will be right at the top of the response
-                        res.status(200).send("" + (postCreationTime.getTime() + 1));
-                    })
-                    .catch((err) => {
-                        console.log("Database error when attempting to save new post: " + err)
-                    });
+                    } else if (req.body.postPrivacy == "private") {
+                        if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post');
+                        }
+                    } else {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + newPostUrl, 'post')
+                    }
+                })
             }
         }
-        savePost();
+
+        for (tag of parsedResult.tags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": newPostId.toString() }, "$set": { "lastUpdated": postCreationTime } }, { upsert: true, new: true }, function(error, result) { if (error) return });
+        }
+
+        if (isCommunityPost) {
+            Community.findOneAndUpdate({ _id: req.body.communityId }, { $set: { lastUpdated: new Date() } })
+        }
+
+        await post.save();
+        res.status(200).send("" + (postCreationTime.getTime() + 1));
     });
 
     //Responds to requests that delete posts.
@@ -347,59 +241,6 @@ module.exports = function(app) {
                 if (!post.author._id.equals(req.user._id)) {
                     res.status(400).send("you are not the owner of this post which you are attempting to delete. i know how you feel, but this is not allowed");
                     return;
-                }
-
-                if (post.imageVersion < 3 || !post.imageVersion) {
-                    for (const image of post.images) {
-                        if (post.imageVersion == 2) {
-                            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                                if (err) console.log("Image deletion error " + err)
-                            })
-                        } else {
-                            fs.unlink(global.appRoot + '/public/images/uploads/' + image, (err) => {
-                                if (err) console.log("Image deletion error " + err)
-                            })
-                        }
-                        Image.deleteOne({ "filename": image });
-                    }
-
-                } else {
-                    for (const ie of post.inlineElements) {
-                        if (ie.type == "image(s)") {
-                            for (const image of ie.images) {
-                                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                                    if (err) console.log("Image deletion error " + err)
-                                })
-                                Image.deleteOne({ "filename": image });
-                            }
-                        }
-                    }
-                }
-
-                // Delete tags (does not currently fix tag last updated time)
-                if (post.tags) {
-                    post.tags.forEach((tag) => {
-                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
-                            .then((tag) => {
-                                console.log("Deleted tag: " + tag)
-                            })
-                            .catch((err) => {
-                                console.log("Database error: " + err)
-                            })
-                    })
-                }
-
-                // Delete boosts
-                if (post.type == "original" && post.boosts) {
-                    post.boosts.forEach((boost) => {
-                        Post.deleteOne({ "_id": boost })
-                            .then((boost) => {
-                                console.log("Deleted boost: " + boost)
-                            })
-                            .catch((err) => {
-                                console.log("Database error: " + err)
-                            })
-                    })
                 }
 
                 function deleteImagesRecursive(postOrComment) {
@@ -437,17 +278,34 @@ module.exports = function(app) {
 
                 deleteImagesRecursive(post);
 
-                // Delete notifications
-                User.update({}, {
-                        $pull: {
-                            notifications: {
-                                subjectId: post._id
-                            }
-                        }
-                    }, { multi: true })
-                    .then(response => {
-                        console.log(response)
+                // Delete tags (does not currently fix tag last updated time)
+                if (post.tags) {
+                    post.tags.forEach((tag) => {
+                        Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: req.params.postid } })
+                            .then((tag) => {
+                                console.log("Deleted post from tag: " + tag)
+                            })
+                            .catch((err) => {
+                                console.log("Database error while attempting to delete post from tag: " + err)
+                            })
                     })
+                }
+
+                // Delete boosts
+                if (post.type == "original" && post.boosts) {
+                    post.boosts.forEach((boost) => {
+                        Post.deleteOne({ "_id": boost })
+                            .then((boost) => {
+                                console.log("Deleted boost: " + boost)
+                            })
+                            .catch((err) => {
+                                console.log("Database error while attempting to delete boost while deleting post: " + err)
+                            })
+                    })
+                }
+
+                // Delete notifications
+                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log(response) })
             })
             .then(() => {
                 Post.deleteOne({ "_id": req.params.postid })
@@ -455,7 +313,7 @@ module.exports = function(app) {
                         res.sendStatus(200);
                     })
                     .catch((err) => {
-                        console.log("Database error: " + err)
+                        console.log("Error while attempting to delete post: " + err)
                     });
             });
     });
@@ -468,8 +326,8 @@ module.exports = function(app) {
         commentTimestamp = new Date();
         var commentId = mongoose.Types.ObjectId();
 
-        var rawContent = sanitize(req.body.commentContent);
-        var parsedResult = await helper.parseText(JSON.parse(rawContent), false, true, true, true);
+        var rawContent = req.body.commentContent;
+        var parsedResult = await helper.parseText(JSON.parse(rawContent));
 
         if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
             res.status(400).send('bad post op');
@@ -495,22 +353,22 @@ module.exports = function(app) {
                     var postType = "community";
                     var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
                 } else {
-                    var postType = "user";
+                    var postType = "original";
                     var postPrivacy = post.privacy;
                 }
 
                 for (var inline of parsedResult.inlineElements) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, req.user._id, postPrivacy, req.user.settings.imageQuality);
-                        inline.imageIsHorizontal = horizOrVertics.isHorizontal;
-                        inline.imageIsVertical = horizOrVertics.isVertical;
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
+                        inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }
                 }
 
                 comment.inlineElements = parsedResult.inlineElements;
-                comment = await helper.updateHTMLCache(comment);
-                var contentHTML = comment.cachedHTML.fullContentHTML;
+                var contentHTML = await helper.renderHTMLContent(comment)
+                comment.cachedHTML = { fullContentHTML: contentHTML };
 
                 numberOfComments = 0;
                 var depth = undefined;
@@ -810,13 +668,12 @@ module.exports = function(app) {
     app.post("/deletecomment/:postid/:commentid", isLoggedInOrRedirect, function(req, res) {
         Post.findOne({ "_id": req.params.postid })
             .then((post) => {
-                commentsByUser = 0;
-                latestTimestamp = 0;
-                numberOfComments = 0;
+                var commentsByUser = 0;
+                var latestTimestamp = 0;
+                var numberOfComments = 0;
+                var target = undefined;
 
                 function findNested(array, id, parent) {
-                    var foundElement;
-                    var parentElement = (parent ? parent : post)
                     array.forEach((element) => {
                         if (!element.deleted) {
                             numberOfComments++;
@@ -827,25 +684,21 @@ module.exports = function(app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
-                        element.numberOfSiblings = (parent ? parentElement.replies.length - 1 : post.comments.length - 1);
-                        element.parent = parentElement;
-                        if (element._id && element._id.equals(id)) {
-                            foundElement = element;
+                        element.numberOfSiblings = (parent ? parent.replies.length - 1 : post.comments.length - 1);
+                        element.parent = parent;
+                        if (!target && element._id && element._id.equals(id)) {
+                            target = element;
                             commentsByUser--;
                             numberOfComments--;
                             console.log('numberOfComments', numberOfComments)
                         }
                         if (element.replies) {
-                            var found = findNested(element.replies, id, element)
-                            if (found) {
-                                foundElement = found;
-                            }
+                            findNested(element.replies, id, element)
                         }
                     })
-                    return foundElement;
                 }
 
-                var target = findNested(post.comments, req.params.commentid);
+                findNested(post.comments, req.params.commentid, post);
                 if (target) {
                     post.numberOfComments = numberOfComments;
                 }
@@ -894,7 +747,6 @@ module.exports = function(app) {
 
                 post.save()
                     .then((comment) => {
-                        // todo: check if post's lastUpdated is changed somewhere? relocatePost(ObjectId(req.params.postid))?
                         post.lastUpdated = latestTimestamp;
                         //unsubscribe the author of the deleted comment from the post if they have no other comments on it
                         if (commentsByUser == 0) {
@@ -958,7 +810,6 @@ module.exports = function(app) {
                     privacy: 'public',
                     timestamp: boostedTimestamp,
                     lastUpdated: boostedTimestamp,
-                    //add field back to schema so this works
                     boostTarget: boostedPost._id
                 })
                 boost.save().then(savedBoost => {
@@ -971,9 +822,6 @@ module.exports = function(app) {
                         return !boost.booster.equals(req.user._id)
                     })
                     boostedPost.boostsV2.push(boost);
-
-                    // don't think so
-                    //boostedPost.subscribedUsers.push(req.user._id.toString());
 
                     boostedPost.save().then(() => {
                         //don't notify the original post's author if they're creating the boost or are unsubscribed from this post
@@ -991,15 +839,7 @@ module.exports = function(app) {
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
     app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
-        Post.findOne({
-                '_id': req.params.postid
-            }, {
-                boostsV2: 1,
-                privacy: 1,
-                author: 1,
-                url: 1,
-                timestamp: 1
-            })
+        Post.findOne({ '_id': req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
             .then((boostedPost) => {
                 var boost = boostedPost.boostsV2.find(b => {
                     return b.booster.equals(req.user._id)
@@ -1017,14 +857,220 @@ module.exports = function(app) {
                 })
             })
     })
+
+    app.post('/createposteditor/:postid', isLoggedInOrRedirect, function(req, res) {
+        Post.findOne({
+                _id: req.params.postid
+            })
+            .then(async post => {
+                if (post.author.equals(req.user._id)) {
+                    // This post has been written by the logged in user - we good
+                    var isCommunityPost = (post.type == 'community');
+                    var content = await helper.renderHTMLContent(post, true);
+                    hbs.render('./views/partials/posteditormodal.handlebars', {
+                            contentWarnings: post.contentWarnings,
+                            privacy: post.privacy,
+                            isCommunityPost: isCommunityPost,
+                            isDraft: post.type=="draft",
+                            postID: post._id.toString()
+                        })
+                        .then(async html => {
+                            var result = {
+                                editor: html,
+                                content: content
+                            }
+                            res.contentType('json');
+                            res.send(JSON.stringify(result));
+                        })
+                } else {
+                    res.send('Hold up there scout')
+                }
+            })
+    })
+
+    app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function(req, res) {
+        var post = await Post.findById(req.params.postid);
+        if (!post.author._id.equals(req.user._id)) {
+            return res.sendStatus(403);
+        }
+        var parsedPost = await helper.parseText(JSON.parse(req.body.postContent));
+        if (!(parsedPost.inlineElements.length || parsedPost.text.trim())) {
+            //ignore the edit if it results in an empty post; it's an invalid request, the client side code also works to prevent this
+            return res.sendStatus(403);
+        }
+
+        post.lastEdited = new Date();
+        post.rawContent = req.body.postContent;
+        post.parsedContent = parsedPost.text;
+
+        //don't save mentions or tags for draft posts, this means that notifications and tag adding will be deferred until the post is published and at that point
+        //all of the mentions and tags will register as "new" and so the right actions will occur then
+        if(req.body.isDraft){
+            parsedPost.mentions = [];
+            parsedPost.tags = [];
+        }
+
+        //process images added to/deleted from the post, retrieve/find orientations. its spaghetti, i know. the imageIsVertical and imageIsHorizontal database fields should
+        //really be combined into a single imageOrientationType field that just stores either 'vertical-image', 'horizontal-image', or a blank string for each image.
+        //it would be a lot simpler, if computationally wasteful, to just re-compute the orientation of every image for every image instead of doing all of this to keep track
+        //of how it was stored for images already in the post in potentially a completely different format and image order; if this code gives too much trouble probably just switch to that.
+
+        //create lookup tables: oldHorizontalImages[imageFileName] will contain the value of imageIsHorizontal corresponding to that filename, and the same for vertical ones
+        var horizontalityLookup = {};
+        var verticalityLookup = {};
+        var oldPostImages = [];
+        if (post.images && post.images.length) {
+            oldPostImages = post.images;
+            if (post.imageIsHorizontal && post.imageIsVertical) {
+                oldPostImages.map((v, i) => {
+                    horizontalityLookup[v] = post.imageIsHorizontal[i];
+                    verticalityLookup[v] = post.imageIsVertical[i];
+                })
+            }
+        } else if (post.inlineElements && post.inlineElements.length) {
+            post.inlineElements.filter(element => element.type == "image(s)").map(imagesElement => imagesElement.images.map(
+                (imageFilename, i) => {
+                    oldPostImages.push(imageFilename);
+                    if (imagesElement.imageIsHorizontal && imagesElement.imageIsVertical) {
+                        horizontalityLookup[imageFilename] = imagesElement.imageIsHorizontal[i];
+                        verticalityLookup[imageFilename] = imagesElement.imageIsVertical[i];
+                    }
+                }))
+        }
+        if (post.community) {
+            var imagePrivacy = (await Community.findById(post.community)).settings.visibility;
+            var imagePrivacyChanged = false;
+        } else if(req.body.isDraft){
+            var imagePrivacy = "private";
+            var imagePrivacyChanged = false;
+        } else {
+            var imagePrivacy = req.body.postPrivacy;
+            var imagePrivacyChanged = !(imagePrivacy == post.privacy);
+        }
+        //finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
+        //change the privacy of old image documents if the post's privacy changed.
+        var currentPostImages = [];
+        for (e of parsedPost.inlineElements) {
+            if (e.type == "image(s)") {
+                e.imageIsVertical = [];
+                e.imageIsHorizontal = [];
+                for (var i = 0; i < e.images.length; i++) {
+                    currentPostImages.push(e.images[i]);
+                    if (!oldPostImages.includes(e.images[i])) {
+                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality);
+                        e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
+                        e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
+                    } else if (!post.imageVersion || post.imageVersion < 2) {
+                        //finalize images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
+                        var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/');
+                        e.imageIsVertical.push(horizOrVertic.imageIsVertical[0]);
+                        e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0]);
+                    } else {
+                        e.imageIsVertical.push(verticalityLookup[e.images[i]]);
+                        e.imageIsHorizontal.push(horizontalityLookup[e.images[i]]);
+                        if (imagePrivacyChanged) {
+                            var imageDoc = await Image.findOne({ filename: e.images[i] });
+                            imageDoc.privacy = imagePrivacy;
+                            await imageDoc.save();
+                        }
+                    }
+                }
+            }
+        }
+
+        var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v));
+        for (image of deletedImages) {
+            Image.deleteOne({ filename: image });
+            fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if(err){console.error('could not delete unused image from edited post:\n' + err) }});
+        }
+
+        post.inlineElements = parsedPost.inlineElements;
+        post.images = undefined;
+        post.imageDescriptions = undefined;
+        post.imageIsHorizontal = undefined;
+        post.imageIsVertical = undefined;
+        post.embeds = undefined;
+
+        var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v));
+        for (mention of newMentions) {
+            if (mention != req.user.username) {
+                User.findOne({ username: mention }).then(async mentioned => {
+                    if (post.community) {
+                        if (mentioned.communities.some(v=>v.equals(post.community))) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post');
+                        }
+                    } else if (req.body.postPrivacy == "private") {
+                        if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
+                            notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post');
+                        }
+                    } else {
+                        notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + post.url, 'post')
+                    }
+                })
+            }
+        }
+        post.mentions = parsedPost.mentions;
+
+        var newTags = parsedPost.tags.filter(v => !post.tags.includes(v));
+        for (const tag of newTags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id.toString() }, "$set": { "lastUpdated": post.lastEdited } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
+        }
+        var deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
+        for (const tag of deletedTags) {
+            Tag.findOneAndUpdate({ name: tag }, { "$pull": { "posts": post._id.toString() } }).catch(err => console.error('could not remove edited post ' + post._id.toString() + ' from tag ' + tag + '\n' + err));
+
+        }
+        post.tags = parsedPost.tags;
+
+        //if the post is in a community, the community's last activity timestamp could be updated here, but maybe not, idk
+
+        var newHTML = await helper.renderHTMLContent(post);
+        post.cachedHTML.fullContentHTML = newHTML;
+
+        post.contentWarnings = req.body.postContentWarnings;
+
+        if (req.body.postContentWarnings) {
+            //this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
+            newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
+                '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
+                '<button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>';
+        }
+
+        if(post.type == "draft" && !req.body.isDraft){
+            var timePublished = new Date();
+            post.timestamp = timePublished;
+            post.lastUpdated = timePublished;
+            post.lastEdited = undefined;
+            post.type = "original";
+            newHTML = '<p style="font-weight:300;font-style:italic;color:#ce1717;">This post was published!</p>'; //the color is $sweet-red from _colors.scss
+        }
+
+        if (post.type == "original") {
+            post.privacy = req.body.postPrivacy;
+        }else if(post.type == "draft"){
+            post.privacy = "private"; //the client should send is this in req.body.postPrivacy but, just to be sure
+        }else if(post.type == "community"){
+            post.privacy = "public";
+        }
+
+        post.save().then(() => {
+            res.contentType("text/html; charset=utf-8");
+            res.status(200);
+            res.send(newHTML);
+        })
+    })
 };
 
+//scan the temp folder every day and delete images that are more than a week old. just in case someone leaves their post editor open for that long. this generous
+//time limit is enabled by the fact that the vast, vast majority of temp images are going to be specifically cleared by the /cleartempimage route above; the only
+//images that are going to be picked up by this function are those uploaded by users whose device loses power, whose device loses internet connection and doesn't
+//regain it before they close the tab, and maybe those that are using a really weird browser or extensions.
 function cleanTempFolder() {
     fs.readdir("./cdn/images/temp", function(err, files) {
         files.forEach(file => {
             if (file != ".gitkeep" && file != "") {
                 fs.stat("./cdn/images/temp/" + file, function(err, s) {
-                    if (Date.now() - s.mtimeMs > 3600000) {
+                    if (Date.now() - s.mtimeMs > 7*24*60*60*1000) {
                         fs.unlink("./cdn/images/temp/" + file, function(e) {
                             if (e) {
                                 console.log("couldn't clean temp file " + file);
@@ -1036,10 +1082,9 @@ function cleanTempFolder() {
             }
         });
     });
-    setTimeout(cleanTempFolder, 3600000);
 }
-
-setTimeout(cleanTempFolder, 3600000); //clean temp image folder every hour
+cleanTempFolder();
+setInterval(cleanTempFolder, 24*60*60*1000);
 
 //For post and get requests where the browser will handle the response automatically and so redirects will work
 function isLoggedInOrRedirect(req, res, next) {

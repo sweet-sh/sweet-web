@@ -1,0 +1,24 @@
+    {{#if editing}}
+    <a class="link-preview-container slidable-embed" linkUrl="{{linkUrl}}" contenteditable="false">
+    {{/if}}
+    {{#if image}}
+    <img class="link-preview-image" src="{{image}}" />
+    {{else}}
+    {{#if editing}}
+    <div class="link-preview-image"><i class="fas fa-link"></i></div>
+    {{else}}
+    <div class="link-preview-image"><i class="fas fa-spinner fa-spin"></i></div>
+    {{/if}}
+    {{/if}}
+    <div class="link-preview-text-container" style="width:100%;">
+        <span class="link-preview-title">{{#if editing}}{{title}}{{else}}...loading...{{/if}}</span>
+        <span class="link-preview-description">{{#if editing}}{{description}}{{else}}...loading...{{/if}}</span>
+        <span class="link-preview-domain">{{#if editing}}{{domain}}{{#if isEmbeddableVideo}} (will open as embed){{/if}}{{else}}...loading...{{/if}}</span>
+    </div>
+    <div class="image-preview-controls">
+        <div class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></div>
+        <div class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
+    </div>
+    {{#if editing}}
+    </a>
+    {{/if}}

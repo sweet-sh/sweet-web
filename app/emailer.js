@@ -1,8 +1,5 @@
 const nodemailer = require("nodemailer");
 const nodemailerHbs = require('nodemailer-express-handlebars');
-const path = require('path');
-const schedule = require('node-schedule'); //no longer used!
-const fs = require('fs');
 const moment = require('moment-timezone');
 const auth = require(global.appRoot + '/config/auth.js');
 
@@ -39,7 +36,9 @@ nodemailerHbsOptions = {
 transporter.use('compile', nodemailerHbs(nodemailerHbsOptions));
 
 function emailLog(message) {
-    console.log(message);
+    if(process.env.NODE_ENV == "production"){
+        console.log(message);
+    }
     fs.appendFileSync("emailLog.txt", message + '\n');
 }
 

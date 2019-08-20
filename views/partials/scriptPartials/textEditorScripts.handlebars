@@ -1,27 +1,9 @@
 <script type="text/custom-template" id="new-post-link-preview-contents">
-    <img class="link-preview-image" src="/images/spinner-stolen.gif" />
-    <div class="link-preview-text-container" style="width:100%;">
-        <span class="link-preview-title">...loading...</span>
-        <span class="link-preview-description">...loading...</span>
-        <span class="link-preview-domain">...loading...</span>
-    </div>
-    <div class="image-preview-controls">
-        <div class="image-control image-clear" title="Clear"><i class="fas fa-times"></i></div>
-        <div class="image-control image-move" title="Move" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
-    </div>
+{{> linkPreviewPreview}}
 </script>
 
 <script type="text/custom-template" id="new-post-image-preview-contents">
-    <div class="image-preview">
-        <div class="fader" style="position: absolute;top: 0;display: flex;flex-direction:column;color:white;background-color:#00000088;display:flex;align-items:center;justify-content:center;height:100%;width:100%;flex-scrollDirection:column;">
-            <div id="percentage" style="padding:5px 5px;">0%</div><progress max="100" value="0"></progress>
-        </div>
-    </div>
-    <textarea class="form-control mb-3" name="postImageDescription" id="postImageDescription" placeholder="Describe this image for people using screen readers."></textarea>
-    <div class="image-preview-controls">
-        <div class="image-control image-clear" title="Clear image"><i class="fas fa-times"></i></div>
-        <div class="image-control image-move" title="Move image" ondragstart="return false;" ondrop="return false;"><i class="fas fa-arrows-alt"></i></div>
-    </div>
+{{> imagePreview}}
 </script>
 
 <script>
@@ -34,8 +16,10 @@
         if (postForm.find('.still-loading').length == 0) {
             var button = postForm.find('.create-comment, #postSubmit');
             button.attr('disabled', false);
-            if (button.hasClass('create-comment')) {
-                button.html("Reply");
+            if (button.hasClass('save-draft-button')) {
+                button.html('Save <i class="fas fa-chevron-right"></i>');
+            } else if (button.hasClass('create-comment')) {
+                button.html('Reply <i class="fas fa-chevron-right"></i>');
             } else if (button.attr('id') == "postSubmit") {
                 button.html('Send <i class="fas fa-chevron-right"></i>');
             }
@@ -47,14 +31,20 @@
 
     //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
     function clearEmbed(e) {
-        var m = $(this).parent().parent();
-        if (m[0].request && m[0].request.readyState != 4) { //if the request is still in progress
-            m[0].request.abort();
+        var container = $(this).closest('.slidable-embed');
+        if(container.hasClass('image-preview-container') && !container.attr('imagealreadysaved') && !container.hasClass('still-loading')){
+            $.post('/cleartempimage',{imageURL: container.attr('image-url')});
         }
-        var postform = m.closest('.new-comment-form, .contentForm');
-        m.remove();
+        var quillController = container.closest('.ql-container')[0].__quill;
+        quillController.updateContents(); //slightly hacky way to get quill to save the image description so it'll put it back if this deletion is undone
+        quillController.focus();
+        if (container[0].request && container[0].request.readyState != 4) { //if the request is still in progress
+            container[0].request.abort();
+        }
+        var postform = container.closest('.new-comment-form, .contentForm');
+        container.remove();
         updateSubmitButtonState(postform);
-        createImageGroups(m.closest('.ql-editor'));
+        createImageGroups(postform.find('.ql-editor'));
     }
 
     var newEmbedId = 0; //this increments every time an embed is added in an editor anywhere and before that is used to create their ids so they can all be uniquely identified
@@ -84,7 +74,7 @@
             n.addClass('still-loading');
             n.addClass('slidable-embed');
             n.find('.link-preview-image').on('error', function(e) {
-                $(this).replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                $(this).replaceWith('<div class="link-preview-image""><i class="fas fa-link"></i></div>');
             })
             node.request = $.post("/api/newpostform/linkpreviewdata", { url: url }, function(data, status, jqXHR) {
                 var m = $("#embed" + id);
@@ -97,9 +87,9 @@
                 } else {
                     var linkInfo = JSON.parse(data);
                     if (linkInfo.image) {
-                        m.find(".link-preview-image").attr('src', linkInfo.image)
+                        m.find(".link-preview-image").replaceWith('<img class="link-preview-image" src="'+linkInfo.image+'" />')
                     } else {
-                        m.find(".link-preview-image").replaceWith('<div class="link-preview-image" style="font-size:50px;text-align:center;"><i class="fas fa-link"></i></div>');
+                        m.find(".link-preview-image").replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
                     }
                     m.find('.link-preview-title').html(linkInfo.title);
                     m.find('.link-preview-description').html(linkInfo.description);
@@ -150,14 +140,39 @@
     var files = {}; //each file object is stored in this object under the container's id so that if a user deletes an image embed and then undoes that action, quill can find the file in here and reconstitute the embed from it.
     class PostImage extends BlockEmbed {
 
-        //this is called when the quill api is used to create an embed with type 'PostImage' (which is where you pass in the file)
-        static create(file) {
+        //this is called when the quill api is used to create an embed with type 'PostImage' (which is where you pass in the file). it's also called to recreate one of these if it's
+        //deleted and then that's undone, in which case if the image is already on the server we want to use that instead of uploading a new copy, so a string with the full url of the
+        //image will be passed in in that case (quill gets it from the value() function)
+        static create(fileOrUrl) {
+            if(typeof fileOrUrl == "string"){
+                var url = fileOrUrl;
+                let node = super.create();
+                node.setAttribute('contenteditable', false);
+                node.setAttribute('imagealreadysaved','true');
+                node.setAttribute('fullsavedurl',url);
+                node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
+                node.setAttribute('id', 'embed' + newEmbedId);
+                newEmbedId++;
+                var n = $(node);
+                n.addClass('slidable-embed');
+                n.find(".fader").remove();
+                n.find(".image-preview").css('background-image','url('+url+')');
+                n.find('.image-clear').click(clearEmbed);
+                n.find('.image-move').on('mousedown', mousedownOnHandle);
+                n.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
+                return node;
+            }
+
+            var file = fileOrUrl;
+
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
-                return null;
+                throw (file.name ? file.name : "") +" of unsupported mime type";                
+                return undefined;
             } else if (!(((file.type === "image/jpeg" || file.type === "image/png") && file.size < 10485760) || (file.type === "image/gif" && file.size < 5242880))) {
                 bootbox.alert("Sorry, but this file appears to be too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
-                return null;
+                throw (file.name ? file.name : "") +" too large";
+                return undefined;
             }
             let node = super.create();
             node.setAttribute('id', 'embed' + newEmbedId);
@@ -165,21 +180,14 @@
             var id = newEmbedId;
             newEmbedId++;
             node.setAttribute('contenteditable', false);
-            node.setAttribute('image-url', 'loading...')
+            node.setAttribute('image-url', 'loading...');
             node.innerHTML = $("#new-post-image-preview-contents")[0].innerHTML;
             var n = $(node);
             n.addClass("still-loading");
             n.addClass('slidable-embed');
-            //create filereader that will obtain us the preview
-            var fr = new FileReader();
-            fr.onload = function(e) {
-                var m = $("#embed" + id)
-                if (m) { //our preview window might have already been eliminated by a cancel operation
-                    m.find('.image-preview')[0].style.backgroundImage = "url(" + e.target.result + ")";
-                }
-            }
-            fr.fileType = file.type;
-            fr.readAsDataURL(file);
+            //generate "virtual url" for the file and use it to display the preview of the image
+            var fileURL = URL.createObjectURL(file);
+            n.find('.image-preview')[0].style.backgroundImage = "url(" + fileURL + ")";
 
             //make the image-uploading ajax request
             var fd = new FormData();
@@ -221,17 +229,49 @@
                         if (serverResponse.error == "filesize") {
                             bootbox.alert("Image too large! The maximum size for GIF images is 5MB and for JPG and PNG images is 10MB.");
                         } else if (serverResponse.error == "filetype") {
-                            bootbox.alert("We cannot use this file! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
+                            bootbox.alert("We cannot use this fileOrUrl! Please make sure you are uploading a JPG, PNG, or GIF from this universe.");
                         }
                         endMovement(); //in case this link preview is currently being dragged
                         m.find('.image-clear').click();
                     } else {
                         if (serverResponse.thumbnail) {
-                            m.find('.image-preview').css('background-image', "url(" + serverResponse.thumbnail + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+                            $.get({
+                                url: serverResponse.thumbnail,
+                                success: function(data) {
+                                    m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
+                                },
+                                processData: false,
+                                xhr: function() {
+                                    var uploader = new XMLHttpRequest();
+                                    uploader.responseType = 'blob';
+                                    return uploader;
+                                }
+                            })
                         }
                         m.find('.fader').remove();
                         m.attr('image-url', serverResponse.url);
                         updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
+                        setTimeout(function() {
+                            var o = $("#embed" + id);
+                            if (o.length) {
+                                if (!$(".bootbox-alert.show").length) { //so if multiple images are expiring (almost) at once it only creates one alert
+                                    bootbox.alert("hey your images are expired and stuff whoops sorry! this tab has apparently been open for a week. or maybe linear time has ceased to function. i guess you can reupload? you probably weren't going to finish this post anyway? geez");
+                                }
+                                var text = o.find("#postImageDescription").val();
+                                if (text.trim()) {
+                                    o.replaceWith("<p>Image: " + text.trim() + (file.name ? " ("+file.name+")" : "") + "</p>");
+                                } else if (file.name) { //image.png is the placeholder for pasted images at least on chrome + firefox
+                                    if (file.name != "image.png") {
+                                        o.replaceWith("<p>Image: " + file.name + "</p>");
+                                    } else {
+                                        o.replaceWith("<p>Pasted image</p>");
+                                    }
+                                } else {
+                                    o.replaceWith("<p>Image</p>");
+                                }
+                                createImageGroups(o.parent());
+                            }
+                        }, 7*24*60*60*1000);
                     }
                 }
             });
@@ -245,14 +285,29 @@
         }
 
         //quill calls this function to find out what value it should put for this embed in the object it returns when you call getContents() on it (although we don't use this there)
-        //or what value to pass to create() if it has to recreate this object bc of an undo, which we can use
+        //or what value to pass to create() if it has to recreate this object bc of an undo. when that happens, we want it to be recreated using the file that created it if the image
+        //is not yet saved on the server (if this is a new post) or using the image from the server if that's saved in public view (if this is an image that was already in a post
+        //that's now being edited)
         static value(node) {
-            return files[node.getAttribute('id')];
+            if(node.getAttribute("imagealreadysaved")){
+                return node.getAttribute('fullsavedurl')
+            }else{
+                return files[node.getAttribute('id')];
+            }
         }
 
         //quill calls this function to find out what attributes it should put for this embed in the object it returns when you call getContents() on it
         static formats(node) {
             return { description: $(node).find('#postImageDescription').val(), imageURL: node.getAttribute('image-url') };
+        }
+
+        //when quill recreates one of these after undoing it will reapply the formats established by the method above
+        format(name, value) {
+            if(name=="description"){
+                $(this.domNode).find("#postImageDescription").val(value);
+            }else if(name=="imageURL"){
+                this.domNode.setAttribute('image-url',value);
+            }
         }
     }
     PostImage.blotName = 'PostImage';
@@ -317,7 +372,7 @@
             }
             return delta;
         })
-        //save the most recent cursor position when the editor loses focus for emoji picker placement. 
+        //save the most recent cursor position when the editor loses focus for emoji picker placement.
         quill.on('selection-change', function(range, oldRange, source) {
             if (!range) {
                 element.lastCursorPos = oldRange.index;
@@ -403,7 +458,12 @@
                 } else {
                     var addEmbedAt = quill.getLength();
                 }
-                quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+                try{
+                    quill.insertEmbed(addEmbedAt, 'PostImage', file, Quill.sources.USER);
+                }catch(err){
+                    console.log("image type/size unsupported!");
+                    console.log(err);
+                }
                 updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
                 createImageGroups($(element).children('.ql-editor'));
             }
@@ -417,7 +477,6 @@
 
             //create a blank line when someone clicks on the space below an embed if it's the last thing in the editor
             element.onclick = function(e) {
-                console.log(e.target);
                 var et = $(e.target);
                 if (et.hasClass('ql-editor')) {
                     var c = et.children();
@@ -462,13 +521,13 @@
                 // event.originalEvent.clipboard for newer chrome versions
                 var items = (event.clipboardData || event.originalEvent.clipboardData).items;
                 for (var i = 0; i < items.length; i++) {
-                    if (element.imagesAdded() > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
-                        break;
-                    } else {
-                        if (items[i].type.indexOf("image") === 0) {
-                            element.addImage(items[i].getAsFile());
+                    if (items[i].type.indexOf("image") === 0) {
+                        if (element.imagesAdded() > 3) {
+                            bootbox.alert("sorry, we only take 4 images at once atm");
+                            break;
+                        } else {
                             e.preventDefault();
+                            element.addImage(items[i].getAsFile());
                         }
                     }
                 }
@@ -557,6 +616,7 @@
 
     function mousedownOnHandle(mouseDownEvent) {
         mouseDownEvent.preventDefault();
+        $(this).addClass('in-use');
         var selectedEmbed = $(this).parent().parent();
 
         //turms selectedEmbed into a spacer element. floatyEmbed is going to contain the embed now instead.
@@ -630,46 +690,37 @@
     //this functions creates and returns a new, floaty version of the element you pass in and turns the original into an empty "spacer"
     function prepareEmbedForMoving(selectedEmbed) {
 
+        var spacer = selectedEmbed;
+
         var floatingVersion = selectedEmbed.clone(false);
         floatingVersion.find('.image-move')[0].addEventListener('touchstart', touchStartOnHandle, { passive: false });
         floatingVersion.find('.image-move').on('mousedown', mousedownOnHandle);
         floatingVersion.find('.image-clear').click(clearEmbed);
 
-        var groupClasses = 'ipc-group ipc-group-top ipc-group-bottom';
-        selectedEmbed.removeClass(groupClasses);
-        var above = selectedEmbed.prev('.image-preview-container');
-        while (above.length) {
-            above.removeClass(groupClasses);
-            above = above.prev('.image-preview-container');
-        }
-        var below = selectedEmbed.next('.image-preview-container');
-        while (below.length) {
-            below.removeClass(groupClasses);
-            below = below.next('.image-preview-container');
-        }
-
-        var spacer = selectedEmbed;
-
-        spacer.addClass("embedspacer");
-        spacer.attr('id', '');
-
         floatingVersion.css("width", spacer.outerWidth(true) + "px");
         floatingVersion.css("left", spacer.offset().left + "px");
         floatingVersion.css("top", getTop(spacer) + "px");
 
-        spacer.closest('.ql-container').append(floatingVersion);
+        if(selectedEmbed.hasClass('ipc-group')){
+            createImageGroups(selectedEmbed.parent());
+        }
+
+        spacer.addClass("embedspacer");
+        spacer.attr('id', '');
+        spacer.removeClass('ipc-group ipc-group-top ipc-group-bottom')
+
+        $('body').append(floatingVersion);
 
         //these can be put in the css file under .onthemove if that's preferred. I guess I would rather have them here
         floatingVersion.css("position", "fixed");
         floatingVersion.css("z-index", 2147483647); // over 9000
-        floatingVersion.css("background-color", "white");
+        floatingVersion.removeClass('ipc-group ipc-group-top ipc-group-bottom');
 
         floatingVersion.addClass("onthemove");
 
-        spacer.css("border", "dashed")
         spacer.empty();
 
-        floatingVersion[0].scrollPrompterId = setInterval(function() { scrollPrompter(floatingVersion) }, 50);
+        floatingVersion[0].scrollPrompterId = setInterval(function() { scrollPrompter(floatingVersion, spacer.closest('.ql-editor')) }, 50);
 
         lastWindowPos = window.scrollY;
         $(window).on('scroll', function(e) {
@@ -686,19 +737,28 @@
 
     //auto-scrolls when the floating element is less than 100px away from the top or bottom and the top or bottom of the editor is offscreen.
     //called through setInterval, which is started in prepareEmbedForMoving, and then canceled in endMovement
-    function scrollPrompter(floatingEmbed) {
-        var t = floatingEmbed.offset().top;
+    function scrollPrompter(floatingEmbed, editor) {
+        var t = getTop(floatingEmbed)
         var h = floatingEmbed.outerHeight();
         var b = t + h;
-        var pt = floatingEmbed.parent().offset().top;
-        var pb = pt + floatingEmbed.parent().outerHeight();
+        var et = getTop(editor);
+        var eb = et + editor.outerHeight();
+        var modal = editor.closest('.modal');
         var w = $(window);
         var wst = w.scrollTop();
         var wh = w.height();
-        if (t < wst + 100 && pt < wst + 50) {
-            w.scrollTop(wst - 10);
-        } else if (b > wh - 100 && pb > (wst + wh)) {
-            w.scrollTop(wst + 10);
+        if (t < 100 && et < 50) {
+            if(modal.length){
+                modal.scrollTop(modal.scrollTop()-10);
+            }else{
+                w.scrollTop(wst - 10);
+            }
+        } else if (b > wh - 100 && eb > wh) {
+            if(modal.length){
+                modal.scrollTop(modal.scrollTop()+10);
+            }else{
+                w.scrollTop(wst + 10);
+            }
         }
     }
 
@@ -742,6 +802,8 @@
                 }
             }
         }
+
+        createImageGroups(spacer.parent());
     }
 
     //this function is called when the user lifts their finger from their screen or mouse button and the image can find its spot. it's all called to just
@@ -754,6 +816,7 @@
             $('.embedspacer').after($('.onthemove'));
             floatingEmbed.css("position", "").css("border", "").css('width', '').css('left', '').css('top', '').css('height', '').css("z-index", 10); //seems like a good number
             floatingEmbed.removeClass("onthemove");
+            floatingEmbed.find('.image-move').removeClass('in-use');
             var spacer = $('.embedspacer');
             spacer.remove();
             createImageGroups(floatingEmbed.closest('.ql-editor'));
@@ -762,29 +825,40 @@
 
     function createImageGroups(qlEditorElement) {
         var kids = qlEditorElement.children();
-        kids.removeClass('ipc-group ipc-group-top ipc-group-bottom'); //reset. this is not very well optimized, the loop below could be added to to just remove specific    classes where necessary
         var containersInARow = 0;
         for (var i = 0; i < kids.length; i++) {
-            if ($(kids[i]).hasClass('image-preview-container')) {
+            var kid = $(kids[i]);
+            if (kid.hasClass('image-preview-container') && !kid.hasClass('embedspacer')) {
                 containersInARow++;
                 if (containersInARow > 1) {
                     if (containersInARow == 2) {
-                        $(kids[i - 1]).addClass('ipc-group ipc-group-top');
+                        $(kids[i - 1]).addClass('ipc-group ipc-group-top').removeClass('ipc-group-bottom');
                     } else {
-                        $(kids[i - 1]).addClass('ipc-group');
+                        $(kids[i - 1]).addClass('ipc-group').removeClass('ipc-group-top ipc-group-bottom');
                     }
                 }
             } else {
                 if (containersInARow > 1) {
-                    $(kids[i - 1]).addClass('ipc-group ipc-group-bottom');
+                    $(kids[i - 1]).addClass('ipc-group ipc-group-bottom').removeClass('ipc-group-top');
+                }else if(containersInARow==1){
+                    $(kids[i - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
                 }
                 containersInARow = 0;
             }
         }
         if (containersInARow > 1) {
-            $(kids[kids.length - 1]).addClass('ipc-group ipc-group-bottom');
+            $(kids[kids.length - 1]).addClass('ipc-group ipc-group-bottom').removeClass('ipc-group-top');
         } else if (containersInARow == 1) {
             $(kids[kids.length - 1]).removeClass('ipc-group ipc-group-top ipc-group-bottom')
         }
     }
+
+    window.addEventListener("beforeunload", function(event) {
+        $("div.image-preview-container:not(.still-loading)").each(function(i,e){
+            if(!e.getAttribute('imagealreadysaved')){
+                $.post('/cleartempimage',{imageURL: e.getAttribute('image-url')});
+            }
+        })
+    });
+
 </script>

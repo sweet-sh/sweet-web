@@ -1,5 +1,53 @@
 <script type="text/javascript">
+
+//bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
+//the body when it's dismissed and make the backdrops not collide with each other
+var oldAlert = bootbox.alert;
+bootbox.alert = function(alertString, callback) {
+    var editModal = $("#editPostModal");
+    oldAlert(alertString, callback);
+    if (editModal.length) {
+        var body = $("body");
+        var obvs = new MutationObserver(function(e) {
+          if(editModal.length && editModal.is(":visible")){
+            body.addClass("modal-open");
+          }
+          obvs.disconnect();
+          obvs = undefined;
+        })
+        obvs.observe(body[0], {
+            attributes: true,
+            attributeFilter: ['class']
+        })
+        $($(".modal-backdrop")[1]).css('z-index', 1050); //so the second modal backdrop will be in front of the edit post modal, which has a z-index of 1040 (in css) but behind the bootbox-alert modal, which is at z-index: 1060
+    }
+}
+
+//check for posts every minute (function declared globally for console debugging purposes)
+{{#eq activePage "home"}}
+var pageLoadTime = new Date().getTime();
+function checkForNewPosts(){
+    $.get("/heyaretherenewposts/"+pageLoadTime).done(function(data,textStatus,jqXHR){
+      if(data=="yeah"){
+        $("#newPostsAvailable").show();
+      }else{
+        window.setTimeout(checkForNewPosts, 60000);
+      }
+    })
+  }
+  window.setTimeout(checkForNewPosts, 60000);
+{{/eq}}
+
 $(function() {
+    $(window).scroll(function() {
+        var scroll = $(window).scrollTop();
+        if (scroll > 0) {
+            $("#topNav").addClass("shadow");
+        }
+        else {
+            $("#topNav").removeClass("shadow");
+        }
+    });
 {{#if loggedInUserData.settings.flashRecentComments}}
     $(window).scroll(function() {
         $(".recent-comment-content:not(.flash)").each(function(){
@@ -11,15 +59,10 @@ $(function() {
 
             if((bottom_of_screen > top_of_element) && (top_of_screen < bottom_of_element)){
                 element.addClass('flash')
-                console.log("Flash dat comment")
             }
         });
     });
 {{/if}}
-
-  $('body').tooltip({
-    selector: '[data-toggle="tooltip"]'
-  });
 
     $('html').on('show.simplelightbox', function () {
 	     $('#bodyContainer, #topNav').css('filter','blur(10px)');
@@ -28,7 +71,10 @@ $(function() {
          $('#bodyContainer, #topNav').css('filter','none');
     });
 
-
+  // Reload notifications container every minute (hack until we set up WebSockets)
+  window.setInterval(function(){
+    $("#notificationsContainer").load("/api/notification/display");
+  }, 60000);
   $("#notificationsContainer").load( "/api/notification/display" );
 
   if ($('#notificationsPageLink').hasClass('active')){
@@ -86,36 +132,11 @@ $(function() {
     window.location.href = '/search/' +	searchQuery
   });
 
-  // Reload notifications container and check for new posts every minute (hack until we set up WebSockets)
-  window.setInterval(function(){
-    $("#notificationsContainer").load("/api/notification/display");
-    {{#eq activePage "home"}}
-    $("#checkNewPosts").load("/showposts/home/{{loggedInUserData._id}}/"+((new Date()).getTime()), function(error, result){
-      let latestPost = $("#checkNewPosts").find(".post").attr("data-post-id");
-      let currentlyDisplayedPost = $("#postsContainer").find(".post").attr("data-post-id");
-      if ((latestPost != currentlyDisplayedPost) && latestPost != ""){
-        $("#newPostsAvailable").show();
-      }
-      else {
-        $("#newPostsAvailable").hide();
-      }
-    })
-    {{/eq}}
-  }, 60000);
-
-  $('body').on('mouseover', '.link-preview-container', function() {
-      $(this).find('.link-preview-icon').css('color','#eee');
-  });
-  $('body').on('mouseout', '.link-preview-container', function() {
-      $(this).find('.link-preview-icon').css('color','white');
-  });
-
   $('body').on('click', '.show-comments', function() {
     commentsContainer = $(this).closest(".post").find(".comments");
     commentsContainer.slideToggle("fast", function(){
       commentsContainer.find('.comment').each(function(i,e) {
           e = $(e);
-          console.log(e.height());
           showMoreAndImageLightboxing(e);
       })
       if (commentsContainer.is(':visible')){
@@ -147,7 +168,7 @@ $(function() {
     }
     else {
       var pC = $(this).prev(".content");
-      pC.addClass("abbreviated-content").removeClass("content").animate({height:"20rem"},200);
+      pC.animate({height:"20rem"},200,"swing",function(){pC.addClass("abbreviated-content").removeClass("content")});
       var scroll = pC.offset().top;
       $("html, body").animate({ scrollTop: (scroll-200)+"px" },200); //-200 to roughly account for the navbar covering up the very top of the screen
       $(this).attr("data-state","contracted");
@@ -155,15 +176,6 @@ $(function() {
     var text = $(this).text();
     $(this).text(
         text == "Show more" ? "Show less" : "Show more");
-  })
-  $('body').on('click','.replyEmojiWindowButton', function() {
-    var commentFormContainer = $(this).closest('.new-comment-form');
-    commentFormContainer.find('.replyEmojiWindow').slideToggle("fast");
-    commentFormContainer.find('.ql-editor').focus();
-
-  })
-  $('body').on('click','.replyEmojiWindow>.add-emoji', function() {
-    $(this).closest(".new-comment-form").find('.ql-container')[0].insertEmojiAtCursor(event.target.innerHTML);
   })
 
     $('#boostersModal').on('show.bs.modal', function (event) {
@@ -178,7 +190,7 @@ $(function() {
             if (user === "you") {
                 return;
             }
-            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="badge badge-secondary float-right">Following</span></li>')
+            modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'<span class="tag">Following</span></li>')
         })
         users.otherBoosters.forEach(function(user) {
             modal.find('#boosters-list').append('<a href="/'+user+'" class="list-group-item">@'+user+'</li>')
@@ -190,7 +202,6 @@ $(function() {
     var images = $this.closest(".post").find(".content-warning-images");
     var state = $this.attr("data-state");
     var abbrContent = $this.closest(".post").find(".abbreviated-content");
-    console.log(abbrContent)
     if (state == "contracted") {
       abbrContent.css('height','100%')
       images.toggleClass("content-warning-images-shown");
@@ -213,7 +224,7 @@ $(function() {
     bootbox.confirm("Are you sure you want to delete this post?", function(result){
       if (result == true) {
         let divToDelete = element.closest(".post");
-        $.post("/deletepost/"+element.attr("id"), function(data) {
+        $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
           divToDelete.fadeOut(function() {
             divToDelete.remove();
           });
@@ -234,8 +245,6 @@ $(function() {
             divToDelete.find('footer button.delete-comment:first').remove();
 
             let newCommentCount = data.numberOfComments;
-            console.log(element)
-            console.log(counterToChange)
             if(newCommentCount!=0){
               counterToChange.html(newCommentCount)
             }else{

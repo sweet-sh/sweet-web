@@ -6,67 +6,19 @@
     "configurations": [
         {
             "type": "node",
-            "request": "launch",
-            "name": "Launch Server",
-            "program": "${workspaceFolder}\\server.js"
+            "request": "attach",
+            "name": "Attach",
+            "port": 5757
         },
         {
             "type": "node",
             "request": "launch",
-            "name": "Create 'boostsV2' field",
-            "program": "${workspaceFolder}\\databasetransforms\\populateBoostsV2.js"
+            "name": "Launch via NPM",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script", "debug"
+            ],
+            "port": 5757
         },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "nodemon Launch Server",
-            "runtimeExecutable": "nodemon",
-            "program": "${workspaceFolder}/server.js",
-            "restart": true,
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Add Joined Date And Timestamps",
-            "program": "${workspaceFolder}\\databasetransforms\\addJoinedDateAndTimestamps.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Add fake users",
-            "program": "${workspaceFolder}\\databasetransforms\\createFakeTestUsers.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Smol DB Check",
-            "program": "${workspaceFolder}\\databasetransforms\\databaseIntegrity.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Add width and height to images",
-            "program": "${workspaceFolder}\\databasetransforms\\addImageSizesToDB.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Add isVertical field for images",
-            "program": "${workspaceFolder}\\databasetransforms\\addIsVerticalField.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Remove old image fields",
-            "program": "${workspaceFolder}\\databasetransforms\\removeOldPostFields.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Nuke posts",
-            "program": "${workspaceFolder}\\databasetransforms\\DO_NOT_RUNnewTestPosts.js"
-        }
     ]
 }

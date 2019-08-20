@@ -1,6 +1,6 @@
 {{#each posts}}
-{{#if canDisplay}}
 <article class="post" data-post-id="{{this._id}}">
+    {{#isnt this.type "draft"}}
     <aside class="notifications">
         {{#if recentlyCommented}}
             {{#isnt lastCommentAuthor.username ../loggedInUserData.username}}
@@ -11,12 +11,12 @@
         {{/if}}
         {{#if headerBoosters}}
             <div class="boosters-notification">
-                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<a href="/{{#eq this "you"}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a>{{/each}}{{#if otherBoosters}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/gt}}
+                <i class="fas fa-retweet"></i> Boosted by {{#each headerBoosters}}{{#unless @first}}{{#unless @last}}, {{/unless}}{{/unless}}{{#if @last}}{{#unless ../otherBoosters}}{{#if ../this.followedBoosters.[1]}} and {{/if}}{{/unless}}{{#if ../otherBoosters}}{{#unless @first}}, {{/unless}}{{/if}}{{/if}}<a href="/{{#eq this "you"}}{{../../loggedInUserData.username}}{{else}}{{this}}{{/eq}}">{{#eq this "you"}}{{else}}@{{/eq}}{{this}}</a>{{/each}}{{#if otherBoosters}} and others <button type="button" class="smol-button show-boosters-list button outline-button uppercase-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/if}}{{#gt followedBoosters.length 3}} and others <button type="button" class="smol-button show-boosters-list button outline-button uppercase-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>{{/gt}}
             </div>
         {{else}}
             {{#if otherBoosters}}
                 <div class="boosters-notification">
-                    <i class="fas fa-retweet"></i> Boosted by {{plural otherBoosters 'some people/someone'}} you don't follow <button type="button" class="show-boosters-list button outline-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
+                    <i class="fas fa-retweet"></i> Boosted by {{plural otherBoosters 'some people/someone'}} you don't follow <button type="button" class="smol-button show-boosters-list button outline-button uppercase-button" data-toggle="modal" data-target="#boostersModal" data-users='{"followedBoosters":[{{#each followedBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],"otherBoosters":[{{#each otherBoosters}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}]}'>show all</button>
                 </div>
             {{/if}}
         {{/if}}
@@ -29,6 +29,7 @@
             {{/if}}
         {{/isnt}}
     </aside>
+    {{/isnt}}
     <header>
         <div class="post-header-left">
             <a href="/{{this.author.username}}">
@@ -50,13 +51,21 @@
                 {{/contains}}
             </h2>
             <aside class="metadata">
-                <span class="post-timestamp">
+                <span class="post-timestamp" title="Posted {{this.fullTimestamp}}">
                     {{this.parsedTimestamp}}
                 </span>
                 &nbsp;&middot;&nbsp;
                 <span class="post-visibility">
-                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash">{{/eq}}</i>
+                    {{#eq this.type "draft"}}
+                    <i class="fas fa-pencil-ruler"></i>
+                    {{else}}
+                    {{#eq this.privacy "public"}}<i class="fas fa-eye"></i>{{else}}<i class="fas fa-eye-slash"></i>{{/eq}}
+                    {{/eq}}
                 </span>
+                {{#if lastEdited}}
+                &nbsp;&middot;&nbsp;
+                <span class="post-edited" title="Last edited {{this.fullEditedTimestamp}}">Edited</span>
+                {{/if}}
             </aside>
         </div>
     </header>
@@ -70,7 +79,7 @@
         {{{this.internalPostHTML}}}
         {{#if this.contentWarnings}}
             </div>
-            <button type="button" class="button grey-button content-warning-show-more" data-state="contracted">Show post</button>
+            <button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>
         {{/if}}
     </section>
     <footer class="toolbar">
@@ -111,6 +120,7 @@
                 {{/isnt}}
             {{/if}}
         {{/eq}}
+        {{#isnt this.type "draft"}}
         <div class="toolbar-button-container">
             <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
                 <span class="fa-layers">
@@ -121,23 +131,45 @@
         </div>
         {{#contains this.subscribedUsers ../loggedInUserData._id}}
             <div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button unsubscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Receiving notifications (click to change)">
+                <button type="button" class="button post-toolbar-button unsubscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Receiving notifications (click to change)">
                     <i class="far fa-bell"></i>
                 </button>
             </div>
         {{else}}
             <div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button subscribe-post" data-post-id="{{this._id}}" data-toggle="tooltip" data-placement="bottom" title="Not receiving notifications (click to change)">
+                <button type="button" class="button post-toolbar-button subscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Not receiving notifications (click to change)">
                     <i class="far fa-bell-slash"></i>
                 </button>
             </div>
         {{/contains}}
+        {{/isnt}}
         {{#if isYourPost}}
-        	<div class="toolbar-button-container">
-                <button type="button" class="button post-toolbar-button delete-post" id="{{this.deleteid}}">
+        {{#eq type "draft"}}
+            <div class="leftSideControls">
+                <button type="button" class="button post-toolbar-button edit-post edit-draft-post">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+            <div class="rightSideControls">
+                <button type="button" class="button post-toolbar-button delete-post">
                     <i class="far fa-trash-alt"></i>
                 </button>
             </div>
+        {{else}}
+        <div class="toolbar-button-container dropdown">
+          <button id="post-extra-controls-dropdown" class="button post-toolbar-button" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-bars"></i>
+          </button>
+          <div class="dropdown-menu" aria-labelledby="post-extra-controls-dropdown">
+              <button  type="button" class="dropdown-item edit-post">
+                  <i class="fas fa-fw fa-pencil-alt"></i> Edit
+              </button>
+              <button type="button" class="dropdown-item delete-post" id="{{this.deleteid}}">
+                  <i class="far fa-fw fa-trash-alt"></i> Delete
+              </button>
+          </div>
+        </div>
+        {{/eq}}
         {{/if}}
     </footer>
     {{#unless this.commentsDisabled}}
@@ -155,8 +187,7 @@
         </section>
     {{/unless}}
     {{#if @last}}
-    <div id="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
+    <div class="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
     {{/if}}
 </article>
-{{/if}}
 {{/each}}

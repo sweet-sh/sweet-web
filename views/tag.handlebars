@@ -1,7 +1,7 @@
 <div id="homeBody" class="row justify-content-center">
   <div class="col-lg-8">
     <h3 class="page-header mx-2">#{{name}}</h3>
-		<div class="container commentsList" id="postsContainer">
+		<div id="postsContainer">
 		</div>
     {{> infiniteScrollLoadingSpinner}}
   </div>
@@ -10,12 +10,18 @@
 <script>
 
 $('#postsContainer').infiniteScroll({
+  //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value if we've just gotten to the page
   path: function() {
+    if($(".oldesttimestamp").length){
+      //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+      return '/showposts/tag/{{name}}/' + $(".oldesttimestamp").last().html();
+    }
+    //this is for when the feed is currently empty and is being loaded/reloaded
     return '/showposts/tag/{{name}}/' + needPostsOlderThan;
   },
   append: '.post',
   prefill: true,
-  history: true,
+  history: false,
   status: '.page-load-status'
 });
 </script>
