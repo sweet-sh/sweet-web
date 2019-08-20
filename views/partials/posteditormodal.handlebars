@@ -25,8 +25,8 @@
             </div>
             <div id="editorControlsRow" class="mt-2 post-controls">
               {{! Hide this div in communities}}
+              <div class="leftSideControls"> {{! leaving an empty version of this div in even for community posts so that rightSideControls stays on the right }}
               {{#unless isCommunityPost}}
-              <div class="leftSideControls">
                 <div class="switch-field" id="editVisibilityControls">
                   <input type="radio" id="editPostPrivacy-public" name="editPostPrivacy" value="public" {{#eq privacy "public"}}checked{{/eq}} />
                   <label for="editPostPrivacy-public" id="publicPrivacyLabel"><i class='fas fa-eye'></i></label>
@@ -37,8 +37,9 @@
                   <label for="editPseudoPrivacy-draft" id="draftLabel"><i class='fas fa-pencil-ruler'></i></label>
                   {{/if}}
                 </div>
-              </div>
               {{/unless}}
+
+              </div>
               <div class="rightSideControls">
                 <button type="button" class="button grey-button" id="postLinkButton"><i class="fas fa-link"></i></button>
                 <button type="button" class="button grey-button" id="postImageButton"><i class="fas fa-image"></i></button>
