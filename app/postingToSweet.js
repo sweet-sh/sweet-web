@@ -1042,7 +1042,7 @@ module.exports = function(app) {
             post.lastUpdated = timePublished;
             post.lastEdited = undefined;
             post.type = "original";
-            newHTML = "<p>ǹ̵̡͎̗͕̝̬̯̰̘̑̿̾̎̊͑͌̕͝͝ͅj̸̲̦̩̒̀̍̅̊̅̒͐̽;̴̰͙̭̻̙͕̾̅̍͆̀̂̾̽̎͜j̴̭̥̮͙̥̺̮͐̿̂̉͌͒͛͌̐̈́̽̈́̎̈́̚;̴̢̜̦̩̼̞͓̬͙̈̍̆̀̂̂͘̕͝j̷̯̹̙̗̗̚̕ḱ̸̬̞̥̟̟̞̮̬̣̘̣̠̊̈́;̴̡̛̣̬͓̰͕̗̭̞͓̥͕̓̈͆̎͂͝k̴̦̰̹̦̤̞̱̲̼̼͗̊͛̋̈́͊j̸͉̥̙̇̉͂͊;̶̨̘͉̻̺̜̲̿͂̀̀͝ͅl̷̢̮̳̝̳̘̺̜͇̟̳̊̆̿̇̍͆k̸͉̲̪͚̞͓̩̦͍͚͉̅̑̉͆̍̆̋̈́́̄͗̋͛̿j̶̨̧̛̗͓͍̙̲̯̦̋̃̔̀̾́̆̿ͅ;̶̪́̈́̄̋̆l̵͚͙̐̒͑̒̓̋̅̑͒̇̾̓̐̕k̴̢̨̖̰̙̲̆͜j̷̲̫̲͙̪̲̳͔̏̿͝ͅ</p>";
+            newHTML = '<p style="color:#ce1717">this post was published!</p>'; //the color is $sweet-red from _colors.scss
         }
 
         if (post.type == "original") {
