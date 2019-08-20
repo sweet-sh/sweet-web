@@ -3,9 +3,9 @@
 //bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
 //the body when it's dismissed and make the backdrops not collide with each other
 var oldAlert = bootbox.alert;
-bootbox.alert = function(alertString) {
+bootbox.alert = function(alertString, callback) {
     var editModal = $("#editPostModal");
-    oldAlert(alertString);
+    oldAlert(alertString, callback);
     if (editModal.length) {
         var body = $("body");
         var obvs = new MutationObserver(function(e) {
