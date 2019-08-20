@@ -168,7 +168,8 @@ article.post>header .metadata {
 .button.show-boosters-list {
     margin-left: 2px;
     position: relative;
-    bottom: 2px;
+    bottom: -4px;
+    text-transform: uppercase;
 }
 
 .booster:not(:last-of-type):after {
@@ -598,7 +599,7 @@ div.link-preview-image {
     .link-preview-image {
         max-width: 75px;
     }
-    
+
     div.link-preview-image {
         font-size:40px;
     }
