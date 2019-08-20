@@ -165,10 +165,6 @@
 
             var file = fileOrUrl;
 
-            console.log(file.lastModified);
-            console.log(new Date().getTime());
-            console.log(file.name);
-
             if (file.type != "image/jpeg" && file.type != "image/png" && file.type != "image/gif") {
                 bootbox.alert("Sorry, but this appears to be an unsupported file type! We only take JPG, PNG, and GIF images at the moment");
                 throw "image unsupported";

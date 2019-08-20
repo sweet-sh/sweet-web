@@ -9,9 +9,11 @@ bootbox.alert = function(alertString, callback) {
     if (editModal.length) {
         var body = $("body");
         var obvs = new MutationObserver(function(e) {
+          if(editModal.length && editModal.is(":visible")){
             body.addClass("modal-open");
-            obvs.disconnect();
-            obvs = undefined;
+          }
+          obvs.disconnect();
+          obvs = undefined;
         })
         obvs.observe(body[0], {
             attributes: true,
