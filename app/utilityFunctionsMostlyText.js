@@ -186,7 +186,7 @@ module.exports = {
         var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
         var parsed = undefined;
         var isEmbeddableVideo = false;
-        if (parsed = youtubeUrlFindingRegex.exec(url)) {
+        if (parsed = youtubeUrlFindingRegex.exec(finalUrl)) {
             result.embedUrl = "https://www.youtube.com/embed/" + parsed[5] + "?autoplay=1"; //won't actually autoplay until link preview is clicked
             isEmbeddableVideo = true;
             try {
@@ -207,7 +207,7 @@ module.exports = {
                 console.log("youtube link had time specifier that was apparently malformed! error:")
                 console.log(err);
             }
-        } else if (parsed = vimeoUrlFindingRegex.exec(url)) {
+        } else if (parsed = vimeoUrlFindingRegex.exec(finalUrl)) {
             result.embedUrl = "https://player.vimeo.com/video/" + parsed[4] + "?autoplay=1"; //won't actually autoplay until link preview is clicked
             isEmbeddableVideo = true;
         }

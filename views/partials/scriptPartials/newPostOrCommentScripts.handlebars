@@ -172,7 +172,7 @@ $(function(){
           var postID = editModal.attr('data-post-id');
           var contentWarnings = cont.find('#postContentWarnings').val().trim();
           var originalPrivacy = editModal.attr('data-original-privacy');
-          var currentPrivacy = ($('#editPostPrivacy-public').is(':checked') ? 'public' : 'private');
+          var currentPrivacy = ($('#editPostPrivacy-public').is(':checked') || editModal.attr("data-is-community") ? 'public' : 'private');
           var wasDraft = editModal.attr('data-is-draft');
           var isDraft = $("#editPseudoPrivacy-draft").is(":checked");
           $.post('/saveedits/' + postID, {
