@@ -22,7 +22,6 @@ const fileUpload = require('express-fileupload');
 app.use(fileUpload());
 
 // Set up our Express application
-app.use(morgan('[:date[web]]: :method :url :status :res[content-length] - :response-time ms')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
@@ -171,6 +170,15 @@ bcrypt = require('bcrypt-nodejs');
 Autolinker = require('autolinker');
 schedule = require('node-schedule');
 globals = require('./config/globals');
+app.use(morgan('[:date[web]]: :method :url :status :res[content-length] - :response-time ms')); // log every request to the console
+var normalLogger = console.log;
+console.log = function(){
+  normalLogger.apply(console, [moment().format('[[]DD/MM HH:mm[]]')].concat(Array.from(arguments)));
+}
+var normalError = console.error;
+console.error = function() {
+  normalError.apply(console, [moment().format('[[]DD/MM HH:mm[]]')].concat(Array.from(arguments)));
+};
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
@@ -195,4 +203,4 @@ https.createServer(httpsOptions, app)
   console.log('app listening on port 3000! Go to https://localhost:3000/')
 })*/
 
-console.log('Server booting on '+ moment().format('MMMM Do YYYY, [at] h:mm a [UTC]Z')+", default port: " + port);
+console.log('Server booting on default port: ' + port);
