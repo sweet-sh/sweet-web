@@ -252,7 +252,7 @@
         $("#emailTimeSelect").css('display','block');
         $("#emailTimeSelect").attr('name','emailTime');
     }
-
+    
     //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
     var isSubscribed = false;
     var pushButton = $('#notifs-button');
@@ -261,9 +261,10 @@
         //service worker is like a mini program that contains some code that responds to events no matter what page the user is on.
         //the below line will only have an effect the first time it is run, after that it will be already registered
         navigator.serviceWorker.register('/js/sw.js')
-            .then(function (swReg) {
+            .then(function(swReg) {
+                swReg.update();
                 swRegistration = swReg; //store the registration in a global variable for future use
-                swRegistration.pushManager.getSubscription().then(function (subscription) {
+                swRegistration.pushManager.getSubscription().then(function(subscription) {
                     isSubscribed = !(subscription === null);
                     if (isSubscribed) {
                         console.log('User IS subscribed.');
@@ -273,11 +274,11 @@
                     updateButtonDisplay();
                 });
             })
-            .catch(function (error) {
+            .catch(function(error) {
                 console.error('Service Worker Error', error);
             });
 
-        pushButton.click(function (e) {
+        pushButton.click(function(e) {
             pushButton[0].disabled = true; //so it can't be clicked again right away and double-send subscription info to server
             if (Notification.permission == "denied") {
                 bootbox.alert("You have notification permissions turned off for this site! To change this, click the button with the letter 'i' on it on the left side of the address bar and look for the word 'notifications' in the menu that shows up.");
@@ -293,22 +294,22 @@
 
     } else {
         console.warn('Push messaging is not supported');
-        $('.pushNotifSubStuff').css('display','none');
+        $('.pushNotifSubStuff').css('display', 'none');
     }
 
-    function subscribeUser(){
+    function subscribeUser() {
         const applicationServerKey = urlBase64ToUint8Array("{{this.notifierPublicKey}}");
         swRegistration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: applicationServerKey
-        }).then(function (subscription) {
+        }).then(function(subscription) {
             console.log('User was just subscribed');
             $.post("/pushnotifs/subscribe", {
                 subscription: JSON.stringify(subscription)
             })
             isSubscribed = true;
             updateButtonDisplay()
-        }).catch(function (err) {
+        }).catch(function(err) {
             console.log('Failed to subscribe the user: ', err);
             updateButtonDisplay()
         });
@@ -336,12 +337,12 @@
 
     //call this whenever the subscription state changes
     function updateButtonDisplay() {
-        if(Notification.permission == "denied"){ //this isn't actually about updating the button but this is a convenient place to check permissions, we can't predict when the user will change them so we want to check this whenever it might be relevant
+        if (Notification.permission == "denied") { //this isn't actually about updating the button but this is a convenient place to check permissions, we can't predict when the user will change them so we want to check this whenever it might be relevant
             isSubscribed = false;
             //unsubscribe the user so that the server doesn't waste time trying to send them stuff
             unsubscribeUser();
             pushButton.html('Click to subscribe this browser to sweet push notifications!');
-        }else if (isSubscribed) {
+        } else if (isSubscribed) {
             pushButton.html('Click to unsubscribe this browser from sweet push notifications!');
         } else {
             pushButton.html('Click to subscribe this browser to sweet push notifications!');
