@@ -141,7 +141,7 @@ postSchema.index({ timestamp: -1 });
 //honestly only used by the active users graph but what the hell
 postSchema.index({ 'comments.timestamp': -1 });
 
-linkPreviewCacheSchema.index({ linkUrl: 1 });
+linkPreviewCacheSchema.index({ retrievalUrl: 1 });
 //just retrieve this with mongoose.model('Cached Link Metadata') in the one place in which it is needed
 mongoose.model('Cached Link Metadata', linkPreviewCacheSchema);
 
