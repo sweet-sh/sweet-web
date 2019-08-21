@@ -22,7 +22,7 @@ const fileUpload = require('express-fileupload');
 app.use(fileUpload());
 
 // Set up our Express application
-app.use(morgan('dev')); // log every request to the console
+app.use(morgan('[:date[web]]: :method :url :status :res[content-length] - :response-time ms')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
@@ -195,4 +195,4 @@ https.createServer(httpsOptions, app)
   console.log('app listening on port 3000! Go to https://localhost:3000/')
 })*/
 
-console.log('The magic happens on port ' + port);
+console.log('Server booting on '+ moment().format('MMMM Do YYYY, [at] h:mm a [UTC]Z')+", default port: " + port);
