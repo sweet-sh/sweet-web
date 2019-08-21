@@ -451,7 +451,7 @@
 
             element.addImage = function(file) {
                 var sel = quill.getSelection(true);
-                var range = sel.index;
+                var range = sel ? sel.index : 0;
                 if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
                     quill.deleteText(range, 1);
                     var addEmbedAt = range;
