@@ -1161,7 +1161,7 @@ module.exports = function(app) {
             var displayedPost = displayedPosts[0];
             if (typeof displayedPost !== 'undefined') {
                 var canDisplay = true;
-                var image = undefined;
+                var imageCont = undefined;
                 if (displayedPost.inlineElements && displayedPost.inlineElements.length && (imageCont = (displayedPost.inlineElements.find(v => v.type == "image(s)")))) {
                     var metadataImage = "https://sweet.sh/api/image/display/" + imageCont.images[0];
                 } else if (displayedPost.images && displayedPost.images.length) {
