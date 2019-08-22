@@ -23,6 +23,13 @@ bootbox.alert = function(alertString, callback) {
     }
 }
 
+function resolveTimestamp(element) {
+    if (!element.stamped) {
+        element.title += new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', timeZoneName: 'short' });
+        element.stamped = true;
+    }
+}
+
 //check for posts every minute (function declared globally for console debugging purposes)
 {{#eq activePage "home"}}
 var pageLoadTime = new Date().getTime();

@@ -620,7 +620,7 @@
 
                     //the following is a crazy hack to try to make tribute work with quill
                     var index = parseInt(li.getAttribute('data-index'));
-                    var textToInsert = "@"+tribute.collection[0].values[index].value;
+                    var textToInsert = "@"+tribute.current.filteredItems[index].original.value;
                     var quill = tribute.current.element.parentElement.__quill;
                     var sel = quill.getSelection(true);
                     if(sel.length==0){
@@ -724,6 +724,7 @@
                 if (info) {
                     this.tribute.current.selectedPath = info.mentionSelectedPath;
                     this.tribute.current.mentionText = info.mentionText;
+                    console.log("info.mt ",info.mentionText);
                     this.tribute.current.selectedOffset = info.mentionSelectedOffset;
                 }
             }
@@ -1235,28 +1236,9 @@
             value: function getTextPrecedingCurrentSelection() {
                 var context = this.tribute.current,
                     text = '';
-    
-                if (!this.isContentEditable(context.element)) {
-                    var textComponent = this.tribute.current.element;
-                    if (textComponent) {
-                        var startPos = textComponent.selectionStart;
-                        if (textComponent.value && startPos >= 0) {
-                            text = textComponent.value.substring(0, startPos);
-                        }
-                    }
-                } else {
-                    var selectedElem = this.getWindowSelection().anchorNode;
-    
-                    if (selectedElem != null) {
-                        var workingNodeContent = selectedElem.textContent;
-                        var selectStartOffset = this.getWindowSelection().getRangeAt(0).startOffset;
-    
-                        if (workingNodeContent && selectStartOffset >= 0) {
-                            text = workingNodeContent.substring(0, selectStartOffset);
-                        }
-                    }
-                }
-    
+                var qc = $(this.tribute.current.element).parent()[0].__quill
+                return qc.getText(0,qc.getSelection().index);
+                console.log("text ",text)
                 return text;
             }
         }, {

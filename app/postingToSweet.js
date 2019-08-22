@@ -86,6 +86,7 @@ module.exports = function(app) {
                     thumbnail = await (finalFormat == "jpeg" ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer();
                     thumbnails[""+thumbID] = thumbnail;
                     thumbnails[thumbID+"type"] = finalFormat;
+                    setTimeout(function(){delete thumbnails[""+thumbID];delete thumbnails[thumbID+"type"]},30000) //client has 30 seconds to retrieve the thumbnail
                     var response = { url: imageUrl + '.' + finalFormat };
                     if(thumbnail){
                         response.thumbnail = "/api/image/thumbnailretrieval/"+thumbID++;
@@ -118,6 +119,7 @@ module.exports = function(app) {
             res.end(thumbnails[req.params.id]);
             delete thumbnails[req.params.id];
             delete thumbnails[req.params.id+"type"];
+            console.log(Object.keys(thumbnails));
         }else{
             res.sendStatus(404);
         }
@@ -684,7 +686,7 @@ module.exports = function(app) {
                         if (element.timestamp > latestTimestamp) {
                             latestTimestamp = element.timestamp;
                         }
-                        element.numberOfSiblings = (parent ? parent.replies.length - 1 : post.comments.length - 1);
+                        element.numberOfSiblings = (parent.replies ? parent.replies.length - 1 : post.comments.length - 1);
                         element.parent = parent;
                         if (!target && element._id && element._id.equals(id)) {
                             target = element;
@@ -775,9 +777,6 @@ module.exports = function(app) {
                     .catch((error) => {
                         console.error(error)
                     })
-            })
-            .catch((err) => {
-                console.log("Database error: " + err)
             })
     });
 
@@ -1014,7 +1013,7 @@ module.exports = function(app) {
 
         var newTags = parsedPost.tags.filter(v => !post.tags.includes(v));
         for (const tag of newTags) {
-            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id.toString() }, "$set": { "lastUpdated": post.lastEdited } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
+            Tag.findOneAndUpdate({ name: tag }, { "$push": { "posts": post._id.toString() }, "$set": { "lastUpdated": new Date() } }, { upsert: true, new: true }, function(error, result) { if (error) console.error('could not update tag upon post editing\n' + error) });
         }
         var deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
         for (const tag of deletedTags) {
