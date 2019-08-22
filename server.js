@@ -171,8 +171,21 @@ bcrypt = require('bcrypt-nodejs');
 Autolinker = require('autolinker');
 schedule = require('node-schedule');
 globals = require('./config/globals');
+
+const writeMorganToSeparateFile = true; //change to write full request log to stdout instead of a separate file
+
+if(writeMorganToSeparateFile){
+  var morganOutput = fs.openSync("full request log starting "+moment().format('DD-MM HH[h] MM[m] ss[s]')+".txt",'w'); //colons in the file path not supported by windows :(
+  var stream = {
+    write: function(input,encoding){
+      fs.writeSync(morganOutput,input,undefined,encoding);
+    }
+  }
+}else{
+  var stream = process.stdout;
+}
 //log every request to the console w/ timestamp before it can crash the server
-app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+" "+req.method.toLowerCase()+" request for "+req.url},{immediate:true}));
+app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+" "+req.method.toLowerCase()+" request for "+req.url},{immediate:true,stream:stream}));
 //add timestamps to all console logging functions
 for(var spicy of ["warn","error","log"]){
   var vanilla = console[spicy];
