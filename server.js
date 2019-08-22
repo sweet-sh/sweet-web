@@ -163,6 +163,7 @@ moment.updateLocale('en', {
     sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
 });
+var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]';
 sanitizeHtml = require('sanitize-html');
 sharp = require('sharp');
 shortid = require('shortid');
@@ -170,15 +171,13 @@ bcrypt = require('bcrypt-nodejs');
 Autolinker = require('autolinker');
 schedule = require('node-schedule');
 globals = require('./config/globals');
-app.use(morgan('[:date[web]]: :method :url :status :res[content-length] - :response-time ms')); // log every request to the console
-var normalLogger = console.log;
-console.log = function(){
-  normalLogger.apply(console, [moment().format('[[]DD/MM HH:mm[]]')].concat(Array.from(arguments)));
+//log every request to the console w/ timestamp before it can crash the server
+app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+" "+req.method.toLowerCase()+" request for "+req.url},{immediate:true}));
+//add timestamps to all console logging functions
+for(var spicy of ["warn","error","log"]){
+  var vanilla = console[spicy];
+  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat)+' %s'); //i have no idea how the %s is working with multiple arguments
 }
-var normalError = console.error;
-console.error = function() {
-  normalError.apply(console, [moment().format('[[]DD/MM HH:mm[]]')].concat(Array.from(arguments)));
-};
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
