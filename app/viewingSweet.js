@@ -1162,8 +1162,8 @@ module.exports = function(app) {
             if (typeof displayedPost !== 'undefined') {
                 var canDisplay = true;
                 var image = undefined;
-                if (displayedPost.inlineElements && displayedPost.inlineElements.length && (image = (displayedPost.inlineElements.find(v => v.type == "image(s)").images[0]))) {
-                    var metadataImage = "https://sweet.sh/api/image/display/" + image;
+                if (displayedPost.inlineElements && displayedPost.inlineElements.length && (imageCont = (displayedPost.inlineElements.find(v => v.type == "image(s)")))) {
+                    var metadataImage = "https://sweet.sh/api/image/display/" + imageCont.images[0];
                 } else if (displayedPost.images && displayedPost.images.length) {
                     var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + displayedPost.images[0];
                 } else if (displayedPost.author.imageEnabled) {
