@@ -189,7 +189,7 @@ app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+
 //add timestamps to all console logging functions
 for(var spicy of ["warn","error","log"]){
   var vanilla = console[spicy];
-  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat)+' %s'); //i have no idea how the %s is working with multiple arguments
+  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat));
 }
 
 // routes ======================================================================
