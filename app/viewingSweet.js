@@ -1052,8 +1052,8 @@ module.exports = function(app) {
             var displayedPost = Object.assign(displayContext, {
                 deleteid: displayContext._id,
                 parsedTimestamp: parsedTimestamp,
-                fullTimestamp: moment(displayContext.timestamp).calendar(),
-                fullEditedTimestamp: displayContext.lastEdited ? moment(displayContext.lastEdited).calendar() : "",
+                timestampMs: displayContext.timestamp.getTime(),
+                editedTimestampMs: displayContext.lastEdited ? displayContext.lastEdited.getTime() : "",
                 internalPostHTML: displayContext.cachedHTML.fullContentHTML,
                 headerBoosters: boostsForHeader,
                 recentlyCommented: false, // This gets set below
