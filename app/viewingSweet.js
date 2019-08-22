@@ -1223,81 +1223,18 @@ module.exports = function(app) {
                     return false;
                 }
             }
-          
-            if (result != "no posts") {
-                metadata = {};
-                if (req.params.context == "single") {
-                    // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
-                    // We can only get the post metadata if the post array is filled (and it'll only be filled
-                    // if the post was able to be displayed, so this checks to see if we should display
-                    // our vague error message on the frontend)
-                    var displayedPost = displayedPosts[0];
-                    if (typeof displayedPost !== 'undefined') {
-                        var canDisplay = true;
-                        var image = undefined;
-                        if (displayedPost.inlineElements && displayedPost.inlineElements.length && (image = (displayedPost.inlineElements.find(v => v.type == "image(s)").image[0]))) {
-                            var metadataImage = "https://sweet.sh/api/image/display/" + image;
-                        } else if (displayedPost.images && displayedPost.images.length) {
-                            var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + displayedPost.images[0];
-                        } else if (displayedPost.author.imageEnabled) {
-                            var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image;
-                        } else {
-                            var metadataImage = "https://sweet.sh/images/cake.svg";
-                        }
-                        var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
-                        if (firstLine && firstLine[1]) {
-                            firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '');
-                        } else {
-                            firstLine = "Just another ol' good post on sweet";
-                        }
-                        metadata = {
-                            title: "@" + displayedPost.author.username + " on sweet",
-                            description: firstLine,
-                            image: metadataImage,
-                            url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
-                        }
-                        if (displayedPost.community && req.isAuthenticated() && displayedPost.community.members.some(m => { return m.equals(req.user._id) })) {
-                            var isMember = true;
-                        } else {
-                            var isMember = false;
-                        }
-                    } else {
-                        var canDisplay = false;
-                        // We add some dummy metadata for posts which error
-                        metadata = {
-                            title: "sweet • a social network",
-                            description: "",
-                            image: "https://sweet.sh/images/cake.svg",
-                            url: "https://sweet.sh/"
-                        }
-                    }
-                    res.render('singlepost', {
-                        canDisplay: canDisplay,
-                        loggedIn: req.isAuthenticated(),
-                        loggedInUserData: loggedInUserData,
-                        posts: [displayedPost], // This is so it loads properly inside the posts_v2 partial
-                        flaggedUsers: flagged,
-                        metadata: metadata,
-                        isMuted: isMuted,
-                        isMember: isMember,
-                        canReply: canReply(),
-                        activePage: 'singlepost'
-                    })
-                } else {
-                    res.render('partials/posts_v2', {
-                        layout: false,
-                        loggedIn: req.isAuthenticated(),
-                        isMuted: isMuted,
-                        loggedInUserData: loggedInUserData,
-                        posts: displayedPosts,
-                        flaggedUsers: flagged,
-                        context: req.params.context,
-                        canReply: canReply(),
-                        oldesttimestamp: oldesttimestamp
-                    });
-                }
-            }
-        })
+            res.render('partials/posts_v2', {
+                layout: false,
+                loggedIn: req.isAuthenticated(),
+                isMuted: isMuted,
+                loggedInUserData: loggedInUserData,
+                posts: displayedPosts,
+                flaggedUsers: flagged,
+                context: req.params.context,
+                canReply: canReply(),
+                oldesttimestamp: oldesttimestamp
+            });
+        }
     })
 
     //Responds to get requests for a user's profile page.
