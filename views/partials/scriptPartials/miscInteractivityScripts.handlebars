@@ -24,10 +24,16 @@ bootbox.alert = function(alertString, callback) {
 }
 
 function resolveTimestamp(element) {
-    if (!element.stamped) {
-        element.title += new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', timeZoneName: 'short' });
-        element.stamped = true;
+    element.title = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' });
+    element.setAttribute("onmouseover", "");
+}
+
+function touchResolveTimestamp(element) {
+    if (element.lastTouch && event.timeStamp - element.lastTouch < 300) {
+        element.innerHTML = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' })
+        element.setAttribute("ontouchstart", "");
     }
+    element.lastTouch = event.timeStamp;
 }
 
 //check for posts every minute (function declared globally for console debugging purposes)
