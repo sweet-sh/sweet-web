@@ -147,6 +147,12 @@ module.exports = function(app) {
         })
     });
 
+    app.get('/home/internalized', function(req, res, next) {
+        req.internalize = true;
+        req.url = req.path = '/home';
+        next('route');
+    })
+
     //Responds to get requests for the home page.
     //Input: none
     //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
@@ -273,6 +279,7 @@ module.exports = function(app) {
         res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         res.setHeader("Expires", "0"); // Proxies.
         res.render('home', {
+            layout: req.internalize ? false : 'main',
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'home',
@@ -561,7 +568,8 @@ module.exports = function(app) {
                         } else {
                             post.parsedTimestamp = momentTimestamp.format('D MMM YYYY');
                         }
-                        post.fullTimestamp = momentTimestamp.calendar();
+                        post.timestampMs = post.timestamp.getTime();
+                        post.editedTimestampMs = post.lastEdited ? post.lastEdited.getTime() : '';
                     }
                     res.render('partials/posts_v2', {
                         layout: false,
@@ -633,6 +641,12 @@ module.exports = function(app) {
             }
             res.send("no i guess not");
         })
+    })
+
+    app.get('/:username/internalized', function(req, res, next) {
+        req.internalize = true;
+        req.url = req.path = '/' + req.params.username;
+        next('route');
     })
 
     //Responds to a get response for a specific post.
@@ -869,7 +883,7 @@ module.exports = function(app) {
             .populate('boostsV2.booster');
 
         //so this will be called when the query retrieves the posts we want
-        var posts = await query;        
+        var posts = await query;
 
         if (!posts || !posts.length) {
             res.status(404).render('singlepost', { // The 404 is required so InfiniteScroll.js stops loading the feed
@@ -1318,6 +1332,7 @@ module.exports = function(app) {
             var flagged = false;
         }
         res.render('user', {
+            layout: req.internalize ? false : 'main',
             loggedIn: req.isAuthenticated(),
             isOwnProfile: isOwnProfile,
             loggedInUserData: req.user,

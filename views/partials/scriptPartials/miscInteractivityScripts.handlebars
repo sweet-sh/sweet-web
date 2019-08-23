@@ -1,5 +1,4 @@
 <script type="text/javascript">
-
 //bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
 //the body when it's dismissed and make the backdrops not collide with each other
 var oldAlert = bootbox.alert;
@@ -52,8 +51,61 @@ function checkForNewPosts(){
 {{/eq}}
 
 $(function() {
+
+  history.scrollRestoration = 'manual';
+
+  var historyStateId = 0;
+  var prePopState = 0;
+
+  history.replaceState({infS:activeScrollPath,scrt:0,hid:historyStateId++},'',window.location.href);
+  var nonStackablePages = ['/settings','/communities','/support','/logout','/signup','login'];
+
+$('body').on('click','a',function(e){
+  var href = this.getAttribute('href')
+  if(href.substring(0,1)=="/" && !nonStackablePages.includes(href)){
+    e.preventDefault();
+    if(href==window.location.pathname){
+      $(window).scrollTop(0);
+      restartInfiniteScroll();
+      return;
+    }
+    var fullDestUrl = this.href;
+    var scrt = $(window).scrollTop();
+    var postsContainer = $('.postsContainer');
+    postsContainer.infiniteScroll('destroy');
+    postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
+    var prevFeedCont = $('.activeFeedCont');
+    prevFeedCont.nextAll().remove();
+    prevFeedCont.removeClass('activeFeedCont').addClass('inactiveFeedCont');
+    $.get(this.href+'/internalized',function(data){
+      $('.inactiveFeedCont').last().after(data);
+      startInfiniteScroll();
+      history.replaceState({infS:history.state.infS,scrt:scrt,hid:history.state.hid},'',window.location.href);      
+      history.pushState({infS: activeScrollPath,scrt:0,hid:historyStateId++},'',fullDestUrl);
+      prePopState = historyStateId;
+    })
+  }
+})
+
+window.addEventListener('popstate',function(e){
+  activeScrollPath = e.state.infS;
+  var oldActive = $('.activeFeedCont');
+  var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
+  oldActive.removeClass('activeFeedCont').addClass('inactiveFeedCont');
+  newActive.removeClass('inactiveFeedCont').addClass('activeFeedCont');
+  var oldPostCont = oldActive.find('.postsContainer');
+  oldPostCont.infiniteScroll('destroy');
+  oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
+  newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+  startInfiniteScroll();
+  prePopState = e.state.hid;
+  $(window).scrollTop(e.state.scrt);
+  console.log(e.state.scrt);
+})
+
     $(window).scroll(function() {
         var scroll = $(window).scrollTop();
+        history.replaceState({infS:history.state.infS,scrt:scroll,hid:history.state.hid},'',window.location.href);
         if (scroll > 0) {
             $("#topNav").addClass("shadow");
         }

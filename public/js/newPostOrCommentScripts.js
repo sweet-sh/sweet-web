@@ -1,22 +1,3 @@
-//this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
-function restartInfiniteScroll(timestamp) {
-    if (!timestamp) {
-        timestamp = new Date().getTime();
-    }
-    $(".infinite-scroll-last, .infinite-scroll-error").css('display', 'none');
-    $(".infinite-scroll-request").css('display', 'block');
-    var postsContainer = $('#postsContainer');
-    postsContainer.fadeOut(250, function() {
-        postsContainer.html("");
-        needPostsOlderThan = timestamp;
-        pageLoadTime = timestamp;
-        postsContainer.infiniteScroll("destroy");
-        postsContainer[0].fadedOut = true;
-        startInfiniteScroll();
-        $(".page-load-status").css('display', 'block');
-    });
-}
-
 //NEW POST FORM CODE
 
 $(function() {
@@ -335,10 +316,10 @@ $(function() {
                 innerEditor.html("");
                 button.attr('disabled', false);
                 //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
-                if (!$("#pseudoPrivacy-draft").is(":checked") || (typeof draftsMode != "undefined" && draftsMode)) {
-                    if (!$("#pseudoPrivacy-draft").is(":checked") && typeof draftsMode != "undefined" && draftsMode) {
+                if (!$("#pseudoPrivacy-draft").is(":checked") || activeScrollPath=='/drafts/') {
+                    if (!$("#pseudoPrivacy-draft").is(":checked") && activeScrollPath=='/drafts/') {
                         //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
-                        draftsMode = false;
+                        $('#toggle-drafts-mode').click();
                     }
                     restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
                 } else {

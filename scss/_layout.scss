@@ -67,6 +67,11 @@ section {
     justify-content: center !important
 }
 
+/* todo: move to somewhere that makes sense */
+.inactiveFeedCont{
+    display:none;
+}
+
 @media(min-width:600px) {
     .col-md-4 {
         -webkit-box-flex: 0;
