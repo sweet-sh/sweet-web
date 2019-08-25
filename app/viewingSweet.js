@@ -893,7 +893,7 @@ module.exports = function(app) {
                     //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
                     //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
                     //to see if there is a more recent boost.
-                    if (req.params.context != "community" && req.params.context != "single") {
+                    if (req.params.context != "single") {
                         var isThereNewerInstance = false;
                         var whosePostsCount = req.params.context == "user" ? [new ObjectId(req.params.identifier)] : myFollowedUserIds;
                         if (post.type == 'original') {
@@ -989,6 +989,7 @@ module.exports = function(app) {
                     if (post.type == "boost") {
                         displayContext = post.boostTarget;
                         displayContext.author = await User.findById(displayContext.author);
+                        displayContext.community = await Community.findById(displayContext.community);
                         for (const boost of displayContext.boostsV2) {
                             boost.booster = await User.findById(boost.booster);
                         }
@@ -1009,7 +1010,7 @@ module.exports = function(app) {
                         var isYourPost = displayContext.author._id.equals(req.user._id);
                     }
                     //generate some arrays containing usernames that will be put in "boosted by" labels
-                    if (req.isAuthenticated() && (req.params.context != "community")) {
+                    if (req.isAuthenticated()) {
                         var followedBoosters = [];
                         var notFollowingBoosters = [];
                         var youBoosted = false;
@@ -1230,6 +1231,7 @@ module.exports = function(app) {
                         posts: displayedPosts,
                         flaggedUsers: flagged,
                         context: req.params.context,
+                        identifier: req.params.identifier,
                         canReply: canReply(),
                         oldesttimestamp: oldesttimestamp
                     });

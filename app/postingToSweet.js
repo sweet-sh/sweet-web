@@ -785,8 +785,15 @@ module.exports = function(app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/createboost/:postid', isLoggedInOrRedirect, function(req, res) {
+    app.post('/createboost/:postid/:location', isLoggedInOrRedirect, async function(req, res) {
         boostedTimestamp = new Date();
+        if (req.params.location != 'userfeed') { // This post will be boosted into a specific location (i.e. a community), rather than the user's regular feed
+            boostCommunity = await Community.findById(req.params.location);
+            if (!boostCommunity.members.some(member => member.equals(req.user._id))) {
+                res.status(400).send("You're not a member of the community where you want to boost this post");
+                return;
+            }
+        }
         Post.findOne({
                 '_id': req.params.postid
             }, {
@@ -796,14 +803,15 @@ module.exports = function(app) {
                 unsubscribedUsers: 1,
                 author: 1,
                 url: 1
-            }).populate('author')
+            }).populate('author').populate('community')
             .then((boostedPost) => {
-                if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
-                    res.status(400).send("post is not public and therefore may not be boosted");
+                if (boostedPost.privacy != "public" || (boostedPost.community && boostedPost.community.settings.visibility != "public")) {
+                    res.status(400).send("post is not public, or is posted in a closed community, and therefore may not be boosted");
                     return;
                 }
                 var boost = new Post({
                     type: 'boost',
+                    community: (req.params.location != 'userfeed' ? boostCommunity._id : null),
                     authorEmail: req.user.email,
                     author: req.user._id,
                     url: shortid.generate(),
@@ -834,7 +842,7 @@ module.exports = function(app) {
             })
     })
 
-    //Responds to a post request that boosts a post.
+    //Responds to a post request that removes a boosted post.
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.

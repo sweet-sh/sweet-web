@@ -197,6 +197,26 @@ $(function() {
         })
     })
 
+    $('#boostPostLocationModal').on('show.bs.modal', function (event) {
+        var postID = $(event.relatedTarget).closest('.post').attr('data-post-id');
+        var modal = $(this)
+        modal.find('#communities-dropdown').empty()
+        $.get('/api/community/listjoined', function(response) {
+            response = JSON.parse(response);
+            response.forEach(function(community) {
+                modal.find('#communities-dropdown').append("<option value='"+community._id+"'>"+community.name+"</option>");
+            })
+        })
+
+        modal.find('#original-post-id').val(postID);
+    })
+
+    $('body').on('click', '.boost-post-into-community', function() {
+        var postID = $(this).closest("#boostPostLocationModal").find('#original-post-id').val();
+        var targetCommunity = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').val();
+        $.post("/createboost/" + postID + "/" + targetCommunity);
+    });
+
   $('body').on('click', '.content-warning-show-more', function() {
     var $this = $(this);
     var images = $this.closest(".post").find(".content-warning-images");

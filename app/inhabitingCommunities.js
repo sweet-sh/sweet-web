@@ -47,6 +47,15 @@ module.exports = function(app, passport) {
             })
     })
 
+    app.get('/api/community/listjoined', isLoggedIn, function(req, res) {
+        Community.find({ members: req.user._id }, { _id: 1, name: 1, image: 1, slug: 1 })
+            .sort('name')
+            .then(communities => {
+                res.setHeader('content-type', 'text/plain');
+                res.send(JSON.stringify(communities))
+            })
+    })
+
     app.get('/communities', isLoggedIn, function(req, res) {
         Community.find({
                 members: req.user._id
