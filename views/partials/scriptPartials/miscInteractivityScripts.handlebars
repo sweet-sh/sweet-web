@@ -204,7 +204,7 @@ $(function() {
         $.get('/api/community/listjoined', function(response) {
             response = JSON.parse(response);
             response.forEach(function(community) {
-                modal.find('#communities-dropdown').append("<option value='"+community._id+"'>"+community.name+"</option>");
+                modal.find('#communities-dropdown').append("<option data-slug='"+community.slug+"' value='"+community._id+"'>"+community.name+"</option>");
             })
         })
 
@@ -213,8 +213,11 @@ $(function() {
 
     $('body').on('click', '.boost-post-into-community', function() {
         var postID = $(this).closest("#boostPostLocationModal").find('#original-post-id').val();
-        var targetCommunity = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').val();
-        $.post("/createboost/" + postID + "/" + targetCommunity);
+        var targetCommunitySlug = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
+        var targetCommunityID = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').val();
+        $.post("/createboost/" + postID + "/" + targetCommunityID, function(response){
+            window.location.href = '/community/' + targetCommunitySlug;
+        });
     });
 
   $('body').on('click', '.content-warning-show-more', function() {
