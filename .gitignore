@@ -142,3 +142,5 @@ userTimeline.csv
 activeUsersTimeline.csv
 clientsideerrors.txt
 emailLog.txt
+
+full request log starting *.txt
