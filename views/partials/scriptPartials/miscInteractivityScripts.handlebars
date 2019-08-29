@@ -53,8 +53,7 @@ function checkForNewPosts(){
 $(function() {
 
   function isStackableURL(url){
-    return (!url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/api\/.*$/))
-
+    return (!url.match(/#/) && !url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/support$/) && !url.match(/^\/api\/.*$/))
   }
 
   history.scrollRestoration = 'manual';
