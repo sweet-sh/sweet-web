@@ -67,6 +67,11 @@ section {
     justify-content: center !important
 }
 
+/* todo: move to somewhere that makes sense */
+.inactive-feed-container{
+    display:none;
+}
+
 @media(min-width:600px) {
     .col-md-4 {
         -webkit-box-flex: 0;
@@ -463,6 +468,10 @@ section {
     display: flex;
     justify-content: flex-start;
     flex-wrap: wrap;
+}
+
+.user-list.collapse {
+    display:none;
 }
 
 .user-list-icon {

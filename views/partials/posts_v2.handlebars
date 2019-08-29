@@ -51,7 +51,7 @@
                 {{/contains}}
             </h2>
             <aside class="metadata">
-                <span class="post-timestamp" title="Posted {{this.fullTimestamp}}">
+                <span class="post-timestamp" data-timestamp="{{this.timestampMs}}" onmouseover="resolveTimestamp(this);" ontouchstart="touchResolveTimestamp(this);">
                     {{this.parsedTimestamp}}
                 </span>
                 &nbsp;&middot;&nbsp;
@@ -64,7 +64,7 @@
                 </span>
                 {{#if lastEdited}}
                 &nbsp;&middot;&nbsp;
-                <span class="post-edited" title="Last edited {{this.fullEditedTimestamp}}">Edited</span>
+                <span class="post-edited" data-timestamp="{{this.editedTimestampMs}}" onmouseover="resolveTimestamp(this);" ontouchstart="touchResolveTimestamp(this);">Edited</span>
                 {{/if}}
             </aside>
         </div>
@@ -192,8 +192,8 @@
             {{/if}}
         </section>
     {{/unless}}
-    {{#if @last}}
+    {{#and @last .../oldesttimestamp}}
     <div class="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
-    {{/if}}
+    {{/and}}
 </article>
 {{/each}}

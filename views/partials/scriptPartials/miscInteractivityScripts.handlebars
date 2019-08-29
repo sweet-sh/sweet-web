@@ -1,5 +1,4 @@
 <script type="text/javascript">
-
 //bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
 //the body when it's dismissed and make the backdrops not collide with each other
 var oldAlert = bootbox.alert;
@@ -23,6 +22,19 @@ bootbox.alert = function(alertString, callback) {
     }
 }
 
+function resolveTimestamp(element) {
+    element.title = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' });
+    element.setAttribute("onmouseover", "");
+}
+
+function touchResolveTimestamp(element) {
+    if (element.lastTouch && event.timeStamp - element.lastTouch < 300) {
+        element.innerHTML = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' })
+        element.setAttribute("ontouchstart", "");
+    }
+    element.lastTouch = event.timeStamp;
+}
+
 //check for posts every minute (function declared globally for console debugging purposes)
 {{#eq activePage "home"}}
 var pageLoadTime = new Date().getTime();
@@ -39,8 +51,75 @@ function checkForNewPosts(){
 {{/eq}}
 
 $(function() {
+
+  function isStackableURL(url){
+    return (!url.match(/#/) && !url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/support$/) && !url.match(/^\/api\/.*$/))
+  }
+
+  history.scrollRestoration = 'manual';
+
+  var historyStateId = 0;
+  var prePopState = 0;
+
+  history.replaceState({infS:activeScrollPath,scrt:0,hid:historyStateId++,url:window.location.href},'',window.location.href);
+
+$('body').on('click','a',function(e){
+  var href = this.getAttribute('href')
+  if(href.substring(0,1)=="/" && isStackableURL(href)){
+    e.preventDefault();
+    needPostsOlderThan = ""+(new Date().getTime());
+    if(href==window.location.pathname){
+      $(window).scrollTop(0);
+      restartInfiniteScroll();
+      return;
+    }
+    var fullDestUrl = this.href;
+    var scrt = $(window).scrollTop();
+    var postsContainer = $('.postsContainer');
+    postsContainer.infiniteScroll('destroy');
+    postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
+    var prevFeedCont = $('.active-feed-container');
+    prevFeedCont.nextAll().remove();
+    prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
+    $.get({url:fullDestUrl+'/internalized',success:function(data){
+      $('.inactive-feed-container').last().after(data);
+      var editor = $('.active-feed-container').find("#editor");
+      if(editor.length){
+        attachQuill(editor[0]);
+      }
+      startInfiniteScroll();
+      history.replaceState({infS:history.state.infS,scrt:scrt,hid:history.state.hid,url:window.location.href},'',window.location.href);      
+      history.pushState({infS: activeScrollPath,scrt:0,hid:historyStateId++,url:fullDestUrl},'',fullDestUrl);
+      prePopState = historyStateId;
+    },error:function(){
+      window.location.href = fullDestUrl;
+    }})
+  }
+})
+
+window.addEventListener('popstate',function(e){
+  activeScrollPath = e.state.infS;
+  var oldActive = $('.active-feed-container');
+  var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
+  if(newActive.length){
+    oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
+    newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
+    var oldPostCont = oldActive.find('.postsContainer');
+    oldPostCont.infiniteScroll('destroy');
+    oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
+    newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+    startInfiniteScroll();
+    prePopState = e.state.hid;
+    $(window).scrollTop(e.state.scrt);
+    console.log(e.state.scrt);
+  }else{
+    window.location.href = e.state.url;
+  }
+})
+
     $(window).scroll(function() {
         var scroll = $(window).scrollTop();
+        history.replaceState({infS:history.state.infS,scrt:scroll,hid:history.state.hid},'',window.location.href);
         if (scroll > 0) {
             $("#topNav").addClass("shadow");
         }

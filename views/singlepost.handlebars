@@ -1,6 +1,6 @@
-<section id="homeBody" class="row justify-content-center">
+<section id="homeBody" class="row justify-content-center active-feed-container">
     <div class="col-lg-8">
-        <div class="single-post-container" id="postsContainer">
+        <div class="single-post-container" class="postsContainer">
             {{#if canDisplay}}
                 {{> posts_v2 }}
             {{else}}
@@ -26,8 +26,12 @@
 
 <script>
 $(function() {
-  if ($('.post-images').length > 0) {
-      var imagesLoaded = $('.post-single-image').length;
+    activeScrollPath = null;
+    
+    var thisContainer = $('.active-feed-container');
+
+  if (thisContainer.find('.post-images').length > 0) {
+      var imagesLoaded = thisContainer.find('.post-single-image').length;
       console.log("images loaded: " + imagesLoaded);
       var imagesLightboxed = 0;
       //i think when you're looking at a single post it makes perfect sense to be able to slideshow through all the images in the post + comments at once  
@@ -35,8 +39,8 @@ $(function() {
     }
   
 {{#if loggedIn}}
-    var commentForm = undefined;
-    if(commentForm = document.getElementsByClassName('editable-text')[0]){
+    var commentForm = thisContainer.find('.editable-text')[0];
+    if(commentForm){
         attachQuill(commentForm,'Reply to this post with a good reply')
     }
 

@@ -36,7 +36,8 @@ var inlineElementSchema = new mongoose.Schema({
 //this is really similar to the embed schema but i only just realized that and i don't feel like changing this
 var linkPreviewCacheSchema = new mongoose.Schema({
     isEmbeddableVideo: Boolean,
-    linkUrl: String,
+    retrievalUrl: String, //the url without the protocol - this is used to retrieve the document (works if the user inputs the url with http://, https://, or neither)
+    linkUrl: String, //the url with the correct protocol (determined by the request package)
     embedUrl: String, //only used if isEmbeddableVideo is true
     title: String,
     image: String,
@@ -140,7 +141,7 @@ postSchema.index({ timestamp: -1 });
 //honestly only used by the active users graph but what the hell
 postSchema.index({ 'comments.timestamp': -1 });
 
-linkPreviewCacheSchema.index({ linkUrl: 1 });
+linkPreviewCacheSchema.index({ retrievalUrl: 1 });
 //just retrieve this with mongoose.model('Cached Link Metadata') in the one place in which it is needed
 mongoose.model('Cached Link Metadata', linkPreviewCacheSchema);
 

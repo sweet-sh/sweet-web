@@ -1,7 +1,7 @@
 <div id="homeBody" class="row justify-content-center">
   <div class="col-lg-8">
     <h3 class="page-header mx-2">#{{name}}</h3>
-		<div id="postsContainer">
+		<div class="postsContainer">
 		</div>
     {{> infiniteScrollLoadingSpinner}}
   </div>
@@ -9,7 +9,7 @@
 
 <script>
 
-$('#postsContainer').infiniteScroll({
+$('.postsContainer').infiniteScroll({
   //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value if we've just gotten to the page
   path: function() {
     if($(".oldesttimestamp").length){

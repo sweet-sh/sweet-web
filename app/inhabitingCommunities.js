@@ -78,6 +78,12 @@ module.exports = function(app, passport) {
             });
     });
 
+    app.get('/community/:slug/internalized', function(req,res,next){
+        req.internalize = true;
+        req.url = req.path = '/community/'+req.params.slug;
+        next('route');
+    })
+
     app.get('/community/:slug', function(req, res) {
         const today = moment().clone().startOf('day');
         const thisyear = moment().clone().startOf('year');
@@ -170,6 +176,7 @@ module.exports = function(app, passport) {
                                     }
                                 })
                                 res.render('community', {
+                                    layout: req.internalize ? false : 'main',
                                     loggedIn: isLoggedIn,
                                     loggedInUserData: req.user,
                                     communityData: community,
@@ -184,6 +191,7 @@ module.exports = function(app, passport) {
                             })
                     } else {
                         res.render('community', {
+                            layout: req.internalize ? false : 'main',
                             loggedIn: false,
                             loggedInUserData: "",
                             communityData: community,

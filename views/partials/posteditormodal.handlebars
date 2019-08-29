@@ -1,4 +1,4 @@
-<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true"{{#if isDraft}} data-is-draft="true"{{/if}} data-post-id="{{postID}}" data-original-privacy="{{privacy}}">
+<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true"{{#if isDraft}} data-is-draft="true"{{/if}} data-post-id="{{postID}}" data-original-privacy="{{privacy}}"{{#if isCommunityPost}} data-is-community="true"{{/if}}>
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">

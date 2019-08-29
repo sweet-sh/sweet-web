@@ -4,4 +4,6 @@ var tagSchema = new mongoose.Schema({
   lastUpdated: Date
 });
 
+tagSchema.index({name:1});
+
 module.exports = mongoose.model('Tag', tagSchema);

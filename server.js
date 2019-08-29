@@ -22,7 +22,6 @@ const fileUpload = require('express-fileupload');
 app.use(fileUpload());
 
 // Set up our Express application
-app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
@@ -164,6 +163,7 @@ moment.updateLocale('en', {
     sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
 });
+var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]';
 sanitizeHtml = require('sanitize-html');
 sharp = require('sharp');
 shortid = require('shortid');
@@ -171,6 +171,26 @@ bcrypt = require('bcrypt-nodejs');
 Autolinker = require('autolinker');
 schedule = require('node-schedule');
 globals = require('./config/globals');
+
+const writeMorganToSeparateFile = true; //change to write full request log to stdout instead of a separate file
+
+if(writeMorganToSeparateFile){
+  var morganOutput = fs.openSync("full request log starting "+moment().format('DD-MM HH[h] MM[m] ss[s]')+".txt",'w'); //colons in the file path not supported by windows :(
+  var stream = {
+    write: function(input,encoding){
+      fs.writeSync(morganOutput,input,undefined,encoding);
+    }
+  }
+}else{
+  var stream = process.stdout;
+}
+//log every request to the console w/ timestamp before it can crash the server
+app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+" "+req.method.toLowerCase()+" request for "+req.url},{immediate:true,stream:stream}));
+//add timestamps to all console logging functions
+for(var spicy of ["warn","error","log"]){
+  var vanilla = console[spicy];
+  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat));
+}
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
@@ -195,4 +215,4 @@ https.createServer(httpsOptions, app)
   console.log('app listening on port 3000! Go to https://localhost:3000/')
 })*/
 
-console.log('The magic happens on port ' + port);
+console.log('Server booting on default port: ' + port);
