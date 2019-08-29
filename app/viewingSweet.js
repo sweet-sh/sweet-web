@@ -661,6 +661,16 @@ module.exports = function(app) {
         return;
     })
 
+    app.get('/:username/:posturl/internalized', function(req, res, next){
+        if (req.params.username != 'images') { //shouldn't be relevant but i'm leaving it in
+        req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
+        req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
+        req.internalize = true;
+        next('route');
+    }
+    return;
+    })
+
     app.get('/tag/:tagname', function(req, res, next) {
         req.url = req.path = "/showposts/tag/" + req.params.tagname + "/1";
         next('route');
@@ -1213,6 +1223,7 @@ module.exports = function(app) {
                 }
             }
             res.render('singlepost', {
+                layout: req.internalize ? false : 'main',
                 canDisplay: canDisplay,
                 loggedIn: req.isAuthenticated(),
                 loggedInUserData: loggedInUserData,

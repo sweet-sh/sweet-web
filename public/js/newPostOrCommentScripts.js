@@ -7,13 +7,10 @@ $(function() {
         attachQuill(editor)
     }
 
-    $(".ql-editor").focus(function(e) {
-        if (e.target.parentElement.id == "editor") {
-            $(".post-controls").css('display', 'flex');
-        }
-    })
-
     $('body').on('focus', '.ql-editor', function(e) {
+        if (e.target.parentElement.id == "editor") {
+            $(e.target.parentElement).siblings('.post-controls').css('display', 'flex');
+        }
         $(this).closest('.editable-text').addClass('focused');
     })
     $('body').on('focusout', '.ql-editor', function(e) {
@@ -195,8 +192,7 @@ $(function() {
                     $('html').animate({ scrollTop: wst + (postbottom - wsb) + 10 });
                 }
             }).fail(function() {
-                editModal.modal('hide');
-                bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again', function() { editModal.modal() });
+                bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again');
                 button.attr('disabled', false);
                 button.html('Try again... <i class="fas fa-chevron-right"></i>');
             })
@@ -292,7 +288,8 @@ $(function() {
     $("#postSubmit").click(function(e) {
         e.preventDefault();
         $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
-        let editor = $('#editor');
+        let form = $(this).closest('.contentForm');
+        let editor = form.find("#editor");
         let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
         if (editor[0].hasContent()) {
             var button = $(this);
@@ -301,23 +298,23 @@ $(function() {
                 url: '/createpost',
                 type: 'POST',
                 data: {
-                    communityId: $('#postForm').attr("communityId"),
-                    isDraft: $("#pseudoPrivacy-draft").is(":checked") ? true : "",
-                    postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
+                    communityId: form.attr("communityId"),
+                    isDraft: form.find("#pseudoPrivacy-draft").is(":checked") ? true : "",
+                    postPrivacy: (form.find('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
                     postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
-                    postContentWarnings: $('#postContentWarnings').val(),
+                    postContentWarnings: form.find('#postContentWarnings').val(),
                 }
             }).done(function(postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
-                $('#postContentWarnings').val("");
-                $("#postContentWarningsContainer").slideUp("fast");
-                $("#new-post-emoji-picker").slideUp("fast");
-                $(".link-form-cont").slideUp("fast");
+                form.find('#postContentWarnings').val("");
+                form.find("#postContentWarningsContainer").slideUp("fast");
+                form.find("#new-post-emoji-picker").slideUp("fast");
+                form.find(".link-form-cont").slideUp("fast");
                 var innerEditor = editor.find(".ql-editor");
                 innerEditor.html("");
                 button.attr('disabled', false);
                 //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
-                if (!$("#pseudoPrivacy-draft").is(":checked") || activeScrollPath=='/drafts/') {
-                    if (!$("#pseudoPrivacy-draft").is(":checked") && activeScrollPath=='/drafts/') {
+                if (!form.find("#pseudoPrivacy-draft").is(":checked") || activeScrollPath=='/drafts/') {
+                    if (!form.find("#pseudoPrivacy-draft").is(":checked") && activeScrollPath=='/drafts/') {
                         //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
                         $('#toggle-drafts-mode').click();
                     }

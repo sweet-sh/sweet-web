@@ -1,4 +1,4 @@
-<section id="homeBody" class="row justify-content-center">
+<section id="homeBody" class="row justify-content-center active-feed-container">
     <div class="col-lg-8">
         <div class="single-post-container" class="postsContainer">
             {{#if canDisplay}}
@@ -26,6 +26,8 @@
 
 <script>
 $(function() {
+    activeScrollPath = null;
+
   if ($('.post-images').length > 0) {
       var imagesLoaded = $('.post-single-image').length;
       console.log("images loaded: " + imagesLoaded);

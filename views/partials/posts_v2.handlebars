@@ -186,8 +186,8 @@
             {{/if}}
         </section>
     {{/unless}}
-    {{#if @last}}
+    {{#and @last .../oldesttimestamp}}
     <div class="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
-    {{/if}}
+    {{/and}}
 </article>
 {{/each}}
