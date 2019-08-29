@@ -317,6 +317,21 @@ module.exports = function(app) {
         })
     })
 
+    app.get('/tag/:name/internalized', isLoggedInOrRedirect, function(req, res) {
+        Tag.findOne({ name: req.params.name }).then((tag) => {
+            if (tag) {
+                res.render('tag', {
+                    layout: false,
+                    name: req.params.name,
+                    loggedIn: true,
+                    loggedInUserData: req.user
+                })
+            } else {
+                res.redirect('/404');
+            }
+        })
+    })
+
     //Responds to get requests for /notifications. I think this is only used on mobile?
     //Input: none
     //Output: renders notifications page, which renders as "you're not logged in" if you're not logged in

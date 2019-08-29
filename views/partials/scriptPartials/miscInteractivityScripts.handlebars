@@ -52,6 +52,8 @@ function checkForNewPosts(){
 
 $(function() {
 
+  //this is where the trouble starts
+
   function isStackableURL(url){
     return (!url.match(/#/) && !url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/support$/) && !url.match(/^\/api\/.*$/))
   }
@@ -87,7 +89,6 @@ $('body').on('click','a',function(e){
       if(editor.length){
         attachQuill(editor[0]);
       }
-      startInfiniteScroll();
       history.replaceState({infS:history.state.infS,scrt:scrt,hid:history.state.hid,url:window.location.href},'',window.location.href);      
       history.pushState({infS: activeScrollPath,scrt:0,hid:historyStateId++,url:fullDestUrl},'',fullDestUrl);
       prePopState = historyStateId;
