@@ -661,14 +661,14 @@ module.exports = function(app) {
         return;
     })
 
-    app.get('/:username/:posturl/internalized', function(req, res, next){
+    app.get('/:username/:posturl/internalized', function(req, res, next) {
         if (req.params.username != 'images') { //shouldn't be relevant but i'm leaving it in
-        req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
-        req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
-        req.internalize = true;
-        next('route');
-    }
-    return;
+            req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
+            req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
+            req.internalize = true;
+            next('route');
+        }
+        return;
     })
 
     app.get('/tag/:tagname', function(req, res, next) {
@@ -817,14 +817,18 @@ module.exports = function(app) {
             //but we also only want posts if they're non-community or they come from a community that we belong to:
             if (req.isAuthenticated()) {
                 matchPosts.$or = [{
-                    community: {
-                        $exists: false
+                        community: {
+                            $exists: false
+                        }
+                    }, {
+                        community: null
+                    },
+                    {
+                        community: {
+                            $in: myCommunities
+                        }
                     }
-                }, {
-                    community: {
-                        $in: myCommunities
-                    }
-                }];
+                ];
                 var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
             } else {
                 //logged out users shouldn't see any community posts on user profile pages
