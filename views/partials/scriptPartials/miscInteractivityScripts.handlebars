@@ -117,7 +117,7 @@ window.addEventListener('popstate',function(e){
     var oldActive = $('.active-feed-container');
     var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
     if(newActive.length){
-      history.replaceState({infS:history.state.infS,scrt:scroll,hid:history.state.hid},'',window.location.href);
+      history.replaceState({infS:history.state.infS,scrt:$(window).scrollTop(),hid:history.state.hid},'',window.location.href);
       activeScrollPath = e.state.infS;
       oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
       newActive.removeClass('inactive-feed-container').addClass('active-feed-container');

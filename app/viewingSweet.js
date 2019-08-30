@@ -662,6 +662,12 @@ module.exports = function(app) {
         req.internalize = true;
         req.url = req.path = '/' + req.params.username;
         next('route');
+    });
+
+    app.get('/drafts', function(req,res,next){
+        req.draftsFirst = true;
+        req.url = req.path = '/' + req.user.username;
+        next('route');
     })
 
     //Responds to a get response for a specific post.
@@ -1363,6 +1369,7 @@ module.exports = function(app) {
         }
         res.render('user', {
             layout: req.internalize ? false : 'main',
+            draftsFirst: req.draftsFirst,
             loggedIn: req.isAuthenticated(),
             isOwnProfile: isOwnProfile,
             loggedInUserData: req.user,
