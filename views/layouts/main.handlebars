@@ -52,6 +52,13 @@
 <script>
   var socket = io();
   socket.on('found', function(data){console.log(data)});
+  socket.on('notification', function(notifHTML){
+    console.log(notifHTML);
+    $("#notificationsContainer").prepend(notifHTML);
+    $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
+    document.title = '(⚐) sweet';
+  });
+
 </script>
 
 </head>

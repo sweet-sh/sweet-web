@@ -122,6 +122,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                             image: response.image,
                             url: url
                         }
+                        socketCity.notifyUser(notifieeID, notification);
                         notifiedUser.notifications.push(notification);
                         notifiedUser.notifications.slice(Math.max(0, notifiedUser.notifications.length - 60));
                         notifiedUser.save().then(() => { console.log("notification sent to " + notifiedUser.username); });

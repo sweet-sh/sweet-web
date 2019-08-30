@@ -1,9 +1,10 @@
 {{#if loggedIn}}
 {{#if notifications}}
+{{#unless justHTML}}
   <script>
   notificationsCount = 0;
   </script>
-
+{{/unless}}
   {{#each notifications}}
     <a href="{{this.url}}" class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}" id="{{this._id}}">
       <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{this.image}}"/>
@@ -11,11 +12,11 @@
         {{{this.text}}}
       </span>
     </a>
-    {{#unless this.seen}}
+    {{#unless this.seen}} {{#unless justHTML}}
       <script>notificationsCount = (notificationsCount < 9 ? notificationsCount + 1 : notificationsCount);</script>
-    {{/unless}}
+    {{/unless}} {{/unless}}
   {{/each}}
-
+{{#unless justHTML}}
   <script type="text/javascript">
     if (notificationsCount > 0) {
       $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
@@ -26,6 +27,7 @@
       document.title = 'sweet';
     }
   </script>
+  {{/unless}}
 {{else}}
   <p class="mt-2 text-muted text-center">
     You're up to date!

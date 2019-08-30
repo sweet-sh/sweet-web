@@ -1,11 +1,9 @@
 // Initialization ======================================================================
 const express = require('express');
-const handlebars = require('express-handlebars');
 const app = express();
 const port = process.env.PORT || 8686;
 const passport = require('passport');
 const flash = require('connect-flash');
-require('handlebars-helpers')();
 
 const compression = require('compression');
 app.use(compression());
@@ -30,6 +28,8 @@ const mongoSanitize = require('express-mongo-sanitize'); //sanitize information 
 app.use(mongoSanitize());
 
 // View engine (Handlebars)
+const handlebars = require('express-handlebars');
+require('handlebars-helpers')();
 hbs = handlebars.create({
   defaultLayout: 'main',
   partialsDir:['views/partials/','views/partials/scriptPartials/'],
@@ -198,7 +198,7 @@ for(var spicy of ["warn","error","log"]){
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-require('./app/socketSetup.js')(io);
+socketCity = require('./app/socketSetup.js')(io);
 
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
