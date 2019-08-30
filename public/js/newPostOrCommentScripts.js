@@ -2,8 +2,8 @@
 
 $(function() {
 
-    var editor = undefined;
-    if (editor = document.getElementById('editor')) {
+    var editor = document.getElementById('editor');
+    if (editor) {
         attachQuill(editor)
     }
 

@@ -4,6 +4,14 @@
     box-sizing: border-box;
 }
 
+html {
+    height:100%;
+}
+
+body {
+    min-height:100%;
+}
+
 img {
     vertical-align: middle;
     border-style: none
@@ -327,6 +335,7 @@ section {
 #bodyContainer {
     padding-top: 80px;
     padding-bottom: 20px;
+    height:100%;
 }
 
 #bodyContainer .intro {
