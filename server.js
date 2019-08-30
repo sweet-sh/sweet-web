@@ -21,8 +21,10 @@ const session = require('express-session');
 const fileUpload = require('express-fileupload');
 app.use(fileUpload());
 
+var auth = require('./config/auth.js');
+
 // Set up our Express application
-app.use(cookieParser()); // read cookies (needed for auth)
+app.use(cookieParser(auth.secret)); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
 app.use(mongoSanitize());
@@ -82,12 +84,13 @@ Community = require('./app/models/community');
 Vote = require('./app/models/vote');
 Image = require('./app/models/image');
 
+
 //persist sessions across restarts via their storage in mongodb
 const MongoStore = require('connect-mongo')(session);
+Sessions = mongoose.model('Sessions', new mongoose.Schema({ _id: String, expires: Date, session: String}), 'sessions'); //access data from said sessions, sneakily
 
 //set up passport authentication and session storage
 require('./config/passport')(passport); // pass passport for configuration
-var auth = require('./config/auth.js');
 app.use(session({
   secret: auth.secret,
   cookie: {
@@ -192,6 +195,11 @@ for(var spicy of ["warn","error","log"]){
   console[spicy] = vanilla.bind(console, moment().format(momentLogFormat));
 }
 
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
+
+require('./app/socketSetup.js')(io);
+
 // routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
 require('./app/statisticsTracker.js')(app, mongoose);
@@ -203,7 +211,8 @@ require('./app/viewingSweet.js')(app);
 require('./app/postingToSweet.js')(app);
 
 // launch ======================================================================
-app.listen(port);
+
+server.listen(port);
 
 /*var https = require('https');
 var httpsOptions = {
@@ -215,4 +224,4 @@ https.createServer(httpsOptions, app)
   console.log('app listening on port 3000! Go to https://localhost:3000/')
 })*/
 
-console.log('Server booting on default port: ' + port);
+console.log('Server listening on default port: ' + port);

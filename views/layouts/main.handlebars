@@ -48,6 +48,12 @@
 
   {{> clientSideCodeErrorReporter }}
 
+  <script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+  socket.on('found', function(data){console.log(data)});
+</script>
+
 </head>
 
 <body>

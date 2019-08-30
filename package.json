@@ -48,6 +48,7 @@
     "sanitize-html": "^1.20.0",
     "sharp": "^0.22.0",
     "shortid": "^2.2.14",
+    "socket.io": "^2.2.0",
     "web-push": "^3.3.5"
   },
   "devDependencies": {
