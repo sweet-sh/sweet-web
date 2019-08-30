@@ -2,7 +2,7 @@
 
 
 function startInfiniteScroll() {
-    if(activeScrollPath){
+    if(activeScrollPath){ //set to null for single post pages
         $('.postsContainer').infiniteScroll({
         //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value
             //if we've just gotten to this page, or if we've just made a post the feed is emptied and needPostsOlderThan is set so that the new post loads on top of the feed

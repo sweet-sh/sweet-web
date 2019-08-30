@@ -50,23 +50,33 @@ function checkForNewPosts(){
   window.setTimeout(checkForNewPosts, 60000);
 {{/eq}}
 
+
+//this is where the trouble starts. this needs many better variable names and comments, i'm getting to that...
+
+function isStackableURL(url){
+  return (!url.match(/#/) && !url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/support$/) && !url.match(/^\/api\/.*$/))
+}
+
+history.scrollRestoration = 'manual';
+
+var historyStateId = 0;
+var prePopState = 0;
+
+
+function switchFeedWithinPage(addressBarPath, infiniteScrollRequestPath){
+  history.replaceState({infS:history.state.infS, scrt:$(window).scrollTop(), hid:history.state.hid, url:window.location.href,withinPage:true},'',window.location.href);
+  activeScrollPath = infiniteScrollRequestPath;
+  needPostsOlderThan = ""+new Date().getTime();
+  history.pushState({infS:activeScrollPath, scrt:0, hid:historyStateId++, url:window.location.origin+addressBarPath, withinPage:true},'',window.location.origin+addressBarPath);
+  restartInfiniteScroll();
+}
+
 $(function() {
-
-  //this is where the trouble starts
-
-  function isStackableURL(url){
-    return (!url.match(/#/) && !url.match(/^\/settings$/) && !url.match(/^\/communities$/) && !url.match(/^\/logout$/) && !url.match(/^\/signup$/) && !url.match(/^\/support$/) && !url.match(/^\/api\/.*$/))
-  }
-
-  history.scrollRestoration = 'manual';
-
-  var historyStateId = 0;
-  var prePopState = 0;
 
   history.replaceState({infS:activeScrollPath,scrt:0,hid:historyStateId++,url:window.location.href},'',window.location.href);
 
 $('body').on('click','a',function(e){
-  var href = this.getAttribute('href')
+  var href = this.getAttribute('href');
   if(href.substring(0,1)=="/" && isStackableURL(href)){
     e.preventDefault();
     needPostsOlderThan = ""+(new Date().getTime());
@@ -92,35 +102,41 @@ $('body').on('click','a',function(e){
       history.replaceState({infS:history.state.infS,scrt:scrt,hid:history.state.hid,url:window.location.href},'',window.location.href);      
       history.pushState({infS: activeScrollPath,scrt:0,hid:historyStateId++,url:fullDestUrl},'',fullDestUrl);
       prePopState = historyStateId;
-    },error:function(){
+    },error: function(){
       window.location.href = fullDestUrl;
     }})
   }
 })
 
 window.addEventListener('popstate',function(e){
-  activeScrollPath = e.state.infS;
-  var oldActive = $('.active-feed-container');
-  var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
-  if(newActive.length){
-    oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
-    newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
-    var oldPostCont = oldActive.find('.postsContainer');
-    oldPostCont.infiniteScroll('destroy');
-    oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
-    newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
-    startInfiniteScroll();
+  if(e.state.withinPage){
+    activeScrollPath = e.state.infS;
+    restartInfiniteScroll();
     prePopState = e.state.hid;
-    $(window).scrollTop(e.state.scrt);
-    console.log(e.state.scrt);
   }else{
-    window.location.href = e.state.url;
+    var oldActive = $('.active-feed-container');
+    var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
+    if(newActive.length){
+      history.replaceState({infS:history.state.infS,scrt:scroll,hid:history.state.hid},'',window.location.href);
+      activeScrollPath = e.state.infS;
+      oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
+      newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
+      var oldPostCont = oldActive.find('.postsContainer');
+      oldPostCont.infiniteScroll('destroy');
+      oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
+      newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+      startInfiniteScroll();
+      prePopState = e.state.hid;
+      $(window).scrollTop(e.state.scrt);
+      console.log(e.state.scrt);
+    }else{
+      window.location.href = e.state.url;
+    }
   }
 })
 
     $(window).scroll(function() {
         var scroll = $(window).scrollTop();
-        history.replaceState({infS:history.state.infS,scrt:scroll,hid:history.state.hid},'',window.location.href);
         if (scroll > 0) {
             $("#topNav").addClass("shadow");
         }

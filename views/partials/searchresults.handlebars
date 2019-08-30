@@ -1,5 +1,5 @@
 {{#if noResults}}
-  <div class="content-box">
+  <div class="content-box post">
     <div class="row">
       <div class="col commentContent">
         <p class="mt-2 mb-4 text-center" style="font-size:1.3em">
@@ -10,7 +10,7 @@
   </div>
 {{else}}
   {{#each results}}
-  <div class="content-box">
+  <div class="content-box post">
     <div class="row">
       <div class="col commentContent">
         <p class="text-muted">
@@ -27,7 +27,7 @@
       </div>
     </div>
     {{#if @last}}
-      <div id="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
+      <div class="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
     {{/if}}
   </div>
   {{/each}}

@@ -90,6 +90,7 @@
     startInfiniteScroll();
     {{#if isOwnProfile}}
     $(function() {
+      //TODO: actually, call switchFeedWithinPage(). it'll be great
         $("#toggle-drafts-mode").click(function(e) {
             e.preventDefault();
             if(activeScrollPath!='/drafts/'){
