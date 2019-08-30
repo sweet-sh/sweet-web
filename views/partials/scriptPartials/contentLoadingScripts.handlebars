@@ -173,12 +173,20 @@ $(function(){
 
 {{/if}}
 
+    activePosts = {}; //this is populated below, lets us find posts instantly by their id to add or delete comments and stuff. todo: also populate for single posts that don't use this
     //this runs when posts are added to the active feed container to hide long ones behind "show more"s and make the images bring up the lightbox when you click on them.
     $('.postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         var newlyLoadedStuff = $(items);
 
         newlyLoadedStuff.each(function(i,e){
+
             e = $(e);
+
+            var id = e.attr('data-post-id');
+            if(id){
+                activePosts[id] = e[0]; //todo: feed stack stuff
+            }
+
             var imgs = e.children('.content').find('img');
             if(imgs.length){
                 var loaded = 0;
@@ -199,6 +207,8 @@ $(function(){
             }
         })
 
+
+
         if(newlyLoadedStuff.find('img.link-preview-image').length > 0){
             newlyLoadedStuff.find('img.link-preview-image').on('error',function(){
                 $(this).replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
@@ -216,4 +226,32 @@ $(function(){
         {{/if}}
     });
 });
+
+//loading notifications and comment stuff through websockets
+var socket = io();
+{{#if loggedIn}}
+socket.on('notification', function(notifHTML){
+    console.log(notifHTML);
+    $("#notificationsContainer").prepend(notifHTML);
+    $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
+    document.title = '(⚐) sweet';
+});
+{{/if}}
+
+socket.on('comment deleted', function(postID, commentID){
+    if(activePosts[postID]){
+        var divToDelete = $(activePosts[postID]).find('.comment[data-comment-id="'+commentID+'"]');
+        divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
+        divToDelete.find('header:first').remove();
+        divToDelete.find('footer button.delete-comment:first').remove();
+        var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
+        var newCommentCount = parseInt(counterToChange.innerHTML)-1;
+        if(newCommentCount===0){
+            counterToChange.innerHTML = '';
+        }else{
+            counterToChange.innerHTML = newCommentCount;
+        }
+    }
+})
+
 </script>

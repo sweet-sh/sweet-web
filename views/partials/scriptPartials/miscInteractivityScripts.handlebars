@@ -85,16 +85,6 @@ $(function() {
          $('#bodyContainer, #topNav').css('filter','none');
     });
 
-  // Reload notifications container every minute (hack until we set up WebSockets)
-  window.setInterval(function(){
-    $("#notificationsContainer").load("/api/notification/display");
-  }, 60000);
-  $("#notificationsContainer").load( "/api/notification/display" );
-
-  if ($('#notificationsPageLink').hasClass('active')){
-    $('#notificationsPageLink').find('.notifications-count').css('color', '#900202');
-  }
-
   $('.clear-all-notifications').click(function() {
       $.post('/api/notifications/clearall', function(data){
           $("#notificationsContainer").load( "/api/notification/display" );

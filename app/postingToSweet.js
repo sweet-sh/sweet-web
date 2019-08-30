@@ -307,7 +307,7 @@ module.exports = function(app) {
                 }
 
                 // Delete notifications
-                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log(response) })
+                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log('notifications removed',response) })
             })
             .then(() => {
                 Post.deleteOne({ "_id": req.params.postid })
@@ -773,6 +773,7 @@ module.exports = function(app) {
                             numberOfComments: numberOfComments
                         }
                         res.contentType('json').send(JSON.stringify(result));
+                        socketCity.commentDeleted(req.params.postid, req.params.commentid);
                     })
                     .catch((error) => {
                         console.error(error)
