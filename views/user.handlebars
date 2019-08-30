@@ -87,6 +87,7 @@
 
 <script>
 
+//this button is located in usersidebar.handlebars
   function setDraftsButtonText(){
     if(window.location.pathname=='/{{profileData.username}}'){
       $('.active-feed-container').find('#toggle-drafts-mode').html('<i class="fas fa-pencil-ruler"></i> See drafts');
@@ -104,6 +105,7 @@
     
     {{#if isOwnProfile}}
 $(function() {
+
     startInfiniteScroll();
     setDraftsButtonText();
 

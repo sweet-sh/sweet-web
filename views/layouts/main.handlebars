@@ -48,13 +48,6 @@
 
   {{> clientSideCodeErrorReporter }}
 
-  {{#if loggedIn}}
-    {{>newPostFormTemplatesContainer}}
-    <script src="/js/textEditorScripts.min.js"></script>
-  {{/if}}
-
-  {{> onPostLoadScripts }}
-
 </head>
 
 <body>
@@ -104,7 +97,14 @@
 
 </body>
 
+{{> contentLoadingScripts }}
+
 {{> miscInteractivityScripts }}
+
+{{#if loggedIn}}
+  {{>newPostFormTemplatesContainer}}
+  <script src="/js/textEditorScripts.min.js"></script>
+{{/if}}
 
 {{#if loggedIn}}
 <script src="/js/newPostOrCommentScripts.min.js"></script>

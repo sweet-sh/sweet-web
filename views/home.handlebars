@@ -86,7 +86,8 @@
 {{> filemessage }}
 
 <script>
-  //called immediately below and in restartInfiniteSCroll
   activeScrollPath = '/showposts/home/{{loggedInUserData._id}}/';
-  startInfiniteScroll();
+  $(function(){
+    startInfiniteScroll();
+  })
 </script>

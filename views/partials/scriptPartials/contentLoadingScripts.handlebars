@@ -1,0 +1,219 @@
+<script type="text/javascript">
+//this code manages transistions between feeds and pages. when links are clicked to stackable pages, instead of navigating the browser to a new page, we just load the relevant content
+//and add it to a stack of feed containers in the dom, which the back and forward buttons will navigate between. this saves loading time and lets us restore the user's scroll position
+//immediately when they hit "back"
+
+//keep the browser from trying to second-guess our scrolling stuff
+history.scrollRestoration = 'manual';
+
+//these are just used in some circituous logic to tell if, when the popstate event fires, we're moving backward or forward in history, which imo the browser should just tell us, oh well
+var historyStateId = 0;
+var prePopState = 0;
+
+//when the feed is starting or restarting, this variable is referred to for post requesting; otherwise, posts are requested based on the oldest (and thus furtherest down) post currently loaded
+needPostsOlderThan = new Date().getTime();
+
+//this function is currently used for new searches and for switching between drafts and posts on a user's own profile page; we don't need a new feed container for those things, we just use
+//the old one while supplying a new url for the infinite scroll script to make requests to.
+function switchFeedWithinPage(addressBarPath, infiniteScrollRequestPath) {
+    history.replaceState({ contentSource: history.state.contentSource, scrollPos: $(window).scrollTop(), hid: history.state.hid, url: window.location.href, withinPage: true }, '', window.location.href);
+    activeScrollPath = infiniteScrollRequestPath;
+    needPostsOlderThan = "" + new Date().getTime();
+    history.pushState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: window.location.origin + addressBarPath, withinPage: true }, '', window.location.origin + addressBarPath);
+    restartInfiniteScroll();
+}
+
+//this runs once sets the state of the first page the user navigates to as it's loaded "from scratch"
+//note that activeScrollPath is initially set by the script specific to the page that's being loaded, which is located in that page's handlebars file
+history.replaceState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: window.location.href }, '', window.location.href);
+
+//this specifies the url paths where clicking a link should do the normal action; in theory, though, the settings, communities, and support pages could be added to the stack, i just haven't done it (yet)
+function isStackablePath(path) {
+    return (!path.match(/#/) && !path.match(/^\/settings$/) && !path.match(/^\/communities$/) && !path.match(/^\/logout$/) && !path.match(/^\/signup$/) && !path.match(/^\/support$/) && !path.match(/^\/api\/.*$/))
+}
+
+//this intercepts clicks on relative links and, if their paths pass the test from the above function, loads a new feed container into the existing page 
+$('body').on('click', 'a', function(e) {
+    var href = this.getAttribute('href'); //for relative links, this gives the path (the part of the url starting after the domain name and port).
+    if (href.substring(0, 1) == "/" && isStackablePath(href)) { //checks to see if this is just a path, meaning it's a relative link, and then that it's one that's allowed to be intercepted
+        e.preventDefault();
+        needPostsOlderThan = "" + (new Date().getTime());
+        if (href == window.location.pathname) { //if you click on a link to a page that you're on, this treats it as a simple refresh - todo: probably push a history state so that you can go "back"?
+            $(window).scrollTop(0);
+            restartInfiniteScroll();
+            return;
+        }
+        var fullDestUrl = this.href; //for no reason, this.getAttribute('href') gives the path for relative links and this.href gives the full url (including the protocol and origin)
+        var scrollPos = $(window).scrollTop();
+        //this just saves the page's current scroll position (has to be done before we move things around) while leaving everything else the same (it was already filled in either by the very first replaceState, above, or the most recent pushState if one of those has happened)
+        history.replaceState({ contentSource: history.state.contentSource, scrollPos: scrollPos, hid: history.state.hid, url: window.location.href }, '', window.location.href);
+        var postsContainer = $('.postsContainer'); //this is the class name that the infinite scroll script looks for to append content into; only one element with this class name should exist at once
+        postsContainer.infiniteScroll('destroy');
+        postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
+        var prevFeedCont = $('.active-feed-container');
+        prevFeedCont.nextAll().remove(); //when a link is clicked and a new history state is pushed, the forward button resets, so feed containers that would be accessible through that are no longer needed
+        prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
+        $.get({
+            url: fullDestUrl + '/internalized',
+            success: function(data) {
+                $('.inactive-feed-container').last().after(data);
+                var editor = $('.active-feed-container').find("#editor");
+                if (editor.length) {
+                    attachQuill(editor[0]); //comment fields have the editor attached as the post loads, but new post forms need to be attached as the feed container loads, like this
+                }
+                history.pushState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: fullDestUrl }, '', fullDestUrl);
+                prePopState = historyStateId;
+            },
+            error: function() {
+                window.location.href = fullDestUrl;
+            }
+        })
+    }
+})
+
+//so this event is fired when the user hits the back or forward buttons on their browser
+window.addEventListener('popstate', function(e) {
+    if (e.state.withinPage) {
+        activeScrollPath = e.state.contentSource;
+        restartInfiniteScroll();
+        prePopState = e.state.hid;
+    } else {
+        var oldActive = $('.active-feed-container');
+        var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
+        if (newActive.length) { //if the user's just refreshed the page or something we won't find the content we're going back to in the dom, we just have to head to that page normally (in the else below)
+            history.replaceState({ contentSource: history.state.contentSource, scrollPos: $(window).scrollTop(), hid: history.state.hid }, '', window.location.href);
+            activeScrollPath = e.state.contentSource;
+            oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
+            newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
+            var oldPostCont = oldActive.find('.postsContainer');
+            oldPostCont.infiniteScroll('destroy');
+            oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
+            newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+            startInfiniteScroll();
+            prePopState = e.state.hid;
+            $(window).scrollTop(e.state.scrollPos);
+            console.log(e.state.scrollPos);
+        } else {
+            window.location.href = e.state.url;
+        }
+    }
+})
+
+function startInfiniteScroll() {
+    if(activeScrollPath){ //set to null for single post pages
+        $('.postsContainer').infiniteScroll({
+        //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value
+            //if we've just gotten to this page, or if we've just made a post the feed is emptied and needPostsOlderThan is set so that the new post loads on top of the feed
+            path: function() {
+                if ($('.active-feed-container').find(".oldesttimestamp").length) {
+                    //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+                    return activeScrollPath + $('.active-feed-container').find(".oldesttimestamp").last().html();
+                }
+                //this is for when the feed is currently empty and is being loaded/reloaded
+                return activeScrollPath + needPostsOlderThan;
+            },
+            append: '.post',
+            prefill: true,
+            history: false,
+            status: '.page-load-status'
+        });
+    }
+}
+
+function restartInfiniteScroll(timestamp) {
+    if (!timestamp) {
+        timestamp = new Date().getTime();
+    }
+    $(".infinite-scroll-last, .infinite-scroll-error").css('display', 'none');
+    $(".infinite-scroll-request").css('display', 'block');
+    var postsContainer = $('.postsContainer');
+    postsContainer.fadeOut(250, function() {
+        postsContainer.html("");
+        postsContainer.css('display','');
+        needPostsOlderThan = timestamp;
+        pageLoadTime = timestamp;
+        postsContainer.infiniteScroll("destroy");
+        startInfiniteScroll();
+        $(".page-load-status").css('display', 'block');
+    });
+}
+
+// Globally defining the check height function (should this go somewhere ... else?)
+function showMoreAndImageLightboxing(e) {
+    var contentCont = $(e.find('.content')[0]);
+    if (contentCont.height() > 550 && !contentCont.hasClass('content-warning-post')) {
+        var content = contentCont.children();
+        content.remove();
+        contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button uppercase-button show-more" data-state="contracted">Show more</button>');
+        contentCont.children('.abbreviated-content').append(content);
+    }
+    var images = contentCont.find('.post-images a');
+    if(images.length){
+        images.simpleLightbox();
+    }
+}
+$(function(){
+{{#if loggedIn}}
+
+    //retrieves the user's followers to suggest them with tribute when they type an @
+    $.post('/api/user/followers', function (data) {
+        followers = JSON.parse(data).followers;
+        tribute = new Tribute({
+            values: followers,
+            menuItemTemplate: function (item) {
+                return '<img class="tribute-image" src="/images/' + item.original.image + '"><span class="tribute-text">' + item.string + '</span>';
+            },
+            searchOpts: {
+                pre: '<strong>',
+                post: '</strong>'
+            }
+        })
+        tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
+    });
+
+{{/if}}
+
+    //this runs when posts are added to the active feed container to hide long ones behind "show more"s and make the images bring up the lightbox when you click on them.
+    $('.postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
+        var newlyLoadedStuff = $(items);
+
+        newlyLoadedStuff.each(function(i,e){
+            e = $(e);
+            var imgs = e.children('.content').find('img');
+            if(imgs.length){
+                var loaded = 0;
+                imgs.on('load', function(){
+                    loaded++;
+                    if(loaded == imgs.length){
+                        showMoreAndImageLightboxing(e);
+                    }
+                })
+                imgs.on('error', function(){
+                    loaded++;
+                    if(loaded == imgs.length){
+                        showMoreAndImageLightboxing(e);
+                    }
+                })
+            }else{
+                showMoreAndImageLightboxing(e);
+            }
+        })
+
+        if(newlyLoadedStuff.find('img.link-preview-image').length > 0){
+            newlyLoadedStuff.find('img.link-preview-image').on('error',function(){
+                $(this).replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
+            })
+        }
+
+        {{#if loggedIn}}
+        var commentForms = newlyLoadedStuff.find('.editable-text');
+        commentForms.each(function(){
+            attachQuill(this,'Reply to this post with a good reply');
+        })
+        if (typeof tribute !== 'undefined') { // Silently fails to load tribute if we don't have the user's "following" list yet, it will be attached to these comment fields when that does load in the function that loads it
+            tribute.attach(newlyLoadedStuff.find(".ql-editor"));
+        }
+        {{/if}}
+    });
+});
+</script>

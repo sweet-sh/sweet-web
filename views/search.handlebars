@@ -20,14 +20,20 @@
 </div>
 
 <script>
-  $(function(){
-    activeScrollPath = '/showsearch/{{query}}/';
-    startInfiniteScroll();
-  $('#searchForm').submit(function (e) {
-    e.preventDefault();
-    var searchTerm = $('.active-feed-container').find('#searchQuery').val();
-    switchFeedWithinPage('/search/'+searchTerm,'/showsearch/'+searchTerm+'/');
-  });
-
+  $(function() {
+      activeScrollPath = '/showsearch/{{query}}/';
+      startInfiniteScroll();
+      
+      $('#searchForm').submit(function(e) {
+          e.preventDefault();
+          var searchTerm = $('.active-feed-container').find('#searchQuery').val();
+          $('#searchTitle').html('Search: ' + searchTerm);
+          switchFeedWithinPage('/search/' + searchTerm, '/showsearch/' + searchTerm + '/');
+          window.addEventListener('popstate', function() {
+              var searchTerm = window.location.pathname.replace(/\/search\//, ''); //slightly hacky way to extract the current search term from the current url
+              $('#searchTitle').html('Search: ' + searchTerm);
+              $('#searchQuery').val(searchTerm);
+          });
+      });
   })
 </script>
