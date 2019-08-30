@@ -1,4 +1,5 @@
 var connectedUsers = {}; //object matching the ids of connected users to their sockets in an array so we can find them to send 'em their notifications later
+var postsInView = {}; //object matching each post to an array of sockets which have loaded it so we can immediately find who to send events about any given post to
 
 module.exports = function(io) {
     //add users to connectedUsers when they are connected. and remove when they aren't anymore
@@ -35,6 +36,15 @@ module.exports = function(io) {
         },
         commentDeleted: function(postID, commentID){
             io.emit('comment deleted', postID, commentID);
+        },
+        commentAdded: function(socketID, postID, parentID, commentID, commentHTML){
+            for(user in connectedUsers){
+                for(socket of connectedUsers[user]){
+                    if(socketID!=socket.id){//don't need to send the client that just made the comment the comment
+                        socket.emit('comment added', postID, parentID, commentID, commentHTML);
+                    }
+                }
+            }
         }
     };
 }

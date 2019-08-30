@@ -372,9 +372,9 @@ module.exports = function(app) {
                 var contentHTML = await helper.renderHTMLContent(comment)
                 comment.cachedHTML = { fullContentHTML: contentHTML };
 
-                numberOfComments = 0;
+                var numberOfComments = 0;
                 var depth = undefined;
-                commentParent = false;
+                var commentParent = false;
                 if (req.params.commentid == 'undefined') {
                     depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
@@ -654,6 +654,7 @@ module.exports = function(app) {
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
+                                socketCity.commentAdded(req.cookies.io, post._id.toString(), target? target._id.toString() : undefined, commentId.toString(), html);
                             })
                     })
                     .catch((err) => {

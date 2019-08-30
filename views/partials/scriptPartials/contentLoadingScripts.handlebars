@@ -254,4 +254,25 @@ socket.on('comment deleted', function(postID, commentID){
     }
 })
 
+socket.on('comment added', function(postID, parentID, commentID, commentHTML){
+    if(activePosts[postID]){
+        if(!parentID){
+            var cc = $(activePosts[postID]).find(".comments-container");
+        }else{
+            var cc = $($(activePosts[postID]).find('.comment[data-comment-id="'+parentID+'"]').find('.replies').get(1));
+        }
+
+        if(!cc.find('.comment[data-comment-id="'+commentID+'"]').length){
+            cc.append(commentHTML);
+        }
+
+        var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
+        if(counterToChange.innerHTML.trim()){
+            counterToChange.innerHTML = parseInt(counterToChange.innerHTML)+1;
+        }else{
+            counterToChange.innerHTML = "1";
+        }
+    }
+})
+
 </script>
