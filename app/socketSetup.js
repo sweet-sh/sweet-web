@@ -1,4 +1,3 @@
-
 module.exports = function(io) {
     io.on('connection', async (socket) => {
         var sidCookie = undefined;
@@ -30,11 +29,11 @@ module.exports = function(io) {
         },
         //when calling this you can generally pass in `req.cookies.io` for socketID. any falsy value should be good for parentID if it's a top-level comment
         //this function assumes that postDocument has its community and author fields populated bc that's how it is right now in the createcomment route that calls this
-        commentAdded: function(socketID, postID, postDocument, parentID, commentHTML){
+        commentAdded: function(socketID, postDocument, parentID, commentHTML){
             var permissionToSee = false;
-            io.of(postID).clients(async (error,clients)=>{
+            io.of('/').in(postDocument._id.toString()).clients(async (error,clients)=>{
                 for(var socket of clients){
-                    if(socket.id!=socketID){ //don't need to give the comment to the client that just made the comment
+                    if(socket!=socketID){ //don't need to give the comment to the client that just made the comment
                         if(postDocument.privacy == 'public' && (!postDocument.community || postDocument.community.visibility == 'public')){
                             permissionToSee = true;
                         }else if(postDocument.community){
@@ -42,8 +41,8 @@ module.exports = function(io) {
                         }else if(postDocument.privacy == 'private'){
                             permissionToSee = !!(await Relationship.findOne({value:'trust',fromUser:postDocument.author._id,toUser:socket.userID}))
                         }
-                        if(permissionToSee){
-                            socket.emit('comment added', postID, parentID, commentHTML);
+                        if(permissionToSee && io.sockets.connected[socket]){
+                            io.sockets.connected[socket].emit('comment added', postDocument._id.toString(), parentID, commentHTML);
                         }
                     }
                 }

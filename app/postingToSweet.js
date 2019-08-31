@@ -656,7 +656,7 @@ module.exports = function(app) {
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
-                                socketCity.commentAdded(req.cookies.io, post._id.toString(), req.params.commentId=='undefined' ? undefined : req.params.commentId, newCommentID.toString(), html);
+                                socketCity.commentAdded(req.cookies.io, post, req.params.commentid=='undefined' ? undefined : req.params.commentid, html);
                             })
                     })
                     .catch((err) => {
