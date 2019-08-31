@@ -26,8 +26,12 @@
 
 <script>
     activeScrollPath = null;
-$(function() {    
+$(function() {
+    
     var thisContainer = $('.active-feed-container');
+
+    activePosts['{{posts.0._id}}'] = thisContainer.find('.post').get(0);
+    socket.emit('post(s) loaded', '{{posts.0._id}}');
 
   if (thisContainer.find('.post-images').length > 0) {
       var imagesLoaded = thisContainer.find('.post-single-image').length;

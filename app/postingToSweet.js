@@ -321,12 +321,13 @@ module.exports = function(app) {
     });
 
     //Responds to post requests which create a comment.
-    //Inputs: comment body, filenames of comment images, descriptions of comment images
+    //Inputs: comment text, comment embeds. the params in the url are for the parent post and the parent comment; the latter is 'undefined' if 
+    //it's a top-level comment
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
     app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function(req, res) {
         commentTimestamp = new Date();
-        var commentId = mongoose.Types.ObjectId();
+        var newCommentID = mongoose.Types.ObjectId();
 
         var rawContent = req.body.commentContent;
         var parsedResult = await helper.parseText(JSON.parse(rawContent));
@@ -337,7 +338,7 @@ module.exports = function(app) {
         }
 
         var comment = {
-            _id: commentId,
+            _id: newCommentID,
             authorEmail: req.user.email,
             author: req.user._id,
             timestamp: commentTimestamp,
@@ -349,11 +350,12 @@ module.exports = function(app) {
 
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
+            .populate('community') 
             .then(async (post) => {
 
-                if (post.communityId) {
+                if (post.community) {
                     var postType = "community";
-                    var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
+                    var postPrivacy = post.community.settings.visibility;
                 } else {
                     var postType = "original";
                     var postPrivacy = post.privacy;
@@ -362,7 +364,7 @@ module.exports = function(app) {
                 for (var inline of parsedResult.inlineElements) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.community._id, req.user._id, postPrivacy, req.user.settings.imageQuality);
                         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
                         inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }
@@ -644,7 +646,7 @@ module.exports = function(app) {
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
                                 content: contentHTML,
-                                comment_id: commentId.toString(),
+                                comment_id: newCommentID.toString(),
                                 post_id: post._id.toString(),
                                 depth: depth
                             })
@@ -654,7 +656,7 @@ module.exports = function(app) {
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
-                                socketCity.commentAdded(req.cookies.io, post._id.toString(), target? target._id.toString() : undefined, commentId.toString(), html);
+                                socketCity.commentAdded(req.cookies.io, post._id.toString(), req.params.commentId=='undefined' ? undefined : req.params.commentId, newCommentID.toString(), html);
                             })
                     })
                     .catch((err) => {

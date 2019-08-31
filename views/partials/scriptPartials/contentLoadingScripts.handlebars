@@ -152,9 +152,9 @@ function showMoreAndImageLightboxing(e) {
         images.simpleLightbox();
     }
 }
-$(function(){
 {{#if loggedIn}}
 
+$(function(){
     //retrieves the user's followers to suggest them with tribute when they type an @
     $.post('/api/user/followers', function (data) {
         followers = JSON.parse(data).followers;
@@ -170,10 +170,66 @@ $(function(){
         })
         tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
     });
+});
 
 {{/if}}
 
-    activePosts = {}; //this is populated below, lets us find posts instantly by their id to add or delete comments and stuff. todo: also populate for single posts that don't use this
+    activePosts = {}; //this is populated in append.infiniteScroll below, lets us find posts instantly by their id to add or delete comments and stuff. todo: also populate for single posts that don't use this
+
+    //loading notifications and comment stuff through websockets
+
+    socket = io();
+
+    socket.on('connect', function(){
+        socket.emit('post(s) loaded', Object.keys(activePosts));
+    })
+
+    {{#if loggedIn}}
+    socket.on('notification', function(notifHTML){
+        console.log(notifHTML);
+        $("#notificationsContainer").prepend(notifHTML);
+        $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
+        document.title = '(⚐) sweet';
+    });
+    {{/if}}
+
+    socket.on('comment deleted', function(postID, commentID){
+        if(activePosts[postID]){
+            var divToDelete = $(activePosts[postID]).find('.comment[data-comment-id="'+commentID+'"]');
+            divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
+            divToDelete.find('header:first').remove();
+            divToDelete.find('footer button.delete-comment:first').remove();
+            var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
+            var newCommentCount = parseInt(counterToChange.innerHTML)-1;
+            if(newCommentCount===0){
+                counterToChange.innerHTML = '';
+            }else{
+                counterToChange.innerHTML = newCommentCount;
+            }
+        }
+    })
+
+    socket.on('comment added', function(postID, parentID, commentHTML){
+        if(activePosts[postID]){
+            if(!parentID){
+                var cc = $(activePosts[postID]).find(".comments-container");
+            }else{
+                var cc = $($(activePosts[postID]).find('.comment[data-comment-id="'+parentID+'"]').find('.replies').get(1));
+            }
+
+            cc.append(commentHTML);
+
+            var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
+            if(counterToChange.innerHTML.trim()){
+                counterToChange.innerHTML = parseInt(counterToChange.innerHTML)+1;
+            }else{
+                counterToChange.innerHTML = "1";
+            }
+        }
+    })
+
+$(function(){
+
     //this runs when posts are added to the active feed container to hide long ones behind "show more"s and make the images bring up the lightbox when you click on them.
     $('.postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
         var newlyLoadedStuff = $(items);
@@ -183,9 +239,8 @@ $(function(){
             e = $(e);
 
             var id = e.attr('data-post-id');
-            if(id){
-                activePosts[id] = e[0]; //todo: feed stack stuff
-            }
+            id && (activePosts[id] = e[0]); //todo: feed stack stuff
+            socket.emit('post(s) loaded', [id]);
 
             var imgs = e.children('.content').find('img');
             if(imgs.length){
@@ -207,8 +262,6 @@ $(function(){
             }
         })
 
-
-
         if(newlyLoadedStuff.find('img.link-preview-image').length > 0){
             newlyLoadedStuff.find('img.link-preview-image').on('error',function(){
                 $(this).replaceWith('<div class="link-preview-image"><i class="fas fa-link"></i></div>');
@@ -226,53 +279,5 @@ $(function(){
         {{/if}}
     });
 });
-
-//loading notifications and comment stuff through websockets
-var socket = io();
-{{#if loggedIn}}
-socket.on('notification', function(notifHTML){
-    console.log(notifHTML);
-    $("#notificationsContainer").prepend(notifHTML);
-    $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
-    document.title = '(⚐) sweet';
-});
-{{/if}}
-
-socket.on('comment deleted', function(postID, commentID){
-    if(activePosts[postID]){
-        var divToDelete = $(activePosts[postID]).find('.comment[data-comment-id="'+commentID+'"]');
-        divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
-        divToDelete.find('header:first').remove();
-        divToDelete.find('footer button.delete-comment:first').remove();
-        var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
-        var newCommentCount = parseInt(counterToChange.innerHTML)-1;
-        if(newCommentCount===0){
-            counterToChange.innerHTML = '';
-        }else{
-            counterToChange.innerHTML = newCommentCount;
-        }
-    }
-})
-
-socket.on('comment added', function(postID, parentID, commentID, commentHTML){
-    if(activePosts[postID]){
-        if(!parentID){
-            var cc = $(activePosts[postID]).find(".comments-container");
-        }else{
-            var cc = $($(activePosts[postID]).find('.comment[data-comment-id="'+parentID+'"]').find('.replies').get(1));
-        }
-
-        if(!cc.find('.comment[data-comment-id="'+commentID+'"]').length){
-            cc.append(commentHTML);
-        }
-
-        var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
-        if(counterToChange.innerHTML.trim()){
-            counterToChange.innerHTML = parseInt(counterToChange.innerHTML)+1;
-        }else{
-            counterToChange.innerHTML = "1";
-        }
-    }
-})
 
 </script>

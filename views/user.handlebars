@@ -102,11 +102,11 @@
     activeScrollPath = '/showposts/user/{{profileData._id}}/';
   {{/if}}
 
+$(function(){startInfiniteScroll();});
     
     {{#if isOwnProfile}}
 $(function() {
 
-    startInfiniteScroll();
     setDraftsButtonText();
 
     $("#toggle-drafts-mode").click(function(e) {
