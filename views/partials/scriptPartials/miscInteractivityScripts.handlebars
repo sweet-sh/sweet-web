@@ -284,13 +284,6 @@ $(function() {
     });
   })
 
-  $('body').on('click', '.notificationLink', function(e) {
-    e.preventDefault();
-    var link = this.href;
-    $.post("/api/notification/update/"+$(this).attr("id"), function( data ) {
-      window.location.href = link;
-    });
-  })
   $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
