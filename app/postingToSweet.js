@@ -119,7 +119,6 @@ module.exports = function(app) {
             res.end(thumbnails[req.params.id]);
             delete thumbnails[req.params.id];
             delete thumbnails[req.params.id+"type"];
-            console.log(Object.keys(thumbnails));
         }else{
             res.sendStatus(404);
         }
@@ -364,7 +363,7 @@ module.exports = function(app) {
                 for (var inline of parsedResult.inlineElements) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.community._id, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.community ? post.community._id : undefined, req.user._id, postPrivacy, req.user.settings.imageQuality);
                         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
                         inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }

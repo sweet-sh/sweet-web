@@ -1,15 +1,18 @@
-function markRead(userId, subjectId) {
-    User.findOne({
+async function markRead(userId, subjectId) {
+    var markedRead = [];
+    await User.findOne({
             _id: userId
         }, 'notifications')
         .then(user => {
             user.notifications.forEach(notification => {
                 if (notification.seen == false && notification.subjectId == subjectId) {
                     notification.seen = true;
+                    markedRead.push(notification._id);
                 }
             })
             user.save();
         })
+        return markedRead;
 }
 
 function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
@@ -120,7 +123,8 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                             subjectId: subjectId,
                             text: response.text,
                             image: response.image,
-                            url: url
+                            url: url,
+                            _id: new ObjectId()
                         }
                         socketCity.notifyUser(notifieeID, notification);
                         notifiedUser.notifications.push(notification);

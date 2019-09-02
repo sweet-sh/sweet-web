@@ -1410,21 +1410,9 @@ module.exports = function(app) {
         );
     })
 
-    app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, function(req, res) {
-        User.findOne({
-                _id: req.user._id
-            })
-            .then(user => {
-                user.notifications.forEach(notification => {
-                    if (notification.subjectId == req.params.subjectid) {
-                        notification.seen = true;
-                    }
-                })
-                user.save()
-                    .then(response => {
-                        res.sendStatus(200);
-                    })
-            })
+    app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, async function(req, res) {
+        var markedRead = await notifier.markRead(req.user._id, req.params.subjectid);
+        socketCity.markNotifsRead(req.user._id, markedRead);
     })
 
     app.get('/api/notification/display', function(req, res) {

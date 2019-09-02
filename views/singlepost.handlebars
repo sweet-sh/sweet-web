@@ -56,6 +56,8 @@ $(function() {
       }
     })
   })
+
+  $.post('/api/notification/update-by-subject/{{posts.0._id}}');
 });
 {{/if}}
 </script>

@@ -52,6 +52,9 @@ module.exports = function(io) {
                     }
                 }
             })
+        },
+        markNotifsRead: function(userID, readNotifsArray){
+            io.in(userID.toString()).emit('notification(s) read', readNotifsArray);
         }
     };
 }
