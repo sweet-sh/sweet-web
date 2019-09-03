@@ -1,62 +1,66 @@
-{{#if isOwnProfile}}
 <script type="text/javascript">
-  $("#image-upload").change(function (e) {
-    var preview = $("#image-preview");
-    var reader = new FileReader();
-    reader.addEventListener("load", function () {
-      preview.css('background-image',"url("+reader.result+")");
-      $("#image-label").html("change image");
-    }, false);
-    if (this.files[0]) {
-      reader.readAsDataURL(this.files[0]);
-    }else{
-      preview.css('background-image',"");
-      $("#image-label").html("choose image");
-    }
-  })
-  $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
-  $("#image-preview").css("background-size", "cover");
-  $("#image-preview").css("background-position", "center center");
-</script>
-{{else}}
-<script type="text/javascript">
-function confirmRelationshipChange(confirmQString, relType, addOrDelete) {
-  bootbox.confirm(confirmQString, function (result) {
-    if (result == true) {
-      $.post("/useraction/" + relType + "/" + addOrDelete + "/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
-        location.reload();
-      });
-    }
+if(!window.profileScriptsLoaded){ //bc these listeners, etc, should only be attached once, we set this flag after loading them once, so they aren't loaded again if the user goes to their profile page twice without reloading the dom
+  {{#if isOwnProfile}}
+    $("#image-upload").change(function (e) {
+      var preview = $("#image-preview");
+      var reader = new FileReader();
+      reader.addEventListener("load", function () {
+        preview.css('background-image',"url("+reader.result+")");
+        $("#image-label").html("change image");
+      }, false);
+      if (this.files[0]) {
+        reader.readAsDataURL(this.files[0]);
+      }else{
+        preview.css('background-image',"");
+        $("#image-label").html("choose image");
+      }
+    })
+    $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
+    $("#image-preview").css("background-size", "cover");
+    $("#image-preview").css("background-position", "center center");
+
+  {{else}}
+
+  function confirmRelationshipChange(confirmQString, relType, addOrDelete) {
+    bootbox.confirm(confirmQString, function (result) {
+      if (result == true) {
+        //todo: make this api method less shit
+        $.post("/useraction/" + relType + "/" + addOrDelete + "/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
+          location.reload();
+        });
+      }
+    });
+  }
+
+  $("#flagButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to flag this user?', 'flag', 'add');
   });
+
+  $("#unflagButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
+  });
+  $("#muteButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to mute this user? Their posts will be hidden from you across sweet - they will not be notified of this.', 'mute', 'add');
+  });
+  $("#unmuteButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unmute this user? You will be able to see their posts across sweet.', 'mute', 'delete');
+  });
+  $("#trustButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
+  });
+  $("#untrustButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to stop trusting this user?', 'trust', 'delete');
+  });
+  $("#followButton").click(function () {
+    //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
+    $.post("/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
+      location.reload();
+    });
+  });
+  $("#unfollowButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
+  });
+  {{/if}}
+  window.profileScriptsLoaded = true;
 }
-
-$("#flagButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to flag this user?', 'flag', 'add');
-});
-
-$("#unflagButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
-});
-$("#muteButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to mute this user? Their posts will be hidden from you across sweet - they will not be notified of this.', 'mute', 'add');
-});
-$("#unmuteButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unmute this user? You will be able to see their posts across sweet.', 'mute', 'delete');
-});
-$("#trustButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
-});
-$("#untrustButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to stop trusting this user?', 'trust', 'delete');
-});
-$("#followButton").click(function () {
-  //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
-  $.post("/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
-    location.reload();
-  });
-});
-$("#unfollowButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
-});
 </script>
-{{/if}}

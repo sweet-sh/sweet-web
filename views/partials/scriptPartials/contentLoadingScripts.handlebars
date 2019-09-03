@@ -96,7 +96,7 @@ window.addEventListener('popstate', function(e) {
         prePopState = e.state.hid;
     } else {
         var oldActive = $('.active-feed-container');
-        var newActive = prePopState < e.state.hid ? oldActive.next() : oldActive.prev();
+        var newActive = prePopState < e.state.hid ? oldActive.next('.inactive-feed-container') : oldActive.prev('.inactive-feed-container');
         if (newActive.length) { //if the user's just refreshed the page or something we won't find the content we're going back to in the dom, we just have to head to that page normally (in the else below)
             history.replaceState({ contentSource: history.state.contentSource, scrollPos: $(window).scrollTop(), hid: history.state.hid }, '', window.location.href);
             activeScrollPath = e.state.contentSource;
@@ -202,29 +202,27 @@ $(function(){
     })
 
     {{#if loggedIn}}
+
     socket.on('notification', function(notifHTML){
         $("#notificationsContainer").prepend(notifHTML);
         $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
         document.title = '(⚐) sweet';
     });
+    
+    socket.on('notification(s) read', function(readNotifsArray){
+        var notificationsContainer = $('#notificationsContainer');
+        for(var i=0; i<readNotifsArray.length; i++){
+            notificationsContainer.children('#'+readNotifsArray[i]).removeClass('notification-active');
+        }
+        if(notificationsContainer.children('.notification-active').length === 0){
+            $('.notifications-count').html('');
+            document.title = 'sweet';
+        }
+    });
+
     {{/if}}
 
-    socket.on('comment deleted', function(postID, commentID){
-        if(activePosts[postID]){
-            var divToDelete = $(activePosts[postID]).find('.comment[data-comment-id="'+commentID+'"]');
-            divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
-            divToDelete.find('header:first').remove();
-            divToDelete.find('footer button.delete-comment:first').remove();
-            var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
-            var newCommentCount = parseInt(counterToChange.innerHTML)-1;
-            if(newCommentCount===0){
-                counterToChange.innerHTML = '';
-            }else{
-                counterToChange.innerHTML = newCommentCount;
-            }
-        }
-    })
-
+    
     socket.on('comment added', function(postID, parentID, commentHTML){
         if(activePosts[postID]){
             if(!parentID){
@@ -244,16 +242,21 @@ $(function(){
         }
     })
 
-    socket.on('notification(s) read', function(readNotifsArray){
-        var notificationsContainer = $('#notificationsContainer');
-        for(var i=0; i<readNotifsArray.length; i++){
-            notificationsContainer.children('#'+readNotifsArray[i]).removeClass('notification-active');
+    socket.on('comment deleted', function(postID, commentID){
+        if(activePosts[postID]){
+            var divToDelete = $(activePosts[postID]).find('.comment[data-comment-id="'+commentID+'"]');
+            divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
+            divToDelete.find('header:first').remove();
+            divToDelete.find('footer button.delete-comment:first').remove();
+            var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
+            var newCommentCount = parseInt(counterToChange.innerHTML)-1;
+            if(newCommentCount===0){
+                counterToChange.innerHTML = '';
+            }else{
+                counterToChange.innerHTML = newCommentCount;
+            }
         }
-        if(notificationsContainer.children('.notification-active').length === 0){
-            $('.notifications-count').html('');
-            document.title = 'sweet';
-        }
-    });
+    })
 
 $(function(){
 

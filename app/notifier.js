@@ -12,7 +12,7 @@ async function markRead(userId, subjectId) {
             })
             user.save();
         })
-        return markedRead;
+    return markedRead;
 }
 
 function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
