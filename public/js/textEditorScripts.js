@@ -844,10 +844,25 @@ function createImageGroups(qlEditorElement) {
     }
 }
 
-window.addEventListener("beforeunload", function(event) {
+window.addEventListener("beforeunload", function(e) {
+    var wip = false;
+    $('.active-feed-container').find('.ql-container').each(function(i,e){
+        if(!wip && e.hasContent()){
+            wip = true;
+        }
+    })
+    if(wip){
+        e.preventDefault();
+        e.stopPropagation();
+        e.returnValue = 'there is content in the post box, would you like to perhaps save it as draft first'; //this text isn't actually displayed by many browsers but oh well
+        return 'there is content in the post box, would you like to perhaps save it as draft first';
+    }
+});
+
+window.addEventListener('unload', function(e){
     $("div.image-preview-container:not(.still-loading)").each(function(i, e) {
         if (!e.getAttribute('imagealreadysaved')) {
             $.post('/cleartempimage', { imageURL: e.getAttribute('image-url') });
         }
     })
-});
+})
