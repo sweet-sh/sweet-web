@@ -23,98 +23,106 @@ function switchFeedWithinPage(addressBarPath, infiniteScrollRequestPath) {
     restartInfiniteScroll();
 }
 
-//this runs once sets the state of the first page the user navigates to as it's loaded "from scratch"
-//note that activeScrollPath is initially set by the script specific to the page that's being loaded, which is located in that page's handlebars file
-history.replaceState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: window.location.href }, '', window.location.href);
+if(window.activeScrollPath){ //so don't do any of this for the settings page, etc not-stacked ones
 
-//this specifies the url paths where clicking a link should do the normal action; in theory, though, the settings, communities, and support pages could be added to the stack, i just haven't done it (yet)
-function isStackablePath(path) {
-    return (!path.match(/^#$/) && !path.match(/^\/settings$/) && !path.match(/^\/communities$/) && !path.match(/^\/logout$/) && !path.match(/^\/signup$/) && !path.match(/^\/support$/) && !path.match(/^\/api\/.*$/))
-}
+    //this runs once sets the state of the first page the user navigates to as it's loaded "from scratch"
+    //note that activeScrollPath is initially set by the script specific to the page that's being loaded, which is located in that page's handlebars file
+    history.replaceState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: window.location.href }, '', window.location.href);
 
-//this intercepts clicks on relative links and, if their paths pass the test from the above function, loads a new feed container into the existing page 
-$('body').on('click', 'a', function(e) {
-    try{
-        var href = this.getAttribute('href'); //for relative links, this gives the path (the part of the url starting after the domain name and port).
-        if (href.substring(0, 1) == "/" && isStackablePath(href)) { //checks to see if this is just a path, meaning it's a relative link, and then that it's one that's allowed to be intercepted
-            e.preventDefault();
-            if (href.includes('#')) {
-                var hrefComps = href.split('#');
-                href = hrefComps[0];
-                var jump = hrefComps[1];
-            } else {
-                var jump = '';
-            }
-            needPostsOlderThan = "" + (new Date().getTime());
-            if (href == window.location.pathname) { //if you click on a link to a page that you're on, this treats it as a simple refresh - todo: probably push a history state so that you can go "back"?
-                $(window).scrollTop(0);
-                restartInfiniteScroll();
-                return;
-            }
-            var fullDestUrl = this.href.split('#')[0]; //for no reason, this.getAttribute('href') gives the path for relative links and this.href gives the full url (including the protocol and origin)
-            var scrollPos = $(window).scrollTop();
-            //this just saves the page's current scroll position (has to be done before we move things around) while leaving everything else the same (it was already filled in either by the very first replaceState, above, or the most recent pushState if one of those has happened)
-            history.replaceState({ contentSource: history.state.contentSource, scrollPos: scrollPos, hid: history.state.hid, url: window.location.href }, '', window.location.href);
-            var postsContainer = $('.postsContainer'); //this is the class name that the infinite scroll script looks for to append content into; only one element with this class name should exist at once
-            postsContainer.infiniteScroll('destroy');
-            postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
-            var prevFeedCont = $('.active-feed-container');
-            prevFeedCont.nextAll().remove(); //when a link is clicked and a new history state is pushed, the forward button resets, so feed containers that would be accessible through that are no longer needed
-            prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
-            $.get({
-                url: fullDestUrl + '/internalized',
-                success: function(data) {
-                    $('.inactive-feed-container').last().after(data);
-                    var editor = $('.active-feed-container').find("#editor");
-                    if (editor.length) {
-                        attachQuill(editor[0]); //comment fields have the editor attached as the post loads, but new post forms need to be attached as the feed container loads, like this
-                    }
-                    history.pushState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: fullDestUrl }, '', fullDestUrl);
-                    prePopState = historyStateId;
-                    if(jump){
-                        $('html, body').animate({
-                            scrollTop: $('.active-feed-container').find("#"+jump).offset().top
-                        }, 400);
-                    }
-                },
-                error: function() {
-                    window.location.href = fullDestUrl;
+    //this specifies the url paths where clicking a link should do the normal action; in theory, though, the settings, communities, and support pages could be added to the stack, i just haven't done it (yet)
+    function isStackablePath(path) {
+        return (!path.match(/^#$/) && !path.match(/^\/settings(\/|#)?/) && !path.match(/^\/communities$/) && !path.match(/^\/logout$/) && !path.match(/^\/signup$/) && !path.match(/^\/support$/) && !path.match(/^\/api\/.*$/))
+    }
+
+    //this intercepts clicks on relative links and, if their paths pass the test from the above function, loads a new feed container into the existing page 
+    $('body').on('click', 'a', function(e) {
+        try{
+            var href = this.getAttribute('href'); //for relative links, this gives the path (the part of the url starting after the domain name and port).
+            if (href.substring(0, 1) == "/" && isStackablePath(href)) { //checks to see if this is just a path, meaning it's a relative link, and then that it's one that's allowed to be intercepted
+                e.preventDefault();
+                if (href.includes('#')) {
+                    var hrefComps = href.split('#');
+                    href = hrefComps[0];
+                    var jump = hrefComps[1];
+                } else {
+                    var jump = '';
                 }
-            })
+                needPostsOlderThan = "" + (new Date().getTime());
+                if (href == window.location.pathname) { //if you click on a link to a page that you're on, this treats it as a simple refresh - todo: probably push a history state so that you can go "back"?
+                    $(window).scrollTop(0);
+                    restartInfiniteScroll();
+                    return;
+                }
+                var fullDestUrl = this.href.split('#')[0]; //for no reason, this.getAttribute('href') gives the path for relative links and this.href gives the full url (including the protocol and origin)
+                var scrollPos = $(window).scrollTop();
+                //this just saves the page's current scroll position (has to be done before we move things around) while leaving everything else the same (it was already filled in either by the very first replaceState, above, or the most recent pushState if one of those has happened)
+                history.replaceState({ contentSource: history.state.contentSource, scrollPos: scrollPos, hid: history.state.hid, url: window.location.href }, '', window.location.href);
+                var postsContainer = $('.postsContainer'); //this is the class name that the infinite scroll script looks for to append content into; only one element with this class name should exist at once
+                postsContainer.infiniteScroll('destroy');
+                postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
+                var prevFeedCont = $('.active-feed-container');
+                prevFeedCont.nextAll().remove(); //when a link is clicked and a new history state is pushed, the forward button resets, so feed containers that would be accessible through that are no longer needed
+                prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
+                $('.new-feed-container-load-status').css('display','block');
+                $.get({
+                    url: fullDestUrl + '/internalized',
+                    success: function(data) {
+                        $('.new-feed-container-load-status').css('display','none');
+                        $('.inactive-feed-container').last().after(data);
+                        var editor = $('.active-feed-container').find("#editor");
+                        if (editor.length) {
+                            attachQuill(editor[0]); //comment fields have the editor attached as the post loads, but new post forms need to be attached as the feed container loads, like this
+                        }
+                        history.pushState({ contentSource: activeScrollPath, scrollPos: 0, hid: historyStateId++, url: fullDestUrl }, '', fullDestUrl);
+                        prePopState = historyStateId;
+                        if(jump){
+                            $('html, body').animate({
+                                scrollTop: $('.active-feed-container').find("#"+jump).offset().top
+                            }, 400);
+                        }
+                    },
+                    error: function() {
+                        window.location.href = fullDestUrl;
+                    }
+                })
+            }
+        }catch(err){
+            console.log("error navigating to page", err);
+            window.location.href = this.href;
         }
-    }catch(err){
-        console.log("error navigating to page", err);
-        window.location.href = e.target.href;
-    }
-})
+    })
 
-//so this event is fired when the user hits the back or forward buttons on their browser
-window.addEventListener('popstate', function(e) {
-    if (e.state.withinPage) {
-        activeScrollPath = e.state.contentSource;
-        restartInfiniteScroll();
-        prePopState = e.state.hid;
-    } else {
-        var oldActive = $('.active-feed-container');
-        var newActive = prePopState < e.state.hid ? oldActive.next('.inactive-feed-container') : oldActive.prev('.inactive-feed-container');
-        if (newActive.length) { //if the user's just refreshed the page or something we won't find the content we're going back to in the dom, we just have to head to that page normally (in the else below)
-            history.replaceState({ contentSource: history.state.contentSource, scrollPos: $(window).scrollTop(), hid: history.state.hid }, '', window.location.href);
-            activeScrollPath = e.state.contentSource;
-            oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
-            newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
-            var oldPostCont = oldActive.find('.postsContainer');
-            oldPostCont.infiniteScroll('destroy');
-            oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
-            newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
-            startInfiniteScroll();
-            prePopState = e.state.hid;
-            $(window).scrollTop(e.state.scrollPos);
-            console.log(e.state.scrollPos);
-        } else {
-            window.location.href = e.state.url;
+    //so this event is fired when the user hits the back or forward buttons on their browser
+    window.addEventListener('popstate', function(e) {
+        if(!e.state){ //if this is the initial page load event
+            return;
         }
-    }
-})
+        if (e.state.withinPage) {
+            activeScrollPath = e.state.contentSource;
+            restartInfiniteScroll();
+            prePopState = e.state.hid;
+        } else {
+            var oldActive = $('.active-feed-container');
+            var newActive = prePopState < e.state.hid ? oldActive.next('.inactive-feed-container') : oldActive.prev('.inactive-feed-container');
+            if (newActive.length) { //if the user's just refreshed the page or something we won't find the content we're going back to in the dom, we just have to head to that page normally (in the else below)
+                history.replaceState({ contentSource: history.state.contentSource, scrollPos: $(window).scrollTop(), hid: history.state.hid }, '', window.location.href);
+                activeScrollPath = e.state.contentSource;
+                oldActive.removeClass('active-feed-container').addClass('inactive-feed-container');
+                newActive.removeClass('inactive-feed-container').addClass('active-feed-container');
+                var oldPostCont = oldActive.find('.postsContainer');
+                oldPostCont.infiniteScroll('destroy');
+                oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
+                newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+                startInfiniteScroll();
+                prePopState = e.state.hid;
+                $(window).scrollTop(e.state.scrollPos);
+                console.log(e.state.scrollPos);
+            } else {
+                window.location.href = e.state.url;
+            }
+        }
+    })
+}
 
 function startInfiniteScroll() {
     if(activeScrollPath){ //set to null for single post pages

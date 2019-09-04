@@ -336,7 +336,7 @@ $("#welcomeMessageForm").submit(function(e){
   return true;
 })
 
-$('#community-image-button').click(function(e) {
+$('.active-feed-container').find('#community-image-button').click(function(e) {
   let button = $(this);
   if(button.parent().find("input[type='file']")){ //if a file is being submitted
     if(!button.parent().find("input[type='file']").val()){ //and its value isn't set

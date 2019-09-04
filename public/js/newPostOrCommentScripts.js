@@ -316,7 +316,7 @@ $(function() {
                 if (!form.find("#pseudoPrivacy-draft").is(":checked") || activeScrollPath=='/drafts/') {
                     if (!form.find("#pseudoPrivacy-draft").is(":checked") && activeScrollPath=='/drafts/') {
                         //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
-                        $('#toggle-drafts-mode').click();
+                        $('.active-post-container').find('#toggle-drafts-mode').click();
                     }
                     restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
                 } else {
