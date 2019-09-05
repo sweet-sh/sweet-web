@@ -332,6 +332,12 @@ module.exports = function(app) {
         })
     })
 
+    app.get('/notifications/internalized', function(req, res, next){
+        req.internalize = true;
+        req.url = req.path = '/notifications';
+        next('route');
+    })
+
     //Responds to get requests for /notifications. I think this is only used on mobile?
     //Input: none
     //Output: renders notifications page, which renders as "you're not logged in" if you're not logged in
@@ -340,6 +346,7 @@ module.exports = function(app) {
             User.findOne({ _id: req.user._id }, 'notifications').then(user => {
                 user.notifications.reverse();
                 res.render('notifications', {
+                    layout: req.internalize ? false : 'main',
                     loggedIn: true,
                     loggedInUserData: req.user,
                     notifications: user.notifications,
@@ -348,6 +355,7 @@ module.exports = function(app) {
             })
         } else {
             res.render('notifications', {
+                layout: req.internalize ? false : 'main',
                 loggedIn: false,
                 activePage: 'notifications'
             });
