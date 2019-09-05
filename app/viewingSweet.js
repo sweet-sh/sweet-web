@@ -1375,7 +1375,20 @@ module.exports = function(app) {
             var followed = false;
             var flagged = false;
         }
+
+        if(profileData.profileVisibility != "invisible"){
+            var metadata = {
+                title: profileData.displayName+' (@'+profileData.username+') on sweet',
+                description: profileData.aboutRaw,
+                image: (process.env.NODE_ENV=='development' ? 'http://localhost:8686' : 'https://sweet.sh') + '/images/' + profileData.image,
+                url: (process.env.NODE_ENV=='development' ? 'http://localhost:8686' : 'https://sweet.sh') + '/' + profileData.username
+            }
+        }else{
+            var metadata = {};
+        }
+
         res.render('user', {
+            metadata: metadata,
             layout: req.internalize ? false : 'main',
             draftsFirst: req.draftsFirst,
             loggedIn: req.isAuthenticated(),

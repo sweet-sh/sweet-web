@@ -176,8 +176,8 @@ module.exports = {
             retrievalUrl: retrievalUrl,
             linkUrl: finalUrl,
             image: metadata.image,
-            title: metadata.title,
-            description: metadata.description,
+            title: helper.escapeHTMLChars(metadata.title),
+            description: helper.escapeHTMLChars(metadata.description),
             domain: urlParser.parse(finalUrl).hostname
         }
         //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
