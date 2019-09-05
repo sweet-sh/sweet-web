@@ -80,7 +80,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                 .then(async response => {
                     //send the user push notifications if they have a subscribed browser
                     if (notifiedUser.pushNotifSubscriptions.length > 0) {
-                        for (subbed of notifiedUser.pushNotifSubscriptions) {
+                        for (var subbed of notifiedUser.pushNotifSubscriptions) {
                             const pushSubscription = JSON.parse(subbed);
                             const options = {
                                 gcmAPIKey: ''

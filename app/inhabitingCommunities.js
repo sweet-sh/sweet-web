@@ -106,6 +106,12 @@ module.exports = function(app, passport) {
             .populate('welcomeMessageAuthor')
             .then(community => {
                 if (community) {
+                    var metadata = {
+                        title: community.name,
+                        description: community.descriptionRaw.replace(/<(.*?)>/g, ''),
+                        image: (process.env.NODE_ENV=="development" ? 'http://localhost:8686' : 'https://sweet.sh') + ('/images/communities/') + (community.imageEnabled ? community.image : 'cake.svg'),
+                        url: (process.env.NODE_ENV=="development" ? 'http://localhost:8686' : 'https://sweet.sh') + '/community/' + community.slug
+                    }
                     if (isLoggedIn) {
                         let memberIds = community.members.map(a => a._id.toString());
                         let bannedMemberIds = community.bannedMembers.map(a => a._id.toString());
@@ -186,11 +192,13 @@ module.exports = function(app, passport) {
                                     majorityMargin: majorityMargin,
                                     isBanned: isBanned,
                                     isMuted: isMuted,
-                                    bannedMemberIds: bannedMemberIds
+                                    bannedMemberIds: bannedMemberIds,
+                                    metadata
                                 })
                             })
                     } else {
                         res.render('community', {
+                            metadata: metadata,
                             layout: req.internalize ? false : 'main',
                             loggedIn: false,
                             loggedInUserData: "",

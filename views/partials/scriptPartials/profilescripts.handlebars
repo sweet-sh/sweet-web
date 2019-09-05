@@ -1,5 +1,4 @@
 <script type="text/javascript">
-//if(!window.profileScriptsLoaded){ //bc these listeners, etc, should only be attached once, we set this flag after loading them once, so they aren't loaded again if the user goes to their profile page twice without reloading the dom
   {{#if isOwnProfile}}
     $active("#image-upload").change(function (e) {
       var preview = $active("#image-preview");
@@ -60,6 +59,4 @@
     confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
   });
   {{/if}}
-  //window.profileScriptsLoaded = true;
-//}
 </script>

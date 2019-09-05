@@ -846,7 +846,7 @@ function createImageGroups(qlEditorElement) {
 
 window.addEventListener("beforeunload", function(e) {
     var wip = false;
-    $active('.ql-container').each(function(i,e){
+    $active('.ql-container:not(.form-control)').each(function(i,e){ //community editor fields will have content in them but we're ignoring that
         if(!wip && e.hasContent()){
             wip = true;
         }
