@@ -846,7 +846,7 @@ function createImageGroups(qlEditorElement) {
 
 window.addEventListener("beforeunload", function(e) {
     var wip = false;
-    $('.active-feed-container').find('.ql-container').each(function(i,e){
+    $active('.ql-container').each(function(i,e){
         if(!wip && e.hasContent()){
             wip = true;
         }

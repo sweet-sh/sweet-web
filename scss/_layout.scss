@@ -5,11 +5,11 @@
 }
 
 html {
-    height:100%;
+    height: 100%;
 }
 
 body {
-    min-height:100%;
+    min-height: 100%;
 }
 
 img {
@@ -76,8 +76,8 @@ section {
 }
 
 /* todo: move to somewhere that makes sense */
-.inactive-feed-container{
-    display:none;
+.inactive-feed-container {
+    display: none;
 }
 
 @media(min-width:600px) {
@@ -335,7 +335,9 @@ section {
 #bodyContainer {
     padding-top: 80px;
     padding-bottom: 20px;
-    height:100%;
+    height: 100%;
+    overflow-y: visible;
+    overflow-x: hidden;
 }
 
 #bodyContainer .intro {
@@ -410,9 +412,9 @@ section {
     position: fixed;
 }
 
-@media(max-width:975px){
+@media(max-width:975px) {
     .fixed-container {
-        display:none;
+        display: none;
     }
 }
 
@@ -480,7 +482,7 @@ section {
 }
 
 .user-list.collapse {
-    display:none;
+    display: none;
 }
 
 .user-list-icon {
@@ -576,6 +578,7 @@ section {
 .compact-container {
     border: 1px solid $medium-grey;
 }
+
 /*used for listing items inside .compact-container*/
 .content-box {
     padding: 15px;
@@ -684,8 +687,8 @@ section {
 }
 
 #votesContainer {
-  background: $lightest-pink;
-  border: 1px solid $medium-grey;
+    background: $lightest-pink;
+    border: 1px solid $medium-grey;
 }
 
 // This is the box containing the new proposal in community votes
@@ -824,6 +827,7 @@ section {
         max-width: 500px;
         margin: 1.75rem auto;
     }
+
     #editPostModal>.modal-dialog {
         max-width: 600px;
     }

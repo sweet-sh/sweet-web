@@ -90,9 +90,9 @@
 //this button is located in usersidebar.handlebars
   function setDraftsButtonText(){
     if(window.location.pathname=='/{{profileData.username}}'){
-      $('.active-feed-container').find('#toggle-drafts-mode').html('<i class="fas fa-pencil-ruler"></i> See drafts');
+      $active('#toggle-drafts-mode').html('<i class="fas fa-pencil-ruler"></i> See drafts');
     }else if(window.location.pathname=='/drafts'){
-      $('.active-feed-container').find('#toggle-drafts-mode').html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
+      $active('#toggle-drafts-mode').html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
     }
   }
 
@@ -109,26 +109,32 @@ $(function() {
 
     setDraftsButtonText();
 
-    $("#toggle-drafts-mode").click(function(e) {
+    $active("#toggle-drafts-mode").click(function(e) {
         e.preventDefault();
+        $(this).html('<i class="fas fa-spinner fa-spin"></i>');
         if (activeScrollPath != '/drafts/') {
             $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text on the post privacy labels showing up)
             switchFeedWithinPage('/drafts', '/drafts/');
             window.addEventListener('popstate', setDraftsButtonText);
-            setDraftsButtonText();
         } else {
             //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
             $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked", true);
             switchFeedWithinPage('/{{profileData.username}}', '/showposts/user/{{profileData._id}}/');
             window.addEventListener('popstate', setDraftsButtonText);
-            setDraftsButtonText();
         }
 
-        //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
         var postsContainer = $(".postsContainer");
+
+        function loaded(){
+          setDraftsButtonText();
+          postsContainer.off("append.infiniteScroll", loaded);
+        }
+        postsContainer.on("append.infiniteScroll", loaded);
+
+        //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
         if (getTop(postsContainer) > $(window).scrollTop() + $(window).height()) {
             function scrollToCont() {
-                $('html').animate({ scrollTop: getTop($("#postForm")) - $("#topNav").outerHeight() }, 200);
+                $('html').animate({ scrollTop: getTop($active("#postForm")) - $("#topNav").outerHeight() }, 200);
                 postsContainer.off("append.infiniteScroll", scrollToCont);
             }
             postsContainer.on("append.infiniteScroll", scrollToCont);

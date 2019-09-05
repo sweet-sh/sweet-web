@@ -60,6 +60,9 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                 var postsContainer = $('.postsContainer'); //this is the class name that the infinite scroll script looks for to append content into; only one element with this class name should exist at once
                 postsContainer.infiniteScroll('destroy');
                 postsContainer.removeClass('postsContainer').addClass('inactivePostsContainer');
+                $("#postPrivacy-public").attr('id','inactivePostPrivacy-public'); //todo: this is dumb, but idk how else to keep the label elements working when there's more than one element with any of these ids in the dom
+                $("#postPrivacy-private").attr('id','inactivePostPrivacy-private');
+                $("#pseudoPrivacy-draft").attr('id','inactivePseudoPrivacy-draft');
                 var prevFeedCont = $('.active-feed-container');
                 prevFeedCont.nextAll().remove(); //when a link is clicked and a new history state is pushed, the forward button resets, so feed containers that would be accessible through that are no longer needed
                 prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
@@ -69,7 +72,7 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                     success: function(data) {
                         $('.new-feed-container-load-status').css('display','none');
                         $('.inactive-feed-container').last().after(data);
-                        var editor = $('.active-feed-container').find("#editor");
+                        var editor = $active("#editor");
                         if (editor.length) {
                             attachQuill(editor[0]); //comment fields have the editor attached as the post loads, but new post forms need to be attached as the feed container loads, like this
                         }
@@ -77,7 +80,7 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                         prePopState = historyStateId;
                         if(jump){
                             $('html, body').animate({
-                                scrollTop: $('.active-feed-container').find("#"+jump).offset().top
+                                scrollTop: $active("#"+jump).offset().top
                             }, 400);
                         }
                     },
@@ -113,10 +116,12 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                 oldPostCont.infiniteScroll('destroy');
                 oldPostCont.removeClass('postsContainer').addClass('inactivePostsContainer');
                 newActive.find('.inactivePostsContainer').removeClass('inactivePostsContainer').addClass('postsContainer');
+                newActive.find("#inactivePostPrivacy-public").attr('id','postPrivacy-public'); //todo: this is dumb, but idk how else to keep the labels from applying to these elements even when they're not at the top of the dom
+                newActive.find("#inactivePostPrivacy-private").attr('id','postPrivacy-private');
+                newActive.find("#inactivePseudoPrivacy-draft").attr('id','pseudoPrivacy-draft');
                 startInfiniteScroll();
                 prePopState = e.state.hid;
                 $(window).scrollTop(e.state.scrollPos);
-                console.log(e.state.scrollPos);
             } else {
                 window.location.href = e.state.url;
             }
@@ -130,9 +135,9 @@ function startInfiniteScroll() {
         //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value
             //if we've just gotten to this page, or if we've just made a post the feed is emptied and needPostsOlderThan is set so that the new post loads on top of the feed
             path: function() {
-                if ($('.active-feed-container').find(".oldesttimestamp").length) {
+                if ($active(".oldesttimestamp").length) {
                     //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-                    return activeScrollPath + $('.active-feed-container').find(".oldesttimestamp").last().html();
+                    return activeScrollPath + $active(".oldesttimestamp").last().html();
                 }
                 //this is for when the feed is currently empty and is being loaded/reloaded
                 return activeScrollPath + needPostsOlderThan;

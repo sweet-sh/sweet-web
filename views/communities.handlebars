@@ -115,6 +115,8 @@
 
 <script type="text/javascript">
 
+$(function(){
+
 attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
 attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
 
@@ -181,5 +183,6 @@ $("#newCommunityForm").submit(function(e){
   $(document).on('input', '#communityName', function() {
     $("#communitySlug").text(slugify($(this).val()))
   });
+});
 
 </script>

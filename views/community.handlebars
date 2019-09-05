@@ -321,6 +321,8 @@ attachQuill(document.getElementById("communityDescriptionHtml"),"Write something
 attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
 attachQuill(document.getElementById("welcomeMessageHtml"),"Write something. Highlight to format",true);
 
+//todo: does any of this work
+
 $("#rulesForm").submit(function(e){
   $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());
   return true;
@@ -336,7 +338,7 @@ $("#welcomeMessageForm").submit(function(e){
   return true;
 })
 
-$('.active-feed-container').find('#community-image-button').click(function(e) {
+$active('#community-image-button').click(function(e) {
   let button = $(this);
   if(button.parent().find("input[type='file']")){ //if a file is being submitted
     if(!button.parent().find("input[type='file']").val()){ //and its value isn't set

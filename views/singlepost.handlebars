@@ -38,7 +38,7 @@ $(function() {
       console.log("images loaded: " + imagesLoaded);
       var imagesLightboxed = 0;
       //i think when you're looking at a single post it makes perfect sense to be able to slideshow through all the images in the post + comments at once  
-      $('.post-images a').simpleLightbox();
+      thisContainer.find('.post-images a').simpleLightbox();
     }
   
 {{#if loggedIn}}

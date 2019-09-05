@@ -176,8 +176,10 @@ $(function() {
                     images.simpleLightbox();
                 }
                 //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
-                $('body').on('hidden.bs.modal', '#editPostModal', function(e) { e.target.remove();
-                    $('body').off('hidden.bs.modal'); })
+                $('body').on('hidden.bs.modal', '#editPostModal', function(e) {
+                    e.target.remove();
+                    $('body').off('hidden.bs.modal');
+                })
                 $("#editPostModal").modal('hide');
                 //scroll to the newly edited post if the top or bottom is offscreen
                 var posttop = postContainer.offset().top;
@@ -285,7 +287,7 @@ $(function() {
     })
 
     //function for very specifically submitting a post, not a comment
-    $("#postSubmit").click(function(e) {
+    $("body").on("click", "#postSubmit", function(e) {
         e.preventDefault();
         $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
         let form = $(this).closest('.contentForm');
@@ -313,10 +315,10 @@ $(function() {
                 innerEditor.html("");
                 button.attr('disabled', false);
                 //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
-                if (!form.find("#pseudoPrivacy-draft").is(":checked") || activeScrollPath=='/drafts/') {
-                    if (!form.find("#pseudoPrivacy-draft").is(":checked") && activeScrollPath=='/drafts/') {
+                if (!form.find("#pseudoPrivacy-draft").is(":checked") || activeScrollPath == '/drafts/') {
+                    if (!form.find("#pseudoPrivacy-draft").is(":checked") && activeScrollPath == '/drafts/') {
                         //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
-                        $('.active-post-container').find('#toggle-drafts-mode').click();
+                        $active('#toggle-drafts-mode').click();
                     }
                     restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
                 } else {

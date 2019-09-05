@@ -24,15 +24,15 @@
       activeScrollPath = '/showsearch/{{query}}/';
       startInfiniteScroll();
       
-      $('#searchForm').submit(function(e) {
+      $active('#searchForm').submit(function(e) {
           e.preventDefault();
-          var searchTerm = $('.active-feed-container').find('#searchQuery').val();
-          $('#searchTitle').html('Search: ' + searchTerm);
+          var searchTerm = $active('#searchQuery').val();
+          $active('#searchTitle').html('Search: ' + searchTerm);
           switchFeedWithinPage('/search/' + searchTerm, '/showsearch/' + searchTerm + '/');
           window.addEventListener('popstate', function() {
               var searchTerm = window.location.pathname.replace(/\/search\//, ''); //slightly hacky way to extract the current search term from the current url
-              $('#searchTitle').html('Search: ' + searchTerm);
-              $('#searchQuery').val(searchTerm);
+              $active('#searchTitle').html('Search: ' + searchTerm);
+              $active('#searchQuery').val(searchTerm);
           });
       });
   })
