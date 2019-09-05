@@ -409,7 +409,8 @@ module.exports = function(app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'search',
-            query: req.params.query
+            query: req.params.query,
+            metadata: {title: "Search: "+req.params.query} //more stuff could go here huh
         })
     })
 
@@ -563,7 +564,8 @@ module.exports = function(app) {
                                             loggedIn: true,
                                             loggedInUserData: req.user,
                                             oldesttimestamp: oldesttimestamp.getTime(),
-                                            results: parsedResults.slice(0, resultsPerPage)
+                                            results: parsedResults.slice(0, resultsPerPage),
+                                            query: req.params.query
                                         });
                                     }
                                 })
@@ -1376,7 +1378,7 @@ module.exports = function(app) {
             var flagged = false;
         }
 
-        if(profileData.profileVisibility != "invisible"){
+        if(profileData.profileVisibility != "invisible" || req.isAuthenticated()){
             var metadata = {
                 title: profileData.displayName+' (@'+profileData.username+') on sweet',
                 description: profileData.aboutRaw,

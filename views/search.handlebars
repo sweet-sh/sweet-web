@@ -1,6 +1,6 @@
-<div id="homeBody" class="row justify-content-center active-feed-container">
+<div id="homeBody" class="row justify-content-center active-feed-container" data-title="{{#if query}}{{query}}{{else}}Search{{/if}}">
   <div class="col-lg-8">
-    <h3 id="searchTitle" class="page-header mx-2">{{#if query}}{{#eq query ""}}Search{{else}}Search: {{query}}{{/eq}}{{else}}Search{{/if}}</h3>
+    <h3 id="searchTitle" class="page-header mx-2">Search{{#if query}}: {{query}}{{/if}}</h3>
       <form id="searchForm">
         <input id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags."/>
         <button type="submit" class="button">Search</button>
@@ -20,14 +20,15 @@
 </div>
 
 <script>
+  activeScrollPath = '/showsearch/{{query}}/';
   $(function() {
-      activeScrollPath = '/showsearch/{{query}}/';
       startInfiniteScroll();
       
       $active('#searchForm').submit(function(e) {
           e.preventDefault();
           var searchTerm = $active('#searchQuery').val();
           $active('#searchTitle').html('Search: ' + searchTerm);
+          document.title = 'Search: ' + searchTerm;
           switchFeedWithinPage('/search/' + searchTerm, '/showsearch/' + searchTerm + '/');
           window.addEventListener('popstate', function() {
               var searchTerm = window.location.pathname.replace(/\/search\//, ''); //slightly hacky way to extract the current search term from the current url

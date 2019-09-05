@@ -12,10 +12,10 @@
   <script type="text/javascript">
     if ($('.notification-active').length > 0) {
       $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
-      document.title = '(⚐) sweet';
+      document.title = '(⚐) ' + document.title;
     } else {
       $(".notifications-count").html('');
-      document.title = 'sweet';
+      document.title = document.title.replace(/\(⚐\)\ /,'');
     }
   </script>
   {{/unless}}

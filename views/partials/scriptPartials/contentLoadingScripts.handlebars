@@ -72,6 +72,9 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                     success: function(data) {
                         $('.new-feed-container-load-status').css('display','none');
                         $('.inactive-feed-container').last().after(data);
+                        if($('.active-feed-container').attr('data-title')){
+                            document.title = $('.active-feed-container').attr('data-title');
+                        }
                         var editor = $active("#editor");
                         if (editor.length) {
                             attachQuill(editor[0]); //comment fields have the editor attached as the post loads, but new post forms need to be attached as the feed container loads, like this
@@ -219,7 +222,7 @@ $(function(){
     socket.on('notification', function(notifHTML){
         $("#notificationsContainer").prepend(notifHTML);
         $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
-        document.title = '(⚐) sweet';
+        document.title = '(⚐) ' + document.title;        
     });
     
     socket.on('notification(s) read', function(readNotifsArray){
@@ -229,7 +232,7 @@ $(function(){
         }
         if(notificationsContainer.children('.notification-active').length === 0){
             $('.notifications-count').html('');
-            document.title = 'sweet';
+            document.title = document.title.replace(/\(⚐\)\ /,'');
         }
     });
 
