@@ -1463,6 +1463,10 @@ module.exports = function(app) {
     app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
         try {
             const metadata = await helper.getLinkMetadata(req.body.url);
+            //when the embed with this data is rendered in a post server-side, handlebars will escape the html characters bc the info is in double-braces,
+            //not triple; but for the link preview previews in the browser, we have to escape them here.
+            metadata.description = helper.escapeHTMLChars(metadata.description);
+            metadata.title = helper.escapeHTMLChars(metadata.title);
             res.setHeader('content-type', 'text/plain');
             res.send(JSON.stringify(metadata))
         } catch (err) {

@@ -24,17 +24,10 @@ module.exports = function(app, passport) {
             }
             res.redirect(301, '/signup');
         } else {
-            req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({
-                max: 80
-            });
+            req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({ max: 80 });
             req.checkBody('username', 'Username can contain only lowercase letters, numbers, - (dash) and _ (underscore).').matches(/^[a-z0-9-_]+$/);
-            req.checkBody('username', 'Username must be between 2 and 20 characters long.').isLength({
-                min: 2,
-                max: 20
-            })
-            req.checkBody('password', 'Password must be at least 8 characters long.').isLength({
-                min: 8
-            });
+            req.checkBody('username', 'Username must be between 2 and 20 characters long.').isLength({ min: 2, max: 20 })
+            req.checkBody('password', 'Password must be at least 8 characters long.').isLength({ min: 8 });
             req.checkBody('password', 'Passwords do not match.').equals(req.body.passwordrepeat)
 
             req.getValidationResult().then(function(result) {
@@ -215,6 +208,8 @@ module.exports = function(app, passport) {
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {
+                        //deletemany with this regex means this will also delete public link metadata for the user's posts in case their privacy just changed, and not using a full url means this will also work with test users on test servers
+                        mongoose.model('Cached Link Metadata').deleteMany({retrievalUrl: {$regex: new RegExp('\/'+user.username)}}, function(err){if(err){console.log(err)}});
                         res.redirect('back');
                     })
                     .catch((err) => {

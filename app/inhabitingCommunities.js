@@ -879,6 +879,9 @@ module.exports = function(app, passport) {
 
                                 if (vote.votes >= majorityMargin) {
                                     console.log("Vote passed!")
+                                    if(vote.reference=='description' || vote.reference=='title' || vote.reference=='image'){
+                                        mongoose.model('Cached Link Metadata').deleteMany({retrievalUrl: {$regex: new RegExp('\/'+community.name)}}, function(err){if(err){console.log(err)}});
+                                    }
                                     if (vote.reference == "visibility") {
                                         community.settings[vote.reference] = vote.proposedValue;
                                         Image.find({
