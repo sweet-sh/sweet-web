@@ -225,12 +225,13 @@ $(function() {
           $this.attr('data-action',"unboost");
           $this.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span> Unboost post');
           $this.attr('data-boost-url','/removeboost/'+$this.closest('.post').attr('data-post-id'));
+          dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
         }else{
           $this.attr('data-action',"boost");
           $this.html('<i class="fas fa-fw fa-user-circle"></i> Boost post to your profile');
           $this.attr('data-boost-url','/createboost/'+$this.closest('.post').attr('data-post-id')+'/userfeed');
+          dropdownParent.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span>&nbsp;<i class="fa fa-check"></i>');
         }
-        dropdownParent.closest('.dropdown').find('#post-boosting-dropdown').html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');        
       })
     })
 
