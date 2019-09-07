@@ -213,13 +213,13 @@ $(function() {
                 modal.find('#communities-dropdown').append("<option data-slug='"+community.slug+"' value='"+community._id+"'>"+community.name+"</option>");
             })
         })
-
         modal.find('#original-post-id').val(postID);
     })
 
     $('body').on('click', '.boost-post-userfeed', function(){
       var $this = $(this);
-      $this.html('<i class=fa fa-spinner fa-spin"></i>');
+      var dropdownParent = $this.closest('.dropdown').find('#post-boosting-dropdown');
+      dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
       $.post($this.attr('data-boost-url')).done(function(){
         if($this.attr('data-action')=="boost"){
           $this.attr('data-action',"unboost");
@@ -230,19 +230,21 @@ $(function() {
           $this.html('<i class="fas fa-fw fa-user-circle"></i> Boost post to your profile');
           $this.attr('data-boost-url','/createboost/'+$this.closest('.post').attr('data-post-id')+'/userfeed');
         }
+        dropdownParent.closest('.dropdown').find('#post-boosting-dropdown').html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');        
       })
     })
 
     $('body').on('click', '.boost-post-into-community', function() {
-        var modal = $(this).closest("#boostPostLocationModal")
-        var postID = modal.find('#original-post-id').val();
-        var targetCommunitySlug = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
-        var targetCommunityID = $(this).closest("#boostPostLocationModal").find('#communities-dropdown').val();
         var $this = $(this);
-        $this.html('<i class="fa fa-spinner fa-spin"></i>');
+        var modal = $this.closest("#boostPostLocationModal")
+        var postID = modal.find('#original-post-id').val();
+        var targetCommunitySlug = $this.closest("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
+        var targetCommunityID = $this.closest("#boostPostLocationModal").find('#communities-dropdown').val();
+        var dropdownParent = $this.closest('.dropdown').find('#post-boosting-dropdown');
+        dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
         $.post("/createboost/" + postID + "/" + targetCommunityID).done(function(data){
           modal.modal('hide');
-          //todo: add boost header to post once it is figured out what that will look like
+          dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
         });
     });
 
