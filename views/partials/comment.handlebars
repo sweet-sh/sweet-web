@@ -19,7 +19,7 @@
                 <div class="comment-header-divider">
                     &middot;
                 </div>
-                <aside class="timestamp">
+                <aside class="timestamp" data-timestamp="{{this.timestampMs}}" onmouseover="resolveTimestamp(this);" ontouchstart="touchResolveTimestamp(this);">
                     {{this.parsedTimestamp}}
                 </aside>
             </div>

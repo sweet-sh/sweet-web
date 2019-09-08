@@ -351,6 +351,42 @@ module.exports = {
             return cleanedParsedContent;
         }
     },
+    //returns a metadata object with title, description, image, and url for the input post document
+    getPostMetadata: function(post){
+        if (post) {
+            var imageCont = undefined;
+            if (post.inlineElements && post.inlineElements.length && (imageCont = (post.inlineElements.find(v => v.type == "image(s)")))) {
+                var metadataImage = "https://sweet.sh/api/image/display/" + imageCont.images[0];
+            } else if (post.images && post.images.length) {
+                var metadataImage = ((!post.imageVersion || post.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + post.images[0];
+            } else if (post.author.imageEnabled) {
+                var metadataImage = "https://sweet.sh/images/" + post.author.image;
+            } else {
+                var metadataImage = "https://sweet.sh/images/cake.svg";
+            }
+            var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(post.internalPostHTML)
+            if (firstLine && firstLine[1]) {
+                firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '');
+            } else {
+                firstLine = "Just another ol' good post on sweet";
+            }
+            var metadata = {
+                title: "@" + post.author.username + " on sweet",
+                description: firstLine,
+                image: metadataImage,
+                url: 'https://sweet.sh/' + post.author.username + '/' + post.url
+            }
+        } else {
+            // We add some dummy metadata for posts which error
+            var metadata = {
+                title: "sweet • a social network",
+                description: "",
+                image: "https://sweet.sh/images/cake.svg",
+                url: "https://sweet.sh/"
+            }
+        }
+        return metadata;
+    },
     isEven: function(n) {
         return n % 2 == 0;
     },

@@ -158,12 +158,6 @@ moment.updateLocale('en', {
         MM: "%dmon ago",
         y: "1y ago",
         yy: "%dy ago"
-    },
-    calendar: {
-        sameDay: '[today at] h:mm a [UTC]Z',
-        lastDay: '[yesterday at] h:mm a [UTC]Z',
-        lastWeek: '[last] dddd [at] h:mm a [UTC]Z',
-        sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
     }
 });
 var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]';
