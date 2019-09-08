@@ -144,8 +144,8 @@ module.exports = {
     },
     getLinkMetadata: async function(url) {
         //remove the protocol and the path if it's empty from the url bc that's how it's stored in the cache (that way it matches it with or without)
-        var parsedUrl = Object.assign(urlParser.parse(url),{protocol:"",slashes:false});
-        if(parsedUrl.path=="/" && parsedUrl.pathname=="/"){
+        var parsedUrl = Object.assign(urlParser.parse(url), { protocol: "", slashes: false });
+        if (parsedUrl.path == "/" && parsedUrl.pathname == "/") {
             parsedUrl.path = "";
             parsedUrl.pathname = "";
         }
@@ -156,7 +156,7 @@ module.exports = {
         var cacheHit = !!found;
         if (!cacheHit) {
             var urlreq = new Promise(function(resolve, reject) {
-                request({ url: url.includes("//") ? url : ("http://"+url), gzip: true }, function(error, response, body) { //(faking a maybe-wrong protocol here just so the this thing will accept it)
+                request({ url: url.includes("//") ? url : ("http://" + url), gzip: true }, function(error, response, body) { //(faking a maybe-wrong protocol here just so the this thing will accept it)
                     if (error) {
                         reject(error);
                     } else {
@@ -177,7 +177,7 @@ module.exports = {
             linkUrl: finalUrl,
             image: metadata.image,
             title: metadata.title,
-            description:metadata.description,
+            description: metadata.description,
             domain: urlParser.parse(finalUrl).hostname
         }
         //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
@@ -352,17 +352,18 @@ module.exports = {
         }
     },
     //returns a metadata object with title, description, image, and url for the input post document
-    getPostMetadata: function(post){
+    getPostMetadata: function(post) {
         if (post) {
             var imageCont = undefined;
+            var origin = process.env.NODE_ENV == 'development' ? 'http://localhost:8686' : 'https://sweet.sh';
             if (post.inlineElements && post.inlineElements.length && (imageCont = (post.inlineElements.find(v => v.type == "image(s)")))) {
-                var metadataImage = "https://sweet.sh/api/image/display/" + imageCont.images[0];
+                var metadataImage = origin + "/api/image/display/" + imageCont.images[0];
             } else if (post.images && post.images.length) {
-                var metadataImage = ((!post.imageVersion || post.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + post.images[0];
+                var metadataImage = ((!post.imageVersion || post.imageVersion < 2) ? origin + "/images/uploads/" : origin + "/api/image/display/") + post.images[0];
             } else if (post.author.imageEnabled) {
-                var metadataImage = "https://sweet.sh/images/" + post.author.image;
+                var metadataImage = origin + "/images/" + post.author.image;
             } else {
-                var metadataImage = "https://sweet.sh/images/cake.svg";
+                var metadataImage = origin + "/images/cake.svg";
             }
             var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(post.internalPostHTML)
             if (firstLine && firstLine[1]) {
@@ -374,7 +375,7 @@ module.exports = {
                 title: "@" + post.author.username + " on sweet",
                 description: firstLine,
                 image: metadataImage,
-                url: 'https://sweet.sh/' + post.author.username + '/' + post.url
+                url: origin + '/' + post.author.username + '/' + post.url
             }
         } else {
             // We add some dummy metadata for posts which error
