@@ -193,13 +193,19 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 socketCity = require('./app/socketSetup.js')(io);
-
-// routes ======================================================================
 helper = require('./app/utilityFunctionsMostlyText.js');
-require('./app/statisticsTracker.js')(app, mongoose);
-notifier = require('./app/notifier.js');
 emailer = require('./app/emailer.js');
+notifier = require('./app/notifier.js');
+
+// route handlers setup ======================================================================
+require('./app/statisticsTracker.js')(app, mongoose);
 require('./app/personalAccountActions.js')(app, passport);
+//a fun meta-route used to load the following page types dynamically: home, tag, search, notifications, user profile (not drafts), single post, and community.
+app.get(/\/internal$/, function(req, res, next){
+    req.noLayout = true;
+    req.url = req.path = req.url.replace(/\/internal$/, '');
+    next('route');
+})
 require('./app/inhabitingCommunities.js')(app, passport);
 require('./app/viewingSweet.js')(app);
 require('./app/postingToSweet.js')(app);

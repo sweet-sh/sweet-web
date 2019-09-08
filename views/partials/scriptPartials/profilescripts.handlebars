@@ -21,7 +21,7 @@
         $.post("/useraction/" + relType + "/" + addOrDelete + "/{{profileData._id}}", function (result) {
           $('.active-feed-container').css('display','none');
           $('.new-feed-container-load-status').css('display','block');
-          $.get(window.location.href+'/internalized', function(data){
+          $.get(window.location.href+'/internal', function(data){
             $('.new-feed-container-load-status').css('display','none');
             $('.active-feed-container').replaceWith(data);
           })

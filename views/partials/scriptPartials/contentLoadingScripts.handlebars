@@ -68,7 +68,7 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
                 prevFeedCont.removeClass('active-feed-container').addClass('inactive-feed-container');
                 $('.new-feed-container-load-status').css('display','block');
                 $.get({
-                    url: fullDestUrl + '/internalized',
+                    url: fullDestUrl + '/internal',
                     success: function(data) {
                         $('.new-feed-container-load-status').css('display','none');
                         $('.inactive-feed-container').last().after(data);

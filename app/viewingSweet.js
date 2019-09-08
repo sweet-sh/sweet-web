@@ -136,23 +136,6 @@ module.exports = function(app) {
         });
     });
 
-    //Responds to get requests for the profile of someone with a certain email. Deprecated? Is this used?
-    //Input: the email
-    //Output: redirect to /the username of the person with that email, unless isLoggedInOrRedirect redirects you
-    app.get('/getprofile/:email', isLoggedInOrRedirect, function(req, res) {
-        User.findOne({
-            email: req.params.email
-        }).then((user) => {
-            res.redirect('/' + user.username);
-        })
-    });
-
-    app.get('/home/internalized', function(req, res, next) {
-        req.internalize = true;
-        req.url = req.path = '/home';
-        next('route');
-    })
-
     //Responds to get requests for the home page.
     //Input: none
     //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
@@ -279,7 +262,7 @@ module.exports = function(app) {
         res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         res.setHeader("Expires", "0"); // Proxies.
         res.render('home', {
-            layout: req.internalize ? false : 'main',
+            layout: req.noLayout ? false : 'main',
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'home',
@@ -317,27 +300,6 @@ module.exports = function(app) {
         })
     })
 
-    app.get('/tag/:name/internalized', isLoggedInOrRedirect, function(req, res) {
-        Tag.findOne({ name: req.params.name }).then((tag) => {
-            if (tag) {
-                res.render('tag', {
-                    layout: false,
-                    name: req.params.name,
-                    loggedIn: true,
-                    loggedInUserData: req.user
-                })
-            } else {
-                res.redirect('/404');
-            }
-        })
-    })
-
-    app.get('/notifications/internalized', function(req, res, next) {
-        req.internalize = true;
-        req.url = req.path = '/notifications';
-        next('route');
-    })
-
     //Responds to get requests for /notifications. I think this is only used on mobile?
     //Input: none
     //Output: renders notifications page, which renders as "you're not logged in" if you're not logged in
@@ -346,7 +308,7 @@ module.exports = function(app) {
             User.findOne({ _id: req.user._id }, 'notifications').then(user => {
                 user.notifications.reverse();
                 res.render('notifications', {
-                    layout: req.internalize ? false : 'main',
+                    layout: req.noLayout ? false : 'main',
                     loggedIn: true,
                     loggedInUserData: req.user,
                     notifications: user.notifications,
@@ -355,7 +317,7 @@ module.exports = function(app) {
             })
         } else {
             res.render('notifications', {
-                layout: req.internalize ? false : 'main',
+                layout: req.noLayout ? false : 'main',
                 loggedIn: false,
                 activePage: 'notifications'
             });
@@ -668,12 +630,6 @@ module.exports = function(app) {
         })
     })
 
-    app.get('/:username/internalized', function(req, res, next) {
-        req.internalize = true;
-        req.url = req.path = '/' + req.params.username;
-        next('route');
-    });
-
     app.get('/drafts', function(req, res, next) {
         req.draftsFirst = true;
         req.url = req.path = '/' + req.user.username;
@@ -687,16 +643,6 @@ module.exports = function(app) {
         if (req.params.username != 'images') { //a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
             req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
             req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
-            next('route');
-        }
-        return;
-    })
-
-    app.get('/:username/:posturl/internalized', function(req, res, next) {
-        if (req.params.username != 'images') { //shouldn't be relevant but i'm leaving it in
-            req.url = req.path = "/showposts/single/" + req.params.posturl + "/1";
-            req.singlepostUsername = req.params.username; //slightly sus way to pass this info to showposts
-            req.internalize = true;
             next('route');
         }
         return;
@@ -872,8 +818,7 @@ module.exports = function(app) {
                 var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
             }
         } else if (req.params.context == "tag") {
-            var matchPosts = { _id: { $in: Tag.findOne({ name: req.params.identifier }).posts }, type: { $ne: "draft" } }
-            return matchPosts;
+            var matchPosts = { _id: { $in: (await Tag.findOne({ name: req.params.identifier })).posts }, type: { $ne: "draft" } };
             var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
         } else if (req.params.context == "single") {
             var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }));
@@ -1165,7 +1110,7 @@ module.exports = function(app) {
                 var isMember = false;
             }
             res.render('singlepost', {
-                layout: req.internalize ? false : 'main',
+                layout: req.noLayout ? false : 'main',
                 canDisplay: canDisplay,
                 loggedIn: req.isAuthenticated(),
                 loggedInUserData: loggedInUserData,
@@ -1286,7 +1231,7 @@ module.exports = function(app) {
         }
 
         res.render('user', Object.assign(renderData, {
-            layout: req.internalize ? false : 'main',
+            layout: req.noLayout ? false : 'main',
             profileData: profileData,
             draftsFirst: req.draftsFirst,
             loggedIn: req.isAuthenticated(),
@@ -1326,7 +1271,7 @@ module.exports = function(app) {
 
     app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
         try {
-            const metadata = await helper.getLinkMetadata(req.body.url);
+            const metadata = await helper.getLinkMetadata(req.body.url, true);
             //when the embed with this data is rendered in a post server-side, handlebars will escape the html characters bc the info is in double-braces,
             //not triple; but for the link preview previews in the browser, we have to escape them here.
             metadata.description = helper.escapeHTMLChars(metadata.description);

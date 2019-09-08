@@ -142,7 +142,7 @@ module.exports = {
             return entityMap[s];
         });
     },
-    getLinkMetadata: async function(url) {
+    getLinkMetadata: async function(url, forceRefresh=false) {
         //remove the protocol and the path if it's empty from the url bc that's how it's stored in the cache (that way it matches it with or without)
         var parsedUrl = Object.assign(urlParser.parse(url), { protocol: "", slashes: false });
         if (parsedUrl.path == "/" && parsedUrl.pathname == "/") {
@@ -152,8 +152,15 @@ module.exports = {
         var retrievalUrl = urlParser.format(parsedUrl);
         var finalUrl; //this will have the correct protocol, obtained either by the cache or the request package
         var cache = mongoose.model('Cached Link Metadata');
-        var found = await cache.findOne({ retrievalUrl: retrievalUrl });
-        var cacheHit = !!found;
+        if(!forceRefresh){
+            console.log('looking in cache for link metadata');
+            var found = await cache.findOne({ retrievalUrl: retrievalUrl });
+            var cacheHit = !!found;
+            (found&&(console.log('found link metadata in cache')));
+        }else{
+            await cache.deleteOne({retrievalUrl:retrievalUrl},function(err){if(err)(console.error(err))});
+            var cacheHit = found = false;
+        }
         if (!cacheHit) {
             var urlreq = new Promise(function(resolve, reject) {
                 request({ url: url.includes("//") ? url : ("http://" + url), gzip: true }, function(error, response, body) { //(faking a maybe-wrong protocol here just so the this thing will accept it)
@@ -161,6 +168,7 @@ module.exports = {
                         reject(error);
                     } else {
                         finalUrl = response.request.href;
+                        console.log('retrieved link metadata');
                         resolve(body);
                     }
                 });
@@ -213,6 +221,7 @@ module.exports = {
         }
         result.isEmbeddableVideo = isEmbeddableVideo;
         if (!cacheHit) {
+            console.log('saving new link metadata in cache');
             (new cache(result)).save();
         }
         return result;
