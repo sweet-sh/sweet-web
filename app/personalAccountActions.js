@@ -208,8 +208,6 @@ module.exports = function(app, passport) {
                 user.image = imageFilename;
                 user.imageEnabled = imageEnabled;
                 user.save().then(() => {
-                        //deletemany with this regex means this will also delete public link metadata for the user's posts in case their privacy just changed, and not using a full url means this will also work with test users on test servers
-                        mongoose.model('Cached Link Metadata').deleteMany({retrievalUrl: {$regex: new RegExp('\/'+user.username)}}, function(err){if(err){console.log(err)}});
                         res.redirect('back');
                     })
                     .catch((err) => {
