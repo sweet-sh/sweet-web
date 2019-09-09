@@ -235,13 +235,17 @@ $(function() {
       })
     })
 
+    $('body').on('click', '.boost-post-community', function(){
+      document.getElementById('boostPostLocationModal').dropdownParent = $(this).closest('.dropdown').find('#post-boosting-dropdown');
+    })
+
     $('body').on('click', '.boost-post-into-community', function() {
         var $this = $(this);
         var modal = $this.closest("#boostPostLocationModal")
         var postID = modal.find('#original-post-id').val();
-        var targetCommunitySlug = $this.closest("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
-        var targetCommunityID = $this.closest("#boostPostLocationModal").find('#communities-dropdown').val();
-        var dropdownParent = $this.closest('.dropdown').find('#post-boosting-dropdown');
+        var targetCommunitySlug = $("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
+        var targetCommunityID = $("#boostPostLocationModal").find('#communities-dropdown').val();
+        var dropdownParent = document.getElementById('boostPostLocationModal').dropdownParent;
         dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
         $.post("/createboost/" + postID + "/" + targetCommunityID).done(function(data){
           modal.modal('hide');

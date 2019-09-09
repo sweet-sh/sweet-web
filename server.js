@@ -200,10 +200,10 @@ notifier = require('./app/notifier.js');
 // route handlers setup ======================================================================
 require('./app/statisticsTracker.js')(app, mongoose);
 require('./app/personalAccountActions.js')(app, passport);
-//a fun meta-route used to load the following page types dynamically: home, tag, search, notifications, user profile (not drafts), single post, and community.
+//a fun meta-route used to load the content of the following page types dynamically: home, tag, search, notifications, user profile (not drafts), single post, and community.
 app.get(/\/internal$/, function(req, res, next){
-    req.noLayout = true;
-    req.url = req.path = req.url.replace(/\/internal$/, '');
+    req.noLayout = true; //tell the route handler not to place the page content within a layout (it passes this info to the handlebars renderer)
+    req.url = req.path = req.url.replace(/\/internal$/, ''); //change the path/url so express will pass this request to the general handler for the relevant page
     next('route');
 })
 require('./app/inhabitingCommunities.js')(app, passport);
