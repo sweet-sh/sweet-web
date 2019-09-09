@@ -127,6 +127,9 @@ module.exports = {
     },
     //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
     escapeHTMLChars: function(string) {
+        if(!string){
+            return ""; //otherwise the string constructor below will try to make the input into a string object and end up with null, and the caller prob. expects a string
+        }
         var entityMap = {
             '&': '&amp;',
             '<': '&lt;',
@@ -422,7 +425,6 @@ module.exports = {
 function wordCount(str) {
     return str.split(' ').filter(function(n) { return n != '' }).length;
 }
-
 
 //the following is a function i wrote to parse quilljs' delta format and turn formatted text into html and inline elements into an array. it turned
 //out to be more complicated than necessary so right now we're actually just going to pull the html from the quill editor directly and process it in

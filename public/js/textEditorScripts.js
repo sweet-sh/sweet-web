@@ -22,6 +22,7 @@ function updateSubmitButtonState(postForm) {
 
 //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
 function clearEmbed(e) {
+    e.preventDefault();
     var container = $(this).closest('.slidable-embed');
     if (container.hasClass('image-preview-container') && !container.attr('imagealreadysaved') && !container.hasClass('still-loading')) {
         $.post('/cleartempimage', { imageURL: container.attr('image-url') });
@@ -77,6 +78,8 @@ class LinkPreview extends BlockEmbed {
                 m.find('.image-clear').click();
             } else {
                 var linkInfo = JSON.parse(data);
+                console.log(JSON.stringify(linkInfo,null,4));
+                node.setAttribute('href', linkInfo.linkUrl);
                 if (linkInfo.image) {
                     m.find(".link-preview-image").replaceWith('<img class="link-preview-image" src="' + linkInfo.image + '" />')
                 } else {
@@ -865,4 +868,8 @@ window.addEventListener('unload', function(e){
             $.post('/cleartempimage', { imageURL: e.getAttribute('image-url') });
         }
     })
+})
+
+$('body').on('click', '.link-preview-container', function(e){
+    e.preventDefault();
 })
