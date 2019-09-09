@@ -421,6 +421,10 @@ function attachQuill(element, placeholder, embedsForbidden) {
         }
     }
 
+    element.getQuill = function(){
+        return quill;
+    }
+
     //the following code deals with embeds and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
     if (!embedsForbidden) {
         //prevent there from ever being embeds at the end of the content with no new lines after to type text on
