@@ -36,9 +36,9 @@ if(window.activeScrollPath){ //so don't do any of this for the settings page, et
 
     //this intercepts clicks on relative links and, if their paths pass the test from the above function, loads a new feed container into the existing page 
     $('body').on('click', 'a', function(e) {
-        try{
-            var href = this.getAttribute('href'); //for relative links, this gives the path (the part of the url starting after the domain name and port).
-            if (href.substring(0, 1) == "/" && isStackablePath(href)) { //checks to see if this is just a path, meaning it's a relative link, and then that it's one that's allowed to be intercepted
+        try{ //emphasis on the "try"
+            if (this.host==window.location.host && this.getAttribute('href')!='#' && isStackablePath(this.pathname)) { //checks to see if this is a relative link, and then that it's one that's allowed to be intercepted
+                var href = this.pathname;
                 e.preventDefault();
                 if (href.includes('#')) {
                     var hrefComps = href.split('#');
@@ -171,20 +171,6 @@ function restartInfiniteScroll(timestamp) {
     });
 }
 
-// Globally defining the check height function (should this go somewhere ... else?)
-function showMoreAndImageLightboxing(e) {
-    var contentCont = $(e.find('.content')[0]);
-    if (contentCont.height() > 550 && !contentCont.hasClass('content-warning-post')) {
-        var content = contentCont.children();
-        content.remove();
-        contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button uppercase-button show-more" data-state="contracted">Show more</button>');
-        contentCont.children('.abbreviated-content').append(content);
-    }
-    var images = contentCont.find('.post-images a');
-    if(images.length){
-        images.simpleLightbox();
-    }
-}
 {{#if loggedIn}}
 
 $(function(){
@@ -274,10 +260,26 @@ $(function(){
         }
     })
 
+    
+// Globally defining the check height function (should this go somewhere ... else?)
+function showMoreAndImageLightboxing(e) {
+    var contentCont = $(e.find('.content')[0]);
+    if (contentCont.height() > 550 && !contentCont.hasClass('content-warning-post')) {
+        var content = contentCont.children();
+        content.remove();
+        contentCont.append('<div class="abbreviated-content"></div><button type="button" class="button grey-button uppercase-button show-more" data-state="contracted">Show more</button>');
+        contentCont.children('.abbreviated-content').append(content);
+    }
+    var images = contentCont.find('.post-images a');
+    if(images.length){
+        images.simpleLightbox();
+    }
+}
+
 $(function(){
 
     //this runs when posts are added to the active feed container to hide long ones behind "show more"s and make the images bring up the lightbox when you click on them.
-    $('.postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
+    $('body').on('append.infiniteScroll', '.postsContainer', function (event, response, path, items) {
         var newlyLoadedStuff = $(items);
 
         newlyLoadedStuff.each(function(i,e){

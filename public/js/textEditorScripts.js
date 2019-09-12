@@ -874,6 +874,6 @@ window.addEventListener('unload', function(e){
     })
 })
 
-$('body').on('click', '.link-preview-container', function(e){
+$('body').on('click', '.ql-editor .link-preview-container', function(e){
     e.preventDefault();
 })
