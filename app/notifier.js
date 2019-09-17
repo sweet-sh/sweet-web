@@ -38,7 +38,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                         var image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg');
                         var username = '@' + user.username;
                         var final = '<strong>' + username + '</strong> ' + text;
-                        var emailText = notifEmails[cause] ? notifEmails[cause] : "";
+                        var emailText = notifEmails[cause] ? ('<strong>' + username + '</strong> ' + notifEmails[cause]) : "";
                         return {
                             image: image,
                             text: final,

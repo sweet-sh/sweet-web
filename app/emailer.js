@@ -134,11 +134,12 @@ function emailScheduler(user, justSentOne = false) {
 
 async function sendUpdateEmail(user) {
     try {
-        email = {};
+        user = await User.findById(user._id); //refetch the user document from the database to guarantee that the latest notifications are present in it
+        var subject = "";
         if (user.settings.digestEmailFrequency == "daily") {
-            email.subject = "sweet daily update 🍭"
+            subject = "sweet daily update 🍭";
         } else if (user.settings.digestEmailFrequency == "weekly") {
-            email.subject = "sweet weekly update 🍭"
+            subject = "sweet weekly update 🍭";
         } else {
             emailLog("\n" + "sendUpdateEmail was called, but " + user.username + " does not appear to have their email preference set correctly?");
             return;
@@ -149,7 +150,7 @@ async function sendUpdateEmail(user) {
             let info = {
                 from: '"sweet 🍬" <updates@sweet.sh>', // sender address
                 to: user.email,
-                subject: email.subject,
+                subject: subject,
                 template: "update",
                 context: {
                     title: 'sweet',
@@ -211,11 +212,6 @@ function emailRescheduler(user) {
 }
 
 async function sendSingleNotificationEmail(user, notification, link){
-    let singleNotification = [{
-        url: link,
-        image: notification.image,
-        text: notification.emailText
-    }];
     let info = {
                 from: '"sweet 🍬" <updates@sweet.sh>',
                 to: user.email,
