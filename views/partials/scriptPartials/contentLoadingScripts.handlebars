@@ -260,8 +260,8 @@ $(function(){
         }
     })
 
-    
-// Globally defining the check height function (should this go somewhere ... else?)
+//puts a container around tall posts/comments and makes lightbox show up when you click on their images
+//called for each post below in the append.infiniteScroll event after its images load and for each comment when its container is expanded
 function showMoreAndImageLightboxing(e) {
     var contentCont = $(e.find('.content')[0]);
     if (contentCont.height() > 550 && !contentCont.hasClass('content-warning-post')) {
