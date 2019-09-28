@@ -226,17 +226,8 @@ class PostImage extends BlockEmbed {
                     m.find('.image-clear').click();
                 } else {
                     if (serverResponse.thumbnail) {
-                        $.get({
-                            url: serverResponse.thumbnail,
-                            success: function(data) {
-                                m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
-                            },
-                            processData: false,
-                            xhr: function() {
-                                var uploader = new XMLHttpRequest();
-                                uploader.responseType = 'blob';
-                                return uploader;
-                            }
+                        fetch(serverResponse.thumbnail).then(res=>res.blob()).then(blob=>{
+                            m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(blob) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
                         })
                     }
                     m.find('.fader').remove();
