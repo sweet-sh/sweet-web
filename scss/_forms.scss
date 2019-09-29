@@ -465,7 +465,9 @@ button.close {
     position: absolute;
     margin-top:3px;
     padding:3px;
-    opacity:0.6;
+    &>*{
+        display:inline;
+    }
 }
 
 .link-preview-prompt-dismiss {

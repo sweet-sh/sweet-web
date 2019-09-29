@@ -369,7 +369,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
     //prompt the user to add a link preview when a youtube or vimeo url is placed on a new line
     var linkPrompter = new MutationObserver(function(mutationsList) {
         console.log(mutationsList);
-        var linkPreviewPrompt = "<div class='link-preview-prompt'>Click to add link preview<span class='link-preview-prompt-dismiss'>(x)</span></div>";
+        var linkPreviewPrompt = "<div class='link-preview-prompt'><div>Click to add link preview</div><div class='link-preview-prompt-dismiss'>(x)</div></div>";
         for (var i = 0; i < mutationsList.length; i++) {
             if (mutationsList[i].type == "childList" && mutationsList[i].target.nodeName == "P") {
                 if (mutationsList[i].addedNodes.length == 1) {
@@ -380,29 +380,34 @@ function attachQuill(element, placeholder, embedsForbidden) {
                         if (youtubeUrlFindingRegex.test(newText) || vimeoUrlFindingRegex.test(newText)) {
                             $('.link-preview-prompt').remove();
                             var prompt = $(linkPreviewPrompt);
-                            var placement = { left: newTextCont.offsetLeft, top: newTextCont.offsetTop + newTextCont.offsetHeight };
                             $(element).append(prompt);
-                            prompt.css('left', placement.left + 'px').css('top', placement.top + 'px');
-                            //remove the prompt if the url is later removed
-                            var removalWatcher = new MutationObserver(function(){
-                                if(!document.body.contains(newTextNode)){
+                            prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
+                            var parentWatcher = new MutationObserver(function(){
+                                //remove the prompt if the new line containing the url is removed
+                                if(!document.body.contains(newTextCont)){
                                     prompt.remove();
                                     this.disconnect();
+                                }else{
+                                    //make sure the prompt is still positioned directly underneath the url in case stuff is being added/removed below/above it
+                                    console.log(newTextCont);
+                                    prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
                                 }
                             })
+                            parentWatcher.observe(newTextCont.parentNode, {childList:true});
                             var metaWatcher = new MutationObserver(function() {
+                                //remove the prompt if the url itself is altered or deleted
                                 if (!newTextNode || !newTextNode.nodeValue || newTextNode.nodeValue.indexOf(newText) == -1) {
                                     prompt.remove();
                                     this.disconnect();
-                                    removalWatcher.disconnect();
+                                    parentWatcher.disconnect();
                                 }
                             })
                             metaWatcher.observe(newTextNode, { characterData: true });
-                            removalWatcher.observe(newTextNode.parentNode, {childList:true});
                             prompt.click(function(e) {
                                 if (!$(e.target).hasClass('link-preview-prompt-dismiss')) {
                                     var cursorPos = quill.getText().indexOf(newText);
                                     if (cursorPos != -1) {
+                                        cursorPos+=$(newTextCont).prevAll('.slidable-embed').length;
                                         newTextCont.innerHTML = newTextCont.innerHTML.replace(newText, '');
                                         if (newTextCont.innerHTML == '') {
                                             newTextCont.parentElement.removeChild(newTextCont);
@@ -413,7 +418,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
                                 }
                                 prompt.remove();
                                 metaWatcher.disconnect();
-                                removalWatcher.disconnect();
+                                parentWatcher.disconnect();
                             })
                         }
                     }
