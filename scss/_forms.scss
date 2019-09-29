@@ -458,6 +458,20 @@ button.close {
     cursor: text;
 }
 
+.link-preview-prompt {
+    cursor: pointer;
+    background-color: lighten($dark-pink, 5%);
+    border-radius: 3px;
+    position: absolute;
+    margin-top:3px;
+    padding:3px;
+    opacity:0.6;
+}
+
+.link-preview-prompt-dismiss {
+    margin-left:10px;
+}
+
 /* the !important is a slightly suss way to override the background of the in-saved-posts link preview style */
 .slidable-embed {
     transition: background 0.15s ease;
