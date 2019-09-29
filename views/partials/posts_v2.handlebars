@@ -135,6 +135,7 @@
                 </span>
             </a>
         </div>
+        {{#if ../loggedIn}}
         {{#contains this.subscribedUsers ../loggedInUserData._id}}
             <div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button unsubscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Receiving notifications (click to change)">
@@ -148,6 +149,7 @@
                 </button>
             </div>
         {{/contains}}
+        {{/if}}
         {{/isnt}}
         {{#if isYourPost}}
         {{#eq type "draft"}}
