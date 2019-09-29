@@ -84,20 +84,18 @@
     </section>
     <footer class="toolbar">
         {{#unless this.commentsDisabled}}
-            {{#if ../loggedIn}}
+            {{#if ../canReply}}
             <div class="toolbar-button-container">
             	<button type="button" class="button post-toolbar-button show-comments">
                 	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                 </button>
             </div>
             {{else}}
-                {{#if this.numberOfComments}}
-               		<div class="toolbar-button-container">
-                    	<button type="button" class="button post-toolbar-button show-comments">
-                        	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
-                    	</button>
-                    </div>
-                {{/if}}
+                <div class="toolbar-button-container">
+                    <button type="button" class="button post-toolbar-button show-comments"{{#unless numberOfComments}} style="display:none;"{{/unless}}>
+                        <i class="far fa-comment"></i> <span class="comments-number">{{this.numberOfComments}}</span>
+                    </button>
+                </div>
             {{/if}}
         {{/unless}}
         {{#eq this.privacy "public"}}
@@ -107,7 +105,7 @@
                             <i class="fas fa-retweet"></i>
                         </button>
                         <div class="dropdown-menu" aria-labelledby="post-boosting-dropdown">
-                            {{!todo: use a different url for this depending on whether this is the userfeed or a community feed}}
+                            {{!todo: use a different url for this depending on whether this is the user/home feed or a community feed}}
                             <button class="boost-post-userfeed dropdown-item" data-action="{{#if youBoosted}}unboost{{else}}boost{{/if}}" data-boost-url="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}{{#unless youBoosted}}/userfeed{{/unless}}">
                                 {{#if youBoosted}}
                                     <span class="fa-layers fa-fw">

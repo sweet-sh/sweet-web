@@ -243,6 +243,8 @@ $(function(){
 
             cc.append(commentHTML);
 
+            $(activePosts[postID]).find('.show-comments').css('display',''); //bc if there were no comments initially and the user is not permitted to comment this was set to display:none
+
             var counterToChange = activePosts[postID].getElementsByClassName('comments-number')[0];
             if(counterToChange.innerHTML.trim()){
                 counterToChange.innerHTML = parseInt(counterToChange.innerHTML)+1;

@@ -2,7 +2,7 @@ module.exports = function(io) {
     io.on('connection', async (socket) => {
         var sidCookie = undefined;
         try {
-            if (socket.handshake.headers.cookie && (sidCookie = socket.handshake.headers.cookie.match(/connect.sid=s%3A(.*?)\./)[1])) {
+            if (socket.handshake.headers.cookie && socket.handshake.headers.cookie.includes('connect.sid=') && (sidCookie = socket.handshake.headers.cookie.match(/connect.sid=s%3A(.*?)\./)[1])) {
                 var session = await Sessions.findById(sidCookie);
                 var userID = JSON.parse(session.session).passport.user;
                 socket.userID = userID;
