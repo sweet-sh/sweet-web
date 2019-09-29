@@ -368,8 +368,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
     })
     //prompt the user to add a link preview when a youtube or vimeo url is placed on a new line
     var linkPrompter = new MutationObserver(function(mutationsList) {
-        console.log(mutationsList);
-        var linkPreviewPrompt = "<div class='link-preview-prompt'><div>Click to add link preview</div><div class='link-preview-prompt-dismiss'>(x)</div></div>";
+        var linkPreviewPrompt = "<div class='link-preview-prompt'><div class='link-preview-prompt-text'>Click to add link preview</div><div class='link-preview-prompt-dismiss'><i class='fa fa-times'></i></div></div>";
         for (var i = 0; i < mutationsList.length; i++) {
             if (mutationsList[i].type == "childList" && mutationsList[i].target.nodeName == "P") {
                 if (mutationsList[i].addedNodes.length == 1) {
@@ -382,40 +381,44 @@ function attachQuill(element, placeholder, embedsForbidden) {
                             var prompt = $(linkPreviewPrompt);
                             $(element).append(prompt);
                             prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
-                            var parentWatcher = new MutationObserver(function(){
+                            var parentWatcher = new MutationObserver(function() {
                                 //remove the prompt if the new line containing the url is removed
-                                if(!document.body.contains(newTextCont)){
+                                if (!newTextCont.parentNode || !newTextCont.parentNode.contains(newTextCont)) {
                                     prompt.remove();
                                     this.disconnect();
-                                }else{
-                                    //make sure the prompt is still positioned directly underneath the url in case stuff is being added/removed below/above it
-                                    console.log(newTextCont);
+                                } else {
+                                    //make sure the prompt is still positioned directly underneath the url in case stuff is being added/removed above it
                                     prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
                                 }
                             })
-                            parentWatcher.observe(newTextCont.parentNode, {childList:true});
+                            console.log('watching parent node ', newTextCont.parentNode);
+                            parentWatcher.observe(newTextCont.parentNode, { childList: true });
                             var metaWatcher = new MutationObserver(function() {
                                 //remove the prompt if the url itself is altered or deleted
-                                if (!newTextNode || !newTextNode.nodeValue || newTextNode.nodeValue.indexOf(newText) == -1) {
+                                if (!newTextCont || !newTextCont.innerText || newTextCont.innerText.indexOf(newText) != 0) {
                                     prompt.remove();
                                     this.disconnect();
                                     parentWatcher.disconnect();
                                 }
                             })
-                            metaWatcher.observe(newTextNode, { characterData: true });
+                            metaWatcher.observe(newTextCont, { subtree: true, characterData: true });
                             prompt.click(function(e) {
-                                if (!$(e.target).hasClass('link-preview-prompt-dismiss')) {
-                                    var cursorPos = quill.getText().indexOf(newText);
-                                    if (cursorPos != -1) {
-                                        cursorPos+=$(newTextCont).prevAll('.slidable-embed').length;
-                                        newTextCont.innerHTML = newTextCont.innerHTML.replace(newText, '');
-                                        if (newTextCont.innerHTML == '') {
-                                            newTextCont.parentElement.removeChild(newTextCont);
-                                        }
-                                        element.addLinkPreview(newText, cursorPos);
-                                        quill.setSelection(cursorPos + 1);
+                                console.log(e);
+                                metaWatcher.disconnect();
+                                parentWatcher.disconnect();
+                                var cursorPos = quill.getText().indexOf(newText);
+                                if (cursorPos != -1) {
+                                    cursorPos += $(newTextCont).prevAll('.slidable-embed').length;
+                                    newTextNode.nodeValue = newTextNode.nodeValue.replace(newText, '');
+                                    if (newTextCont.innerHTML == '') {
+                                        newTextCont.parentElement.removeChild(newTextCont);
                                     }
+                                    element.addLinkPreview(newText, cursorPos);
+                                    quill.setSelection(cursorPos + 1);
                                 }
+                                prompt.remove();
+                            })
+                            prompt.find('.link-preview-prompt-dismiss').click(function() {
                                 prompt.remove();
                                 metaWatcher.disconnect();
                                 parentWatcher.disconnect();
@@ -494,7 +497,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
         })
         //addImage and addLinkPreview functions! embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it (my heuristic for "was intentionally placed there")
         element.addLinkPreview = function(url, pos) { //pos is very, very optional
-            if (!pos) {
+            if (pos === undefined) {
                 var sel = quill.getSelection(true);
                 var range = sel.index;
                 if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
