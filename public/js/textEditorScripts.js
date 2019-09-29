@@ -229,17 +229,8 @@ class PostImage extends BlockEmbed {
                     m.find('.image-clear').click();
                 } else {
                     if (serverResponse.thumbnail) {
-                        $.get({
-                            url: serverResponse.thumbnail,
-                            success: function(data) {
-                                m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(data) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
-                            },
-                            processData: false,
-                            xhr: function() {
-                                var uploader = new XMLHttpRequest();
-                                uploader.responseType = 'blob';
-                                return uploader;
-                            }
+                        fetch(serverResponse.thumbnail).then(res=>res.blob()).then(blob=>{
+                            m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(blob) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
                         })
                     }
                     m.find('.fader').remove();
@@ -312,10 +303,18 @@ Quill.register(PostImage);
 //element is the div that will now become the container for the quill editor and will have the class ql-container. not to be confused with the ql-editor div inside.
 function attachQuill(element, placeholder, embedsForbidden) {
     var quill = new Quill(element, {
+        formats: ['bold', 'italic', 'list', 'link', 'blockquote', 'PostImage', 'LinkPreview'],
         modules: {
             toolbar: ['bold', 'italic', { 'list': 'bullet' }, 'link', 'blockquote'],
             keyboard: {
                 bindings: {
+                    //this just blocks the default quill ordered list adding thing that happens when you type like "1. "
+                    'list autofill': {
+                        key: 32,
+                        handler: function(){
+                            return true;
+                        }
+                    },
                     //if the user hits backspace at the beginning of a blockquote, remove that formatting (quill already does this by default for lists)
                     blqtBksp: {
                         key: 'backspace',
@@ -348,20 +347,21 @@ function attachQuill(element, placeholder, embedsForbidden) {
         placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
         theme: 'bubble'
     });
-    //prevent image html elements from being copied and pasted in (raw image files are fine and are detected by the onpaste listener below, this just blocks "hotlinked" external images)
-    quill.clipboard.addMatcher("img", function(node, delta) {
-        return { ops: [] };
-    });
-    //remove pasted formatting that we don't support. copying and pasting embeds has been erratic for me so this just blocks it, although that probably deserves a second look someday
-    quill.clipboard.addMatcher("*", function(node, delta) {
+    //copying and pasting embeds has been erratic for me so this just blocks it, although that probably deserves a second look someday
+    quill.clipboard.addMatcher(Node.ELEMENT_NODE, function(node, delta) {
         for (var i = 0; i < delta.ops.length; i++) {
             if (typeof delta.ops[i].insert != "string") { //if it's not a string, it is an embed
                 delta.ops[i].insert = "";
             }
-            for (const key in delta.ops[i].attributes) {
-                if (key != "bold" && key != "italic" && key != "link" && key != "blockquote" && key != "list") {
-                    delete delta.ops[i].attributes[key];
-                }
+        }
+        return delta;
+    })
+    //most unwanted formatting won't be pasted in because of the formats array in the options object quill was initialized with, but ordered lists have to 
+    //targeted specifically here, bc for some reasons they can't be disallowed with that array without also blocking unordered lists
+    quill.clipboard.addMatcher("ol", function(node, delta){
+        for(var i=0; i<delta.ops.length; i++){
+            if(delta.ops[i].attributes && delta.ops[i].attributes.list && delta.ops[i].attributes.list=='ordered'){
+                delete delta.ops[0].attributes.list;
             }
         }
         return delta;
@@ -420,11 +420,9 @@ function attachQuill(element, placeholder, embedsForbidden) {
             return $(element).children('.ql-editor').html();
         }
     }
-
     element.getQuill = function(){
         return quill;
     }
-
     //the following code deals with embeds and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
     if (!embedsForbidden) {
         //prevent there from ever being embeds at the end of the content with no new lines after to type text on
