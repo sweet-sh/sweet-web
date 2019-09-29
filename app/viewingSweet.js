@@ -869,6 +869,10 @@ module.exports = function(app) {
         var displayedPosts = []; //populated by the for loop below
 
         for (var post of posts) {
+
+            //todo: for community feeds we have to check for a newer instance now. also we have to ignore the community boosts if context=='user'. 
+            //and only count boosts into the user's communities if context=='home'. will take some thought
+
             //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
             //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
             //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
@@ -965,6 +969,10 @@ module.exports = function(app) {
                 continue;
             }
 
+            //todo: i think it would make sense to refactor the below into a 'getDisplayablePost' function that returns an object that can be supplied to
+            //the posts_v2 rendering template; that way, it can also be used to generate the latest version of the post after an edit, complete with accurate
+            //header and stuff
+
             var displayContext = post;
             if (post.type == "boost") {
                 displayContext = post.boostTarget;
@@ -982,6 +990,13 @@ module.exports = function(app) {
                 // Used to check if you can delete a post
                 var isYourPost = displayContext.author._id.equals(req.user._id);
             }
+
+            //todo: get a list of the names and i guess icons of the communities that a post has been boosted into for the modal.
+            //only count communities here if they're public, posts-wise, or the user is in them.
+            //the community boosts will involve a specific community and a specific user that boosted it into the community; it might be interesting to display
+            //that user alongside the thing? might look messy idk, with multiple users boosting it into a single community, anyway
+
+
             //generate some arrays containing usernames that will be put in "boosted by" labels
             if (req.isAuthenticated()) {
                 var followedBoosters = [];
@@ -989,7 +1004,7 @@ module.exports = function(app) {
                 var youBoosted = false;
                 if (displayContext.boostsV2.length > 0) {
                     displayContext.boostsV2.forEach((v, i, a) => {
-                        if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //do not include implicit boost
+                        if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //todo: i don't believe that this is necessary anymore?
                             if (v.booster._id.equals(req.user._id)) {
                                 followedBoosters.push('you');
                                 youBoosted = true;

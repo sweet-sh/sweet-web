@@ -829,6 +829,8 @@ module.exports = function(app) {
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
     app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
+        //todo: need to be able to remove specific boosts; we need another paramater for source, which will be i guess 'userfeed' or a community id,
+        //to match the parameter in the createboost function, and also 'all', to remove all boosts created by the requesting user.
         Post.findOne({ '_id': req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
             .then((boostedPost) => {
                 var boost = boostedPost.boostsV2.find(b => {

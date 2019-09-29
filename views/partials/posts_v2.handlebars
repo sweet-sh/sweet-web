@@ -107,12 +107,14 @@
                             <i class="fas fa-retweet"></i>
                         </button>
                         <div class="dropdown-menu" aria-labelledby="post-boosting-dropdown">
+                            {{!todo: use a different url for this depending on whether this is the userfeed or a community feed}}
                             <button class="boost-post-userfeed dropdown-item" data-action="{{#if youBoosted}}unboost{{else}}boost{{/if}}" data-boost-url="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}{{#unless youBoosted}}/userfeed{{/unless}}">
                                 {{#if youBoosted}}
                                     <span class="fa-layers fa-fw">
                                         <i class="fas fa-retweet"></i>
                                         <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
                                     </span> Unboost post
+                                    {{!todo: add a button like 'unboost from all'}}
                                 {{else}}
                                     <i class="fas fa-fw fa-user-circle"></i> Boost post to your profile
                                 {{/if}}
