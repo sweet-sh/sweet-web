@@ -870,7 +870,7 @@ module.exports = function(app) {
 
         for (var post of posts) {
 
-            //todo: for community feeds we have to check for a newer instance now. also we have to ignore the community boosts if context=='user'. 
+            //todo: for community feeds we have to check for a newer instance now. also we have to ignore the community boosts if context=='user'.
             //and only count boosts into the user's communities if context=='home'. will take some thought
 
             //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
@@ -1002,12 +1002,19 @@ module.exports = function(app) {
                 var followedBoosters = [];
                 var notFollowingBoosters = [];
                 var youBoosted = false;
+                var boostedIntoFeed = false;
                 if (displayContext.boostsV2.length > 0) {
-                    displayContext.boostsV2.forEach((v, i, a) => {
-                        if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //todo: i don't believe that this is necessary anymore?
+                    displayContext.boostsV2.forEach(async (v, i, a) => {
+                        // if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //todo: i don't believe that this is necessary anymore?
+                        // Yeah I've commented it out, let's see if anything breaks??
                             if (v.booster._id.equals(req.user._id)) {
                                 followedBoosters.push('you');
                                 youBoosted = true;
+                                // todo: This may be dumb but we currently need a variable for whether the post has been boosted to the user's feed
+                                // and I'm not sure how else to do it
+                                if (v.location === "userfeed" || v.location === null) {
+                                    boostedIntoFeed = true;
+                                }
                             } else {
                                 if (myFollowedUserIds.some(following => { if (following) { return following.equals(v.booster._id) } })) {
                                     followedBoosters.push(v.booster.username);
@@ -1015,7 +1022,7 @@ module.exports = function(app) {
                                     notFollowingBoosters.push(v.booster.username);
                                 }
                             }
-                        }
+                        // }
                     })
                 }
                 if (req.params.context == "user" && !displayContext.author._id.equals(post.author._id)) {
@@ -1036,6 +1043,16 @@ module.exports = function(app) {
                 }
             }
 
+            // In the header, remove boosts with duplicate user IDs, to make sure each user who boosted gets shown only once,
+            // even if they boosted the same post multiple times.
+            // todo: is this is going to mess up the 'boosted by' modal? we probably need to reorganise it somehow - I like your
+            // idea above - and maybe we can normalise the two modals ('boosted by' and the
+            // 'boost manager' using something like the boostmanagerlist layout? Not sure.
+            boostsForHeader = [...new Set(boostsForHeader)];
+            if (req.isAuthenticated()) {
+                followedBoosters = [...new Set(followedBoosters)];
+            }
+
             var displayedPost = Object.assign(displayContext, {
                 deleteid: displayContext._id,
                 parsedTimestamp: parsedTimestamp,
@@ -1047,12 +1064,15 @@ module.exports = function(app) {
                 lastCommentAuthor: "", // As does this
             })
 
+            console.log(displayedPost._id,"boostedIntoFeed",boostedIntoFeed)
+
             //these are only a thing for logged in users
             if (req.isAuthenticated()) {
                 displayedPost.followedBoosters = followedBoosters;
                 displayedPost.otherBoosters = notFollowingBoosters;
                 displayedPost.isYourPost = isYourPost;
-                displayedPost.youBoosted = youBoosted
+                displayedPost.youBoosted = youBoosted;
+                displayedPost.boostedIntoFeed = boostedIntoFeed;
             }
 
             //get timestamps and full image urls for each comment
@@ -1283,6 +1303,33 @@ module.exports = function(app) {
             });
         }
     })
+
+    // Responds to a post request that fetches all the boosts the logged in user has made
+    // for a particular post (including if there are none).
+    // Inputs: id of the post
+    // Outputs: an array containing all the user's boosts of a post (or an empty array)
+    app.post('/getboosts/:postid', isLoggedInOrRedirect, function(req, res) {
+        Post.find({ 'type': 'boost', boostTarget: req.params.postid, author: req.user._id })
+        .populate('author')
+        .populate('community')
+        .then(async boosts => {
+            boosts.forEach(boost => {
+                boost.parsedTimestamp = parseTimestamp(boost.timestamp)
+            })
+            hbs.render('./views/partials/boostmanagerlist.handlebars', {
+                boosts: boosts
+            })
+            .then(async html => {
+                var result = {
+                    list: html
+                }
+                res.contentType('json');
+                res.send(JSON.stringify(result));
+            })
+            // res.contentType('json');
+            // res.send(JSON.stringify(boosts));
+        })
+    });
 
     app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
         try {

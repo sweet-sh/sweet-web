@@ -216,22 +216,49 @@ $(function() {
         modal.find('#original-post-id').val(postID);
     })
 
+    $('#boostManagerModal').on('show.bs.modal', function (event) {
+        var postID = $(event.relatedTarget).closest('.post').attr('data-post-id');
+        var modal = $(this)
+        modal.find('#boosts-list').empty()
+        $.post('/getboosts/' + postID, function(response) {
+            modal.find('#boosts-list').append(response.list);
+        })
+    })
+
+    $('body').on('click', '.removeBoost', function(){
+          var $this = $(this);
+          var boostBox = $this.closest('.content-box');
+          var postFeed = $('body').find('.postsContainer');
+          $this.html('<i class="fas fa-spinner fa-spin"></i> Unboosting');
+          $.post('/removeboost/'+$this.attr('data-post-id')+'/'+$this.attr('data-boost-id')).done(function(response){
+              boostBox.fadeOut(function() {
+                boostBox.remove();
+              });
+              // todo: this doesn't currently reload the target post, which it needs to because the number of boosters etc. should
+              // have changed - the post might even vanish if you don't otherwise follow its author - perhaps we should just reload
+              // the feed here?
+          })
+            // if($this.attr('data-action')=="boost"){
+            //   $this.attr('data-action',"unboost");
+            //   $this.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span> Unboost post');
+            //   $this.attr('data-boost-url','/removeboost/'+$this.closest('.post').attr('data-post-id'));
+            //   dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
+            // }else{
+            //   $this.attr('data-action',"boost");
+            //   $this.html('<i class="fas fa-fw fa-user-circle"></i> Boost post to your profile');
+            //   $this.attr('data-boost-url','/createboost/'+$this.closest('.post').attr('data-post-id')+'/userfeed');
+            //   dropdownParent.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span>&nbsp;<i class="fa fa-check"></i>');
+            // }
+    })
+
     $('body').on('click', '.boost-post-userfeed', function(){
       var $this = $(this);
       var dropdownParent = $this.closest('.dropdown').find('#post-boosting-dropdown');
       dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
       $.post($this.attr('data-boost-url')).done(function(){
-        if($this.attr('data-action')=="boost"){
-          $this.attr('data-action',"unboost");
-          $this.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span> Unboost post');
-          $this.attr('data-boost-url','/removeboost/'+$this.closest('.post').attr('data-post-id'));
-          dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
-        }else{
-          $this.attr('data-action',"boost");
-          $this.html('<i class="fas fa-fw fa-user-circle"></i> Boost post to your profile');
-          $this.attr('data-boost-url','/createboost/'+$this.closest('.post').attr('data-post-id')+'/userfeed');
-          dropdownParent.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span>&nbsp;<i class="fa fa-check"></i>');
-        }
+          dropdownParent.html('<i class="fa fa-check"></i>');
+          setTimeout(() => {dropdownParent.html('<i class="fa fa-retweet"></i>')}, 5000);
+          $this.html('<i class="fas fa-fw fa-user-circle"></i> You have boosted this post to your profile').prop('disabled', true)
       })
     })
 
@@ -249,7 +276,8 @@ $(function() {
         dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
         $.post("/createboost/" + postID + "/" + targetCommunityID).done(function(data){
           modal.modal('hide');
-          dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
+          dropdownParent.html('<i class="fa fa-check"></i>');
+          setTimeout(() => {dropdownParent.html('<i class="fa fa-retweet"></i>')}, 5000);
         });
     });
 
@@ -276,17 +304,26 @@ $(function() {
   })
   $('body').on('click', '.delete-post', function() {
     var element = $(this);
-    bootbox.confirm("Are you sure you want to delete this post?", function(result){
-      if (result == true) {
-        let divToDelete = element.closest(".post");
-        $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
-          divToDelete.fadeOut(function() {
-            divToDelete.remove();
-          });
-        });
-      }
-    });
-  })
+    bootbox.confirm({
+        message: "Are you sure you want to delete this post?",
+        buttons: {
+            confirm: {
+                label: 'Delete post',
+                className: 'btn-success'
+            }
+        },
+        callback: function(result) {
+          if (result == true) {
+            let divToDelete = element.closest(".post");
+            $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
+              divToDelete.fadeOut(function() {
+                divToDelete.remove();
+              });
+            });
+          }
+        }
+    })
+    })
   $('body').on('click', '.delete-comment', function() {
     let element = $(this);
     let counterToChange = element.closest(".post").find(".show-comments").find('.comments-number');
@@ -315,7 +352,7 @@ $(function() {
     bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-tooltip", "Not receiving notifications (click to change)");
         })
       }
     })
@@ -325,7 +362,7 @@ $(function() {
     bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-tooltip", "Receiving notifications (click to change)");
         })
       }
     })

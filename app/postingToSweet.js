@@ -300,7 +300,7 @@ module.exports = function(app) {
     });
 
     //Responds to post requests which create a comment.
-    //Inputs: comment text, comment embeds. the params in the url are for the parent post and the parent comment; the latter is 'undefined' if 
+    //Inputs: comment text, comment embeds. the params in the url are for the parent post and the parent comment; the latter is 'undefined' if
     //it's a top-level comment
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
@@ -329,7 +329,7 @@ module.exports = function(app) {
 
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
-            .populate('community') 
+            .populate('community')
             .then(async (post) => {
 
                 if (post.community) {
@@ -806,11 +806,15 @@ module.exports = function(app) {
                     const boost = {
                         booster: req.user._id,
                         timestamp: boostedTimestamp,
+                        location: req.params.location,
                         boost: savedBoost._id
                     }
-                    boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
-                        return !boost.booster.equals(req.user._id)
-                    })
+                    // I'm not sure what this does - it removes previous boosts by the same user, but what if
+                    // the same user wants to boost a post on their feed _and_ in a community? I've commented
+                    // it out for now.
+                    // boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                    //     return !boost.booster.equals(req.user._id)
+                    // })
                     boostedPost.boostsV2.push(boost);
 
                     boostedPost.save().then(() => {
@@ -825,29 +829,33 @@ module.exports = function(app) {
     })
 
     //Responds to a post request that removes a boosted post.
-    //Inputs: id of the post to be boosted
-    //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
-    //user whose post was boosted.
-    app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
+    //Inputs: id of the boost to be removed
+    //Outputs: success or failure for the removal
+    app.post('/removeboost/:postid/:boostid', isLoggedInOrRedirect, function(req, res) {
+
         //todo: need to be able to remove specific boosts; we need another paramater for source, which will be i guess 'userfeed' or a community id,
         //to match the parameter in the createboost function, and also 'all', to remove all boosts created by the requesting user.
-        Post.findOne({ '_id': req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
-            .then((boostedPost) => {
-                var boost = boostedPost.boostsV2.find(b => {
-                    return b.booster.equals(req.user._id)
-                });
-                boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
-                    return !boost.booster.equals(req.user._id)
-                })
-                Post.deleteOne({
-                    _id: boost.boost
-                }, function() {
-                    console.log('delete')
-                });
-                boostedPost.save().then(() => {
-                    res.redirect("back");
+        Post.findOne({ '_id': req.params.postid })
+        .then((boostedPost) => {
+            console.log("Before")
+            console.log(boostedPost.boostsV2)
+            boostedPost.boostsV2 = boostedPost.boostsV2.filter(b => {
+                return !b.boost === req.params.boostid
+            })
+            console.log("After")
+            console.log(boostedPost.boostsV2)
+            boostedPost.save()
+            .then(() => {
+                Post.deleteOne({ '_id': req.params.boostid })
+                .then(deletedBoost => {
+                    if (deletedBoost.ok) {
+                        return res.sendStatus(200);
+                    } else {
+                        return res.sendStatus(500);
+                    }
                 })
             })
+        })
     })
 
     app.post('/createposteditor/:postid', isLoggedInOrRedirect, function(req, res) {
