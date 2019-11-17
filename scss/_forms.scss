@@ -145,6 +145,16 @@ button.close {
     }
 }
 
+button:disabled {
+    color: $dark-grey;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background: initial;
+    // cursor: not-allowed;
+}
+
 /* new post/comment form stuff*/
 
 /* quill editor stuff*/

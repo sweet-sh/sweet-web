@@ -336,14 +336,10 @@
     top: 46px;
 }
 
-#post-extra-controls-dropdown {
-    text-transform: uppercase;
-    font-size: 0.9rem;
-
+#post-extra-controls-dropdown, #post-boosting-dropdown {
     + .dropdown-menu .dropdown-item {
         padding: .5rem 1rem;
-        text-transform: uppercase;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
 }
 
