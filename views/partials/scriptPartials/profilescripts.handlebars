@@ -51,7 +51,7 @@
   });
   $active("#followButton").click(function () {
     //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
-    $.post("/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
+    $.post("/useraction/follow/add/{{ profileData._id }}", function (result) {
       location.reload();
     });
   });
