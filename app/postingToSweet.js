@@ -273,11 +273,11 @@ module.exports = function(app) {
                 }
 
                 // Delete boosts
-                if (post.type == "original" && post.boosts) {
-                    post.boosts.forEach((boost) => {
-                        Post.deleteOne({ "_id": boost })
+                if (post.type == "original" && post.boostsV2 ) {
+                    post.boostsV2.forEach((boost) => {
+                        Post.deleteOne({ "_id": boost.boost })
                             .then((boost) => {
-                                console.log("Deleted boost: " + boost)
+                                console.log("Deleted boost: " + boost.boost)
                             })
                             .catch((err) => {
                                 console.log("Database error while attempting to delete boost while deleting post: " + err)
