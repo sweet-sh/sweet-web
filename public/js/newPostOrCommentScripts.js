@@ -1,38 +1,16 @@
-//this is here bc it's called after a post is made, although it's ALSO called when you click on the "new posts available" notice
-function restartInfiniteScroll(timestamp) {
-    if (!timestamp) {
-        timestamp = new Date().getTime();
-    }
-    $(".infinite-scroll-last, .infinite-scroll-error").css('display', 'none');
-    $(".infinite-scroll-request").css('display', 'block');
-    var postsContainer = $('#postsContainer');
-    postsContainer.fadeOut(250, function() {
-        postsContainer.html("");
-        needPostsOlderThan = timestamp;
-        pageLoadTime = timestamp;
-        postsContainer.infiniteScroll("destroy");
-        postsContainer[0].fadedOut = true;
-        startInfiniteScroll();
-        $(".page-load-status").css('display', 'block');
-    });
-}
-
 //NEW POST FORM CODE
 
 $(function() {
 
-    var editor = undefined;
-    if (editor = document.getElementById('editor')) {
+    var editor = document.getElementById('editor');
+    if (editor) {
         attachQuill(editor)
     }
 
-    $(".ql-editor").focus(function(e) {
-        if (e.target.parentElement.id == "editor") {
-            $(".post-controls").css('display', 'flex');
-        }
-    })
-
     $('body').on('focus', '.ql-editor', function(e) {
+        if (e.target.parentElement.id == "editor") {
+            $(e.target.parentElement).siblings('.post-controls').css('display', 'flex');
+        }
         $(this).closest('.editable-text').addClass('focused');
     })
     $('body').on('focusout', '.ql-editor', function(e) {
@@ -198,8 +176,10 @@ $(function() {
                     images.simpleLightbox();
                 }
                 //remove the modal whose contents were just saved in the database through this event listener which will immediately self destruct
-                $('body').on('hidden.bs.modal', '#editPostModal', function(e) { e.target.remove();
-                    $('body').off('hidden.bs.modal'); })
+                $('body').on('hidden.bs.modal', '#editPostModal', function(e) {
+                    e.target.remove();
+                    $('body').off('hidden.bs.modal');
+                })
                 $("#editPostModal").modal('hide');
                 //scroll to the newly edited post if the top or bottom is offscreen
                 var posttop = postContainer.offset().top;
@@ -214,8 +194,7 @@ $(function() {
                     $('html').animate({ scrollTop: wst + (postbottom - wsb) + 10 });
                 }
             }).fail(function() {
-                editModal.modal('hide');
-                bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again', function() { editModal.modal() });
+                bootbox.alert('this edit operation failed somehow, sorry... maybe wait a few seconds and try again');
                 button.attr('disabled', false);
                 button.html('Try again... <i class="fas fa-chevron-right"></i>');
             })
@@ -308,10 +287,11 @@ $(function() {
     })
 
     //function for very specifically submitting a post, not a comment
-    $("#postSubmit").click(function(e) {
+    $("body").on("click", "#postSubmit", function(e) {
         e.preventDefault();
         $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
-        let editor = $('#editor');
+        let form = $(this).closest('.contentForm');
+        let editor = form.find("#editor");
         let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
         if (editor[0].hasContent()) {
             var button = $(this);
@@ -320,25 +300,25 @@ $(function() {
                 url: '/createpost',
                 type: 'POST',
                 data: {
-                    communityId: $('#postForm').attr("communityId"),
-                    isDraft: $("#pseudoPrivacy-draft").is(":checked") ? true : "",
-                    postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
+                    communityId: form.attr("communityId"),
+                    isDraft: form.find("#pseudoPrivacy-draft").is(":checked") ? true : "",
+                    postPrivacy: (form.find('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
                     postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
-                    postContentWarnings: $('#postContentWarnings').val(),
+                    postContentWarnings: form.find('#postContentWarnings').val(),
                 }
             }).done(function(postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
-                $('#postContentWarnings').val("");
-                $("#postContentWarningsContainer").slideUp("fast");
-                $("#new-post-emoji-picker").slideUp("fast");
-                $(".link-form-cont").slideUp("fast");
+                form.find('#postContentWarnings').val("");
+                form.find("#postContentWarningsContainer").slideUp("fast");
+                form.find("#new-post-emoji-picker").slideUp("fast");
+                form.find(".link-form-cont").slideUp("fast");
                 var innerEditor = editor.find(".ql-editor");
                 innerEditor.html("");
                 button.attr('disabled', false);
                 //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
-                if (!$("#pseudoPrivacy-draft").is(":checked") || (typeof draftsMode != "undefined" && draftsMode)) {
-                    if (!$("#pseudoPrivacy-draft").is(":checked") && typeof draftsMode != "undefined" && draftsMode) {
+                if (!form.find("#pseudoPrivacy-draft").is(":checked") || activeScrollPath == '/drafts/') {
+                    if (!form.find("#pseudoPrivacy-draft").is(":checked") && activeScrollPath == '/drafts/') {
                         //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
-                        draftsMode = false;
+                        $active('#toggle-drafts-mode').click();
                     }
                     restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
                 } else {

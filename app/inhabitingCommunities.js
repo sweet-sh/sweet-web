@@ -47,6 +47,15 @@ module.exports = function(app, passport) {
             })
     })
 
+    app.get('/api/community/listjoined', isLoggedIn, function(req, res) {
+        Community.find({ members: req.user._id }, { _id: 1, name: 1, image: 1, slug: 1 })
+            .sort('name')
+            .then(communities => {
+                res.setHeader('content-type', 'text/plain');
+                res.send(JSON.stringify(communities))
+            })
+    })
+
     app.get('/communities', isLoggedIn, function(req, res) {
         Community.find({
                 members: req.user._id
@@ -91,6 +100,12 @@ module.exports = function(app, passport) {
             .populate('welcomeMessageAuthor')
             .then(community => {
                 if (community) {
+                    var metadata = {
+                        title: community.name,
+                        description: community.descriptionRaw.replace(/<(.*?)>/g, ''),
+                        image: (process.env.NODE_ENV=="development" ? 'http://localhost:8686' : 'https://sweet.sh') + ('/images/communities/') + (community.imageEnabled ? community.image : 'cake.svg'),
+                        url: (process.env.NODE_ENV=="development" ? 'http://localhost:8686' : 'https://sweet.sh') + '/community/' + community.slug
+                    }
                     if (isLoggedIn) {
                         let memberIds = community.members.map(a => a._id.toString());
                         let bannedMemberIds = community.bannedMembers.map(a => a._id.toString());
@@ -161,6 +176,7 @@ module.exports = function(app, passport) {
                                     }
                                 })
                                 res.render('community', {
+                                    layout: req.noLayout ? false : 'main',
                                     loggedIn: isLoggedIn,
                                     loggedInUserData: req.user,
                                     communityData: community,
@@ -170,11 +186,14 @@ module.exports = function(app, passport) {
                                     majorityMargin: majorityMargin,
                                     isBanned: isBanned,
                                     isMuted: isMuted,
-                                    bannedMemberIds: bannedMemberIds
+                                    bannedMemberIds: bannedMemberIds,
+                                    metadata
                                 })
                             })
                     } else {
                         res.render('community', {
+                            metadata: metadata,
+                            layout: req.noLayout ? false : 'main',
                             loggedIn: false,
                             loggedInUserData: "",
                             communityData: community,
@@ -853,7 +872,7 @@ module.exports = function(app, passport) {
                                 let majorityMargin = helper.isOdd(recentlyActiveMembers.length) ? (recentlyActiveMembers.length / 2) + 0.5 : (recentlyActiveMembers.length / 2) + 1
 
                                 if (vote.votes >= majorityMargin) {
-                                    console.log("Vote passed!")
+                                    console.log("Vote passed!");
                                     if (vote.reference == "visibility") {
                                         community.settings[vote.reference] = vote.proposedValue;
                                         Image.find({

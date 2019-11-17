@@ -1,4 +1,4 @@
-<div id="userBody" class="row">
+<div id="userBody" class="row active-feed-container"{{#if metadata.title}} data-title="{{metadata.title}}"{{/if}}>
   <div class="col-md-4 mx-2 mx-md-0">
     {{#if loggedIn}}
       {{> usersidebar}}
@@ -25,18 +25,16 @@
     </div>
     {{/unless}}
     {{#if loggedIn}}
-      <div id="postsContainer"></div>
+      <div class="postsContainer"></div>
       {{> infiniteScrollLoadingSpinner}}
     {{else}}
       {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
-  		  <div id="postsContainer"></div>
+  		  <div class="postsContainer"></div>
         {{> infiniteScrollLoadingSpinner}}
       {{/eq}}
     {{/if}}
   </div>
-</div>
-
-{{#if isOwnProfile}}
+  {{#if isOwnProfile}}
 <div class="modal fade" id="updateProfileModal" tabindex="-1" role="dialog" aria-labelledby="updateProfileModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -85,54 +83,64 @@
 
 {{> filemessage }}
 {{/if}}
-
+</div>
 
 <script>
-    draftsMode = false;
-    function startInfiniteScroll() {
-        $('#postsContainer').infiniteScroll({
-            path: function() {
-                if ($(".oldesttimestamp").length) {
-                    //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-                    return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
-                }
-                //and then this is for when the feed is currently empty and being loaded/reloaded
-                return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
-            },
-            append: '.post',
-            prefill: true,
-            history: false,
-            status: '.page-load-status'
-        });
+
+//this button is located in usersidebar.handlebars
+  function setDraftsButtonText(){
+    if(window.location.pathname=='/{{profileData.username}}'){
+      $active('#toggle-drafts-mode').html('<i class="fas fa-pencil-ruler"></i> See drafts');
+    }else if(window.location.pathname=='/drafts'){
+      $active('#toggle-drafts-mode').html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
     }
-    startInfiniteScroll();
+  }
+
+  {{#if draftsFirst}}
+    activeScrollPath = '/drafts/';
+  {{else}}
+    activeScrollPath = '/showposts/user/{{profileData._id}}/';
+  {{/if}}
+
+$(function(){startInfiniteScroll();});
+    
     {{#if isOwnProfile}}
-    $(function() {
-        $("#switch-to-drafts").click(function(e) {
-            e.preventDefault();
-            if(!draftsMode){
-              draftsMode = true;
-              $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text)
-              $(this).html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
-              restartInfiniteScroll();
-            }else{
-              draftsMode = false;
-              $(this).html('<i class="fas fa-pencil-ruler"></i> See drafts');
-              //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
-              $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked",true);
-              restartInfiniteScroll();
-            }
-            //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
-            var postsContainer = $("#postsContainer");
-            if(getTop(postsContainer) > $(window).scrollTop()+$(window).height()){
-              function scrollToCont(){
-                $('html').animate({scrollTop:getTop($("#postForm")) - $("#topNav").outerHeight()}, 200);
+$(function() {
+
+    setDraftsButtonText();
+
+    $active("#toggle-drafts-mode").click(function(e) {
+        e.preventDefault();
+        $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+        if (activeScrollPath != '/drafts/') {
+            $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text on the post privacy labels showing up)
+            switchFeedWithinPage('/drafts', '/drafts/');
+            window.addEventListener('popstate', setDraftsButtonText);
+        } else {
+            //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
+            $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked", true);
+            switchFeedWithinPage('/{{profileData.username}}', '/showposts/user/{{profileData._id}}/');
+            window.addEventListener('popstate', setDraftsButtonText);
+        }
+
+        var postsContainer = $(".postsContainer");
+
+        function loaded(){
+          setDraftsButtonText();
+          postsContainer.off("append.infiniteScroll", loaded);
+        }
+        postsContainer.on("append.infiniteScroll", loaded);
+
+        //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
+        if (getTop(postsContainer) > $(window).scrollTop() + $(window).height()) {
+            function scrollToCont() {
+                $('html').animate({ scrollTop: getTop($active("#postForm")) - $("#topNav").outerHeight() }, 200);
                 postsContainer.off("append.infiniteScroll", scrollToCont);
-              }
-              postsContainer.on("append.infiniteScroll", scrollToCont);
             }
-        })
+            postsContainer.on("append.infiniteScroll", scrollToCont);
+        }
     })
+})
     {{/if}}
 </script>
 

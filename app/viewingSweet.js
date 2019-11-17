@@ -136,17 +136,6 @@ module.exports = function(app) {
         });
     });
 
-    //Responds to get requests for the profile of someone with a certain email. Deprecated? Is this used?
-    //Input: the email
-    //Output: redirect to /the username of the person with that email, unless isLoggedInOrRedirect redirects you
-    app.get('/getprofile/:email', isLoggedInOrRedirect, function(req, res) {
-        User.findOne({
-            email: req.params.email
-        }).then((user) => {
-            res.redirect('/' + user.username);
-        })
-    });
-
     //Responds to get requests for the home page.
     //Input: none
     //Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
@@ -273,6 +262,7 @@ module.exports = function(app) {
         res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         res.setHeader("Expires", "0"); // Proxies.
         res.render('home', {
+            layout: req.noLayout ? false : 'main',
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'home',
@@ -318,6 +308,7 @@ module.exports = function(app) {
             User.findOne({ _id: req.user._id }, 'notifications').then(user => {
                 user.notifications.reverse();
                 res.render('notifications', {
+                    layout: req.noLayout ? false : 'main',
                     loggedIn: true,
                     loggedInUserData: req.user,
                     notifications: user.notifications,
@@ -326,6 +317,7 @@ module.exports = function(app) {
             })
         } else {
             res.render('notifications', {
+                layout: req.noLayout ? false : 'main',
                 loggedIn: false,
                 activePage: 'notifications'
             });
@@ -379,7 +371,8 @@ module.exports = function(app) {
             loggedIn: true,
             loggedInUserData: req.user,
             activePage: 'search',
-            query: req.params.query
+            query: req.params.query,
+            metadata: { title: "Search: " + req.params.query } //more stuff could go here huh
         })
     })
 
@@ -533,7 +526,8 @@ module.exports = function(app) {
                                             loggedIn: true,
                                             loggedInUserData: req.user,
                                             oldesttimestamp: oldesttimestamp.getTime(),
-                                            results: parsedResults.slice(0, resultsPerPage)
+                                            results: parsedResults.slice(0, resultsPerPage),
+                                            query: req.params.query
                                         });
                                     }
                                 })
@@ -561,7 +555,8 @@ module.exports = function(app) {
                         } else {
                             post.parsedTimestamp = momentTimestamp.format('D MMM YYYY');
                         }
-                        post.fullTimestamp = momentTimestamp.calendar();
+                        post.timestampMs = post.timestamp.getTime();
+                        post.editedTimestampMs = post.lastEdited ? post.lastEdited.getTime() : '';
                     }
                     res.render('partials/posts_v2', {
                         layout: false,
@@ -633,6 +628,12 @@ module.exports = function(app) {
             }
             res.send("no i guess not");
         })
+    })
+
+    app.get('/drafts', function(req, res, next) {
+        req.draftsFirst = true;
+        req.url = req.path = '/' + req.user.username;
+        next('route');
     })
 
     //Responds to a get response for a specific post.
@@ -717,9 +718,22 @@ module.exports = function(app) {
         })
     }
 
+    //called once per post and once per comment to get a readable, displayable timestamp for it
+    function parseTimestamp(timestamp) {
+        var tsMoment = moment(timestamp);
+        var now = moment();
+        if (tsMoment.isSame(now, 'd')) {
+            return tsMoment.fromNow();
+        } else if (tsMoment.isSame(now, 'y')) {
+            return tsMoment.format('D MMM');
+        } else {
+            return tsMoment.format('D MMM YYYY');
+        }
+    }
+
     //Responds to requests for posts for feeds. API method, used within the public pages.
     //Inputs: the context is either community (posts on a community's page), home (posts on the home page), user
-    //(posts on a user's profile page), or single (a single post.) The identifier identifies either the user, the
+    //(posts on a user's profile page), single (a single post), or tag (posts on a tag page.) The identifier identifies either the user, the
     //community, or the post. I don't believe it's used when the context is home? It appears to be the url of the image
     //of the logged in user in that case. (??????????????????) olderthanthis means we want posts older than this timestamp (milliseconds).
     //Output: the rendered HTML of the posts, unless it can't find any posts, in which case it returns a 404 error.
@@ -759,9 +773,6 @@ module.exports = function(app) {
             var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email);
         }
 
-        const today = moment().clone().startOf('day');
-        const thisyear = moment().clone().startOf('year');
-
         //construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find. also, sortMethod
         //is set according to the relevant user setting if they're logged in or to a default way at the bottom of this part if they're not.
 
@@ -769,17 +780,9 @@ module.exports = function(app) {
             //on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
             //we're assuming the user is logged in if this request is being made (it's only made by code on a page that only loads if the user is logged in.)
             var matchPosts = {
-                '$or': [{
-                        'author': {
-                            $in: myFollowedUserIds
-                        }
-                    },
-                    {
-                        type: 'community',
-                        community: {
-                            $in: myCommunities
-                        }
-                    }
+                '$or': [
+                    { 'author': { $in: myFollowedUserIds } },
+                    { type: 'community', community: { $in: myCommunities } }
                 ],
                 type: { $ne: 'draft' }
             };
@@ -792,29 +795,21 @@ module.exports = function(app) {
             }
             //but we also only want posts if they're non-community or they come from a community that we belong to:
             if (req.isAuthenticated()) {
-                matchPosts.$or = [{
-                    community: {
-                        $exists: false
-                    }
-                }, {
-                    community: {
-                        $in: myCommunities
-                    }
-                }];
+                matchPosts.$or = [
+                    { community: { $exists: false } },
+                    { community: null },
+                    { community: { $in: myCommunities } }
+                ];
                 var sortMethod = req.user.settings.userTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
             } else {
                 //logged out users shouldn't see any community posts on user profile pages
-                matchPosts.community = {
-                    $exists: false
-                };
+                matchPosts.community = { $exists: false };
             }
         } else if (req.params.context == "community") {
             var thisComm = await Community.findById(req.params.identifier);
             //we want posts from the community, but only if it's public or we belong to it:
             if (thisComm.settings.visibility == 'public' || myCommunities.some(v => v.toString() == req.params.identifier)) {
-                var matchPosts = {
-                    community: req.params.identifier
-                }
+                var matchPosts = { community: req.params.identifier }
             } else {
                 //if we're not in the community and it's not public, there are no posts we're allowed to view!
                 var matchPosts = undefined;
@@ -823,14 +818,7 @@ module.exports = function(app) {
                 var sortMethod = req.user.settings.communityTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
             }
         } else if (req.params.context == "tag") {
-            function getTag() {
-                return Tag.findOne({ name: req.params.identifier })
-                    .then((tag) => {
-                        var matchPosts = { _id: { $in: tag.posts }, type: { $ne: "draft" } }
-                        return matchPosts;
-                    })
-            }
-            var matchPosts = await getTag();
+            var matchPosts = { _id: { $in: (await Tag.findOne({ name: req.params.identifier })).posts }, type: { $ne: "draft" } };
             var sortMethod = req.user.settings.homeTagTimelineSorting == "fluid" ? "-lastUpdated" : "-timestamp";
         } else if (req.params.context == "single") {
             var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }));
@@ -852,24 +840,14 @@ module.exports = function(app) {
             matchPosts[sortMethod.substring(1, sortMethod.length)] = { $lt: olderthanthis };
         }
 
-        var query = Post.find(
-                matchPosts
-            ).sort(sortMethod)
+        var posts = await Post.find(matchPosts)
+            .sort(sortMethod)
             .limit(postsPerPage)
             //these populate commands retrieve the complete data for these things that are referenced in the post documents
             .populate('author', '-password')
             .populate('community')
-            // If there's a better way to populate a nested tree lmk because this is... dumb. Mitch says: probably just fetching the authors recursively in actual code below
-            .populate('comments.author')
-            .populate('comments.replies.author')
-            .populate('comments.replies.replies.author')
-            .populate('comments.replies.replies.replies.author')
-            .populate('comments.replies.replies.replies.replies.author')
             .populate('boostTarget')
             .populate('boostsV2.booster');
-
-        //so this will be called when the query retrieves the posts we want
-        var posts = await query;        
 
         if (!posts || !posts.length) {
             res.status(404).render('singlepost', { // The 404 is required so InfiniteScroll.js stops loading the feed
@@ -891,6 +869,10 @@ module.exports = function(app) {
         var displayedPosts = []; //populated by the for loop below
 
         for (var post of posts) {
+
+            //todo: for community feeds we have to check for a newer instance now. also we have to ignore the community boosts if context=='user'.
+            //and only count boosts into the user's communities if context=='home'. will take some thought
+
             //figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
             //the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
             //recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
@@ -987,6 +969,10 @@ module.exports = function(app) {
                 continue;
             }
 
+            //todo: i think it would make sense to refactor the below into a 'getDisplayablePost' function that returns an object that can be supplied to
+            //the posts_v2 rendering template; that way, it can also be used to generate the latest version of the post after an edit, complete with accurate
+            //header and stuff
+
             var displayContext = post;
             if (post.type == "boost") {
                 displayContext = post.boostTarget;
@@ -998,29 +984,37 @@ module.exports = function(app) {
 
             await keepCachedHTMLUpToDate(displayContext);
 
-            if (moment(displayContext.timestamp).isSame(today, 'd')) {
-                var parsedTimestamp = moment(displayContext.timestamp).fromNow();
-            } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-                var parsedTimestamp = moment(displayContext.timestamp).format('D MMM');
-            } else {
-                var parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY');
-            }
+            var parsedTimestamp = parseTimestamp(displayContext.timestamp);
 
             if (req.isAuthenticated()) {
                 // Used to check if you can delete a post
                 var isYourPost = displayContext.author._id.equals(req.user._id);
             }
+
+            //todo: get a list of the names and i guess icons of the communities that a post has been boosted into for the modal.
+            //only count communities here if they're public, posts-wise, or the user is in them.
+            //the community boosts will involve a specific community and a specific user that boosted it into the community; it might be interesting to display
+            //that user alongside the thing? might look messy idk, with multiple users boosting it into a single community, anyway
+
+
             //generate some arrays containing usernames that will be put in "boosted by" labels
-            if (req.isAuthenticated() && (req.params.context != "community")) {
+            if (req.isAuthenticated()) {
                 var followedBoosters = [];
                 var notFollowingBoosters = [];
                 var youBoosted = false;
+                var boostedIntoFeed = false;
                 if (displayContext.boostsV2.length > 0) {
-                    displayContext.boostsV2.forEach((v, i, a) => {
-                        if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //do not include implicit boost
+                    displayContext.boostsV2.forEach(async (v, i, a) => {
+                        // if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { //todo: i don't believe that this is necessary anymore?
+                        // Yeah I've commented it out, let's see if anything breaks??
                             if (v.booster._id.equals(req.user._id)) {
                                 followedBoosters.push('you');
                                 youBoosted = true;
+                                // todo: This may be dumb but we currently need a variable for whether the post has been boosted to the user's feed
+                                // and I'm not sure how else to do it
+                                if (v.location === "userfeed" || v.location === null) {
+                                    boostedIntoFeed = true;
+                                }
                             } else {
                                 if (myFollowedUserIds.some(following => { if (following) { return following.equals(v.booster._id) } })) {
                                     followedBoosters.push(v.booster.username);
@@ -1028,7 +1022,7 @@ module.exports = function(app) {
                                     notFollowingBoosters.push(v.booster.username);
                                 }
                             }
-                        }
+                        // }
                     })
                 }
                 if (req.params.context == "user" && !displayContext.author._id.equals(post.author._id)) {
@@ -1049,6 +1043,16 @@ module.exports = function(app) {
                 }
             }
 
+            // In the header, remove boosts with duplicate user IDs, to make sure each user who boosted gets shown only once,
+            // even if they boosted the same post multiple times.
+            // todo: is this is going to mess up the 'boosted by' modal? we probably need to reorganise it somehow - I like your
+            // idea above - and maybe we can normalise the two modals ('boosted by' and the
+            // 'boost manager' using something like the boostmanagerlist layout? Not sure.
+            boostsForHeader = [...new Set(boostsForHeader)];
+            if (req.isAuthenticated()) {
+                followedBoosters = [...new Set(followedBoosters)];
+            }
+
             var displayedPost = Object.assign(displayContext, {
                 deleteid: displayContext._id,
                 parsedTimestamp: parsedTimestamp,
@@ -1060,12 +1064,15 @@ module.exports = function(app) {
                 lastCommentAuthor: "", // As does this
             })
 
+            console.log(displayedPost._id,"boostedIntoFeed",boostedIntoFeed)
+
             //these are only a thing for logged in users
             if (req.isAuthenticated()) {
                 displayedPost.followedBoosters = followedBoosters;
                 displayedPost.otherBoosters = notFollowingBoosters;
                 displayedPost.isYourPost = isYourPost;
-                displayedPost.youBoosted = youBoosted
+                displayedPost.youBoosted = youBoosted;
+                displayedPost.boostedIntoFeed = boostedIntoFeed;
             }
 
             //get timestamps and full image urls for each comment
@@ -1073,68 +1080,43 @@ module.exports = function(app) {
             var sixHoursAgo = moment(new Date()).subtract(6, 'hours');
             var threeHoursAgo = moment(new Date()).subtract(3, 'hours');
 
-            function parseComments(element, level) {
-                if (!level) level = 1;
-                element.forEach(async function(comment) {
-
+            async function parseComments(comments, level) {
+                for (var comment of comments) {
                     comment.canDisplay = true;
                     comment.muted = false;
-                    // I'm not sure why, but boosts in the home feed don't display
-                    // comment authors below the top level - this fixes it, but
-                    // it's kind of a hack - I can't work out what's going on
-                    if (!comment.author.username) {
-                        comment.author = await User.findById(comment.author);
-                    }
-                    if (req.isAuthenticated() && myMutedUserEmails.includes(comment.author.email)) {
-                        comment.muted = true;
-                        comment.canDisplay = false;
-                    }
-                    if (comment.deleted) {
-                        comment.canDisplay = false;
-                    }
-                    momentifiedTimestamp = moment(comment.timestamp);
-                    if (momentifiedTimestamp.isSame(today, 'd')) {
-                        comment.parsedTimestamp = momentifiedTimestamp.fromNow();
-                    } else if (momentifiedTimestamp.isSame(thisyear, 'y')) {
-                        comment.parsedTimestamp = momentifiedTimestamp.format('D MMM');
-                    } else {
-                        comment.parsedTimestamp = momentifiedTimestamp.format('D MMM YYYY');
-                    }
+
+                    comment.author = await User.findById(comment.author);
+
+                    comment.muted = req.isAuthenticated() && myMutedUserEmails.includes(comment.author.email);
+                    comment.canDisplay = !comment.deleted && !comment.muted;
+
+                    comment.timestampMs = comment.timestamp.getTime();
+                    comment.parsedTimestamp = parseTimestamp(comment.timestamp);
                     if (comment.timestamp > latestTimestamp) {
                         latestTimestamp = comment.timestamp;
                         displayedPost.lastCommentAuthor = comment.author;
                     }
+
                     // Only pulse comments from people who aren't you
-                    if (req.isAuthenticated() && momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
-                        comment.isRecent = true;
-                    }
-                    for (var i = 0; i < comment.images.length; i++) {
-                        comment.images[i] = '/api/image/display/' + comment.images[i];
-                    }
-                    // If the comment's author is logged in, or the displayContext's author is logged in
-                    if (((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) && !comment.deleted) {
-                        comment.canDelete = true;
-                    }
-                    if (level < globals.maximumCommentDepth) {
-                        comment.canReply = true;
-                    }
+                    comment.isRecent = (req.isAuthenticated() && moment(comment.timestamp).isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id));
+
+                    comment.images = comment.images.map(v => '/api/image/display/' + v);
+
+                    // If the comment's author is the current viewer, or the displayed post's author is the current viewer
+                    comment.canDelete = ((comment.author._id.equals(loggedInUserData._id)) || (displayContext.author._id.equals(loggedInUserData._id))) && !comment.deleted;
+
+                    comment.canReply = (level < globals.maximumCommentDepth);
+
                     comment.level = level;
+
                     if (comment.replies) {
-                        parseComments(comment.replies, level + 1)
+                        await parseComments(comment.replies, level + 1);
                     }
-                });
-                if (moment(latestTimestamp).isAfter(sixHoursAgo)) {
-                    displayedPost.recentlyCommented = true;
-                } else {
-                    displayedPost.recentlyCommented = false;
                 }
             }
-            parseComments(displayedPost.comments);
+            await parseComments(displayedPost.comments, 1);
 
-            if (req.isAuthenticated() && req.params.context == "single") {
-                // Mark associated notifications read if post is visible
-                notifier.markRead(loggedInUserData._id, displayContext._id)
-            }
+            displayedPost.recentlyCommented = moment(latestTimestamp).isAfter(sixHoursAgo);
 
             //wow, finally.
             displayedPosts.push(displayedPost);
@@ -1152,57 +1134,22 @@ module.exports = function(app) {
             return;
         }
 
-        var metadata = {};
+        // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
         if (req.params.context == "single") {
-            // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
-            // We can only get the post metadata if the post array is filled (and it'll only be filled
-            // if the post was able to be displayed, so this checks to see if we should display
-            // our vague error message on the frontend)
             var displayedPost = displayedPosts[0];
-            if (typeof displayedPost !== 'undefined') {
-                var canDisplay = true;
-                var imageCont = undefined;
-                if (displayedPost.inlineElements && displayedPost.inlineElements.length && (imageCont = (displayedPost.inlineElements.find(v => v.type == "image(s)")))) {
-                    var metadataImage = "https://sweet.sh/api/image/display/" + imageCont.images[0];
-                } else if (displayedPost.images && displayedPost.images.length) {
-                    var metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? "https://sweet.sh/images/uploads/" : "https://sweet.sh/api/image/display/") + displayedPost.images[0];
-                } else if (displayedPost.author.imageEnabled) {
-                    var metadataImage = "https://sweet.sh/images/" + displayedPost.author.image;
-                } else {
-                    var metadataImage = "https://sweet.sh/images/cake.svg";
-                }
-                var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
-                if (firstLine && firstLine[1]) {
-                    firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '');
-                } else {
-                    firstLine = "Just another ol' good post on sweet";
-                }
-                metadata = {
-                    title: "@" + displayedPost.author.username + " on sweet",
-                    description: firstLine,
-                    image: metadataImage,
-                    url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
-                }
-                if (displayedPost.community && req.isAuthenticated() && displayedPost.community.members.some(m => { return m.equals(req.user._id) })) {
-                    var isMember = true;
-                } else {
-                    var isMember = false;
-                }
+            var canDisplay = Boolean(displayedPost);
+            var metadata = helper.getPostMetadata(displayedPost);
+            if (post.community && req.isAuthenticated() && post.community.members.some(m => { return m.equals(req.user._id) })) {
+                var isMember = true;
             } else {
-                var canDisplay = false;
-                // We add some dummy metadata for posts which error
-                metadata = {
-                    title: "sweet • a social network",
-                    description: "",
-                    image: "https://sweet.sh/images/cake.svg",
-                    url: "https://sweet.sh/"
-                }
+                var isMember = false;
             }
             res.render('singlepost', {
+                layout: req.noLayout ? false : 'main',
                 canDisplay: canDisplay,
                 loggedIn: req.isAuthenticated(),
                 loggedInUserData: loggedInUserData,
-                posts: [displayedPost], // This is so it loads properly inside the posts_v2 partial
+                posts: [displayedPost], // the posts_v2 partial expects an array
                 flaggedUsers: flagged,
                 metadata: metadata,
                 isMuted: isMuted,
@@ -1210,19 +1157,9 @@ module.exports = function(app) {
                 canReply: !(displayedPost.type == "community" && !isMember),
                 activePage: 'singlepost'
             })
+
         } else {
-            function canReply() {
-                if (req.isAuthenticated()) {
-                    // These contexts already hide posts from communites you're not a member of
-                    if (req.params.context == "home" || req.params.context == "tag" || req.params.context == "user") {
-                        return true;
-                    } else if (req.params.context == "community") {
-                        return myCommunities.some(m => { return m.equals(req.params.identifier) });
-                    }
-                } else {
-                    return false;
-                }
-            }
+            var canReply = req.isAuthenticated() && (req.params.context != 'community' || myCommunities.some(m => { return m.equals(req.params.identifier) }))
             res.render('partials/posts_v2', {
                 layout: false,
                 loggedIn: req.isAuthenticated(),
@@ -1231,7 +1168,7 @@ module.exports = function(app) {
                 posts: displayedPosts,
                 flaggedUsers: flagged,
                 context: req.params.context,
-                canReply: canReply(),
+                canReply: canReply,
                 oldesttimestamp: oldesttimestamp
             });
         }
@@ -1256,123 +1193,93 @@ module.exports = function(app) {
             res.status(404).redirect('/404');
             return;
         }
-        var communitiesData = await Community.find({ members: profileData._id }).catch(c); //given to the renderer at the end
-        var followersArray = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from); //only used for the below
-        var followers = await User.find({ email: { $in: followersArray } }).catch(c); //passed directly to the renderer
-        var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: "follow" }, { to: 1 }).catch(c)).map(v => v.to); //used in the below and to see if the profile user follows you
-        var theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } }); //passed directly to the renderer
-        var usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: "trust" }).catch(c)).map(v => v.from) //only used for the below
-        var usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c); //passed directly to the renderer
-        var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: "trust" }).catch(c)).map(v => v.to); //used to see if the profile user trusts the logged in user (if not isOwnProfile) and the below
-        var theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c); //given directly to the renderer
 
-        var userTrustsYou = false;
-        var userFollowsYou = false;
+        var renderData = {}; //and he shall be filled up with properties
+
+        renderData.communitiesData = await Community.find({ members: profileData._id }).catch(c);
+        var followersEmails = (await Relationship.find({ to: profileData.email, value: "follow" }, { from: 1 }).catch(c)).map(v => v.from);
+        renderData.followersData = await User.find({ email: { $in: followersEmails } }).catch(c);
+        var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: "follow" }, { to: 1 }).catch(c)).map(v => v.to);
+        renderData.followedUserData = await User.find({ email: { $in: theirFollowedUserEmails } });
+        var usersWhoTrustThemEmails = (await Relationship.find({ to: profileData.email, value: "trust" }).catch(c)).map(v => v.from);
+        renderData.usersWhoTrustThemData = await User.find({ email: { $in: usersWhoTrustThemEmails } }).catch(c);
+        var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: "trust" }).catch(c)).map(v => v.to);
+        renderData.trustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c);
+
         if (req.isAuthenticated()) {
-            // Is this the logged in user's own profile?
-            if (profileData.email == req.user.email) {
-                var isOwnProfile = true;
-                var userTrustsYou = false;
-                var userFollowsYou = false;
-                var trusted = false;
-                var followed = false;
-                var muted = false;
-                var flagged = false;
-                var flagsFromTrustedUsers = 0;
-                var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: "flag" }).catch(c)).map(v => v.to); //only used in the below line
-                var myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c); //passed directly to the renderer, but only actually used if isOwnProfile, so we're only actually defining it in here
+            // Is this the viewing user's own profile?
+            if (profileData._id.equals(req.user._id)) {
+                renderData.isOwnProfile = true;
+                renderData.userTrustsYou = false;
+                renderData.userFollowsYou = false;
+                renderData.trusted = false;
+                renderData.followed = false;
+                renderData.muted = false;
+                renderData.flagged = false;
+                renderData.flagsFromTrustedUsers = 0;
+                var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: "flag" }).catch(c)).map(v => v.to);
+                renderData.flaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c);
             } else {
-                var isOwnProfile = false;
+                renderData.isOwnProfile = false;
 
-                var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: "trust" }).catch(c)).map(v => v.to); //used for flag checking and to see if the logged in user trusts this user
+                var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: "trust" }).catch(c)).map(v => v.to);
 
-                // Check if profile user follows and/or trusts logged in user
-                var userTrustsYou = theirTrustedUserEmails.includes(req.user.email) //not sure if these includes are faster than an indexed query of the relationships collection would be
-                var userFollowsYou = theirFollowedUserEmails.includes(req.user.email)
+                // Check if profile user follows and/or trusts viewing user
+                renderData.userTrustsYou = theirTrustedUserEmails.includes(req.user.email); //not sure if these includes are faster than an indexed query of the relationships collection would be
+                renderData.userFollowsYou = theirFollowedUserEmails.includes(req.user.email);
 
-                // Check if logged in user follows and/or trusts and/or has muted profile user
-                var trusted = myTrustedUserEmails.includes(profileData.email);
-                var followed = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "follow" }).catch(c));
-                var muted = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "mute" }).catch(c));
+                // Check if viewing user follows and/or trusts and/or has muted profile user
+                renderData.trusted = myTrustedUserEmails.includes(profileData.email);
+                renderData.followed = Boolean(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "follow" }).catch(c));
+                renderData.muted = Boolean(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: "mute" }).catch(c));
 
                 var flagsOnUser = await Relationship.find({ to: profileData.email, value: "flag" }).catch(c);
-                var flagsFromTrustedUsers = 0;
-                var flagged = false;
+                renderData.flagsFromTrustedUsers = 0;
+                renderData.flagged = false;
                 for (var flag of flagsOnUser) {
-                    // Check if logged in user has flagged profile user
-                    if (flag.from == req.user.email) {
-                        var flagged = true;
-                    }
-                    // Check if any of the logged in user's trusted users have flagged profile user
+                    // Check if viewing user has flagged profile user
+                    renderData.flagged = (flag.from == req.user.email);
+                    // Check if any of the viewing user's trusted users have flagged profile user
                     if (myTrustedUserEmails.includes(flag.from)) {
-                        flagsFromTrustedUsers++;
+                        renderData.flagsFromTrustedUsers++;
                     }
                 }
             }
 
         } else {
-            var isOwnProfile = false;
-            var flagsFromTrustedUsers = 0;
-            var trusted = false;
-            var followed = false;
-            var flagged = false;
+            renderData.isOwnProfile = false;
+            renderData.flagsFromTrustedUsers = 0;
+            renderData.trusted = false;
+            renderData.followed = false;
+            renderData.flagged = false;
         }
-        res.render('user', {
-            loggedIn: req.isAuthenticated(),
-            isOwnProfile: isOwnProfile,
-            loggedInUserData: req.user,
+
+        if (profileData.profileVisibility != "invisible" || req.isAuthenticated()) {
+            renderData.metadata = {
+                title: profileData.displayName + ' (@' + profileData.username + ') on sweet',
+                description: profileData.aboutRaw,
+                image: (process.env.NODE_ENV == 'development' ? 'http://localhost:8686' : 'https://sweet.sh') + '/images/' + profileData.image,
+                url: (process.env.NODE_ENV == 'development' ? 'http://localhost:8686' : 'https://sweet.sh') + '/' + profileData.username
+            }
+        } else {
+            renderData.metadata = {};
+        }
+
+        res.render('user', Object.assign(renderData, {
+            layout: req.noLayout ? false : 'main',
             profileData: profileData,
-            trusted: trusted,
-            flagged: flagged,
-            muted: muted,
-            followed: followed,
-            followersData: followers,
-            usersWhoTrustThemData: usersWhoTrustThem,
-            userFollowsYou: userFollowsYou,
-            userTrustsYou: userTrustsYou,
-            trustedUserData: theirTrustedUserData,
-            followedUserData: theirFollowedUserData,
-            communitiesData: communitiesData,
-            flaggedUserData: myFlaggedUserData,
-            flagsFromTrustedUsers: flagsFromTrustedUsers,
+            draftsFirst: req.draftsFirst,
+            loggedIn: req.isAuthenticated(),
+            loggedInUserData: req.user,
             activePage: profileData.username,
             visibleSidebarArray: ['profileOnly', 'profileAndPosts']
-        });
+        }));
+
     });
 
-    //Responds to post request from the browser informing us that the user has seen the comments of some post by setting notifications about those comments
-    //to seen=true
-    //Input:
-    app.post("/api/notification/update/:id", isLoggedInOrRedirect, function(req, res) {
-        User.findOneAndUpdate({
-                "_id": req.user._id,
-                "notifications._id": req.params.id
-            }, {
-                "$set": {
-                    "notifications.$.seen": true
-                }
-            },
-            function(err, doc) {
-                res.sendStatus(200)
-            }
-        );
-    })
-
-    app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, function(req, res) {
-        User.findOne({
-                _id: req.user._id
-            })
-            .then(user => {
-                user.notifications.forEach(notification => {
-                    if (notification.subjectId == req.params.subjectid) {
-                        notification.seen = true;
-                    }
-                })
-                user.save()
-                    .then(response => {
-                        res.sendStatus(200);
-                    })
-            })
+    app.post("/api/notification/update-by-subject/:subjectid", isLoggedInOrRedirect, async function(req, res) {
+        var markedRead = await notifier.markRead(req.user._id, req.params.subjectid);
+        socketCity.markNotifsRead(req.user._id, markedRead);
     })
 
     app.get('/api/notification/display', function(req, res) {
@@ -1397,9 +1304,40 @@ module.exports = function(app) {
         }
     })
 
+    // Responds to a post request that fetches all the boosts the logged in user has made
+    // for a particular post (including if there are none).
+    // Inputs: id of the post
+    // Outputs: an array containing all the user's boosts of a post (or an empty array)
+    app.post('/getboosts/:postid', isLoggedInOrRedirect, function(req, res) {
+        Post.find({ 'type': 'boost', boostTarget: req.params.postid, author: req.user._id })
+        .populate('author')
+        .populate('community')
+        .then(async boosts => {
+            boosts.forEach(boost => {
+                boost.parsedTimestamp = parseTimestamp(boost.timestamp)
+            })
+            hbs.render('./views/partials/boostmanagerlist.handlebars', {
+                boosts: boosts
+            })
+            .then(async html => {
+                var result = {
+                    list: html
+                }
+                res.contentType('json');
+                res.send(JSON.stringify(result));
+            })
+            // res.contentType('json');
+            // res.send(JSON.stringify(boosts));
+        })
+    });
+
     app.post('/api/newpostform/linkpreviewdata', async function(req, res) {
         try {
-            const metadata = await helper.getLinkMetadata(req.body.url);
+            const metadata = await helper.getLinkMetadata(req.body.url, true);
+            //when the embed with this data is rendered in a post server-side, handlebars will escape the html characters bc the info is in double-braces,
+            //not triple; but for the link preview previews in the browser, we have to escape them here.
+            metadata.description = helper.escapeHTMLChars(metadata.description);
+            metadata.title = helper.escapeHTMLChars(metadata.title);
             res.setHeader('content-type', 'text/plain');
             res.send(JSON.stringify(metadata))
         } catch (err) {
@@ -1448,6 +1386,7 @@ function isLoggedInOrRedirect(req, res, next) {
                 })
         }
         return next();
+    } else {
+        res.redirect('/');
     }
-    res.redirect('/');
 }

@@ -273,11 +273,11 @@ module.exports = function(app) {
                 }
 
                 // Delete boosts
-                if (post.type == "original" && post.boosts) {
-                    post.boosts.forEach((boost) => {
-                        Post.deleteOne({ "_id": boost })
+                if (post.type == "original" && post.boostsV2 ) {
+                    post.boostsV2.forEach((boost) => {
+                        Post.deleteOne({ "_id": boost.boost })
                             .then((boost) => {
-                                console.log("Deleted boost: " + boost)
+                                console.log("Deleted boost: " + boost.boost)
                             })
                             .catch((err) => {
                                 console.log("Database error while attempting to delete boost while deleting post: " + err)
@@ -286,7 +286,7 @@ module.exports = function(app) {
                 }
 
                 // Delete notifications
-                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log(response) })
+                User.update({}, { $pull: { notifications: { subjectId: post._id } } }, { multi: true }).then(response => { console.log('notifications removed',response) })
             })
             .then(() => {
                 Post.deleteOne({ "_id": req.params.postid })
@@ -300,12 +300,13 @@ module.exports = function(app) {
     });
 
     //Responds to post requests which create a comment.
-    //Inputs: comment body, filenames of comment images, descriptions of comment images
+    //Inputs: comment text, comment embeds. the params in the url are for the parent post and the parent comment; the latter is 'undefined' if
+    //it's a top-level comment
     //Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
     //moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
     app.post("/createcomment/:postid/:commentid", isLoggedInOrErrorResponse, async function(req, res) {
         commentTimestamp = new Date();
-        var commentId = mongoose.Types.ObjectId();
+        var newCommentID = mongoose.Types.ObjectId();
 
         var rawContent = req.body.commentContent;
         var parsedResult = await helper.parseText(JSON.parse(rawContent));
@@ -316,7 +317,7 @@ module.exports = function(app) {
         }
 
         var comment = {
-            _id: commentId,
+            _id: newCommentID,
             authorEmail: req.user.email,
             author: req.user._id,
             timestamp: commentTimestamp,
@@ -328,11 +329,12 @@ module.exports = function(app) {
 
         Post.findOne({ "_id": req.params.postid })
             .populate('author')
+            .populate('community')
             .then(async (post) => {
 
-                if (post.communityId) {
+                if (post.community) {
                     var postType = "community";
-                    var postPrivacy = (await Community.findById(post.communityId)).settings.visibility;
+                    var postPrivacy = post.community.settings.visibility;
                 } else {
                     var postType = "original";
                     var postPrivacy = post.privacy;
@@ -341,7 +343,7 @@ module.exports = function(app) {
                 for (var inline of parsedResult.inlineElements) {
                     if (inline.type == "image(s)") {
                         //calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality);
+                        var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.community ? post.community._id : undefined, req.user._id, postPrivacy, req.user.settings.imageQuality);
                         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal;
                         inline.imageIsVertical = horizOrVertics.imageIsVertical;
                     }
@@ -351,9 +353,9 @@ module.exports = function(app) {
                 var contentHTML = await helper.renderHTMLContent(comment)
                 comment.cachedHTML = { fullContentHTML: contentHTML };
 
-                numberOfComments = 0;
+                var numberOfComments = 0;
                 var depth = undefined;
-                commentParent = false;
+                var commentParent = false;
                 if (req.params.commentid == 'undefined') {
                     depth = 1;
                     // This is a top level comment with no parent (identified by commentid)
@@ -623,7 +625,7 @@ module.exports = function(app) {
                                 username: req.user.username,
                                 timestamp: moment(commentTimestamp).fromNow(),
                                 content: contentHTML,
-                                comment_id: commentId.toString(),
+                                comment_id: newCommentID.toString(),
                                 post_id: post._id.toString(),
                                 depth: depth
                             })
@@ -633,6 +635,7 @@ module.exports = function(app) {
                                 }
                                 res.contentType('json');
                                 res.send(JSON.stringify(result));
+                                socketCity.commentAdded(req.cookies.io, post, req.params.commentid=='undefined' ? undefined : req.params.commentid, html);
                             })
                     })
                     .catch((err) => {
@@ -752,6 +755,7 @@ module.exports = function(app) {
                             numberOfComments: numberOfComments
                         }
                         res.contentType('json').send(JSON.stringify(result));
+                        socketCity.commentDeleted(req.params.postid, req.params.commentid);
                     })
                     .catch((error) => {
                         console.error(error)
@@ -763,8 +767,15 @@ module.exports = function(app) {
     //Inputs: id of the post to be boosted
     //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
     //user whose post was boosted.
-    app.post('/createboost/:postid', isLoggedInOrRedirect, function(req, res) {
+    app.post('/createboost/:postid/:location', isLoggedInOrRedirect, async function(req, res) {
         boostedTimestamp = new Date();
+        if (req.params.location != 'userfeed') { // This post will be boosted into a specific location (i.e. a community), rather than the user's regular feed
+            boostCommunity = await Community.findById(req.params.location);
+            if (!boostCommunity.members.some(member => member.equals(req.user._id))) {
+                res.status(400).send("You're not a member of the community where you want to boost this post");
+                return;
+            }
+        }
         Post.findOne({
                 '_id': req.params.postid
             }, {
@@ -774,14 +785,15 @@ module.exports = function(app) {
                 unsubscribedUsers: 1,
                 author: 1,
                 url: 1
-            }).populate('author')
+            }).populate('author').populate('community')
             .then((boostedPost) => {
-                if (boostedPost.privacy != "public" || boostedPost.type == 'community') {
-                    res.status(400).send("post is not public and therefore may not be boosted");
+                if (boostedPost.privacy != "public" || (boostedPost.community && boostedPost.community.settings.visibility != "public")) {
+                    res.status(400).send("post is not public, or is posted in a closed community, and therefore may not be boosted");
                     return;
                 }
                 var boost = new Post({
                     type: 'boost',
+                    community: (req.params.location != 'userfeed' ? boostCommunity._id : null),
                     authorEmail: req.user.email,
                     author: req.user._id,
                     url: shortid.generate(),
@@ -794,11 +806,15 @@ module.exports = function(app) {
                     const boost = {
                         booster: req.user._id,
                         timestamp: boostedTimestamp,
+                        location: req.params.location,
                         boost: savedBoost._id
                     }
-                    boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
-                        return !boost.booster.equals(req.user._id)
-                    })
+                    // I'm not sure what this does - it removes previous boosts by the same user, but what if
+                    // the same user wants to boost a post on their feed _and_ in a community? I've commented
+                    // it out for now.
+                    // boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
+                    //     return !boost.booster.equals(req.user._id)
+                    // })
                     boostedPost.boostsV2.push(boost);
 
                     boostedPost.save().then(() => {
@@ -812,28 +828,34 @@ module.exports = function(app) {
             })
     })
 
-    //Responds to a post request that boosts a post.
-    //Inputs: id of the post to be boosted
-    //Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
-    //user whose post was boosted.
-    app.post('/removeboost/:postid', isLoggedInOrRedirect, function(req, res) {
-        Post.findOne({ '_id': req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
-            .then((boostedPost) => {
-                var boost = boostedPost.boostsV2.find(b => {
-                    return b.booster.equals(req.user._id)
-                });
-                boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
-                    return !boost.booster.equals(req.user._id)
-                })
-                Post.deleteOne({
-                    _id: boost.boost
-                }, function() {
-                    console.log('delete')
-                });
-                boostedPost.save().then(() => {
-                    res.redirect("back");
+    //Responds to a post request that removes a boosted post.
+    //Inputs: id of the boost to be removed
+    //Outputs: success or failure for the removal
+    app.post('/removeboost/:postid/:boostid', isLoggedInOrRedirect, function(req, res) {
+
+        //todo: need to be able to remove specific boosts; we need another paramater for source, which will be i guess 'userfeed' or a community id,
+        //to match the parameter in the createboost function, and also 'all', to remove all boosts created by the requesting user.
+        Post.findOne({ '_id': req.params.postid })
+        .then((boostedPost) => {
+            console.log("Before")
+            console.log(boostedPost.boostsV2)
+            boostedPost.boostsV2 = boostedPost.boostsV2.filter(b => {
+                return !b.boost === req.params.boostid
+            })
+            console.log("After")
+            console.log(boostedPost.boostsV2)
+            boostedPost.save()
+            .then(() => {
+                Post.deleteOne({ '_id': req.params.boostid })
+                .then(deletedBoost => {
+                    if (deletedBoost.ok) {
+                        return res.sendStatus(200);
+                    } else {
+                        return res.sendStatus(500);
+                    }
                 })
             })
+        })
     })
 
     app.post('/createposteditor/:postid', isLoggedInOrRedirect, function(req, res) {

@@ -1,15 +1,18 @@
-function markRead(userId, subjectId) {
-    User.findOne({
+async function markRead(userId, subjectId) {
+    var markedRead = [];
+    await User.findOne({
             _id: userId
         }, 'notifications')
         .then(user => {
             user.notifications.forEach(notification => {
                 if (notification.seen == false && notification.subjectId == subjectId) {
                     notification.seen = true;
+                    markedRead.push(notification._id);
                 }
             })
             user.save();
         })
+    return markedRead;
 }
 
 function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
@@ -35,7 +38,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                         var image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg');
                         var username = '@' + user.username;
                         var final = '<strong>' + username + '</strong> ' + text;
-                        var emailText = notifEmails[cause] ? notifEmails[cause] : "";
+                        var emailText = notifEmails[cause] ? ('<strong>' + username + '</strong> ' + notifEmails[cause]) : "";
                         return {
                             image: image,
                             text: final,
@@ -77,7 +80,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                 .then(async response => {
                     //send the user push notifications if they have a subscribed browser
                     if (notifiedUser.pushNotifSubscriptions.length > 0) {
-                        for (subbed of notifiedUser.pushNotifSubscriptions) {
+                        for (var subbed of notifiedUser.pushNotifSubscriptions) {
                             const pushSubscription = JSON.parse(subbed);
                             const options = {
                                 gcmAPIKey: ''
@@ -120,8 +123,10 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                             subjectId: subjectId,
                             text: response.text,
                             image: response.image,
-                            url: url
+                            url: url,
+                            _id: new ObjectId()
                         }
+                        socketCity.notifyUser(notifieeID, notification);
                         notifiedUser.notifications.push(notification);
                         notifiedUser.notifications = notifiedUser.notifications.slice(Math.max(0, notifiedUser.notifications.length - 60));
                         notifiedUser.save().then(() => { console.log("notification sent to " + notifiedUser.username); });

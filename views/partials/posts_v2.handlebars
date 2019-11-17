@@ -20,14 +20,14 @@
                 </div>
             {{/if}}
         {{/if}}
-        {{#isnt ../context "community"}}
-            {{#if this.community._id}}
+        {{#eq this.type "community"}}
+            {{#isnt this.community._id ../identifier}}
                 <div class="community-notification">
                     <img alt="Display image for the community '{{this.community.name}}'" src="/images/communities/{{#if this.community.imageEnabled}}{{this.community.image}}{{else}}cake.svg{{/if}}" />
                     <span>Posted in <a href="/community/{{this.community.slug}}">{{this.community.name}}</a></span>
                 </div>
-            {{/if}}
-        {{/isnt}}
+            {{/isnt}}
+        {{/eq}}
     </aside>
     {{/isnt}}
     <header>
@@ -51,7 +51,7 @@
                 {{/contains}}
             </h2>
             <aside class="metadata">
-                <span class="post-timestamp" data-timestamp="{{this.timestampMs}}" title="Posted " onmouseover="resolveTimestamp(this);">
+                <span class="post-timestamp" data-timestamp="{{this.timestampMs}}" onmouseover="resolveTimestamp(this);" ontouchstart="touchResolveTimestamp(this);">
                     {{this.parsedTimestamp}}
                 </span>
                 &nbsp;&middot;&nbsp;
@@ -64,7 +64,7 @@
                 </span>
                 {{#if lastEdited}}
                 &nbsp;&middot;&nbsp;
-                <span class="post-edited" data-timestamp="{{this.editedTimestampMs}}" title="Last edited " onmouseover="resolveTimestamp(this);">Edited</span>
+                <span class="post-edited" data-timestamp="{{this.editedTimestampMs}}" onmouseover="resolveTimestamp(this);" ontouchstart="touchResolveTimestamp(this);">Edited</span>
                 {{/if}}
             </aside>
         </div>
@@ -84,40 +84,44 @@
     </section>
     <footer class="toolbar">
         {{#unless this.commentsDisabled}}
-            {{#if ../loggedIn}}
+            {{#if ../canReply}}
             <div class="toolbar-button-container">
             	<button type="button" class="button post-toolbar-button show-comments">
                 	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                 </button>
             </div>
             {{else}}
-                {{#if this.numberOfComments}}
-               		<div class="toolbar-button-container">
-                    	<button type="button" class="button post-toolbar-button show-comments">
-                        	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
-                    	</button>
-                    </div>
-                {{/if}}
+                <div class="toolbar-button-container">
+                    <button type="button" class="button post-toolbar-button show-comments"{{#unless numberOfComments}} style="display:none;"{{/unless}}>
+                        <i class="far fa-comment"></i> <span class="comments-number">{{this.numberOfComments}}</span>
+                    </button>
+                </div>
             {{/if}}
         {{/unless}}
         {{#eq this.privacy "public"}}
             {{#if ../loggedIn}}
-                {{#isnt this.type "community"}}
-                    <div class="toolbar-button-container">
-                        <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
-                            <button type="submit" class="button post-toolbar-button boost-post">
-                                {{#if youBoosted}}
-                                    <span class="fa-layers fa-fw">
-                                        <i class="fas fa-retweet"></i>
-                                        <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
-                                    </span>
-                                {{else}}
-                                    <i class="fas fa-retweet"></i>
-                                {{/if}}
+                    <div class="toolbar-button-container dropdown">
+                        <button type="button" id="post-boosting-dropdown" class="button post-toolbar-button boost-post" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-retweet"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="post-boosting-dropdown">
+                            {{#if boostedIntoFeed}}
+                                <button disabled class="boost-post-userfeed dropdown-item">
+                                    <i class="fas fa-fw fa-user-circle"></i> You have boosted this post to your profile
+                                </button>
+                            {{else}}
+                                <button class="boost-post-userfeed dropdown-item" data-action="boost" data-boost-url="/createboost/{{this._id}}/userfeed">
+                                    <i class="fas fa-fw fa-user-circle"></i> Boost post to your profile
+                                </button>
+                            {{/if}}
+                            <button type="button" class="dropdown-item boost-post-community" data-toggle="modal" data-target="#boostPostLocationModal" >
+                                <i class="fas fa-fw fa-leaf"></i> Boost post into a community
                             </button>
-                        </form>
+                            <button type="button" class="dropdown-item show-boost-manager" data-toggle="modal" data-target="#boostManagerModal" >
+                                <i class="fas fa-fw fa-retweet"></i> Manage boosts
+                            </button>
+                        </div>
                     </div>
-                {{/isnt}}
             {{/if}}
         {{/eq}}
         {{#isnt this.type "draft"}}
@@ -129,6 +133,7 @@
                 </span>
             </a>
         </div>
+        {{#if ../loggedIn}}
         {{#contains this.subscribedUsers ../loggedInUserData._id}}
             <div class="toolbar-button-container">
                 <button type="button" class="button post-toolbar-button unsubscribe-post tooltip-top" data-post-id="{{this._id}}" data-tooltip="Receiving notifications (click to change)">
@@ -142,6 +147,7 @@
                 </button>
             </div>
         {{/contains}}
+        {{/if}}
         {{/isnt}}
         {{#if isYourPost}}
         {{#eq type "draft"}}
@@ -186,8 +192,8 @@
             {{/if}}
         </section>
     {{/unless}}
-    {{#if @last}}
+    {{#and @last ../oldesttimestamp}}
     <div class="oldesttimestamp" style="display:none;">{{../oldesttimestamp}}</div>
-    {{/if}}
+    {{/and}}
 </article>
 {{/each}}

@@ -127,6 +127,9 @@ module.exports = {
     },
     //stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
     escapeHTMLChars: function(string) {
+        if(!string){
+            return ""; //otherwise the string constructor below will try to make the input into a string object and end up with null, and the caller prob. expects a string
+        }
         var entityMap = {
             '&': '&amp;',
             '<': '&lt;',
@@ -142,25 +145,33 @@ module.exports = {
             return entityMap[s];
         });
     },
-    getLinkMetadata: async function(url) {
+    getLinkMetadata: async function(url, forceRefresh=false) {
         //remove the protocol and the path if it's empty from the url bc that's how it's stored in the cache (that way it matches it with or without)
-        var parsedUrl = Object.assign(urlParser.parse(url),{protocol:"",slashes:false});
-        if(parsedUrl.path=="/" && parsedUrl.pathname=="/"){
+        var parsedUrl = Object.assign(urlParser.parse(url), { protocol: "", slashes: false });
+        if (parsedUrl.path == "/" && parsedUrl.pathname == "/") {
             parsedUrl.path = "";
             parsedUrl.pathname = "";
         }
         var retrievalUrl = urlParser.format(parsedUrl);
         var finalUrl; //this will have the correct protocol, obtained either by the cache or the request package
         var cache = mongoose.model('Cached Link Metadata');
-        var found = await cache.findOne({ retrievalUrl: retrievalUrl });
-        var cacheHit = !!found;
+        if(!forceRefresh){
+            console.log('looking in cache for link metadata');
+            var found = await cache.findOne({ retrievalUrl: retrievalUrl });
+            var cacheHit = !!found;
+            (found&&(console.log('found link metadata in cache')));
+        }else{
+            await cache.deleteOne({retrievalUrl:retrievalUrl},function(err){if(err)(console.error(err))});
+            var cacheHit = found = false;
+        }
         if (!cacheHit) {
             var urlreq = new Promise(function(resolve, reject) {
-                request({ url: url.includes("//") ? url : ("http://"+url), gzip: true }, function(error, response, body) { //(faking a maybe-wrong protocol here just so the this thing will accept it)
+                request({ url: url.includes("//") ? url : ("http://" + url), gzip: true }, function(error, response, body) { //(faking a maybe-wrong protocol here just so the this thing will accept it)
                     if (error) {
                         reject(error);
                     } else {
                         finalUrl = response.request.href;
+                        console.log('retrieved link metadata');
                         resolve(body);
                     }
                 });
@@ -213,6 +224,7 @@ module.exports = {
         }
         result.isEmbeddableVideo = isEmbeddableVideo;
         if (!cacheHit) {
+            console.log('saving new link metadata in cache');
             (new cache(result)).save();
         }
         return result;
@@ -351,6 +363,43 @@ module.exports = {
             return cleanedParsedContent;
         }
     },
+    //returns a metadata object with title, description, image, and url for the input post document
+    getPostMetadata: function(post) {
+        if (post) {
+            var imageCont = undefined;
+            var origin = process.env.NODE_ENV == 'development' ? 'http://localhost:8686' : 'https://sweet.sh';
+            if (post.inlineElements && post.inlineElements.length && (imageCont = (post.inlineElements.find(v => v.type == "image(s)")))) {
+                var metadataImage = origin + "/api/image/display/" + imageCont.images[0];
+            } else if (post.images && post.images.length) {
+                var metadataImage = ((!post.imageVersion || post.imageVersion < 2) ? origin + "/images/uploads/" : origin + "/api/image/display/") + post.images[0];
+            } else if (post.author.imageEnabled) {
+                var metadataImage = origin + "/images/" + post.author.image;
+            } else {
+                var metadataImage = origin + "/images/cake.svg";
+            }
+            var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(post.internalPostHTML)
+            if (firstLine && firstLine[1]) {
+                firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '');
+            } else {
+                firstLine = "Just another ol' good post on sweet";
+            }
+            var metadata = {
+                title: "@" + post.author.username + " on sweet",
+                description: firstLine,
+                image: metadataImage,
+                url: origin + '/' + post.author.username + '/' + post.url
+            }
+        } else {
+            // We add some dummy metadata for posts which error
+            var metadata = {
+                title: "sweet • a social network",
+                description: "",
+                image: "https://sweet.sh/images/cake.svg",
+                url: "https://sweet.sh/"
+            }
+        }
+        return metadata;
+    },
     isEven: function(n) {
         return n % 2 == 0;
     },
@@ -376,7 +425,6 @@ module.exports = {
 function wordCount(str) {
     return str.split(' ').filter(function(n) { return n != '' }).length;
 }
-
 
 //the following is a function i wrote to parse quilljs' delta format and turn formatted text into html and inline elements into an array. it turned
 //out to be more complicated than necessary so right now we're actually just going to pull the html from the quill editor directly and process it in

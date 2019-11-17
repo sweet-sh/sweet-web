@@ -1,5 +1,4 @@
 <script type="text/javascript">
-
 //bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
 //the body when it's dismissed and make the backdrops not collide with each other
 var oldAlert = bootbox.alert;
@@ -24,10 +23,16 @@ bootbox.alert = function(alertString, callback) {
 }
 
 function resolveTimestamp(element) {
-    if (!element.stamped) {
-        element.title += new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', timeZoneName: 'short' });
-        element.stamped = true;
+    element.title = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' });
+    element.setAttribute("onmouseover", "");
+}
+
+function touchResolveTimestamp(element) {
+    if (element.lastTouch && event.timeStamp - element.lastTouch < 300) {
+        element.innerHTML = new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', year: 'numeric', timeZoneName: 'short' })
+        element.setAttribute("ontouchstart", "");
     }
+    element.lastTouch = event.timeStamp;
 }
 
 //check for posts every minute (function declared globally for console debugging purposes)
@@ -45,7 +50,9 @@ function checkForNewPosts(){
   window.setTimeout(checkForNewPosts, 60000);
 {{/eq}}
 
+
 $(function() {
+
     $(window).scroll(function() {
         var scroll = $(window).scrollTop();
         if (scroll > 0) {
@@ -78,15 +85,7 @@ $(function() {
          $('#bodyContainer, #topNav').css('filter','none');
     });
 
-  // Reload notifications container every minute (hack until we set up WebSockets)
-  window.setInterval(function(){
-    $("#notificationsContainer").load("/api/notification/display");
-  }, 60000);
-  $("#notificationsContainer").load( "/api/notification/display" );
-
-  if ($('#notificationsPageLink').hasClass('active')){
-    $('#notificationsPageLink').find('.notifications-count').css('color', '#900202');
-  }
+    $("#notificationsContainer").load( "/api/notification/display" );
 
   $('.clear-all-notifications').click(function() {
       $.post('/api/notifications/clearall', function(data){
@@ -204,6 +203,84 @@ $(function() {
         })
     })
 
+    $('#boostPostLocationModal').on('show.bs.modal', function (event) {
+        var postID = $(event.relatedTarget).closest('.post').attr('data-post-id');
+        var modal = $(this)
+        modal.find('#communities-dropdown').empty()
+        $.get('/api/community/listjoined', function(response) {
+            response = JSON.parse(response);
+            response.forEach(function(community) {
+                modal.find('#communities-dropdown').append("<option data-slug='"+community.slug+"' value='"+community._id+"'>"+community.name+"</option>");
+            })
+        })
+        modal.find('#original-post-id').val(postID);
+    })
+
+    $('#boostManagerModal').on('show.bs.modal', function (event) {
+        var postID = $(event.relatedTarget).closest('.post').attr('data-post-id');
+        var modal = $(this)
+        modal.find('#boosts-list').empty()
+        $.post('/getboosts/' + postID, function(response) {
+            modal.find('#boosts-list').append(response.list);
+        })
+    })
+
+    $('body').on('click', '.removeBoost', function(){
+          var $this = $(this);
+          var boostBox = $this.closest('.content-box');
+          var postFeed = $('body').find('.postsContainer');
+          $this.html('<i class="fas fa-spinner fa-spin"></i> Unboosting');
+          $.post('/removeboost/'+$this.attr('data-post-id')+'/'+$this.attr('data-boost-id')).done(function(response){
+              boostBox.fadeOut(function() {
+                boostBox.remove();
+              });
+              // todo: this doesn't currently reload the target post, which it needs to because the number of boosters etc. should
+              // have changed - the post might even vanish if you don't otherwise follow its author - perhaps we should just reload
+              // the feed here?
+          })
+            // if($this.attr('data-action')=="boost"){
+            //   $this.attr('data-action',"unboost");
+            //   $this.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span> Unboost post');
+            //   $this.attr('data-boost-url','/removeboost/'+$this.closest('.post').attr('data-post-id'));
+            //   dropdownParent.html('<i class="fas fa-retweet"></i>&nbsp;<i class="fa fa-check"></i>');
+            // }else{
+            //   $this.attr('data-action',"boost");
+            //   $this.html('<i class="fas fa-fw fa-user-circle"></i> Boost post to your profile');
+            //   $this.attr('data-boost-url','/createboost/'+$this.closest('.post').attr('data-post-id')+'/userfeed');
+            //   dropdownParent.html('<span class="fa-layers fa-fw"><i class="fas fa-retweet"></i><i class="fas fa-slash" data-fa-transform="rotate-90"></i></span>&nbsp;<i class="fa fa-check"></i>');
+            // }
+    })
+
+    $('body').on('click', '.boost-post-userfeed', function(){
+      var $this = $(this);
+      var dropdownParent = $this.closest('.dropdown').find('#post-boosting-dropdown');
+      dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
+      $.post($this.attr('data-boost-url')).done(function(){
+          dropdownParent.html('<i class="fa fa-check"></i>');
+          setTimeout(() => {dropdownParent.html('<i class="fa fa-retweet"></i>')}, 5000);
+          $this.html('<i class="fas fa-fw fa-user-circle"></i> You have boosted this post to your profile').prop('disabled', true)
+      })
+    })
+
+    $('body').on('click', '.boost-post-community', function(){
+      document.getElementById('boostPostLocationModal').dropdownParent = $(this).closest('.dropdown').find('#post-boosting-dropdown');
+    })
+
+    $('body').on('click', '.boost-post-into-community', function() {
+        var $this = $(this);
+        var modal = $this.closest("#boostPostLocationModal")
+        var postID = modal.find('#original-post-id').val();
+        var targetCommunitySlug = $("#boostPostLocationModal").find('#communities-dropdown').find(':selected').attr("data-slug");
+        var targetCommunityID = $("#boostPostLocationModal").find('#communities-dropdown').val();
+        var dropdownParent = document.getElementById('boostPostLocationModal').dropdownParent;
+        dropdownParent.html('<i class="fas fa-spinner fa-spin"></i>');
+        $.post("/createboost/" + postID + "/" + targetCommunityID).done(function(data){
+          modal.modal('hide');
+          dropdownParent.html('<i class="fa fa-check"></i>');
+          setTimeout(() => {dropdownParent.html('<i class="fa fa-retweet"></i>')}, 5000);
+        });
+    });
+
   $('body').on('click', '.content-warning-show-more', function() {
     var $this = $(this);
     var images = $this.closest(".post").find(".content-warning-images");
@@ -223,22 +300,30 @@ $(function() {
       })
     }
     var text = $this.text();
-    $this.text(
-        text == "Show post" ? "Hide post" : "Show post");
+    $this.text((text == "Show post") ? "Hide post" : "Show post");
   })
   $('body').on('click', '.delete-post', function() {
     var element = $(this);
-    bootbox.confirm("Are you sure you want to delete this post?", function(result){
-      if (result == true) {
-        let divToDelete = element.closest(".post");
-        $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
-          divToDelete.fadeOut(function() {
-            divToDelete.remove();
-          });
-        });
-      }
-    });
-  })
+    bootbox.confirm({
+        message: "Are you sure you want to delete this post?",
+        buttons: {
+            confirm: {
+                label: 'Delete post',
+                className: 'btn-success'
+            }
+        },
+        callback: function(result) {
+          if (result == true) {
+            let divToDelete = element.closest(".post");
+            $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
+              divToDelete.fadeOut(function() {
+                divToDelete.remove();
+              });
+            });
+          }
+        }
+    })
+    })
   $('body').on('click', '.delete-comment', function() {
     let element = $(this);
     let counterToChange = element.closest(".post").find(".show-comments").find('.comments-number');
@@ -262,19 +347,12 @@ $(function() {
     });
   })
 
-  $('body').on('click', '.notificationLink', function(e) {
-    e.preventDefault();
-    var link = this.href;
-    $.post("/api/notification/update/"+$(this).attr("id"), function( data ) {
-      window.location.href = link;
-    });
-  })
   $('body').on('click', '.unsubscribe-post', function(e) {
     var button = $(this);
     bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
       if (result == true) {
         $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-tooltip", "Not receiving notifications (click to change)");
         })
       }
     })
@@ -284,7 +362,7 @@ $(function() {
     bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
       if (result == true) {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-tooltip", "Receiving notifications (click to change)");
         })
       }
     })

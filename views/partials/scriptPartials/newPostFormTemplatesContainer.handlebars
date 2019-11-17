@@ -1,9 +1,11 @@
-{{>newCommentFormTemplate}}
+<div id="fun-template-boys"> {{!not really a necessary container but it keeps the dom better organized}}
+    {{>newCommentFormTemplate}}
 
-<script type="text/custom-template" id="new-post-link-preview-contents">
-{{> linkPreviewPreview}}
-</script>
+    <script type="text/custom-template" id="new-post-link-preview-contents">
+    {{> linkPreviewPreview}}
+    </script>
 
-<script type="text/custom-template" id="new-post-image-preview-contents">
-{{> imagePreview}}
-</script>
+    <script type="text/custom-template" id="new-post-image-preview-contents">
+    {{> imagePreview}}
+    </script>
+</div>

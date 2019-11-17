@@ -510,7 +510,6 @@ article.comment>header .author-username {
     margin: 0;
 }
 
-
 /*link preview stuff, also used to preview youtube/vimeo embeds, so that's here too, and also this is used within the editor while previewing the link previews*/
 .link-preview-container {
     display: flex;
@@ -528,6 +527,11 @@ article.comment>header .author-username {
 .link-preview-container:hover {
     text-decoration: none;
     background: $lightest-grey;
+}
+
+.ql-editor a {
+    text-decoration: none!important;
+    color: $text;
 }
 
 .link-preview-icon {

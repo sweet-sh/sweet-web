@@ -1,6 +1,6 @@
-<section id="homeBody" class="row justify-content-center">
+<section id="homeBody" class="row justify-content-center active-feed-container">
     <div class="col-lg-8">
-        <div class="single-post-container" id="postsContainer">
+        <div class="single-post-container" class="postsContainer">
             {{#if canDisplay}}
                 {{> posts_v2 }}
             {{else}}
@@ -25,18 +25,25 @@
 </div>
 
 <script>
+    activeScrollPath = null;
 $(function() {
-  if ($('.post-images').length > 0) {
-      var imagesLoaded = $('.post-single-image').length;
+    
+    var thisContainer = $('.active-feed-container');
+
+    activePosts['{{posts.0._id}}'] = thisContainer.find('.post').get(0);
+    socket.emit('post(s) loaded', '{{posts.0._id}}');
+
+  if (thisContainer.find('.post-images').length > 0) {
+      var imagesLoaded = thisContainer.find('.post-single-image').length;
       console.log("images loaded: " + imagesLoaded);
       var imagesLightboxed = 0;
       //i think when you're looking at a single post it makes perfect sense to be able to slideshow through all the images in the post + comments at once  
-      $('.post-images a').simpleLightbox();
+      thisContainer.find('.post-images a').simpleLightbox();
     }
   
 {{#if loggedIn}}
-    var commentForm = undefined;
-    if(commentForm = document.getElementsByClassName('editable-text')[0]){
+    var commentForm = thisContainer.find('.editable-text')[0];
+    if(commentForm){
         attachQuill(commentForm,'Reply to this post with a good reply')
     }
 
@@ -49,6 +56,8 @@ $(function() {
       }
     })
   })
-});
+
+  $.post('/api/notification/update-by-subject/{{posts.0._id}}');
 {{/if}}
+});
 </script>

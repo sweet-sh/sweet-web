@@ -7,13 +7,13 @@ var apiConfig = require('../config/apis.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(apiConfig.sendgrid);
 
-module.exports = function (app, passport) {
+module.exports = function(app, passport) {
 
     //Responds to a post request containing signup information.
     //Inputs: the request body, containing an email, a username, and a password.
     //Outputs: either a redirect back to the signup html page with an error message in the sessionflash if some of the info is invalid;
     //or a redirect to login if with a message telling you you've been sent a confirmation email otherwise. also passport is called to send the email for some reason
-    app.post('/signup', function (req, res) {
+    app.post('/signup', function(req, res) {
 
         if (reservedUsernames.includes(req.body.username)) {
             req.session.sessionFlash = {
@@ -24,22 +24,15 @@ module.exports = function (app, passport) {
             }
             res.redirect(301, '/signup');
         } else {
-            req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({
-                max: 80
-            });
+            req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({ max: 80 });
             req.checkBody('username', 'Username can contain only lowercase letters, numbers, - (dash) and _ (underscore).').matches(/^[a-z0-9-_]+$/);
-            req.checkBody('username', 'Username must be between 2 and 20 characters long.').isLength({
-                min: 2,
-                max: 20
-            })
-            req.checkBody('password', 'Password must be at least 8 characters long.').isLength({
-                min: 8
-            });
+            req.checkBody('username', 'Username must be between 2 and 20 characters long.').isLength({ min: 2, max: 20 })
+            req.checkBody('password', 'Password must be at least 8 characters long.').isLength({ min: 8 });
             req.checkBody('password', 'Passwords do not match.').equals(req.body.passwordrepeat)
 
-            req.getValidationResult().then(function (result) {
+            req.getValidationResult().then(function(result) {
                 if (!result.isEmpty()) {
-                    var errors = result.array().map(function (elem) {
+                    var errors = result.array().map(function(elem) {
                         return elem.msg
                     }).join("<hr>");
                     req.session.sessionFlash = {
@@ -69,17 +62,17 @@ module.exports = function (app, passport) {
     //work just as well.
     //Output: either a redirect back to the login html page with a sessionflash message "Please check you email and password" (which shows up twice in fact if
     //you didn't enter an email) or you are successfully logged in by passport.
-    app.post('/login', function (req, res) {
+    app.post('/login', function(req, res) {
         req.checkBody('email', 'Please enter a valid email.').isEmail();
         req.checkBody('email', 'Please fill in your email.').notEmpty();
         req.checkBody('password', 'Please fill in your password.').notEmpty();
 
-        req.getValidationResult().then(function (result) {
+        req.getValidationResult().then(function(result) {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
             res.setHeader("Pragma", "no-cache"); // HTTP 1.0.
             res.setHeader("Expires", "0"); // Proxies.
             if (!result.isEmpty()) {
-                var errors = result.array().map(function (elem) {
+                var errors = result.array().map(function(elem) {
                     return elem.msg
                 }).join("<hr>");
                 req.session.sessionFlash = {
@@ -102,7 +95,7 @@ module.exports = function (app, passport) {
     //Responds to get requests for /logout.
     //Input: none
     //Output: user is logged out and redirected to the referring page or / if no referrer.
-    app.get('/logout', function (req, res) {
+    app.get('/logout', function(req, res) {
         req.logout();
         req.session.destroy();
         res.redirect('back');
@@ -110,75 +103,48 @@ module.exports = function (app, passport) {
 
     //Responds to post requests that create relationships between users.
     //Input: the parameters in the url. type can be either follow, flag, or trust; action can either be add (follow/flag/trust) or delete (unfollow/unflag/untrust);
-    //from and fromid are both the id of the account taking the action (?), same with to and toid (??) and from username is the username of the account
-    //taking the action.
+    //toid is the id of the user that the logged in user is forming or un-forming the relationship with
     //Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone. Or
     //isLoggedInOrRedirect redirects you.
-    app.post("/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername", isLoggedInOrRedirect, function (req, res) {
-        if (req.params.from != req.user._id.toString()) {
-            res.status(400).send("action not permitted: following/unfollowing/flagging/unflagging/trusting/untrusting a user from an account you're not logged in to");
-            return;
-        }
-        User.findOne({
-                _id: req.params.from
-            })
-            .then(fromUser => {
-                from = fromUser;
-                console.log(from)
-            })
-            .then(() => {
-                User.findOne({
-                        _id: req.params.to
-                    })
-                    .then(toUser => {
-                        to = toUser;
-                        console.log(to)
-                    })
-                    .then(() => {
-                        if (req.params.action == "add") {
-                            const flag = new Relationship({
-                                from: from.email,
-                                to: to.email,
-                                fromUser: req.params.from,
-                                toUser: req.params.to,
-                                value: req.params.type
-                            });
-                            flag.save()
-                                .then(() => {
-                                    // Do not notify when users are flagged, muted, or blocked (blocking and muting not currently implemented)
-                                    if (req.params.type != 'block' && req.params.type != 'flag' && req.params.type != 'mute') {
-                                        notifier.notify('user', 'relationship', to._id, from._id, from._id, '/' + from.username, req.params.type)
-                                    }
-                                })
-                                .then(() => {
-                                    res.end('{"success" : "Updated Successfully", "status" : 200}');
-                                })
-                                .catch((err) => {
-                                    console.log("Database error.")
-                                    console.log(err)
-                                });
-                        } else if (req.params.action = "delete") {
-                            Relationship.findOneAndRemove({
-                                    from: from.email,
-                                    to: to.email,
-                                    fromUser: from._id,
-                                    toUser: to._id,
-                                    value: req.params.type
-                                }).then(() => {
-                                    res.end('{"success" : "Updated Successfully", "status" : 200}');
-                                })
-                                .catch((err) => {
-                                    console.log("Database error.")
-                                });
-                        }
-                    })
-            })
+    app.post("/useraction/:type/:action/:toid", isLoggedInOrRedirect, function(req, res) {
+        var fromUser = req.user;
+        User.findById(req.params.toid).then((toUser) => {
+            if (req.params.action == "add") {
+                const flag = new Relationship({
+                    from: fromUser.email,
+                    to: toUser.email,
+                    fromUser: fromUser._id,
+                    toUser: toUser._id,
+                    value: req.params.type
+                });
+                flag.save().then(() => {
+                    // Do not notify when users are flagged, muted, or blocked (blocking not currently implemented)
+                    if (req.params.type != 'block' && req.params.type != 'flag' && req.params.type != 'mute') {
+                        notifier.notify('user', 'relationship', toUser._id, fromUser._id, fromUser._id, '/' + fromUser.username, req.params.type)
+                    }
+                }).then(() => {
+                    res.end('{"success" : "Updated Successfully", "status" : 200}');
+                })
+            } else if (req.params.action = "delete") {
+                Relationship.findOneAndRemove({
+                    from: fromUser.email,
+                    to: toUser.email,
+                    fromUser: fromUser._id,
+                    toUser: toUser._id,
+                    value: req.params.type
+                }).then(() => {
+                    res.end('{"success" : "Updated Successfully", "status" : 200}');
+                })
+            }
+        }).catch((err) => {
+            console.error('not able to save relationship change:', err);
+        })
     });
 
     //Respond to post requests that update the logged in user's display name, bio, location, website, and profile picture.
     //Inputs: all the fields listed above, in req.params. new profile pictures arrive as raw image data, not a url (like in createpost.)
     //Outputs: if the user has uploaded a new image, that image is saved; all the fields in the user's document are updated.
-    app.post("/updateprofile", isLoggedInOrRedirect, function (req, res) {
+    app.post("/updateprofile", isLoggedInOrRedirect, function(req, res) {
         let imageEnabled = req.user.imageEnabled;
         let imageFilename = req.user.image;
         if (Object.keys(req.files).length != 0) {
@@ -216,7 +182,7 @@ module.exports = function (app, passport) {
                     // Parse about section
                     let splitAbout = helper.escapeHTMLChars(req.body.about).substring(0, 500).split(/\r\n|\r|\n/gi);
                     let parsedAboutArray = [];
-                    splitAbout.forEach(function (line) {
+                    splitAbout.forEach(function(line) {
                         if (line != "") {
                             line = "<p>" + line + "</p>";
                             line = Autolinker.link(line);
@@ -254,7 +220,7 @@ module.exports = function (app, passport) {
     //Responds to post requests from users who do not want notifications from activity on some post anymore.
     //Inputs: the id of the post
     //Outputs: removes the logged in user from the post's subscribedusers field, adds them to unsubscribedUsers
-    app.post('/api/post/unsubscribe/:postid', isLoggedInOrRedirect, async function (req, res) {
+    app.post('/api/post/unsubscribe/:postid', isLoggedInOrRedirect, async function(req, res) {
         Post.findOne({
                 _id: req.params.postid
             })
@@ -275,7 +241,7 @@ module.exports = function (app, passport) {
     })
 
     //Well, it's a bit like the last one but in reverse
-    app.post('/api/post/subscribe/:postid', isLoggedInOrRedirect, async function (req, res) {
+    app.post('/api/post/subscribe/:postid', isLoggedInOrRedirect, async function(req, res) {
         Post.findOne({
                 _id: req.params.postid
             })
@@ -299,7 +265,7 @@ module.exports = function (app, passport) {
     //Input: the settings
     //Output: settings are saved for the user in the database, we're redirected back to the user's page.
     //database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
-    app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
+    app.post('/updatesettings', isLoggedInOrRedirect, async function(req, res) {
         let newSets = req.body;
         console.log(newSets)
         let oldSets = req.user.settings;
@@ -342,7 +308,7 @@ module.exports = function (app, passport) {
             })
     })
 
-    app.post('/api/notifications/clearall', isLoggedInOrRedirect, function (req, res) {
+    app.post('/api/notifications/clearall', isLoggedInOrRedirect, function(req, res) {
         User.findOne({
                 _id: req.user._id
             }, 'notifications')
@@ -362,7 +328,7 @@ module.exports = function (app, passport) {
     //Responds to get requests for email verification that don't have the verification token included. Deprecated? When would this happen
     //Input: none
     //Output: redirect to /login with a 301 code and "No token provided" in the flash message.
-    app.get('/verify-email', function (req, res) {
+    app.get('/verify-email', function(req, res) {
         req.session.sessionFlash = {
             type: 'alert',
             message: "No token provided."
@@ -373,7 +339,7 @@ module.exports = function (app, passport) {
     //Responds to get requests for email verification that include the verification token.
     //Input: the token
     //Output: rendering of verify-email with the token as a hidden input on the page and the email autofilled from sessionFlash.
-    app.get('/verify-email/:verificationtoken', function (req, res) {
+    app.get('/verify-email/:verificationtoken', function(req, res) {
         res.render('verify-email', {
             layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash,
@@ -386,14 +352,14 @@ module.exports = function (app, passport) {
     //Output: A redirect to /verify-email/... if the email is wrong or there's an error saving the user,
     //redirect to /resend-token if the token is wrong or if there is a database error finding the user, or a
     //redirect to /login and the user's isVerified property being set to true if everything's right.
-    app.post('/verify-email', function (req, res) {
+    app.post('/verify-email', function(req, res) {
         req.checkBody('email', 'Please enter a valid email.').isEmail().isLength({
             max: 80
         });
-        req.getValidationResult().then(function (result) {
+        req.getValidationResult().then(function(result) {
             if (!result.isEmpty()) {
                 console.log("Not an email")
-                var errors = result.array().map(function (elem) {
+                var errors = result.array().map(function(elem) {
                     return elem.msg
                 }).join("<hr>");
                 req.session.sessionFlash = {
@@ -454,7 +420,7 @@ module.exports = function (app, passport) {
     //Responds to get requests for /resend-token
     //Input: flash message
     //Output: renders resend-token with flash message
-    app.get('/resend-token', function (req, res) {
+    app.get('/resend-token', function(req, res) {
         res.render('resend-token', {
             layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
@@ -464,7 +430,7 @@ module.exports = function (app, passport) {
     //Responds to post requests from /resend-token
     //Input: email address
     //Output: a redirect to /resend-token with a new flash message.
-    app.post('/resend-token', function (req, res) {
+    app.post('/resend-token', function(req, res) {
         User.findOne({
                 email: req.body.email
             })
@@ -482,7 +448,7 @@ module.exports = function (app, passport) {
                     }
                     res.redirect(301, '/resend-token');
                 } else { // Actual success
-                    require('crypto').randomBytes(20, function (err, buffer) {
+                    require('crypto').randomBytes(20, function(err, buffer) {
                         token = buffer.toString('hex');
                     })
                     user.verificationToken = token;
@@ -529,7 +495,7 @@ module.exports = function (app, passport) {
     //Responds to get requests for /forgot-password without a password reset token
     //Input: flash message
     //Output: renders forgot-password with flash message
-    app.get('/forgot-password', function (req, res) {
+    app.get('/forgot-password', function(req, res) {
         res.render('forgot-password', {
             layout: 'logged-out',
             sessionFlash: res.locals.sessionFlash
@@ -540,7 +506,7 @@ module.exports = function (app, passport) {
     //Input: password reset token
     //Output: a redirect to /forgot-password with flash message if the token is wrong,
     //a redirect to reset-password if the token is right
-    app.get('/reset-password/:token', function (req, res) {
+    app.get('/reset-password/:token', function(req, res) {
         User.findOne({
                 passwordResetToken: req.params.token,
                 passwordResetTokenExpiry: {
@@ -571,8 +537,8 @@ module.exports = function (app, passport) {
     //Ouput: just a redirect to /forgot-password with an incorrect flash message if the email is wrong,
     //an email with a link to /reset-password with a token if the email is right and the token saved in
     //the database, or a redirect to /forgot-password with a warning message if the email or database apis return errors.
-    app.post('/forgot-password', function (req, res) {
-        require('crypto').randomBytes(20, function (err, buffer) {
+    app.post('/forgot-password', function(req, res) {
+        require('crypto').randomBytes(20, function(err, buffer) {
             token = buffer.toString('hex');
         })
         User.findOne({
@@ -635,7 +601,7 @@ module.exports = function (app, passport) {
     //with the token and a warning message if the new password is invalid, a new password for the user and an email
     //telling the user they've reset the passport and a redirect to /login if everything is right, or a redirect to /reset-password
     //with the token if there was a database error saving the user's new password.
-    app.post('/reset-password/:token', function (req, res) {
+    app.post('/reset-password/:token', function(req, res) {
         console.log(req.params.token)
         User.findOne({
                 passwordResetToken: req.params.token,
@@ -658,9 +624,9 @@ module.exports = function (app, passport) {
                         min: 8
                     });
                     req.checkBody('password', 'Passwords do not match.').equals(req.body.passwordrepeat)
-                    req.getValidationResult().then(function (result) {
+                    req.getValidationResult().then(function(result) {
                         if (!result.isEmpty()) {
-                            var errors = result.array().map(function (elem) {
+                            var errors = result.array().map(function(elem) {
                                 return elem.msg
                             }).join("<hr>");
                             req.session.sessionFlash = {
@@ -706,7 +672,7 @@ module.exports = function (app, passport) {
             });
     });
 
-    app.post('/pushnotifs/subscribe', async function (req, res) {
+    app.post('/pushnotifs/subscribe', async function(req, res) {
         if (req.isAuthenticated()) {
             var user = await User.findById(req.user._id);
             if (!user.pushNotifSubscriptions.some(v => { //check to make sure there isn't already a subscription set up with this endpoint
@@ -719,7 +685,7 @@ module.exports = function (app, passport) {
         res.sendStatus(200);
     })
 
-    app.post('/pushnotifs/unsubscribe', async function (req, res) {
+    app.post('/pushnotifs/unsubscribe', async function(req, res) {
         if (req.isAuthenticated()) {
             var user = await User.findById(req.user._id);
             user.pushNotifSubscriptions = user.pushNotifSubscriptions.filter(v => { //check to make sure there isn't already a subscription set up with this endpoint
@@ -730,22 +696,21 @@ module.exports = function (app, passport) {
         res.sendStatus(200);
     })
 
-    app.post('/api/recommendations/remove/:type/:id', isLoggedInOrRedirect, function (req, res) {
+    app.post('/api/recommendations/remove/:type/:id', isLoggedInOrRedirect, function(req, res) {
         User.findOne({
-            _id: req.user._id
-        })
-        .then(user => {
-            if (req.params.type == "user") {
-                user.hiddenRecommendedUsers.push(req.params.id)
-            }
-            else if (req.params.type == "community") {
-                user.hiddenRecommendedCommunities.push(req.params.id)
-            }
-            user.save()
-            .then(result => {
-                res.sendStatus(200)
+                _id: req.user._id
             })
-        })
+            .then(user => {
+                if (req.params.type == "user") {
+                    user.hiddenRecommendedUsers.push(req.params.id)
+                } else if (req.params.type == "community") {
+                    user.hiddenRecommendedCommunities.push(req.params.id)
+                }
+                user.save()
+                    .then(result => {
+                        res.sendStatus(200)
+                    })
+            })
     })
 
 };

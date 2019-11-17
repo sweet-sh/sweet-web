@@ -1,62 +1,62 @@
-{{#if isOwnProfile}}
 <script type="text/javascript">
-  $("#image-upload").change(function (e) {
-    var preview = $("#image-preview");
-    var reader = new FileReader();
-    reader.addEventListener("load", function () {
-      preview.css('background-image',"url("+reader.result+")");
-      $("#image-label").html("change image");
-    }, false);
-    if (this.files[0]) {
-      reader.readAsDataURL(this.files[0]);
-    }else{
-      preview.css('background-image',"");
-      $("#image-label").html("choose image");
-    }
-  })
-  $("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
-  $("#image-preview").css("background-size", "cover");
-  $("#image-preview").css("background-position", "center center");
-</script>
-{{else}}
-<script type="text/javascript">
-function confirmRelationshipChange(confirmQString, relType, addOrDelete) {
-  bootbox.confirm(confirmQString, function (result) {
-    if (result == true) {
-      $.post("/useraction/" + relType + "/" + addOrDelete + "/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
-        location.reload();
-      });
-    }
-  });
-}
+  {{#if isOwnProfile}}
+    $active("#image-upload").change(function (e) {
+      var preview = $active("#image-preview");
+      if (this.files[0]) {
+        preview.css('background-image',"url("+URL.createObjectURL(this.files[0])+")");
+      }else{
+        preview.css('background-image',"");
+        $active("#image-label").html("choose image");
+      }
+    })
+    $active("#image-preview").css("background-image", "url('/images/{{profileData.image}}')");
+    $active("#image-preview").css("background-size", "cover");
+    $active("#image-preview").css("background-position", "center center");
 
-$("#flagButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to flag this user?', 'flag', 'add');
-});
+  {{else}}
 
-$("#unflagButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
-});
-$("#muteButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to mute this user? Their posts will be hidden from you across sweet - they will not be notified of this.', 'mute', 'add');
-});
-$("#unmuteButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unmute this user? You will be able to see their posts across sweet.', 'mute', 'delete');
-});
-$("#trustButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
-});
-$("#untrustButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to stop trusting this user?', 'trust', 'delete');
-});
-$("#followButton").click(function () {
-  //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
-  $.post("/useraction/follow/add/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData._id }}/{{ profileData._id }}/{{ loggedInUserData.username }}", function (result) {
-    location.reload();
+  function confirmRelationshipChange(confirmQString, relType, addOrDelete) {
+    bootbox.confirm(confirmQString, function (result) {
+      if (result == true) {
+        $.post("/useraction/" + relType + "/" + addOrDelete + "/{{profileData._id}}", function (result) {
+          $('.active-feed-container').css('display','none');
+          $('.new-feed-container-load-status').css('display','block');
+          $.get(window.location.href+'/internal', function(data){
+            $('.new-feed-container-load-status').css('display','none');
+            $('.active-feed-container').replaceWith(data);
+          })
+        });
+      }
+    });
+  }
+
+  $active("#flagButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to flag this user?', 'flag', 'add');
   });
-});
-$("#unfollowButton").click(function () {
-  confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
-});
+
+  $active("#unflagButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unflag this user?', 'flag', 'delete');
+  });
+  $active("#muteButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to mute this user? Their posts will be hidden from you across sweet - they will not be notified of this.', 'mute', 'add');
+  });
+  $active("#unmuteButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unmute this user? You will be able to see their posts across sweet.', 'mute', 'delete');
+  });
+  $active("#trustButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to trust this user?', 'trust', 'add');
+  });
+  $active("#untrustButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to stop trusting this user?', 'trust', 'delete');
+  });
+  $active("#followButton").click(function () {
+    //i think this is the action we least want to discourage/make weird, so no confirmation dialogue
+    $.post("/useraction/follow/add/{{ profileData._id }}", function (result) {
+      location.reload();
+    });
+  });
+  $active("#unfollowButton").click(function () {
+    confirmRelationshipChange('Are you sure you want to unfollow this user?', 'follow', 'delete');
+  });
+  {{/if}}
 </script>
-{{/if}}

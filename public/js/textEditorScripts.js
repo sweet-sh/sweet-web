@@ -22,6 +22,7 @@ function updateSubmitButtonState(postForm) {
 
 //attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
 function clearEmbed(e) {
+    e.preventDefault();
     var container = $(this).closest('.slidable-embed');
     if (container.hasClass('image-preview-container') && !container.attr('imagealreadysaved') && !container.hasClass('still-loading')) {
         $.post('/cleartempimage', { imageURL: container.attr('image-url') });
@@ -44,14 +45,14 @@ var newEmbedId = 0; //this increments every time an embed is added in an editor 
 
 //register embed types!
 let BlockEmbed = Quill.import('blots/block/embed');
-class LinkPreview extends BlockEmbed {
 
+//taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
+var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+//taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
+var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+class LinkPreview extends BlockEmbed {
     //this is called when the quill api is used to create an embed with type 'LinkPreview' (which is where you pass in the url)
     static create(url) {
-        //taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
-        var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
-        //taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
-        var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
         var isVideo = (youtubeUrlFindingRegex.test(url) || vimeoUrlFindingRegex.test(url));
         let node = super.create();
         node.setAttribute('id', 'embed' + newEmbedId);
@@ -77,6 +78,8 @@ class LinkPreview extends BlockEmbed {
                 m.find('.image-clear').click();
             } else {
                 var linkInfo = JSON.parse(data);
+                console.log(JSON.stringify(linkInfo, null, 4));
+                node.setAttribute('href', linkInfo.linkUrl);
                 if (linkInfo.image) {
                     m.find(".link-preview-image").replaceWith('<img class="link-preview-image" src="' + linkInfo.image + '" />')
                 } else {
@@ -226,7 +229,7 @@ class PostImage extends BlockEmbed {
                     m.find('.image-clear').click();
                 } else {
                     if (serverResponse.thumbnail) {
-                        fetch(serverResponse.thumbnail).then(res=>res.blob()).then(blob=>{
+                        fetch(serverResponse.thumbnail).then(res => res.blob()).then(blob => {
                             m.find('.image-preview').css('background-image', "url(" + URL.createObjectURL(blob) + ")"); //we want the server-created thumbnail bc it will be exif-rotated and transparency-removed as seen fit
                         })
                     }
@@ -308,7 +311,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
                     //this just blocks the default quill ordered list adding thing that happens when you type like "1. "
                     'list autofill': {
                         key: 32,
-                        handler: function(){
+                        handler: function() {
                             return true;
                         }
                     },
@@ -355,14 +358,78 @@ function attachQuill(element, placeholder, embedsForbidden) {
     })
     //most unwanted formatting won't be pasted in because of the formats array in the options object quill was initialized with, but ordered lists have to 
     //targeted specifically here, bc for some reasons they can't be disallowed with that array without also blocking unordered lists
-    quill.clipboard.addMatcher("ol", function(node, delta){
-        for(var i=0; i<delta.ops.length; i++){
-            if(delta.ops[i].attributes && delta.ops[i].attributes.list && delta.ops[i].attributes.list=='ordered'){
+    quill.clipboard.addMatcher("ol", function(node, delta) {
+        for (var i = 0; i < delta.ops.length; i++) {
+            if (delta.ops[i].attributes && delta.ops[i].attributes.list && delta.ops[i].attributes.list == 'ordered') {
                 delete delta.ops[0].attributes.list;
             }
         }
         return delta;
     })
+    //prompt the user to add a link preview when a youtube or vimeo url is placed on a new line
+    var linkPrompter = new MutationObserver(function(mutationsList) {
+        var linkPreviewPrompt = "<div class='link-preview-prompt'><div class='link-preview-prompt-text'>Click to add link preview</div><div class='link-preview-prompt-dismiss'><i class='fa fa-times'></i></div></div>";
+        for (var i = 0; i < mutationsList.length; i++) {
+            if (mutationsList[i].type == "childList" && mutationsList[i].target.nodeName == "P") {
+                if (mutationsList[i].addedNodes.length == 1) {
+                    if (mutationsList[i].addedNodes[0].nodeType == Node.TEXT_NODE) {
+                        var newText = mutationsList[i].addedNodes[0].nodeValue;
+                        var newTextNode = mutationsList[i].addedNodes[0];
+                        var newTextCont = mutationsList[i].target;
+                        if (youtubeUrlFindingRegex.test(newText) || vimeoUrlFindingRegex.test(newText)) {
+                            $('.link-preview-prompt').remove();
+                            var prompt = $(linkPreviewPrompt);
+                            $(element).append(prompt);
+                            prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
+                            var parentWatcher = new MutationObserver(function() {
+                                //remove the prompt if the new line containing the url is removed
+                                if (!newTextCont.parentNode || !newTextCont.parentNode.contains(newTextCont)) {
+                                    prompt.remove();
+                                    this.disconnect();
+                                } else {
+                                    //make sure the prompt is still positioned directly underneath the url in case stuff is being added/removed above it
+                                    prompt.css('left', newTextCont.offsetLeft + 'px').css('top', newTextCont.offsetTop + newTextCont.offsetHeight + 'px');
+                                }
+                            })
+                            console.log('watching parent node ', newTextCont.parentNode);
+                            parentWatcher.observe(newTextCont.parentNode, { childList: true });
+                            var metaWatcher = new MutationObserver(function() {
+                                //remove the prompt if the url itself is altered or deleted
+                                if (!newTextCont || !newTextCont.innerText || newTextCont.innerText.indexOf(newText) != 0) {
+                                    prompt.remove();
+                                    this.disconnect();
+                                    parentWatcher.disconnect();
+                                }
+                            })
+                            metaWatcher.observe(newTextCont, { subtree: true, characterData: true });
+                            prompt.click(function(e) {
+                                console.log(e);
+                                metaWatcher.disconnect();
+                                parentWatcher.disconnect();
+                                var cursorPos = quill.getText().indexOf(newText);
+                                if (cursorPos != -1) {
+                                    cursorPos += $(newTextCont).prevAll('.slidable-embed').length;
+                                    newTextNode.nodeValue = newTextNode.nodeValue.replace(newText, '');
+                                    if (newTextCont.innerHTML == '') {
+                                        newTextCont.parentElement.removeChild(newTextCont);
+                                    }
+                                    element.addLinkPreview(newText, cursorPos);
+                                    quill.setSelection(cursorPos + 1);
+                                }
+                                prompt.remove();
+                            })
+                            prompt.find('.link-preview-prompt-dismiss').click(function() {
+                                prompt.remove();
+                                metaWatcher.disconnect();
+                                parentWatcher.disconnect();
+                            })
+                        }
+                    }
+                }
+            }
+        }
+    })
+    linkPrompter.observe(element, { subtree: true, childList: true });
     //save the most recent cursor position when the editor loses focus for emoji picker placement.
     quill.on('selection-change', function(range, oldRange, source) {
         if (!range) {
@@ -417,7 +484,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
             return $(element).children('.ql-editor').html();
         }
     }
-    element.getQuill = function(){
+    element.getQuill = function() {
         return quill;
     }
     //the following code deals with embeds and is not used when embeds are forbidden, which is currently on community rules and descriptions pages.
@@ -429,14 +496,18 @@ function attachQuill(element, placeholder, embedsForbidden) {
             }
         })
         //addImage and addLinkPreview functions! embeds are added at the bottom of the editor unless the cursor is on a blank line with text somewhere below it (my heuristic for "was intentionally placed there")
-        element.addLinkPreview = function(url) {
-            var sel = quill.getSelection(true);
-            var range = sel.index;
-            if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
-                quill.deleteText(range, 1);
-                var addEmbedAt = range;
+        element.addLinkPreview = function(url, pos) { //pos is very, very optional
+            if (pos === undefined) {
+                var sel = quill.getSelection(true);
+                var range = sel.index;
+                if (sel.length == 0 && quill.getText(range, 1) == "\n" && quill.getText(range + 1, 1) != "") {
+                    quill.deleteText(range, 1);
+                    var addEmbedAt = range;
+                } else {
+                    var addEmbedAt = quill.getLength();
+                }
             } else {
-                var addEmbedAt = quill.getLength();
+                var addEmbedAt = pos;
             }
             quill.insertEmbed(addEmbedAt, 'LinkPreview', url, Quill.sources.USER);
             updateSubmitButtonState($(element).closest('.contentForm, .new-comment-form'));
@@ -846,10 +917,29 @@ function createImageGroups(qlEditorElement) {
     }
 }
 
-window.addEventListener("beforeunload", function(event) {
+window.addEventListener("beforeunload", function(e) {
+    var wip = false;
+    $active('.ql-container:not(.form-control)').each(function(i, e) { //community editor fields will have content in them but we're ignoring that
+        if (!wip && e.hasContent()) {
+            wip = true;
+        }
+    })
+    if (wip) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.returnValue = 'there is content in the post box, would you like to perhaps save it as draft first'; //this text isn't actually displayed by many browsers but oh well
+        return 'there is content in the post box, would you like to perhaps save it as draft first';
+    }
+});
+
+window.addEventListener('unload', function(e) {
     $("div.image-preview-container:not(.still-loading)").each(function(i, e) {
         if (!e.getAttribute('imagealreadysaved')) {
             $.post('/cleartempimage', { imageURL: e.getAttribute('image-url') });
         }
     })
-});
+})
+
+$('body').on('click', '.ql-editor .link-preview-container', function(e) {
+    e.preventDefault();
+})
