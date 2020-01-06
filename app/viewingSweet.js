@@ -183,7 +183,7 @@ module.exports = function(app) {
             }
             //console.time('popularHashtags')
             popularHashtags = await Tag.find()
-                .limit(5)
+                .limit(15)
                 .sort('-lastUpdated')
                 .then(tags => {
                     return tags;
