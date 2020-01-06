@@ -390,6 +390,7 @@ module.exports = function(app) {
         followedUserData = []
         Relationship.find({ fromUser: req.user._id, value: "follow" }).populate("toUser").then((followedUsers) => {
                 followedUsers.forEach(relationship => {
+                    console.log(relationship)
                     var follower = {
                         key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
                         value: relationship.toUser.username,

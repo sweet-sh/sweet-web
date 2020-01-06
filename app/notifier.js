@@ -102,7 +102,10 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
                     //if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
                     var lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
                     if (lastNotif && cause == "relationship" && lastNotif.category == 'relationship' && lastNotif.url == url &&
-                        (lastNotif.text.includes('follows you') && context == 'trust') || (lastNotif.text.includes('trusts you') && context == 'follow')) {
+                        ((lastNotif.text.includes('follows you') && context == 'trust') || (lastNotif.text.includes('trusts you') && context == 'follow'))) {
+                        // It's too late at night to work out a better way to get the username of the new notification that isn't regexing the old notification, so... this will break at some point
+                        var username = lastNotif.text.match(/@[A-Za-z0-9-_]*/);
+                        console.log(username)
                         var notification = {
                             category: cause,
                             sourceId: sourceId,
