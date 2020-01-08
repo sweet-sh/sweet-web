@@ -337,13 +337,10 @@
 }
 
 #post-extra-controls-dropdown {
-    text-transform: uppercase;
-    font-size: 0.9rem;
 
     + .dropdown-menu .dropdown-item {
         padding: .5rem 1rem;
-        text-transform: uppercase;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
 }
 
