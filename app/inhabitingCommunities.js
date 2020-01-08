@@ -69,6 +69,10 @@ module.exports = function(app, passport) {
             });
     });
 
+    app.get('/community', function(req, res) {
+        res.redirect('../communities');
+    })
+
     app.get('/community/:slug', function(req, res) {
         const today = moment().clone().startOf('day');
         const thisyear = moment().clone().startOf('year');
