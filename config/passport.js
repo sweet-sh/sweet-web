@@ -6,9 +6,7 @@ const Relationship            = require('../app/models/relationship');
 
 const crypto = require('crypto');
 
-var apiConfig = require('./apis.js');
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(apiConfig.sendgrid);
+const sgMail = require('../app/mail');
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
@@ -112,7 +110,7 @@ function(req, email, password, done) {
                   'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
                 };
                 sgMail.send(msg)
-                .then(user => {
+                .then(() => {
                   var sweetbotFollow = new Relationship();
                   sweetbotFollow.from = email;
                   sweetbotFollow.to = 'support@sweet.sh';

@@ -1,93 +1,93 @@
 // Initialization ======================================================================
-const express = require('express');
-const handlebars = require('express-handlebars');
-const app = express();
-const port = process.env.PORT || 8686;
-const passport = require('passport');
-const flash = require('connect-flash');
-require('handlebars-helpers')();
+const express = require('express')
+const handlebars = require('express-handlebars')
+const app = express()
+const port = process.env.PORT || 8686
+const passport = require('passport')
+const flash = require('connect-flash')
+require('handlebars-helpers')()
 
-const compression = require('compression');
-app.use(compression());
+const compression = require('compression')
+app.use(compression())
 
-const expressValidator = require('express-validator');
-app.use(expressValidator());
+const expressValidator = require('express-validator')
+app.use(expressValidator())
 
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const session = require('express-session');
+const morgan = require('morgan')
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser')
+const session = require('express-session')
 
-const fileUpload = require('express-fileupload');
-app.use(fileUpload());
+const fileUpload = require('express-fileupload')
+app.use(fileUpload())
 
 // Set up our Express application
-app.use(cookieParser()); // read cookies (needed for auth)
-app.use(bodyParser()); // get information from html forms
-const mongoSanitize = require('express-mongo-sanitize'); //sanitize information recieved from html forms
-app.use(mongoSanitize());
+app.use(cookieParser()) // read cookies (needed for auth)
+app.use(bodyParser()) // get information from html forms
+const mongoSanitize = require('express-mongo-sanitize') // sanitize information recieved from html forms
+app.use(mongoSanitize())
 
 // View engine (Handlebars)
 hbs = handlebars.create({
   defaultLayout: 'main',
-  partialsDir:['views/partials/','views/partials/scriptPartials/'],
+  partialsDir: ['views/partials/', 'views/partials/scriptPartials/'],
   helpers: {
     plural: function (number, text) {
-      var singular = number === 1;
+      var singular = number === 1
       // If no text parameter was given, just return a conditional s.
-      if (typeof text !== 'string') return singular ? '' : 's';
+      if (typeof text !== 'string') return singular ? '' : 's'
       // Split with regex into group1/group2 or group1(group3)
-      var match = text.match(/^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/);
+      var match = text.match(/^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/)
       // If no match, just append a conditional s.
-      if (!match) return text + (singular ? '' : 's');
+      if (!match) return text + (singular ? '' : 's')
       // We have a good match, so fire away
       return singular && match[1] // Singular case
         ||
         match[2] // Plural case: 'bagel/bagels' --> bagels
         ||
-        match[1] + (match[3] || 's'); // Plural case: 'bagel(s)' or 'bagel' --> bagels
+        match[1] + (match[3] || 's') // Plural case: 'bagel(s)' or 'bagel' --> bagels
     },
-    buildComment(comment, depth) {
-      if (!depth) depth = 1;
-      var tree = [];
+    buildComment (comment, depth) {
+      if (!depth) depth = 1
+      var tree = []
       tree.push({
         comment: comment,
         depth: depth
       })
       comment.replies.forEach((r) => {
         depth = depth + 1
-        tree.comment.replies.depth = depth;
-      });
-      return tree;
+        tree.comment.replies.depth = depth
+      })
+      return tree
     }
   }
-});
-app.engine('handlebars', hbs.engine);
-app.set('view engine', 'handlebars');
+})
+app.engine('handlebars', hbs.engine)
+app.set('view engine', 'handlebars')
 
 // Static files
-app.use(express.static('public'));
+app.use(express.static('public'))
 
 // Database Configuration and Global Variable Creation===============================================================
-const configDatabase = require('./config/database.js');
-mongoose = require('mongoose');
-mongoose.connect(configDatabase.url, {useNewUrlParser: true}); // connect to our database
-ObjectId = mongoose.Types.ObjectId;
-DBReference = mongoose.Schema.Types.ObjectId;
-User = require('./app/models/user');
-Relationship = require('./app/models/relationship');
-Post = require('./app/models/post');
-Tag = require('./app/models/tag');
-Community = require('./app/models/community');
-Vote = require('./app/models/vote');
-Image = require('./app/models/image');
+const configDatabase = require('./config/database.js')
+mongoose = require('mongoose')
+mongoose.connect(configDatabase.url, { useNewUrlParser: true }) // connect to our database
+ObjectId = mongoose.Types.ObjectId
+DBReference = mongoose.Schema.Types.ObjectId
+User = require('./app/models/user')
+Relationship = require('./app/models/relationship')
+Post = require('./app/models/post')
+Tag = require('./app/models/tag')
+Community = require('./app/models/community')
+Vote = require('./app/models/vote')
+Image = require('./app/models/image')
 
-//persist sessions across restarts via their storage in mongodb
-const MongoStore = require('connect-mongo')(session);
+// persist sessions across restarts via their storage in mongodb
+const MongoStore = require('connect-mongo')(session)
 
-//set up passport authentication and session storage
-require('./config/passport')(passport); // pass passport for configuration
-var auth = require('./config/auth.js');
+// set up passport authentication and session storage
+require('./config/passport')(passport) // pass passport for configuration
+var auth = require('./config/auth.js')
 app.use(session({
   secret: auth.secret,
   cookie: {
@@ -100,61 +100,61 @@ app.use(session({
     mongooseConnection: mongoose.connection,
     secret: auth.secret
   })
-}));
-app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
-app.use(flash()); // use connect-flash for flash messages stored in session
+}))
+app.use(passport.initialize())
+app.use(passport.session()) // persistent login sessions
+app.use(flash()) // use connect-flash for flash messages stored in session
 app.use(function (req, res, next) {
-  res.locals.sessionFlash = req.session.sessionFlash;
-  delete req.session.sessionFlash;
-  next();
-});
+  res.locals.sessionFlash = req.session.sessionFlash
+  delete req.session.sessionFlash
+  next()
+})
 
-//set up webpush to send push notifications for the notifier
-webpush = require('web-push');
+// set up webpush to send push notifications for the notifier
+webpush = require('web-push')
 if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {
-  vapidKeys = webpush.generateVAPIDKeys();
+  vapidKeys = webpush.generateVAPIDKeys()
   webpush.setVapidDetails(
     'mailto:support@sweet.sh',
     vapidKeys.publicKey,
     vapidKeys.privateKey
-  );
+  )
 } else {
   webpush.setVapidDetails(
     'mailto:support@sweet.sh',
     auth.vapidPublicKey,
     auth.vapidPrivateKey
-  );
+  )
 }
 
-//kill the process when the sigint code is recieved, generally generated by pressing ctrl-c in the console
+// kill the process when the sigint code is recieved, generally generated by pressing ctrl-c in the console
 app.on('SIGINT', function () {
   db.stop(function (err) {
-    process.exit(err ? 1 : 0);
-  });
-});
+    process.exit(err ? 1 : 0)
+  })
+})
 
 // utilized by routes code =================================================================================
-path = require('path');
-global.appRoot = path.resolve(__dirname);
-fs = require('fs');
-moment = require('moment');
+path = require('path')
+global.appRoot = path.resolve(__dirname)
+fs = require('fs')
+moment = require('moment')
 moment.updateLocale('en', {
   relativeTime: {
-      future: "in %s",
-      past: "%s",
-      s: "just now",
-      ss: '%ds ago',
-      m: "1m ago",
-      mm: "%dm ago",
-      h: "1h ago",
-      hh: "%dh ago",
-      d: "1d ago",
-      dd: "%dd ago",
-      M: "1mon ago",
-      MM: "%dmon ago",
-      y: "1y ago",
-      yy: "%dy ago"
+    future: 'in %s',
+    past: '%s',
+    s: 'just now',
+    ss: '%ds ago',
+    m: '1m ago',
+    mm: '%dm ago',
+    h: '1h ago',
+    hh: '%dh ago',
+    d: '1d ago',
+    dd: '%dd ago',
+    M: '1mon ago',
+    MM: '%dmon ago',
+    y: '1y ago',
+    yy: '%dy ago'
   },
   calendar: {
     sameDay: '[today at] h:mm a [UTC]Z',
@@ -162,50 +162,50 @@ moment.updateLocale('en', {
     lastWeek: '[last] dddd [at] h:mm a [UTC]Z',
     sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
-});
-var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]';
-sanitizeHtml = require('sanitize-html');
-sharp = require('sharp');
-shortid = require('shortid');
-bcrypt = require('bcrypt-nodejs');
-Autolinker = require('autolinker');
-schedule = require('node-schedule');
-globals = require('./config/globals');
+})
+var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]'
+sanitizeHtml = require('sanitize-html')
+sharp = require('sharp')
+shortid = require('shortid')
+bcrypt = require('bcrypt-nodejs')
+Autolinker = require('autolinker')
+schedule = require('node-schedule')
+globals = require('./config/globals')
 
-const writeMorganToSeparateFile = true; //change to write full request log to stdout instead of a separate file
+const writeMorganToSeparateFile = true // change to write full request log to stdout instead of a separate file
 
-if(writeMorganToSeparateFile){
-  var morganOutput = fs.openSync("full request log starting "+moment().format('DD-MM HH[h] MM[m] ss[s]')+".txt",'w'); //colons in the file path not supported by windows :(
+if (writeMorganToSeparateFile) {
+  var morganOutput = fs.openSync('full request log starting ' + moment().format('DD-MM HH[h] MM[m] ss[s]') + '.txt', 'w') // colons in the file path not supported by windows :(
   var stream = {
-    write: function(input,encoding){
-      fs.writeSync(morganOutput,input,undefined,encoding);
+    write: function (input, encoding) {
+      fs.writeSync(morganOutput, input, undefined, encoding)
     }
   }
-}else{
-  var stream = process.stdout;
+} else {
+  var stream = process.stdout
 }
-//log every request to the console w/ timestamp before it can crash the server
-app.use(morgan(function(tokens,req,res){return moment().format(momentLogFormat)+" "+req.method.toLowerCase()+" request for "+req.url},{immediate:true,stream:stream}));
-//add timestamps to all console logging functions
-for(var spicy of ["warn","error","log"]){
-  var vanilla = console[spicy];
-  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat));
+// log every request to the console w/ timestamp before it can crash the server
+app.use(morgan(function (tokens, req, res) { return moment().format(momentLogFormat) + ' ' + req.method.toLowerCase() + ' request for ' + req.url }, { immediate: true, stream: stream }))
+// add timestamps to all console logging functions
+for (var spicy of ['warn', 'error', 'log']) {
+  var vanilla = console[spicy]
+  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat))
 }
 
 // routes ======================================================================
-helper = require('./app/utilityFunctionsMostlyText.js');
-require('./app/statisticsTracker.js')(app, mongoose);
-notifier = require('./app/notifier.js');
-emailer = require('./app/emailer.js');
-require('./app/personalAccountActions.js')(app, passport);
-require('./app/inhabitingCommunities.js')(app, passport);
-require('./app/viewingSweet.js')(app);
-require('./app/postingToSweet.js')(app);
+helper = require('./app/utilityFunctionsMostlyText.js')
+require('./app/statisticsTracker.js')(app, mongoose)
+notifier = require('./app/notifier.js')
+emailer = require('./app/emailer.js')
+require('./app/personalAccountActions.js')(app, passport)
+require('./app/inhabitingCommunities.js')(app, passport)
+require('./app/viewingSweet.js')(app)
+require('./app/postingToSweet.js')(app)
 
 // launch ======================================================================
-app.listen(port);
+app.listen(port)
 
-/*var https = require('https');
+/* var https = require('https');
 var httpsOptions = {
     key: fs.readFileSync('../192.168.1.15-key.pem'),
     cert: fs.readFileSync('../192.168.1.15.pem')
@@ -213,6 +213,6 @@ var httpsOptions = {
 https.createServer(httpsOptions, app)
 .listen(3000, function () {
   console.log('app listening on port 3000! Go to https://localhost:3000/')
-})*/
+}) */
 
-console.log('Server booting on default port: ' + port);
+console.log('Server booting on default port: ' + port)

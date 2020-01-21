@@ -2,8 +2,8 @@ var tagSchema = new mongoose.Schema({
   name: String,
   posts: [String],
   lastUpdated: Date
-});
+})
 
-tagSchema.index({name:1});
+tagSchema.index({ name: 1 })
 
-module.exports = mongoose.model('Tag', tagSchema);
+module.exports = mongoose.model('Tag', tagSchema)
