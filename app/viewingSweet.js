@@ -1,12 +1,18 @@
 const fs = require('fs')
+const moment = require('moment')
 const path = require('path')
 const bcrypt = require('bcrypt-nodejs')
 const User = require('./models/user')
 const Relationship = require('./models/relationship')
 const Community = require('./models/community')
+const Post = require('./models/post')
+const Tag = require('./models/tag')
+const helper = require('./utilityFunctionsMostlyText')
+const notifier = require('./notifier')
+const globals = require('../config/globals')
 
 // used on the settings page to set up push notifications
-var auth = require('../config/auth.js')
+const auth = require('../config/auth.js')
 
 module.exports = function (app) {
   // Responds to get requests for images on the server. If the image is private, checks to see
@@ -15,7 +21,7 @@ module.exports = function (app) {
   // Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function (req, res) {
     function sendImageFile () {
-      imagePath = global.appRoot + '/cdn/images/' + req.params.filename
+      const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
       try {
         if (fs.existsSync(imagePath)) {
           res.sendFile(imagePath)
@@ -35,7 +41,7 @@ module.exports = function (app) {
           sendImageFile()
         } else if (image.privacy === 'private') {
           if (req.isAuthenticated()) {
-            if (image.user == req.user._id.toString()) {
+            if (image.user === req.user._id.toString()) {
               sendImageFile()
             } else if (image.context === 'user') {
               Relationship.findOne({ toUser: req.user._id, value: 'trust', fromUser: image.user }).then(rel => {
@@ -97,7 +103,7 @@ module.exports = function (app) {
     } else {
       User.count().then(users => {
         Community.find().sort('-lastUpdated').then(communities => {
-          var publicCommunites = communities.filter(c => c.settings.visibility == 'public' && c.settings.joinType == 'open')
+          const publicCommunites = communities.filter(c => c.settings.visibility === 'public' && c.settings.joinType === 'open')
           publicCommunites.sort(function () {
             return 0.5 - Math.random()
           })
@@ -151,13 +157,13 @@ module.exports = function (app) {
   app.get('/home', isLoggedInOrRedirect, async function (req, res) {
     async function getRecommendations () {
       // console.time('getRecommendationsFunction')
-      popularCommunities = []
-      recommendedUsers = {}
-      relationshipWeights = {
+      let popularCommunities = []
+      const recommendedUsers = {}
+      const relationshipWeights = {
         trust: 2,
         follow: 0.5
       }
-      lastFortnight = moment(new Date()).subtract(14, 'days')
+      const lastFortnight = moment(new Date()).subtract(14, 'days')
       async function getRelationships (id, type) {
         var users = {}
         return Relationship.find({
@@ -180,7 +186,7 @@ module.exports = function (app) {
           })
       }
       // console.time('popularHashtags')
-      popularHashtags = await Tag.find()
+      const popularHashtags = await Tag.find()
         .limit(15)
         .sort('-lastUpdated')
         .then(tags => {
@@ -195,7 +201,7 @@ module.exports = function (app) {
       // (The scores have been arbitrarily selected.)
 
       // console.time('recommendedUsers')
-      primaryRelationships = await getRelationships(req.user._id, ['trust', 'follow'])
+      const primaryRelationships = await getRelationships(req.user._id, ['trust', 'follow'])
       for (const primaryUser in primaryRelationships) {
         const secondaryRelationships = await getRelationships(primaryUser, ['trust', 'follow'])
         for (const secondaryUser in secondaryRelationships) {
@@ -208,14 +214,13 @@ module.exports = function (app) {
           }
         }
       }
-      recommendedUserIds = Object.keys(recommendedUsers)
-      // console.timeEnd('recommendedUsers')
-
-      usersKnown = Object.keys(primaryRelationships)
+      const recommendedUserIds = Object.keys(recommendedUsers)
+      const usersKnown = Object.keys(primaryRelationships)
 
       // Shows all recently active communities if the user's only friend is sweetbot,
       // otherwise only recently active communities with a friend in them
-      if (usersKnown.length == 1 && usersKnown[0] === '5c962bccf0b0d14286e99b68') {
+      let membersQuery
+      if (usersKnown.length === 1 && usersKnown[0] === '5c962bccf0b0d14286e99b68') {
         membersQuery = {}
       } else {
         membersQuery = { members: { $in: usersKnown } }
@@ -238,12 +243,18 @@ module.exports = function (app) {
           // console.time('userFunctions')
           popularCommunities = popularCommunities.filter(e => !user.hiddenRecommendedCommunities.includes(e._id.toString()))
 
-          if (popularCommunities.length > 16) { popularCommunities.length = 16 }
+          if (popularCommunities.length > 16) {
+            // TODO: There are better/clearer ways to slice an array.
+            popularCommunities.length = 16
+          }
 
-          unknownUsers = recommendedUserIds.filter(e => !usersKnown.includes(e))
-          unknownUsers = unknownUsers.filter(e => !user.hiddenRecommendedUsers.includes(e))
+          const unknownUsers = recommendedUserIds
+            .filter(e => !usersKnown.includes(e))
+            .filter(e => !user.hiddenRecommendedUsers.includes(e))
 
-          if (unknownUsers.length > 16) { unknownUsers.length = 16 }
+          if (unknownUsers.length > 16) {
+            unknownUsers.length = 16
+          }
 
           return User.find({
             _id: unknownUsers
@@ -253,7 +264,7 @@ module.exports = function (app) {
                 user.weight = recommendedUsers[user._id.toString()]
               })
               userData.sort((a, b) => (a.weight > b.weight) ? -1 : 1)
-              results = {
+              const results = {
                 popularCommunities: popularCommunities,
                 userRecommendations: userData,
                 popularHashtags: popularHashtags
@@ -264,7 +275,7 @@ module.exports = function (app) {
             })
         })
     }
-    recommendations = await getRecommendations()
+    const recommendations = await getRecommendations()
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate') // HTTP 1.1.
     res.setHeader('Pragma', 'no-cache') // HTTP 1.0.
     res.setHeader('Expires', '0') // Proxies.
@@ -383,7 +394,7 @@ module.exports = function (app) {
   // Input: none
   // Output: JSON data describing the users that follow the logged in user or a redirect from isLoggedInOrRedirect.
   app.post('/api/user/followers', isLoggedInOrRedirect, function (req, res) {
-    followedUserData = []
+    const followedUserData = []
     Relationship.find({ fromUser: req.user._id, value: 'follow' }).populate('toUser').then((followedUsers) => {
       followedUsers.forEach(relationship => {
         console.log(relationship)
@@ -492,7 +503,7 @@ module.exports = function (app) {
                         // It's a community
                         constructedResult.type = '<i class="fas fa-leaf"></i> Community'
                         constructedResult.sort = result.lastUpdated
-                        constructedResult.title = '<strong><a class="authorLink" href="/community/' + result.slug + '">' + result.name + '</a></strong> &middot; <span class="text-muted">' + result.membersCount + ' member' + (result.membersCount == 1 ? '' : 's') + '</span>'
+                        constructedResult.title = '<strong><a class="authorLink" href="/community/' + result.slug + '">' + result.name + '</a></strong> &middot; <span class="text-muted">' + result.membersCount + ' member' + (result.membersCount === 1 ? '' : 's') + '</span>'
                         constructedResult.url = '/community/' + result.slug
                         if (result.imageEnabled) { constructedResult.image = '/images/communities/' + result.image } else { constructedResult.image = '/images/communities/cake.svg' }
                         constructedResult.description = result.descriptionParsed
@@ -502,7 +513,7 @@ module.exports = function (app) {
                         constructedResult.sort = result.lastUpdated
                         constructedResult.title = '<strong><a class="authorLink" href="/tag/' + result.name + '">#' + result.name + '</a></strong>'
                         constructedResult.url = '/tag/' + result.name
-                        constructedResult.description = '<p>' + result.posts.length + ' post' + (result.posts.length == 1 ? '' : 's') + '</p>'
+                        constructedResult.description = '<p>' + result.posts.length + ' post' + (result.posts.length === 1 ? '' : 's') + '</p>'
                         constructedResult.image = '/images/biscuit.svg'
                       }
                       parsedResults.push(constructedResult)
@@ -510,9 +521,13 @@ module.exports = function (app) {
                     parsedResults.sort(function (a, b) {
                       var timestampA = a.sort
                       var timestampB = b.sort
-                      if (timestampA > timestampB) // sort timestamp descending
-                      { return -1 }
-                      if (timestampA < timestampB) { return 1 }
+                      // sort timestamp descending
+                      if (timestampA > timestampB) {
+                        return -1
+                      }
+                      if (timestampA < timestampB) {
+                        return 1
+                      }
                       return 0
                     })
                     parsedResults = parsedResults.slice(0, resultsPerPage)
@@ -582,7 +597,7 @@ module.exports = function (app) {
       { type: { $ne: 'draft' } }
       ]
     }
-    var sortMethod = req.user.settings.homeTagTimelineSorting == 'fluid' ? 'lastUpdated' : 'timestamp'
+    const sortMethod = req.user.settings.homeTagTimelineSorting === 'fluid' ? 'lastUpdated' : 'timestamp'
     var newerThanDate = new Date(parseInt(req.params.newerthanthis))
     var newerThanQuery = {}
     newerThanQuery[sortMethod] = { $gt: newerThanDate }
@@ -616,7 +631,7 @@ module.exports = function (app) {
 
       for (const post of posts) {
         var postCommunity = post.community ? (await Community.findById(post.community)) : undefined
-        if ((sortMethod == 'lastUpdated' && findNewComment(post)) && (post.type != 'community' || !postCommunity.mutedMembers.includes(post.author))) {
+        if ((sortMethod === 'lastUpdated' && findNewComment(post)) && (post.type !== 'community' || !postCommunity.mutedMembers.includes(post.author))) {
           res.send('yeah')
           return
         }
@@ -629,7 +644,7 @@ module.exports = function (app) {
   // Inputs: the username of the user and the string of random letters and numbers that identifies the post (that's how post urls work)
   // Outputs: showposts handles it!
   app.get('/:username/:posturl', function (req, res, next) {
-    if (req.params.username != 'images') { // a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
+    if (req.params.username !== 'images') { // a terrible hack to stop requests for images (/images/[image filename] fits into this route's format) from being sent to showposts
       req.url = req.path = '/showposts/single/' + req.params.posturl + '/1'
       req.singlepostUsername = req.params.username // slightly sus way to pass this info to showposts
       next('route')
@@ -653,26 +668,30 @@ module.exports = function (app) {
         displayContext.cachedHTML = { fullContentHTML: html }
       }
       if (displayContext.comments) {
-        for (comment of displayContext.comments) {
+        for (const comment of displayContext.comments) {
           await updateHTMLRecursive(comment)
         }
       } else if (displayContext.replies) {
-        for (reply of displayContext.replies) {
+        for (const reply of displayContext.replies) {
           await updateHTMLRecursive(reply)
         }
       }
     }
 
-    var galleryTemplatePath = './views/partials/imagegallery.handlebars'
-    var galleryTemplateMTime = undefined
-    var embedsTemplatePath = './views/partials/embed.handlebars'
-    var embedTemplateMTime = undefined
+    let galleryTemplateMTime
+    let embedTemplateMTime
+    const galleryTemplatePath = './views/partials/imagegallery.handlebars'
+    const embedsTemplatePath = './views/partials/embed.handlebars'
 
-    // non-blocking way to retrieve the last modified times for these templates so that we can check if the cached post html is up to data
-    var mTimes = new Promise(function (resolve, reject) {
+    // non-blocking way to retrieve the last modified times for these templates
+    // so that we can check if the cached post html is up to data
+    const mTimes = new Promise(function (resolve, reject) {
       fs.stat(galleryTemplatePath, (err, stats) => {
         if (err) {
-          console.err('could not get last modified time for image gallery template, post html will not be updated')
+          console.err(
+            'could not get last modified time for image gallery template, post ' +
+            'html will not be updated'
+          )
           reject(err)
         } else {
           galleryTemplateMTime = stats.mtime
@@ -683,7 +702,10 @@ module.exports = function (app) {
       })
       fs.stat(embedsTemplatePath, (err, stats) => {
         if (err) {
-          console.err('could not get last modified time for embed/link preview template, post html will not be updated')
+          console.err(
+            'could not get last modified time for embed/link preview template, ' +
+            'post html will not be updated'
+          )
           reject(err)
         } else {
           embedTemplateMTime = stats.mtime
@@ -734,10 +756,10 @@ module.exports = function (app) {
       loggedInUserData = req.user
     } else {
       // logged out users can't get any posts from pages of non-completely-public users and communities
-      if (req.params.context == 'user' && (await User.findById(req.params.identifier)).settings.profileVisibility != 'profileAndPosts') {
+      if (req.params.context === 'user' && (await User.findById(req.params.identifier)).settings.profileVisibility !== 'profileAndPosts') {
         res.sendStatus(404)
         return
-      } else if (req.params.context == 'community' && (await Community.findById(req.params.identifier)).settings.visibility != 'public') {
+      } else if (req.params.context === 'community' && (await Community.findById(req.params.identifier)).settings.visibility !== 'public') {
         res.sendStatus(404)
         return
       }
@@ -745,6 +767,7 @@ module.exports = function (app) {
 
     const postsPerPage = 10
     const olderthanthis = new Date(parseInt(req.params.olderthanthis))
+    let isMuted
 
     // build some user lists. only a thing if the user is logged in.
     // todo: instead of pulling them from the relationships collection, at least the first 4 could be arrays of references to other users in the user document, that would speed things up
@@ -756,10 +779,10 @@ module.exports = function (app) {
       var usersFlaggedByMyTrustedUsers = ((await Relationship.find({ from: { $in: myTrustedUserEmails }, value: 'flag' })).map(v => v.to))
       var usersWhoTrustMeEmails = ((await Relationship.find({ to: loggedInUserData.email, value: 'trust' })).map(v => v.from)).concat([req.user.email])
       var myCommunities = req.user.communities
-      if (req.params.context == 'community' && req.isAuthenticated()) {
-        var isMuted = (await Community.findById(req.params.identifier)).mutedMembers.some(v => v.equals(req.user._id))
+      if (req.params.context === 'community' && req.isAuthenticated()) {
+        isMuted = (await Community.findById(req.params.identifier)).mutedMembers.some(v => v.equals(req.user._id))
       } else {
-        var isMuted = false
+        isMuted = false
       }
       var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email)
     }
@@ -770,10 +793,12 @@ module.exports = function (app) {
     // construct the query that will retrieve the posts we want. basically just coming up with criteria to pass to Post.find. also, sortMethod
     // is set according to the relevant user setting if they're logged in or to a default way at the bottom of this part if they're not.
 
-    if (req.params.context == 'home') {
+    let matchPosts
+    let sortMethod
+    if (req.params.context === 'home') {
       // on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
       // we're assuming the user is logged in if this request is being made (it's only made by code on a page that only loads if the user is logged in.)
-      var matchPosts = {
+      matchPosts = {
         $or: [{
           author: {
             $in: myFollowedUserIds
@@ -788,10 +813,10 @@ module.exports = function (app) {
         ],
         type: { $ne: 'draft' }
       }
-      var sortMethod = req.user.settings.homeTagTimelineSorting == 'fluid' ? '-lastUpdated' : '-timestamp'
-    } else if (req.params.context == 'user') {
+      sortMethod = req.user.settings.homeTagTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
+    } else if (req.params.context === 'user') {
       // if we're on a user's page, obviously we want their posts:
-      var matchPosts = {
+      matchPosts = {
         author: req.params.identifier,
         type: { $ne: 'draft' }
       }
@@ -806,60 +831,59 @@ module.exports = function (app) {
             $in: myCommunities
           }
         }]
-        var sortMethod = req.user.settings.userTimelineSorting == 'fluid' ? '-lastUpdated' : '-timestamp'
+        sortMethod = req.user.settings.userTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
       } else {
         // logged out users shouldn't see any community posts on user profile pages
         matchPosts.community = {
           $exists: false
         }
       }
-    } else if (req.params.context == 'community') {
+    } else if (req.params.context === 'community') {
       var thisComm = await Community.findById(req.params.identifier)
       // we want posts from the community, but only if it's public or we belong to it:
-      if (thisComm.settings.visibility == 'public' || myCommunities.some(v => v.toString() == req.params.identifier)) {
-        var matchPosts = {
+      if (thisComm.settings.visibility === 'public' || myCommunities.some(v => v.toString() === req.params.identifier)) {
+        matchPosts = {
           community: req.params.identifier
         }
       } else {
         // if we're not in the community and it's not public, there are no posts we're allowed to view!
-        var matchPosts = undefined
+        matchPosts = undefined
       }
       if (req.isAuthenticated()) {
-        var sortMethod = req.user.settings.communityTimelineSorting == 'fluid' ? '-lastUpdated' : '-timestamp'
+        sortMethod = req.user.settings.communityTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
       }
-    } else if (req.params.context == 'tag') {
+    } else if (req.params.context === 'tag') {
       function getTag () {
         return Tag.findOne({ name: req.params.identifier })
           .then((tag) => {
-            var matchPosts = { _id: { $in: tag.posts }, type: { $ne: 'draft' } }
-            return matchPosts
+            return { _id: { $in: tag.posts }, type: { $ne: 'draft' } }
           })
       }
-      var matchPosts = await getTag()
-      var sortMethod = req.user.settings.homeTagTimelineSorting == 'fluid' ? '-lastUpdated' : '-timestamp'
-    } else if (req.params.context == 'single') {
+      matchPosts = await getTag()
+      sortMethod = req.user.settings.homeTagTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
+    } else if (req.params.context === 'single') {
       var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }))
-      var matchPosts = {
+      matchPosts = {
         author: author ? author._id : undefined, // won't find anything if the author corresponding to the username couldn't be found
         url: req.params.identifier,
         type: { $ne: 'draft' }
       }
-      var sortMethod = '-lastUpdated' // this shouldn't matter oh well
+      sortMethod = '-lastUpdated' // this shouldn't matter oh well
     }
 
     if (!req.isAuthenticated()) {
       matchPosts.privacy = 'public'
-      var sortMethod = '-lastUpdated'
+      sortMethod = '-lastUpdated'
     }
 
-    if (req.params.context != 'single') {
+    if (req.params.context !== 'single') {
       // in feeds, we only want posts older than ("less than") the parameter sent in, with age being judged by the currently active sorting method.
       matchPosts[sortMethod.substring(1, sortMethod.length)] = { $lt: olderthanthis }
     }
 
-    var query = Post.find(
-      matchPosts
-    ).sort(sortMethod)
+    var query = Post
+      .find(matchPosts)
+      .sort(sortMethod)
       .limit(postsPerPage)
     // these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
@@ -888,7 +912,9 @@ module.exports = function (app) {
       return
     }
 
-    if (req.params.context != 'single') {
+    let displayedPost
+
+    if (req.params.context !== 'single') {
       // this gets the timestamp of the last post, this tells the browser to ask for posts older than this next time. used in feeds, not with single posts
       var oldesttimestamp = '' + posts[posts.length - 1][sortMethod.substring(1, sortMethod.length)].getTime()
     }
@@ -900,24 +926,24 @@ module.exports = function (app) {
       // the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
       // recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
       // to see if there is a more recent boost.
-      if (req.params.context != 'community' && req.params.context != 'single') {
+      if (req.params.context !== 'community' && req.params.context !== 'single') {
         var isThereNewerInstance = false
-        var whosePostsCount = req.params.context == 'user' ? [new ObjectId(req.params.identifier)] : myFollowedUserIds
-        if (post.type == 'original') {
-          for (boost of post.boostsV2) {
-            if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => { return boost.booster.equals(f) })) {
+        var whosePostsCount = req.params.context === 'user' ? [new ObjectId(req.params.identifier)] : myFollowedUserIds
+        if (post.type === 'original') {
+          for (const boost of post.boostsV2) {
+            if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => boost.booster.equals(f))) {
               isThereNewerInstance = true
             }
           }
-        } else if (post.type == 'boost') {
-          if (post.boostTarget != null) {
-            if (sortMethod == '-lastUpdated') {
+        } else if (post.type === 'boost') {
+          if (post.boostTarget !== null) {
+            if (sortMethod === '-lastUpdated') {
               if (post.boostTarget.lastUpdated.getTime() > post.timestamp.getTime()) {
                 isThereNewerInstance = true
               }
             }
-            for (boost of post.boostTarget.boostsV2) {
-              if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => { return boost.booster.equals(f) })) {
+            for (const boost of post.boostTarget.boostsV2) {
+              if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => boost.booster.equals(f))) {
                 isThereNewerInstance = true
               }
             }
@@ -935,14 +961,14 @@ module.exports = function (app) {
       var canDisplay = false
       if (req.isAuthenticated()) {
         // logged in users can't see private posts by users who don't trust them or community posts by muted members
-        if ((post.privacy == 'private' && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy == 'public') {
+        if ((post.privacy === 'private' && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy === 'public') {
           canDisplay = true
         }
-        if (post.type == 'community') {
+        if (post.type === 'community') {
           // we don't have to check if the user is in the community before displaying posts to them if we're on the community's page, or if it's a single post page and: the community is public or the user wrote the post
           // in other words, we do have to check if the user is in the community if those things aren't true, hence the !
-          if (!(req.params.context == 'community' || (req.params.context == 'single' && (post.author.equals(req.user._id) || post.community.settings.visibility == 'public')))) {
-            if (myCommunities.some(m => { return m.equals(post.community._id) })) {
+          if (!(req.params.context === 'community' || (req.params.context === 'single' && (post.author.equals(req.user._id) || post.community.settings.visibility === 'public')))) {
+            if (myCommunities.some(m => m.equals(post.community._id))) {
               canDisplay = true
             } else {
               canDisplay = false
@@ -959,10 +985,10 @@ module.exports = function (app) {
         // so we just have to hide posts boosted from non-publicly-visible accounts and posts from private communities that
         // the user whose profile page we are on wrote (if this is an issue, we're on a profile page, bc non-public
         // community pages are hidden from logged-out users by a return at the very, very beginning of this function)
-        if (post.author.settings.profileVisibility == 'profileAndPosts') {
+        if (post.author.settings.profileVisibility === 'profileAndPosts') {
           // User has allowed non-logged-in users to see their posts
           if (post.community) {
-            if (post.community.settings.visibility == 'public') {
+            if (post.community.settings.visibility === 'public') {
               // Public community, can display post
               const mutedMemberIds = post.community.mutedMembers.map(a => a._id.toString())
               if (mutedMemberIds.includes(post.author._id.toString())) {
@@ -975,7 +1001,7 @@ module.exports = function (app) {
             // Not a community post, can display
             canDisplay = true
           }
-        } else if (req.params.context == 'community' && thisComm.settings.visibility == 'public') {
+        } else if (req.params.context === 'community' && thisComm.settings.visibility === 'public') {
           // also posts in publicly visible communities can be shown, period. i'm 99% sure that posts from private communities won't even
           // be fetched for logged out users because of the way the matchPosts query is constructed above but just in case i'm checking it
           // again in the above if statement
@@ -993,7 +1019,7 @@ module.exports = function (app) {
       }
 
       var displayContext = post
-      if (post.type == 'boost') {
+      if (post.type === 'boost') {
         displayContext = post.boostTarget
         displayContext.author = await User.findById(displayContext.author)
         for (const boost of displayContext.boostsV2) {
@@ -1003,12 +1029,13 @@ module.exports = function (app) {
 
       await keepCachedHTMLUpToDate(displayContext)
 
+      let parsedTimestamp
       if (moment(displayContext.timestamp).isSame(today, 'd')) {
-        var parsedTimestamp = moment(displayContext.timestamp).fromNow()
+        parsedTimestamp = moment(displayContext.timestamp).fromNow()
       } else if (moment(displayContext.timestamp).isSame(thisyear, 'y')) {
-        var parsedTimestamp = moment(displayContext.timestamp).format('D MMM')
+        parsedTimestamp = moment(displayContext.timestamp).format('D MMM')
       } else {
-        var parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY')
+        parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY')
       }
 
       if (req.isAuthenticated()) {
@@ -1016,13 +1043,14 @@ module.exports = function (app) {
         var isYourPost = displayContext.author._id.equals(req.user._id)
       }
       // generate some arrays containing usernames that will be put in "boosted by" labels
-      if (req.isAuthenticated() && (req.params.context != 'community')) {
+      let boostsForHeader
+      if (req.isAuthenticated() && (req.params.context !== 'community')) {
         var followedBoosters = []
         var notFollowingBoosters = []
         var youBoosted = false
         if (displayContext.boostsV2.length > 0) {
           displayContext.boostsV2.forEach((v, i, a) => {
-            if (!(v.timestamp.getTime() == displayContext.timestamp.getTime())) { // do not include implicit boost
+            if (!(v.timestamp.getTime() === displayContext.timestamp.getTime())) { // do not include implicit boost
               if (v.booster._id.equals(req.user._id)) {
                 followedBoosters.push('you')
                 youBoosted = true
@@ -1036,25 +1064,25 @@ module.exports = function (app) {
             }
           })
         }
-        if (req.params.context == 'user' && !displayContext.author._id.equals(post.author._id)) {
-          var boostsForHeader = [post.author.username]
+        if (req.params.context === 'user' && !displayContext.author._id.equals(post.author._id)) {
+          boostsForHeader = [post.author.username]
         } else {
-          var boostsForHeader = followedBoosters.slice(0, 3)
+          boostsForHeader = followedBoosters.slice(0, 3)
         }
       } else {
         // logged out users will see boosts only on user profile pages and they only need to know that that user boosted the post. should be obvious anyway but, whatevs
-        if (!req.isAuthenticated() && req.params.context == 'user') {
-          if (displayContext.author._id.toString() != req.params.identifier) {
-            var boostsForHeader = [(await (User.findById(req.params.identifier))).username]
+        if (!req.isAuthenticated() && req.params.context === 'user') {
+          if (displayContext.author._id.toString() !== req.params.identifier) {
+            boostsForHeader = [(await (User.findById(req.params.identifier))).username]
           }
-        } else if (req.isAuthenticated() && req.params.context == 'user') {
-          if (displayContext.author._id.toString() != req.params.identifier) {
-            var boostsForHeader = [(await (User.findById(req.params.identifier))).username]
+        } else if (req.isAuthenticated() && req.params.context === 'user') {
+          if (displayContext.author._id.toString() !== req.params.identifier) {
+            boostsForHeader = [(await (User.findById(req.params.identifier))).username]
           }
         }
       }
 
-      var displayedPost = Object.assign(displayContext, {
+      displayedPost = Object.assign(displayContext, {
         deleteid: displayContext._id,
         parsedTimestamp: parsedTimestamp,
         timestampMs: displayContext.timestamp.getTime(),
@@ -1079,8 +1107,10 @@ module.exports = function (app) {
       var threeHoursAgo = moment(new Date()).subtract(3, 'hours')
 
       function parseComments (element, level) {
-        if (!level) level = 1
-        element.forEach(async function (comment) {
+        if (!level) {
+          level = 1
+        }
+        element.forEach(async (comment) => {
           comment.canDisplay = true
           comment.muted = false
           // I'm not sure why, but boosts in the home feed don't display
@@ -1096,7 +1126,7 @@ module.exports = function (app) {
           if (comment.deleted) {
             comment.canDisplay = false
           }
-          momentifiedTimestamp = moment(comment.timestamp)
+          const momentifiedTimestamp = moment(comment.timestamp)
           if (momentifiedTimestamp.isSame(today, 'd')) {
             comment.parsedTimestamp = momentifiedTimestamp.fromNow()
           } else if (momentifiedTimestamp.isSame(thisyear, 'y')) {
@@ -1135,7 +1165,7 @@ module.exports = function (app) {
       }
       parseComments(displayedPost.comments)
 
-      if (req.isAuthenticated() && req.params.context == 'single') {
+      if (req.isAuthenticated() && req.params.context === 'single') {
         // Mark associated notifications read if post is visible
         notifier.markRead(loggedInUserData._id, displayContext._id)
       }
@@ -1157,12 +1187,12 @@ module.exports = function (app) {
     }
 
     var metadata = {}
-    if (req.params.context == 'single') {
+    if (req.params.context === 'single') {
       // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
       // We can only get the post metadata if the post array is filled (and it'll only be filled
       // if the post was able to be displayed, so this checks to see if we should display
       // our vague error message on the frontend)
-      var displayedPost = displayedPosts[0]
+      displayedPost = displayedPosts[0]
       let canDisplay
       let isMember = false
       if (typeof displayedPost !== 'undefined') {
