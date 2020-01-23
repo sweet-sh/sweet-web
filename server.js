@@ -41,11 +41,14 @@ hbs = handlebars.create({
       // If no match, just append a conditional s.
       if (!match) return text + (singular ? '' : 's')
       // We have a good match, so fire away
-      return singular && match[1] // Singular case
-        ||
-        match[2] // Plural case: 'bagel/bagels' --> bagels
-        ||
-        match[1] + (match[3] || 's') // Plural case: 'bagel(s)' or 'bagel' --> bagels
+      return (
+        // Singular case
+        (singular && match[1]) ||
+        // Plural case: 'bagel/bagels' --> bagels
+        match[2] ||
+        // Plural case: 'bagel(s)' or 'bagel' --> bagels
+        match[1] + (match[3] || 's')
+      )
     },
     buildComment (comment, depth) {
       if (!depth) depth = 1
@@ -70,17 +73,15 @@ app.use(express.static('public'))
 
 // Database Configuration and Global Variable Creation===============================================================
 const configDatabase = require('./config/database.js')
-mongoose = require('mongoose')
+const mongoose = require('mongoose')
 mongoose.connect(configDatabase.url, { useNewUrlParser: true }) // connect to our database
-ObjectId = mongoose.Types.ObjectId
-DBReference = mongoose.Schema.Types.ObjectId
-User = require('./app/models/user')
-Relationship = require('./app/models/relationship')
-Post = require('./app/models/post')
-Tag = require('./app/models/tag')
-Community = require('./app/models/community')
-Vote = require('./app/models/vote')
-Image = require('./app/models/image')
+require('./app/models/user')
+require('./app/models/relationship')
+require('./app/models/post')
+require('./app/models/tag')
+require('./app/models/community')
+require('./app/models/vote')
+require('./app/models/image')
 
 // persist sessions across restarts via their storage in mongodb
 const MongoStore = require('connect-mongo')(session)
@@ -111,9 +112,9 @@ app.use(function (req, res, next) {
 })
 
 // set up webpush to send push notifications for the notifier
-webpush = require('web-push')
+const webpush = require('web-push')
 if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {
-  vapidKeys = webpush.generateVAPIDKeys()
+  const vapidKeys = webpush.generateVAPIDKeys()
   webpush.setVapidDetails(
     'mailto:support@sweet.sh',
     vapidKeys.publicKey,
@@ -135,10 +136,10 @@ app.on('SIGINT', function () {
 })
 
 // utilized by routes code =================================================================================
-path = require('path')
+const path = require('path')
 global.appRoot = path.resolve(__dirname)
-fs = require('fs')
-moment = require('moment')
+const fs = require('fs')
+const moment = require('moment')
 moment.updateLocale('en', {
   relativeTime: {
     future: 'in %s',
@@ -163,26 +164,27 @@ moment.updateLocale('en', {
     sameElse: 'MMMM Do YYYY, [at] h:mm a [UTC]Z'
   }
 })
-var momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]'
-sanitizeHtml = require('sanitize-html')
-sharp = require('sharp')
-shortid = require('shortid')
-bcrypt = require('bcrypt-nodejs')
-Autolinker = require('autolinker')
-schedule = require('node-schedule')
-globals = require('./config/globals')
+const momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]'
+require('sanitize-html')
+require('sharp')
+require('shortid')
+require('bcrypt-nodejs')
+require('autolinker')
+require('node-schedule')
+require('./config/globals')
 
 const writeMorganToSeparateFile = true // change to write full request log to stdout instead of a separate file
 
+let stream
 if (writeMorganToSeparateFile) {
   var morganOutput = fs.openSync('full request log starting ' + moment().format('DD-MM HH[h] MM[m] ss[s]') + '.txt', 'w') // colons in the file path not supported by windows :(
-  var stream = {
+  stream = {
     write: function (input, encoding) {
       fs.writeSync(morganOutput, input, undefined, encoding)
     }
   }
 } else {
-  var stream = process.stdout
+  stream = process.stdout
 }
 // log every request to the console w/ timestamp before it can crash the server
 app.use(morgan(function (tokens, req, res) { return moment().format(momentLogFormat) + ' ' + req.method.toLowerCase() + ' request for ' + req.url }, { immediate: true, stream: stream }))
@@ -193,10 +195,10 @@ for (var spicy of ['warn', 'error', 'log']) {
 }
 
 // routes ======================================================================
-helper = require('./app/utilityFunctionsMostlyText.js')
+require('./app/utilityFunctionsMostlyText.js')
 require('./app/statisticsTracker.js')(app, mongoose)
-notifier = require('./app/notifier.js')
-emailer = require('./app/emailer.js')
+require('./app/notifier.js')
+require('./app/emailer.js')
 require('./app/personalAccountActions.js')(app, passport)
 require('./app/inhabitingCommunities.js')(app, passport)
 require('./app/viewingSweet.js')(app)

@@ -1,3 +1,7 @@
+const bcrypt = require('bcrypt-nodejs')
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
+
 var notificationSchema = new mongoose.Schema({
   category: String,
   sourceId: String,

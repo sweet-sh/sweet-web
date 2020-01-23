@@ -1,3 +1,6 @@
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
+
 // this is used by older posts instead of the below inlineElementSchema
 var embedSchema = new mongoose.Schema({
   type: String, // "video" always

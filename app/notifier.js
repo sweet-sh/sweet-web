@@ -1,10 +1,15 @@
+const webpush = require('web-push')
+const User = require('./models/user')
+const Community = require('./models/community')
+const emailer = require('./emailer')
+
 function markRead (userId, subjectId) {
   User.findOne({
     _id: userId
   }, 'notifications')
     .then(user => {
       user.notifications.forEach(notification => {
-        if (notification.seen == false && notification.subjectId == subjectId) {
+        if (!notification.seen && notification.subjectId === subjectId) {
           notification.seen = true
         }
       })
@@ -77,7 +82,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
         .then(async response => {
           // send the user push notifications if they have a subscribed browser
           if (notifiedUser.pushNotifSubscriptions.length > 0) {
-            for (subbed of notifiedUser.pushNotifSubscriptions) {
+            for (const subbed of notifiedUser.pushNotifSubscriptions) {
               const pushSubscription = JSON.parse(subbed)
               const options = {
                 gcmAPIKey: ''
@@ -90,23 +95,31 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
               webpush.sendNotification(pushSubscription, payload, options).catch(async err => {
                 console.log('push notification subscription not working, will be removed:')
                 console.log(err)
-                notifiedUser.pushNotifSubscriptions = notifiedUser.pushNotifSubscriptions.filter(v => v != subbed)
+                notifiedUser.pushNotifSubscriptions = notifiedUser.pushNotifSubscriptions.filter(v => v !== subbed)
                 notifiedUser = await notifiedUser.save()
               })
             }
           }
           // send the user an email if it's a mention and they have emails for mentions enabled
-          if (notifiedUser.settings.sendMentionEmails == true && response.emailText) {
+          if (notifiedUser.settings.sendMentionEmails === true && response.emailText) {
             emailer.sendSingleNotificationEmail(notifiedUser, response, url)
           }
           // if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
           var lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
-          if (lastNotif && cause == 'relationship' && lastNotif.category == 'relationship' && lastNotif.url == url &&
-                        ((lastNotif.text.includes('follows you') && context == 'trust') || (lastNotif.text.includes('trusts you') && context == 'follow'))) {
+          let notification
+          if (
+            lastNotif &&
+            cause === 'relationship' &&
+            lastNotif.category === 'relationship' &&
+            lastNotif.url === url &&
+            (
+              (lastNotif.text.includes('follows you') && context === 'trust') ||
+              (lastNotif.text.includes('trusts you') && context === 'follow'))
+          ) {
             // It's too late at night to work out a better way to get the username of the new notification that isn't regexing the old notification, so... this will break at some point
-            var username = lastNotif.text.match(/@[A-Za-z0-9-_]*/)
+            const username = lastNotif.text.match(/@[A-Za-z0-9-_]*/)
             console.log(username)
-            var notification = {
+            notification = {
               category: cause,
               sourceId: sourceId,
               subjectId: subjectId,
@@ -117,7 +130,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
             notifiedUser.notifications[notifiedUser.notifications.length - 1] = notification
             notifiedUser.save().then(() => { console.log('notification sent to ' + notifiedUser.username) })
           } else {
-            var notification = {
+            notification = {
               category: cause,
               sourceId: sourceId,
               subjectId: subjectId,

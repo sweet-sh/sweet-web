@@ -1,3 +1,16 @@
+const sharp = require('sharp')
+const shortid = require('shortid')
+const mongoose = require('mongoose')
+const moment = require('moment')
+const fs = require('fs')
+const Post = require('./models/post')
+const Community = require('./models/community')
+const User = require('./models/user')
+const Tag = require('./models/tag')
+const Relationship = require('./models/relationship')
+const helper = require('./utilityFunctionsMostlyText')
+const notifier = require('./notifier')
+
 // APIs
 
 module.exports = function (app) {
@@ -28,8 +41,8 @@ module.exports = function (app) {
     var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality]
     if (req.files.image) {
       if (req.files.image.size <= 10485760) {
-        var sharpImage
-        var imageMeta
+        let sharpImage
+        let imageMeta
         try {
           sharpImage = sharp(req.files.image.data)
           imageMeta = await sharpImage.metadata()
@@ -39,9 +52,9 @@ module.exports = function (app) {
           res.end(JSON.stringify({ error: 'filetype' }))
           return
         }
-        var imageFormat = imageMeta.format
+        const imageFormat = imageMeta.format
         const imageUrl = shortid.generate()
-        if (imageFormat == 'gif') {
+        if (imageFormat === 'gif') {
           if (req.files.image.size <= 5242880) {
             var imageData = req.files.image.data
             fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function (err) { // to temp
@@ -55,26 +68,27 @@ module.exports = function (app) {
             res.setHeader('content-type', 'text/plain')
             res.end(JSON.stringify({ error: 'filesize' }))
           }
-        } else if (imageFormat == 'jpeg' || imageFormat == 'png') {
+        } else if (imageFormat === 'jpeg' || imageFormat === 'png') {
           sharpImage = sharpImage.resize({
             width: imageQualitySettings.resize,
             withoutEnlargement: true
           }).rotate()
-          if (imageFormat == 'png' && req.user.settings.imageQuality == 'standard') {
+          if (imageFormat === 'png' && req.user.settings.imageQuality === 'standard') {
             sharpImage = sharpImage.flatten({ background: { r: 255, g: 255, b: 255 } })
           }
-          if (imageFormat == 'jpeg' || req.user.settings.imageQuality == 'standard') {
+          let finalFormat
+          if (imageFormat === 'jpeg' || req.user.settings.imageQuality === 'standard') {
             sharpImage = sharpImage.jpeg({ quality: imageQualitySettings.jpegQuality })
-            var finalFormat = 'jpeg'
+            finalFormat = 'jpeg'
           } else {
             sharpImage = sharpImage.png()
-            var finalFormat = 'png'
+            finalFormat = 'png'
           }
 
           // send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
           // IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
           var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true })
-          thumbnail = await (finalFormat == 'jpeg' ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer()
+          thumbnail = await (finalFormat === 'jpeg' ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer()
           var response = { url: imageUrl + '.' + finalFormat, thumbnail: 'data:image/' + finalFormat + ';base64,' + thumbnail.toString('base64') }
 
           await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) // to temp
@@ -117,7 +131,7 @@ module.exports = function (app) {
   // parseText calls to parse it.
   // Outputs: all that stuff is saved as a new post document (with the body of the post parsed to turn urls and tags and @s into links). Or, error response if not logged in.
   app.post('/createpost', isLoggedInOrErrorResponse, async function (req, res) {
-    var parsedResult = await helper.parseText(JSON.parse(req.body.postContent))
+    const parsedResult = await helper.parseText(JSON.parse(req.body.postContent))
 
     // don't save mentions or tags for draft posts, this means that notifications and tag adding will be deferred until the post is published and at that point
     // all of the mentions and tags will register as "new" and so the right actions will occur then
@@ -135,7 +149,7 @@ module.exports = function (app) {
     }
 
     for (var inline of parsedResult.inlineElements) {
-      if (inline.type == 'image(s)') {
+      if (inline.type === 'image(s)') {
         // calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
         var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? 'community' : req.body.isDraft ? 'draft' : 'original'), req.body.communityId, req.user._id, imagePrivacy, req.user.settings.imageQuality)
         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal
@@ -172,16 +186,16 @@ module.exports = function (app) {
       subscribedUsers: [req.user._id]
     })
 
-    var newPostId = post._id
+    const newPostId = post._id
 
-    for (mention of parsedResult.mentions) {
-      if (mention != req.user.username) {
+    for (const mention of parsedResult.mentions) {
+      if (mention !== req.user.username) {
         User.findOne({ username: mention }).then(async mentioned => {
           if (isCommunityPost) {
             if (mentioned.communities.some(v => v.equals(post.community))) {
               notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
             }
-          } else if (req.body.postPrivacy == 'private') {
+          } else if (req.body.postPrivacy === 'private') {
             if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
               notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + newPostUrl, 'post')
             }
@@ -192,8 +206,13 @@ module.exports = function (app) {
       }
     }
 
-    for (tag of parsedResult.tags) {
-      Tag.findOneAndUpdate({ name: tag }, { $push: { posts: newPostId.toString() }, $set: { lastUpdated: postCreationTime } }, { upsert: true, new: true }, function (error, result) { if (error) return })
+    for (const tag of parsedResult.tags) {
+      Tag.findOneAndUpdate(
+        { name: tag },
+        { $push: { posts: newPostId.toString() }, $set: { lastUpdated: postCreationTime } },
+        { upsert: true, new: true },
+        () => {}
+      )
     }
 
     if (isCommunityPost) {
@@ -218,7 +237,7 @@ module.exports = function (app) {
         function deleteImagesRecursive (postOrComment) {
           if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
             for (const il of postOrComment.inlineElements) {
-              if (il.type == 'image(s)') {
+              if (il.type === 'image(s)') {
                 for (const image of il.images) {
                   fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                     if (err) console.log('Image deletion error ' + err)
@@ -264,7 +283,7 @@ module.exports = function (app) {
         }
 
         // Delete boosts
-        if (post.type == 'original' && post.boosts) {
+        if (post.type === 'original' && post.boosts) {
           post.boosts.forEach((boost) => {
             Post.deleteOne({ _id: boost })
               .then((boost) => {
@@ -295,11 +314,11 @@ module.exports = function (app) {
   // Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
   // moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
   app.post('/createcomment/:postid/:commentid', isLoggedInOrErrorResponse, async function (req, res) {
-    commentTimestamp = new Date()
-    var commentId = mongoose.Types.ObjectId()
+    const commentTimestamp = new Date()
+    const commentId = mongoose.Types.ObjectId()
 
-    var rawContent = req.body.commentContent
-    var parsedResult = await helper.parseText(JSON.parse(rawContent))
+    const rawContent = req.body.commentContent
+    const parsedResult = await helper.parseText(JSON.parse(rawContent))
 
     if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) {
       res.status(400).send('bad post op')
@@ -329,7 +348,7 @@ module.exports = function (app) {
         }
 
         for (var inline of parsedResult.inlineElements) {
-          if (inline.type == 'image(s)') {
+          if (inline.type === 'image(s)') {
             // calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
             var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality)
             inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal
@@ -338,13 +357,13 @@ module.exports = function (app) {
         }
 
         comment.inlineElements = parsedResult.inlineElements
-        var contentHTML = await helper.renderHTMLContent(comment)
+        const contentHTML = await helper.renderHTMLContent(comment)
         comment.cachedHTML = { fullContentHTML: contentHTML }
 
-        numberOfComments = 0
-        var depth = undefined
-        commentParent = false
-        if (req.params.commentid == 'undefined') {
+        let numberOfComments = 0
+        let depth
+        const commentParent = false
+        if (req.params.commentid === 'undefined') {
           depth = 1
           // This is a top level comment with no parent (identified by commentid)
           post.comments.push(comment)
@@ -368,7 +387,7 @@ module.exports = function (app) {
         } else {
           // This is a child level comment so we have to drill through the comments
           // until we find it
-          commentParent = undefined
+          let commentParent
 
           function findNested (array, id, depthSoFar = 2) {
             var foundElement = false
@@ -410,7 +429,7 @@ module.exports = function (app) {
         var postPrivacy = post.privacy
         post.lastUpdated = new Date()
         // Add user to subscribed users for post
-        if ((!post.author._id.equals(req.user._id) && post.subscribedUsers.includes(req.user._id.toString()) === false)) { // Don't subscribe to your own post, or to a post you're already subscribed to
+        if ((!post.author._id.equals(req.user._id) && !post.subscribedUsers.includes(req.user._id.toString()))) { // Don't subscribe to your own post, or to a post you're already subscribed to
           post.subscribedUsers.push(req.user._id.toString())
         }
         post.save()
@@ -425,15 +444,15 @@ module.exports = function (app) {
                 // NOTIFY EVERYONE WHO IS MENTIONED
 
                 // we're never going to notify the author of the comment about them mentioning themself
-                workingMentions = parsedResult.mentions.filter(m => m != req.user.username)
+                const workingMentions = parsedResult.mentions.filter(m => m !== req.user.username)
 
-                if (post.type == 'community') {
+                if (post.type === 'community') {
                   workingMentions.forEach(function (mentionedUsername) {
                     User.findOne({
                       username: mentionedUsername
                     }).then((mentionedUser) => {
                       // within communities: notify the mentioned user if this post's community is one they belong to
-                      if (mentionedUser.communities.some(c => c.toString() == post.community.toString())) {
+                      if (mentionedUser.communities.some(c => c.toString() === post.community.toString())) {
                         notifier.notify('user', 'mention', mentionedUser._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'reply')
                       }
                     }).catch(err => {
@@ -442,7 +461,7 @@ module.exports = function (app) {
                     })
                   })
                 } else {
-                  if (postPrivacy == 'private') {
+                  if (postPrivacy === 'private') {
                     workingMentions.forEach(mentionedUsername => {
                       User.findOne({
                         username: mentionedUsername
@@ -469,7 +488,7 @@ module.exports = function (app) {
                         console.log(err)
                       })
                     })
-                  } else if (postPrivacy == 'public') {
+                  } else if (postPrivacy === 'public') {
                     workingMentions.forEach(function (mention) {
                       User.findOne({
                         username: mention
@@ -493,14 +512,21 @@ module.exports = function (app) {
                 }
 
                 // NOTIFY THE PARENT COMMENT'S AUTHOR
-                // Author doesn't need to know about their own child comments, and about replies on your posts they're not subscribed to, and if they're @ed they already got a notification above, and if they're the post's author as well as the parent comment's author (they got a notification above for that too)
+                // Author doesn't need to know about their own child comments,
+                // and about replies on your posts they're not subscribed to,
+                // and if they're @ed they already got a notification above,
+                // and if they're the post's author as well as the parent
+                // comment's author (they got a notification above for that
+                // too)
                 // First check if this comment even HAS a parent
                 if (commentParent) {
-                  parentCommentAuthor = commentParent.author
-                  if (!parentCommentAuthor._id.equals(req.user._id) &&
-                                        (post.unsubscribedUsers.includes(parentCommentAuthor._id.toString()) === false) &&
-                                        (!parsedResult.mentions.includes(parentCommentAuthor.username)) &&
-                                        (!originalPoster._id.equals(parentCommentAuthor._id))) {
+                  const parentCommentAuthor = commentParent.author
+                  if (
+                    !parentCommentAuthor._id.equals(req.user._id) &&
+                    (!post.unsubscribedUsers.includes(parentCommentAuthor._id.toString())) &&
+                    (!parsedResult.mentions.includes(parentCommentAuthor.username)) &&
+                    (!originalPoster._id.equals(parentCommentAuthor._id))
+                  ) {
                     console.log('Notifying parent comment author of a reply')
                     notifier.notify('user', 'commentReply', parentCommentAuthor._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url + '#comment-' + commentParent._id, 'post')
                   }
@@ -544,7 +570,7 @@ module.exports = function (app) {
 
                 // checks each subscriber for trustedness if this is a private post, notifies all of 'em otherwise
                 function notifySubscribers (subscriberList) {
-                  if (postPrivacy == 'private') {
+                  if (postPrivacy === 'private') {
                     subscriberList.forEach(subscriberID => {
                       Relationship.findOne({
                         fromUser: originalPoster._id,
@@ -566,17 +592,24 @@ module.exports = function (app) {
                 }
 
                 function notifySubscriber (subscriberID) {
-                  if ((subscriberID != req.user._id.toString()) // Do not notify the comment's author about the comment
-                                        &&
-                                        (subscriberID != originalPoster._id.toString()) // don't notify the post's author (because they get a different notification, above)
-                                        &&
-                                        (post.unsubscribedUsers.includes(subscriberID) === false) // don't notify unsubscribed users
-                                        &&
-                                        (commentParent ? subscriberID != parentCommentAuthor._id.toString() : true) // don't notify parent comment author, if it's a child comment (because they get a different notification, above)
+                  if (
+                    // Do not notify the comment's author about the comment
+                    (subscriberID !== req.user._id.toString()) &&
+                    // don't notify the post's author (because they get a
+                    // different notification, above)
+                    (subscriberID !== originalPoster._id.toString()) &&
+                    // don't notify unsubscribed users
+                    (!post.unsubscribedUsers.includes(subscriberID)) &&
+                    // don't notify parent comment author, if it's a child
+                    // comment (because they get a different notification,
+                    // above)
+                    (commentParent ? subscriberID !== parentCommentAuthor._id.toString() : true)
                   ) {
                     console.log('Notifying subscribed user')
                     User.findById(subscriberID).then((subscriber) => {
-                      if (!parsedResult.mentions.includes(subscriber.username)) { // don't notify people who are going to be notified anyway bc they're mentioned in the new comment
+                      if (!parsedResult.mentions.includes(subscriber.username)) {
+                        // don't notify people who are going to be notified
+                        // anyway bc they're mentioned in the new comment
                         if (post.mentions.includes(subscriber.username)) {
                           notifier.notify('user', 'mentioningPostReply', subscriberID, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                         } else {
@@ -594,16 +627,10 @@ module.exports = function (app) {
                 console.log(err)
               })
 
-            if (req.user.imageEnabled) {
-              var image = req.user.image
-            } else {
-              var image = 'cake.svg'
-            }
-            if (req.user.displayName) {
-              var name = '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>'
-            } else {
-              var name = '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>'
-            }
+            const image = req.user.imageEnabled ? req.user.image : 'cake.svg'
+            const name = req.user.displayName
+              ? '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>'
+              : '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>'
 
             hbs.render('./views/partials/comment_dynamic.handlebars', {
               image: image,
@@ -616,7 +643,7 @@ module.exports = function (app) {
               depth: depth
             })
               .then(async html => {
-                var result = {
+                const result = {
                   comment: html
                 }
                 res.contentType('json')
@@ -637,17 +664,17 @@ module.exports = function (app) {
   app.post('/deletecomment/:postid/:commentid', isLoggedInOrRedirect, function (req, res) {
     Post.findOne({ _id: req.params.postid })
       .then((post) => {
-        var commentsByUser = 0
-        var latestTimestamp = 0
-        var numberOfComments = 0
-        var target = undefined
+        let commentsByUser = 0
+        let latestTimestamp = 0
+        let numberOfComments = 0
+        let target
 
         function findNested (array, id, parent) {
           array.forEach((element) => {
             if (!element.deleted) {
               numberOfComments++
             }
-            if ((element.author.toString() == req.user._id.toString()) && !element.deleted) {
+            if ((element.author.toString() === req.user._id.toString()) && !element.deleted) {
               commentsByUser++
             }
             if (element.timestamp > latestTimestamp) {
@@ -673,7 +700,7 @@ module.exports = function (app) {
         }
 
         // i'll be impressed if someone trips this one, comment ids aren't displayed for comments that the logged in user didn't make
-        if (!target.author.equals(req.user._id) && post.author.toString() != req.user._id.toString()) {
+        if (!target.author.equals(req.user._id) && post.author.toString() !== req.user._id.toString()) {
           res.status(400).send("you do not appear to be who you would like us to think that you are! this comment ain't got your brand on it")
           return
         }
@@ -687,7 +714,7 @@ module.exports = function (app) {
           }
         } else if (target.inlineElements && target.inlineElements.length) {
           for (const ie of target.inlineElements) {
-            if (ie.type == 'image(s)') {
+            if (ie.type === 'image(s)') {
               for (const image of ie.images) {
                 fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
                   if (err) console.log('Image deletion error ' + err)
@@ -707,7 +734,7 @@ module.exports = function (app) {
         } else {
           // There are no children, the target can be destroyed
           target.remove()
-          if (target.numberOfSiblings == 0 && target.parent.deleted) {
+          if (target.numberOfSiblings === 0 && target.parent.deleted) {
             // There are also no siblings, and the element's parent
             // has been deleted, so we can even destroy that!
             target.parent.remove()
@@ -718,25 +745,15 @@ module.exports = function (app) {
           .then((comment) => {
             post.lastUpdated = latestTimestamp
             // unsubscribe the author of the deleted comment from the post if they have no other comments on it
-            if (commentsByUser == 0) {
+            if (commentsByUser === 0) {
               post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
-                return v != req.user._id.toString()
+                return v !== req.user._id.toString()
               })
               post.save().catch(err => {
                 console.error(err)
               })
             }
-            // if (!target.some((v, i, a) => {
-            //         return v.author.toString() == req.user._id.toString();
-            //     })) {
-            //     post.subscribedUsers = post.subscribedUsers.filter((v, i, a) => {
-            //         return v != req.user._id.toString();
-            //     })
-            //     post.save().catch(err => {
-            //         console.error(err)
-            //     })
-            // }
-            result = {
+            const result = {
               numberOfComments: numberOfComments
             }
             res.contentType('json').send(JSON.stringify(result))
@@ -752,7 +769,7 @@ module.exports = function (app) {
   // Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the
   // user whose post was boosted.
   app.post('/createboost/:postid', isLoggedInOrRedirect, function (req, res) {
-    boostedTimestamp = new Date()
+    const boostedTimestamp = new Date()
     Post.findOne({
       _id: req.params.postid
     }, {
@@ -764,7 +781,7 @@ module.exports = function (app) {
       url: 1
     }).populate('author')
       .then((boostedPost) => {
-        if (boostedPost.privacy != 'public' || boostedPost.type == 'community') {
+        if (boostedPost.privacy !== 'public' || boostedPost.type === 'community') {
           res.status(400).send('post is not public and therefore may not be boosted')
           return
         }
@@ -831,13 +848,13 @@ module.exports = function (app) {
       .then(async post => {
         if (post.author.equals(req.user._id)) {
           // This post has been written by the logged in user - we good
-          var isCommunityPost = (post.type == 'community')
+          var isCommunityPost = post.type === 'community'
           var content = await helper.renderHTMLContent(post, true)
           hbs.render('./views/partials/posteditormodal.handlebars', {
             contentWarnings: post.contentWarnings,
             privacy: post.privacy,
             isCommunityPost: isCommunityPost,
-            isDraft: post.type == 'draft',
+            isDraft: post.type === 'draft',
             postID: post._id.toString()
           })
             .then(async html => {
@@ -894,7 +911,7 @@ module.exports = function (app) {
         })
       }
     } else if (post.inlineElements && post.inlineElements.length) {
-      post.inlineElements.filter(element => element.type == 'image(s)').map(imagesElement => imagesElement.images.map(
+      post.inlineElements.filter(element => element.type === 'image(s)').map(imagesElement => imagesElement.images.map(
         (imageFilename, i) => {
           oldPostImages.push(imageFilename)
           if (imagesElement.imageIsHorizontal && imagesElement.imageIsVertical) {
@@ -903,32 +920,35 @@ module.exports = function (app) {
           }
         }))
     }
+    let imagePrivacy
+    let imagePrivacyChanged
     if (post.community) {
-      var imagePrivacy = (await Community.findById(post.community)).settings.visibility
-      var imagePrivacyChanged = false
+      imagePrivacy = (await Community.findById(post.community)).settings.visibility
+      imagePrivacyChanged = false
     } else if (req.body.isDraft) {
-      var imagePrivacy = 'private'
-      var imagePrivacyChanged = false
+      imagePrivacy = 'private'
+      imagePrivacyChanged = false
     } else {
-      var imagePrivacy = req.body.postPrivacy
-      var imagePrivacyChanged = !(imagePrivacy == post.privacy)
+      imagePrivacy = req.body.postPrivacy
+      imagePrivacyChanged = !(imagePrivacy === post.privacy)
     }
     // finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
     // change the privacy of old image documents if the post's privacy changed.
     var currentPostImages = []
-    for (e of parsedPost.inlineElements) {
-      if (e.type == 'image(s)') {
+    for (const e of parsedPost.inlineElements) {
+      if (e.type === 'image(s)') {
         e.imageIsVertical = []
         e.imageIsHorizontal = []
         for (var i = 0; i < e.images.length; i++) {
           currentPostImages.push(e.images[i])
+          let horizOrVertic
           if (!oldPostImages.includes(e.images[i])) {
-            var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality)
+            horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality)
             e.imageIsVertical.push(horizOrVertic.imageIsVertical[0])
             e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0])
           } else if (!post.imageVersion || post.imageVersion < 2) {
             // finalize images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
-            var horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/')
+            horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/')
             e.imageIsVertical.push(horizOrVertic.imageIsVertical[0])
             e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0])
           } else {
@@ -945,7 +965,7 @@ module.exports = function (app) {
     }
 
     var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v))
-    for (image of deletedImages) {
+    for (const image of deletedImages) {
       Image.deleteOne({ filename: image })
       fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
     }
@@ -959,14 +979,14 @@ module.exports = function (app) {
     post.embeds = undefined
 
     var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v))
-    for (mention of newMentions) {
-      if (mention != req.user.username) {
+    for (const mention of newMentions) {
+      if (mention !== req.user.username) {
         User.findOne({ username: mention }).then(async mentioned => {
           if (post.community) {
             if (mentioned.communities.some(v => v.equals(post.community))) {
               notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post')
             }
-          } else if (req.body.postPrivacy == 'private') {
+          } else if (req.body.postPrivacy === 'private') {
             if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
               notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post')
             }
@@ -990,7 +1010,7 @@ module.exports = function (app) {
 
     // if the post is in a community, the community's last activity timestamp could be updated here, but maybe not, idk
 
-    var newHTML = await helper.renderHTMLContent(post)
+    let newHTML = await helper.renderHTMLContent(post)
     post.cachedHTML.fullContentHTML = newHTML
 
     post.contentWarnings = req.body.postContentWarnings
@@ -1002,7 +1022,7 @@ module.exports = function (app) {
                 '<button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>'
     }
 
-    if (post.type == 'draft' && !req.body.isDraft) {
+    if (post.type === 'draft' && !req.body.isDraft) {
       var timePublished = new Date()
       post.timestamp = timePublished
       post.lastUpdated = timePublished
@@ -1011,11 +1031,11 @@ module.exports = function (app) {
       newHTML = '<p style="font-weight:300;font-style:italic;color:#ce1717;">This post was published!</p>' // the color is $sweet-red from _colors.scss
     }
 
-    if (post.type == 'original') {
+    if (post.type === 'original') {
       post.privacy = req.body.postPrivacy
-    } else if (post.type == 'draft') {
+    } else if (post.type === 'draft') {
       post.privacy = 'private' // the client should send is this in req.body.postPrivacy but, just to be sure
-    } else if (post.type == 'community') {
+    } else if (post.type === 'community') {
       post.privacy = 'public'
     }
 
@@ -1032,10 +1052,10 @@ module.exports = function (app) {
 // images that are going to be picked up by this function are those uploaded by users whose device loses power, whose device loses internet connection and doesn't
 // regain it before they close the tab, and maybe those that are using a really weird browser or extensions.
 function cleanTempFolder () {
-  fs.readdir('./cdn/images/temp', function (err, files) {
+  fs.readdir('./cdn/images/temp', function (_, files) {
     files.forEach(file => {
-      if (file != '.gitkeep' && file != '') {
-        fs.stat('./cdn/images/temp/' + file, function (err, s) {
+      if (file !== '.gitkeep' && file !== '') {
+        fs.stat('./cdn/images/temp/' + file, function (_, s) {
           if (Date.now() - s.mtimeMs > 7 * 24 * 60 * 60 * 1000) {
             fs.unlink('./cdn/images/temp/' + file, function (e) {
               if (e) {
@@ -1056,7 +1076,7 @@ setInterval(cleanTempFolder, 24 * 60 * 60 * 1000)
 function isLoggedInOrRedirect (req, res, next) {
   if (req.isAuthenticated()) {
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
-    currentTime = new Date()
+    const currentTime = new Date()
     if ((currentTime - req.user.lastUpdated) > 3600000) { // If the timestamp is older than an hour
       User.findOne({
         _id: req.user._id

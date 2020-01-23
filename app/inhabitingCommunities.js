@@ -1,17 +1,29 @@
+const mongoose = require('mongoose')
+const sharp = require('sharp')
+const shortid = require('shortid')
+const schedule = require('node-schedule')
+const fs = require('fs')
+const moment = require('moment')
+const helper = require('./utilityFunctionsMostlyText')
 const CommunityPlaceholder = mongoose.model('Community Placeholder')
+const Community = require('./models/community')
+const Vote = require('./models/vote')
+const User = require('./models/user')
+const Post = require('./models/post')
+const notifier = require('./notifier')
 
 // this is never read from but it could be someday i guess
 const expiryTimers = []
 
 // set vote expiration timers when the server starts up
 Vote.find({}).then(votes => {
-  for (vote of votes) {
+  for (const vote of votes) {
     // account for votes that expired while server was down
-    if (vote.expiryTime.getTime() < new Date() && vote.status != 'expired') {
+    if (vote.expiryTime.getTime() < new Date() && vote.status !== 'expired') {
       vote.status = 'expired'
       vote.save()
       // account for currently active votes that need to be scheduled to expire
-    } else if (vote.status == 'active') {
+    } else if (vote.status === 'active') {
       var expireVote = schedule.scheduleJob(vote.expiryTime, function () {
         if (vote) {
           vote.status = 'expired'
@@ -75,11 +87,7 @@ module.exports = function (app, passport) {
   app.get('/community/:slug', function (req, res) {
     const today = moment().clone().startOf('day')
     const thisyear = moment().clone().startOf('year')
-    if (req.isAuthenticated()) {
-      isLoggedIn = true
-    } else {
-      isLoggedIn = false
-    }
+    const isLoggedIn = req.isAuthenticated()
     let isMember = false
     let hasRequested = false
     let isBanned = false
@@ -132,7 +140,7 @@ module.exports = function (app, passport) {
                     vote.parsedTimestamp = moment(vote.timestamp).format('D MMM YYYY')
                   }
                   vote.parsedExpiry = moment(vote.expiryTime).locale('en-GB').fromNow()
-                  if (vote.reference == 'userban' || vote.reference == 'userunban' || vote.reference == 'usermute' || vote.reference == 'userunmute') {
+                  if (vote.reference === 'userban' || vote.reference === 'userunban' || vote.reference === 'usermute' || vote.reference === 'userunmute') {
                     vote.group = 'uservotes'
                     User.findOne({
                       _id: vote.proposedValue
@@ -218,7 +226,6 @@ module.exports = function (app, passport) {
           return res.redirect('back')
         } else {
           let imageEnabled = false
-          const imageUrl = ''
           const communityUrl = shortid.generate()
           if (req.files.imageUpload) {
             if (req.files.imageUpload.data.length > 3145728) {
@@ -297,7 +304,7 @@ module.exports = function (app, passport) {
       touchCommunity(req.params.communityid)
     }
     var user = await User.findOne({ _id: req.user._id })
-    if (!user.communities.some(v => v.toString() == req.params.communityid)) {
+    if (!user.communities.some(v => v.toString() === req.params.communityid)) {
       user.communities.push(req.params.communityid)
       await user.save()
     }
@@ -348,12 +355,14 @@ module.exports = function (app, passport) {
     })
       .then(community => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        voteUrl = shortid.generate()
-        created = new Date()
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        const voteUrl = shortid.generate()
+        const created = new Date()
+        const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        let votesNumber
         if (community.members.length - community.mutedMembers.length === 1) {
           // if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
           votesNumber = 0
@@ -375,9 +384,8 @@ module.exports = function (app, passport) {
             voteThreshold: 50,
             expiryTime: expiryTime,
             votes: votesNumber,
-            voters: votesNumber == 1 ? [req.user._id] : []
+            voters: votesNumber === 1 ? [req.user._id] : []
           })
-          voteId = vote._id
           vote.save()
             .then(vote => {
               var expireVote = schedule.scheduleJob(expiryTime, function () {
@@ -407,12 +415,14 @@ module.exports = function (app, passport) {
     })
       .then((community) => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        voteUrl = shortid.generate()
-        created = new Date()
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        const voteUrl = shortid.generate()
+        const created = new Date()
+        const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        let votesNumber
         if (community.members.length - community.mutedMembers.length === 1) {
           // if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
           votesNumber = 0
@@ -434,9 +444,8 @@ module.exports = function (app, passport) {
             voteThreshold: 50,
             expiryTime: expiryTime,
             votes: votesNumber,
-            voters: votesNumber == 1 ? [req.user._id] : []
+            voters: votesNumber === 1 ? [req.user._id] : []
           })
-          voteId = vote._id
           vote.save()
             .then(vote => {
               var expireVote = schedule.scheduleJob(expiryTime, function () {
@@ -466,12 +475,14 @@ module.exports = function (app, passport) {
     })
       .then((community) => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        voteUrl = shortid.generate()
-        created = new Date()
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        const voteUrl = shortid.generate()
+        const created = new Date()
+        const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        let votesNumber
         if (community.members.length - community.mutedMembers.length === 1) {
           // if there is only one member with permissions, start out with 0 votes total so that someone has to at least click on the 'vote' button to make it pass
           votesNumber = 0
@@ -493,9 +504,8 @@ module.exports = function (app, passport) {
             voteThreshold: 50,
             expiryTime: expiryTime,
             votes: votesNumber,
-            voters: votesNumber == 1 ? [req.user._id] : []
+            voters: votesNumber === 1 ? [req.user._id] : []
           })
-          voteId = vote._id
           vote.save()
             .then(vote => {
               var expireVote = schedule.scheduleJob(expiryTime, function () {
@@ -525,12 +535,14 @@ module.exports = function (app, passport) {
     })
       .then((community) => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        voteUrl = shortid.generate()
-        created = new Date()
-        expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        const voteUrl = shortid.generate()
+        const created = new Date()
+        const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+        let votesNumber
         if (community.members.length - community.mutedMembers.length === 1) {
           // if there is only one member with permissions, start out with 0 votes total so that at least someone has to click on the 'vote' button to make it pass
           votesNumber = 0
@@ -552,9 +564,8 @@ module.exports = function (app, passport) {
             voteThreshold: 50,
             expiryTime: expiryTime,
             votes: votesNumber,
-            voters: votesNumber == 1 ? [req.user._id] : []
+            voters: votesNumber === 1 ? [req.user._id] : []
           })
-          voteId = vote._id
           vote.save()
             .then(vote => {
               var expireVote = schedule.scheduleJob(expiryTime, function () {
@@ -584,6 +595,7 @@ module.exports = function (app, passport) {
     })
       .then(community => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
@@ -614,6 +626,7 @@ module.exports = function (app, passport) {
     })
       .then(community => {
         const memberIds = community.members.map(a => a._id.toString())
+        let isMember
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
@@ -638,7 +651,8 @@ module.exports = function (app, passport) {
       return res.sendStatus(403)
     }
     console.log(req.body)
-    if (req.body.reference == 'image') {
+    let imageUrl
+    if (req.body.reference === 'image') {
       imageUrl = shortid.generate() + '.jpg'
       if (req.files.proposedValue.data.length > 3145728) {
         console.error('Image too large!')
@@ -689,34 +703,36 @@ module.exports = function (app, passport) {
     }
     const parsedReference = parsedReferences[req.body.reference]
     var allowedChange = true // is there a change? and is it allowed?
-    if (req.body.reference == 'description' || req.body.reference == 'rules') {
+    let proposedValue
+    let parsedProposedValue
+    if (req.body.reference === 'description' || req.body.reference === 'rules') {
       proposedValue = req.body.proposedValue
       parsedProposedValue = (await helper.parseText(req.body.proposedValue)).text
-      if (req.body.reference == 'description') {
-        allowedChange = (community.descriptionRaw != proposedValue)
+      if (req.body.reference === 'description') {
+        allowedChange = (community.descriptionRaw !== proposedValue)
       } else {
-        allowedChange = (community.rulesRaw != proposedValue)
+        allowedChange = (community.rulesRaw !== proposedValue)
       }
-    } else if (req.body.reference == 'joinType') {
+    } else if (req.body.reference === 'joinType') {
       proposedValue = req.body.proposedValue
       parsedProposedValue = parsedJoinType[req.body.proposedValue]
-      allowedChange = (parsedProposedValue && community.settings.joinType != proposedValue) // parsedProposedValue will be undefined if req.body.proposedValue wasn't one of the allowed values
-    } else if (req.body.reference == 'visibility') {
+      allowedChange = (parsedProposedValue && community.settings.joinType !== proposedValue) // parsedProposedValue will be undefined if req.body.proposedValue wasn't one of the allowed values
+    } else if (req.body.reference === 'visibility') {
       proposedValue = req.body.proposedValue
       parsedProposedValue = parsedVisibility[req.body.proposedValue]
-      allowedChange = (parsedProposedValue && community.settings.visibility != proposedValue)
-    } else if (req.body.reference == 'voteLength') {
+      allowedChange = (parsedProposedValue && community.settings.visibility !== proposedValue)
+    } else if (req.body.reference === 'voteLength') {
       proposedValue = req.body.proposedValue
       parsedProposedValue = parsedVoteLength[req.body.proposedValue]
-      allowedChange = (parsedProposedValue && community.settings.voteLength != parseInt(proposedValue))
-    } else if (req.body.reference == 'image') {
+      allowedChange = (parsedProposedValue && community.settings.voteLength !== parseInt(proposedValue))
+    } else if (req.body.reference === 'image') {
       proposedValue = imageUrl
       parsedProposedValue = imageUrl
-    } else if (req.body.reference == 'name') { // this is where it gets complicated
+    } else if (req.body.reference === 'name') { // this is where it gets complicated
       proposedValue = req.body.proposedValue
       parsedProposedValue = proposedValue
       var slug = helper.slugify(proposedValue)
-      if (!parsedProposedValue || community.name == proposedValue) {
+      if (!parsedProposedValue || community.name === proposedValue) {
         // not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
         req.session.sessionFlash = {
           type: 'warning',
@@ -760,9 +776,10 @@ module.exports = function (app, passport) {
       return res.redirect('back')
     }
     console.log(community)
-    voteUrl = shortid.generate()
-    created = new Date()
-    expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+    const voteUrl = shortid.generate()
+    const created = new Date()
+    const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
+    let votesNumber
     if (community.members.length - community.mutedMembers.length === 1) {
       // if there is only one member with permissions, start out with 0 votes total so that they have to at least click on the 'vote' button to make it pass
       votesNumber = 0
@@ -784,13 +801,12 @@ module.exports = function (app, passport) {
       voteThreshold: 50,
       expiryTime: expiryTime,
       votes: votesNumber,
-      voters: votesNumber == 1 ? [req.user._id] : []
+      voters: votesNumber === 1 ? [req.user._id] : []
     })
-    voteId = vote._id
     console.log(vote)
     vote.save()
       .then(vote => {
-        var expireVote = schedule.scheduleJob(expiryTime, function () {
+        const expireVote = schedule.scheduleJob(expiryTime, function () {
           Vote.findOne({
             _id: vote._id
           })
@@ -824,7 +840,7 @@ module.exports = function (app, passport) {
   })
 
   app.post('/api/community/vote/cast/:communityid/:voteid', isLoggedIn, function (req, res) {
-    if (!req.user.communities.some(v => v.toString() == req.params.communityid)) {
+    if (!req.user.communities.some(v => v.toString() === req.params.communityid)) {
       return res.sendStatus(403)
     }
     Vote.findOne({
@@ -856,7 +872,7 @@ module.exports = function (app, passport) {
 
                 if (vote.votes >= majorityMargin) {
                   console.log('Vote passed!')
-                  if (vote.reference == 'visibility') {
+                  if (vote.reference === 'visibility') {
                     community.settings[vote.reference] = vote.proposedValue
                     Image.find({
                       context: 'community',
@@ -869,23 +885,23 @@ module.exports = function (app, passport) {
                         image.save()
                       })
                     })
-                  } else if (vote.reference == 'joinType' || vote.reference == 'voteLength') {
+                  } else if (vote.reference === 'joinType' || vote.reference === 'voteLength') {
                     community.settings[vote.reference] = vote.proposedValue
-                  } else if (vote.reference == 'description' || vote.reference == 'rules') {
+                  } else if (vote.reference === 'description' || vote.reference === 'rules') {
                     community[vote.reference + 'Raw'] = vote.proposedValue
                     community[vote.reference + 'Parsed'] = vote.parsedProposedValue
-                  } else if (vote.reference == 'image') {
+                  } else if (vote.reference === 'image') {
                     fs.rename(global.appRoot + '/public/images/communities/staging/' + vote.proposedValue, global.appRoot + '/public/images/communities/' + vote.proposedValue, function () {
                       community[vote.reference] = vote.proposedValue
                       community.imageEnabled = true
                       community.save()
                     })
-                  } else if (vote.reference == 'name') {
+                  } else if (vote.reference === 'name') {
                     var oldName = community.name
                     community.name = vote.proposedValue
                     CommunityPlaceholder.deleteOne({ name: vote.proposedValue }, function (err) { console.error(err) })
                     community.slug = helper.slugify(vote.proposedValue) // i guess i'm assuming the "slugify" function hasn't been modified since the vote was created
-                  } else if (vote.reference == 'userban') {
+                  } else if (vote.reference === 'userban') {
                     community.members.pull(vote.proposedValue)
                     community.bannedMembers.push(vote.proposedValue)
                     User.findOne({
@@ -896,7 +912,7 @@ module.exports = function (app, passport) {
                         user.bannedCommunities.push(req.params.communityid)
                         user.save()
                       })
-                  } else if (vote.reference == 'usermute') {
+                  } else if (vote.reference === 'usermute') {
                     community.mutedMembers.push(vote.proposedValue)
                     User.findOne({
                       _id: vote.proposedValue
@@ -905,7 +921,7 @@ module.exports = function (app, passport) {
                         user.mutedCommunities.push(req.params.communityid)
                         user.save()
                       })
-                  } else if (vote.reference == 'userunban') {
+                  } else if (vote.reference === 'userunban') {
                     community.bannedMembers.pull(vote.proposedValue)
                     User.findOne({
                       _id: vote.proposedValue
@@ -914,7 +930,7 @@ module.exports = function (app, passport) {
                         user.bannedCommunities.pull(req.params.communityid)
                         user.save()
                       })
-                  } else if (vote.reference == 'userunmute') {
+                  } else if (vote.reference === 'userunmute') {
                     community.mutedMembers.pull(vote.proposedValue)
                     User.findOne({
                       _id: vote.proposedValue
@@ -932,7 +948,7 @@ module.exports = function (app, passport) {
                         .then(vote => {
                           vote.status = 'passed'
                           vote.save()
-                          if (vote.reference == 'userban') {
+                          if (vote.reference === 'userban') {
                             User.findOne({
                               _id: vote.proposedValue
                             })
@@ -955,12 +971,12 @@ module.exports = function (app, passport) {
                               notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'banned')
                             })
                             notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'banned')
-                          } else if (vote.reference == 'userunban') {
+                          } else if (vote.reference === 'userunban') {
                             community.members.forEach(member => {
                               notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unbanned')
                             })
                             notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unbanned')
-                          } else if (vote.reference == 'usermute') {
+                          } else if (vote.reference === 'usermute') {
                             console.log('User muted - sending notifications')
                             community.members.forEach(member => {
                               console.log('Notification sending to ' + member)
@@ -970,7 +986,7 @@ module.exports = function (app, passport) {
                                 notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'muted')
                               }
                             })
-                          } else if (vote.reference == 'userunmute') {
+                          } else if (vote.reference === 'userunmute') {
                             community.members.forEach(member => {
                               if (member.equals(vote.proposedValue)) {
                                 notifier.notify('community', 'managementResponse', vote.proposedValue, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
@@ -978,7 +994,7 @@ module.exports = function (app, passport) {
                                 notifier.notify('community', 'management', member, vote.proposedValue, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, 'unmuted')
                               }
                             })
-                          } else if (vote.reference == 'name') {
+                          } else if (vote.reference === 'name') {
                             community.members.forEach(member => {
                               if (!member.equals(req.user._id)) {
                                 notifier.notify('community', 'nameChange', member, req.user._id, req.params.communityid, '/api/community/getbyid/' + req.params.communityid, oldName)
@@ -994,7 +1010,7 @@ module.exports = function (app, passport) {
                             })
                           }
                           touchCommunity(req.params.communityid)
-                          if (vote.reference == 'name') {
+                          if (vote.reference === 'name') {
                             res.end('{"success" : "Updated Successfully", "status" : 302, "redirect": "/community/' + community.slug + '"}')
                           } else {
                             res.end('{"success" : "Updated Successfully", "status" : 200}')

@@ -1,3 +1,9 @@
+const path = require('path')
+const bcrypt = require('bcrypt-nodejs')
+const fs = require('fs')
+const Post = require('./models/post')
+const User = require('./models/user')
+
 module.exports = function (app, mongoose) {
   // Fun stats tracker. Non-interactive.
   var cameOnlineAt = new Date()
@@ -6,11 +12,11 @@ module.exports = function (app, mongoose) {
     var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1)
     Post.countDocuments({}).then(numberOfPosts => {
       Image.countDocuments({}).then(numberOfImages => {
-        mongoose.connection.db.collection('sessions', (err, collection) => {
-          collection.find().toArray(function (err, activeSessions) {
+        mongoose.connection.db.collection('sessions', (_, collection) => {
+          collection.find().toArray(function (_, activeSessions) {
             var numberOfActiveSessions = activeSessions.length
             var activeusers = []
-            for (sesh of activeSessions) {
+            for (const sesh of activeSessions) {
               var sessiondata = JSON.parse(sesh.session)
               if (sessiondata.passport) {
                 if (!activeusers.includes(sessiondata.passport.user)) {
@@ -115,7 +121,7 @@ module.exports = function (app, mongoose) {
     if (userTablePromise) {
       await userTablePromise
     }
-    var mostRecentDate
+    let mostRecentDate
     if (!fs.existsSync(postTableFileName)) {
       if (!postTablePromise) {
         postTablePromise = rebuildPostTable()
@@ -150,7 +156,7 @@ module.exports = function (app, mongoose) {
     if (postTablePromise) {
       await postTablePromise
     }
-    var mostRecentDate
+    let mostRecentDate
     if (!fs.existsSync(userTableFileName)) {
       if (!userTablePromise) {
         userTablePromise = rebuildUserTable()
@@ -177,9 +183,9 @@ module.exports = function (app, mongoose) {
     })
   })
 
-  var activeUsersTablePromise = undefined
+  let activeUsersTablePromise
   app.get('/admin/justactiveusersgraph', async function (req, res) {
-    var mostRecentDate
+    let mostRecentDate
     if (!fs.existsSync(activeUserTableFileName)) {
       if (!activeUsersTablePromise) {
         activeUsersTablePromise = rebuildActiveUsersTable()
@@ -253,7 +259,7 @@ var activeUserTableFileName = 'activeUsersTimeline.csv'
 function tableNotUpToDate (tableFilename, dateInterval = 1) {
   var lastLine = ''
   fs.readFileSync(tableFilename, 'utf-8').split('\n').forEach(function (line) {
-    if (line && line != '\n') {
+    if (line && line !== '\n') {
       lastLine = line
     }
   })
@@ -417,16 +423,17 @@ async function parseTableForGraph (filename, collection, callbackForCurrentY, en
     }
   };
   // add in a datapoint representing the current exact second, if we have a source to obtain it from
-  var now = new Date()
+  const now = new Date()
+  let numberOfDocs
   if (collection) {
-    var numberOfDocs = await collection.countDocuments()
+    numberOfDocs = await collection.countDocuments()
   } else if (callbackForCurrentY) {
-    var numberOfDocs = await callbackForCurrentY()
+    numberOfDocs = await callbackForCurrentY()
   } else {
     return jsonVersion
   }
   jsonVersion.push({
-    label: numberOfDocs == 69 ? 'nice' : now.toLocaleString(),
+    label: numberOfDocs === 69 ? 'nice' : now.toLocaleString(),
     year: now.getFullYear(),
     month: now.getMonth(),
     date: now.getDate(),
@@ -440,10 +447,10 @@ async function parseTableForGraph (filename, collection, callbackForCurrentY, en
 
 // this takes the datpoints type thing above and takes the derivative by subtracting the last date
 function getPerDayRate (datapoints) {
-  var newpoints = []
-  var previousPoint = undefined
+  const newpoints = []
+  let previousPoint
   for (const point of datapoints) {
-    var y = point.y
+    let y = point.y
     if (previousPoint) {
       y -= previousPoint
     }
@@ -607,7 +614,7 @@ async function getActiveUsersForInterval (intervalStart, intervalEnd) {
 async function getActiveUsersSinceLastSave () {
   var lastLine = ''
   fs.readFileSync(activeUserTableFileName, 'utf-8').split('\n').forEach(function (line) {
-    if (line && line != '\n') {
+    if (line && line !== '\n') {
       lastLine = line
     }
   })

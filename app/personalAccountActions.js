@@ -1,8 +1,14 @@
+const Autolinker = require('autolinker')
+const sharp = require('sharp')
+const bcrypt = require('bcrypt-nodejs')
+const Post = require('./models/post')
+const User = require('./models/user')
+const Relationship = require('./models/relationship')
+const helper = require('./utilityFunctionsMostlyText')
+const notifier = require('./notifier')
 const reservedUsernames = require('../config/reserved-usernames.js')
-
-// APIs
-
 const sgMail = require('./mail')
+const emailer = require('./emailer')
 
 module.exports = function (app, passport) {
   // Responds to a post request containing signup information.
@@ -108,10 +114,11 @@ module.exports = function (app, passport) {
   // Output: a relationship document in the database or the removal of one, depending on type, and a notification if someone has followed someone. Or
   // isLoggedInOrRedirect redirects you.
   app.post('/useraction/:type/:action/:from/:to/:fromid/:toid/:fromusername', isLoggedInOrRedirect, function (req, res) {
-    if (req.params.from != req.user._id.toString()) {
+    if (req.params.from !== req.user._id.toString()) {
       res.status(400).send("action not permitted: following/unfollowing/flagging/unflagging/trusting/untrusting a user from an account you're not logged in to")
       return
     }
+    let from
     User.findOne({
       _id: req.params.from
     })
@@ -124,11 +131,12 @@ module.exports = function (app, passport) {
           _id: req.params.to
         })
           .then(toUser => {
-            to = toUser
+            const to = toUser
             console.log(to)
+            return to
           })
-          .then(() => {
-            if (req.params.action == 'add') {
+          .then((to) => {
+            if (req.params.action === 'add') {
               const flag = new Relationship({
                 from: from.email,
                 to: to.email,
@@ -139,7 +147,7 @@ module.exports = function (app, passport) {
               flag.save()
                 .then(() => {
                   // Do not notify when users are flagged, muted, or blocked (blocking and muting not currently implemented)
-                  if (req.params.type != 'block' && req.params.type != 'flag' && req.params.type != 'mute') {
+                  if (req.params.type !== 'block' && req.params.type !== 'flag' && req.params.type !== 'mute') {
                     notifier.notify('user', 'relationship', to._id, from._id, from._id, '/' + from.username, req.params.type)
                   }
                 })
@@ -150,7 +158,7 @@ module.exports = function (app, passport) {
                   console.log('Database error.')
                   console.log(err)
                 })
-            } else if (req.params.action = 'delete') {
+            } else if (req.params.action === 'delete') {
               Relationship.findOneAndRemove({
                 from: from.email,
                 to: to.email,
@@ -160,7 +168,7 @@ module.exports = function (app, passport) {
               }).then(() => {
                 res.end('{"success" : "Updated Successfully", "status" : 200}')
               })
-                .catch((err) => {
+                .catch(() => {
                   console.log('Database error.')
                 })
             }
@@ -174,7 +182,7 @@ module.exports = function (app, passport) {
   app.post('/updateprofile', isLoggedInOrRedirect, function (req, res) {
     let imageEnabled = req.user.imageEnabled
     let imageFilename = req.user.image
-    if (Object.keys(req.files).length != 0) {
+    if (Object.keys(req.files).length !== 0) {
       console.log(req.files.imageUpload.data.length)
       if (req.files.imageUpload.data.length > 3145728) {
         req.session.sessionFlash = {
@@ -205,12 +213,12 @@ module.exports = function (app, passport) {
     })
       .then((user) => {
         let parsedAbout = req.user.aboutParsed
-        if (req.body.about != req.user.aboutRaw) {
+        if (req.body.about !== req.user.aboutRaw) {
           // Parse about section
           const splitAbout = helper.escapeHTMLChars(req.body.about).substring(0, 500).split(/\r\n|\r|\n/gi)
           const parsedAboutArray = []
           splitAbout.forEach(function (line) {
-            if (line != '') {
+            if (line !== '') {
               line = '<p>' + line + '</p>'
               line = Autolinker.link(line)
               var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
@@ -251,7 +259,7 @@ module.exports = function (app, passport) {
       _id: req.params.postid
     })
       .then(async post => {
-        if (post.type == 'boost') {
+        if (post.type === 'boost') {
           post = await Post.findById(post.boostTarget)
         }
         post.subscribedUsers.pull(req.user._id)
@@ -272,7 +280,7 @@ module.exports = function (app, passport) {
       _id: req.params.postid
     })
       .then(async post => {
-        if (post.type == 'boost') {
+        if (post.type === 'boost') {
           post = await Post.findById(post.boostTarget)
         }
         post.unsubscribedUsers.pull(req.user._id)
@@ -297,7 +305,7 @@ module.exports = function (app, passport) {
     const oldSets = req.user.settings
 
     var emailSetsChanged = false
-    if (newSets.digestEmailFrequency != oldSets.digestEmailFrequency || newSets.timezone != oldSets.timezone || newSets.autoDetectedTimeZone != oldSets.autoDetectedTimeZone || newSets.emailTime != oldSets.emailTime || newSets.emailDay != oldSets.emailDay) {
+    if (newSets.digestEmailFrequency !== oldSets.digestEmailFrequency || newSets.timezone !== oldSets.timezone || newSets.autoDetectedTimeZone !== oldSets.autoDetectedTimeZone || newSets.emailTime !== oldSets.emailTime || newSets.emailDay !== oldSets.emailDay) {
       emailSetsChanged = true
     }
 
@@ -314,10 +322,10 @@ module.exports = function (app, passport) {
         'settings.homeTagTimelineSorting': newSets.homeTagTimelineSorting,
         'settings.userTimelineSorting': newSets.userTimelineSorting,
         'settings.communityTimelineSorting': newSets.communityTimelineSorting,
-        'settings.flashRecentComments': (newSets.flashRecentComments == 'on'),
-        'settings.showRecommendations': (newSets.showRecommendations == 'on'),
-        'settings.showHashtags': (newSets.showHashtags == 'on'),
-        'settings.sendMentionEmails': (newSets.sendMentionEmails == 'on'),
+        'settings.flashRecentComments': (newSets.flashRecentComments === 'on'),
+        'settings.showRecommendations': (newSets.showRecommendations === 'on'),
+        'settings.showHashtags': (newSets.showHashtags === 'on'),
+        'settings.sendMentionEmails': (newSets.sendMentionEmails === 'on'),
         'settings.emailTime': newSets.emailTime,
         'settings.emailDay': newSets.emailDay
       }
@@ -461,6 +469,7 @@ module.exports = function (app, passport) {
       email: req.body.email
     })
       .then(user => {
+        let token
         if (!user) { // There is no user registered with this email.
           req.session.sessionFlash = {
             message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.',
@@ -474,7 +483,7 @@ module.exports = function (app, passport) {
           }
           res.redirect(301, '/resend-token')
         } else { // Actual success
-          require('crypto').randomBytes(20, function (err, buffer) {
+          require('crypto').randomBytes(20, function (_, buffer) {
             token = buffer.toString('hex')
           })
           user.verificationToken = token
@@ -482,7 +491,7 @@ module.exports = function (app, passport) {
           user.save()
             .then(user => {
               const msg = {
-                to: email,
+                to: req.body.email,
                 from: 'support@sweet.sh',
                 subject: 'sweet new user verification',
                 text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
@@ -498,7 +507,7 @@ module.exports = function (app, passport) {
                   res.redirect(301, '/resend-token')
                 })
             })
-            .catch(err => {
+            .catch(() => {
               req.session.sessionFlash = {
                 type: 'alert',
                 message: 'There has been a problem sending your token. Please try again in a few minutes.',
@@ -508,7 +517,7 @@ module.exports = function (app, passport) {
             })
         }
       })
-      .catch(err => {
+      .catch(() => {
         req.session.sessionFlash = {
           type: 'alert',
           message: 'There has been a problem sending your token. Please try again in a few minutes.',
@@ -564,7 +573,8 @@ module.exports = function (app, passport) {
   // an email with a link to /reset-password with a token if the email is right and the token saved in
   // the database, or a redirect to /forgot-password with a warning message if the email or database apis return errors.
   app.post('/forgot-password', function (req, res) {
-    require('crypto').randomBytes(20, function (err, buffer) {
+    let token
+    require('crypto').randomBytes(20, function (_, buffer) {
       token = buffer.toString('hex')
     })
     User.findOne({
@@ -702,7 +712,7 @@ module.exports = function (app, passport) {
     if (req.isAuthenticated()) {
       var user = await User.findById(req.user._id)
       if (!user.pushNotifSubscriptions.some(v => { // check to make sure there isn't already a subscription set up with this endpoint
-        return JSON.parse(v).endpoint == JSON.parse(req.body.subscription).endpoint
+        return JSON.parse(v).endpoint === JSON.parse(req.body.subscription).endpoint
       })) {
         user.pushNotifSubscriptions.push(req.body.subscription)
         user.save()
@@ -715,7 +725,7 @@ module.exports = function (app, passport) {
     if (req.isAuthenticated()) {
       var user = await User.findById(req.user._id)
       user.pushNotifSubscriptions = user.pushNotifSubscriptions.filter(v => { // check to make sure there isn't already a subscription set up with this endpoint
-        return !(JSON.parse(v).endpoint == JSON.parse(req.body.subscription).endpoint)
+        return !(JSON.parse(v).endpoint === JSON.parse(req.body.subscription).endpoint)
       })
       user.save()
     }
@@ -727,9 +737,9 @@ module.exports = function (app, passport) {
       _id: req.user._id
     })
       .then(user => {
-        if (req.params.type == 'user') {
+        if (req.params.type === 'user') {
           user.hiddenRecommendedUsers.push(req.params.id)
-        } else if (req.params.type == 'community') {
+        } else if (req.params.type === 'community') {
           user.hiddenRecommendedCommunities.push(req.params.id)
         }
         user.save()
@@ -744,7 +754,7 @@ module.exports = function (app, passport) {
 function isLoggedInOrRedirect (req, res, next) {
   if (req.isAuthenticated()) {
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
-    currentTime = new Date()
+    const currentTime = new Date()
     if ((currentTime - req.user.lastUpdated) > 3600000) { // If the timestamp is older than an hour
       User.findOne({
         _id: req.user._id

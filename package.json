@@ -8,7 +8,7 @@
     "generate-dark-mode": "node-sass --source-map true --output-style compressed scss/dark-mode.scss public/css/dark-mode.css --watch",
     "start": "nodemon server.js & npm run watch-sass",
     "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch",
-    "lint": "eslint app --fix"
+    "lint": "eslint --fix"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",

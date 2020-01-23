@@ -1,4 +1,5 @@
 const fs = require('fs')
+const mongoose = require('mongoose')
 const moment = require('moment')
 const path = require('path')
 const bcrypt = require('bcrypt-nodejs')
@@ -13,6 +14,8 @@ const globals = require('../config/globals')
 
 // used on the settings page to set up push notifications
 const auth = require('../config/auth.js')
+
+const ObjectId = mongoose.Types.ObjectId
 
 module.exports = function (app) {
   // Responds to get requests for images on the server. If the image is private, checks to see

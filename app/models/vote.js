@@ -1,9 +1,5 @@
-
-// var optionSchema = new mongoose.Schema({
-//   title: String,
-//   votes: Number,
-//   voters: [{ type: DBReference, ref: 'User' }]
-// });
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
 
 var commentSchema = new mongoose.Schema({
   authorEmail: String,

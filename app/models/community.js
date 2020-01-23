@@ -1,3 +1,6 @@
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
+
 // define the schema for our user model
 var communitySchema = new mongoose.Schema({
   created: Date,
@@ -37,10 +40,10 @@ communitySchema.pre('validate', function (next) {
   this.membersCount = this.members.length
   this.requestsCount = this.membershipRequests.length
   this.mutedMembersCount = this.mutedMembers.length
-  membersIds = this.members.map(String)
-  mutedMembersIds = this.mutedMembers.map(String)
-  mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
-  votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
+  const membersIds = this.members.map(String)
+  const mutedMembersIds = this.mutedMembers.map(String)
+  const mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
+  const votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
   this.votingMembersCount = votingMembers
   if (this.membersCount === 0) {
     this.settings.joinType = 'open'
