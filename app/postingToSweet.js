@@ -140,12 +140,14 @@ module.exports = function (app) {
       parsedResult.tags = []
     }
 
+    var imagePrivacy
+
     if (req.body.communityId) {
-      var imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility
+      imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility
     } else if (req.body.isDraft) {
-      var imagePrivacy = 'private' // this should already be stored in req.body.postPrivacy but just in case
+      imagePrivacy = 'private' // this should already be stored in req.body.postPrivacy but just in case
     } else {
-      var imagePrivacy = req.body.postPrivacy
+      imagePrivacy = req.body.postPrivacy
     }
 
     for (var inline of parsedResult.inlineElements) {
@@ -314,6 +316,36 @@ module.exports = function (app) {
   // Outputs: makes the comment document (with the body parsed for urls, tags, and @mentions), embeds a comment document in its post document,
   // moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
   app.post('/createcomment/:postid/:commentid', isLoggedInOrErrorResponse, async function (req, res) {
+    // loop over the array of comments adding 1 +  countComments on its replies to the count variable.
+    function countComments (comments) {
+      let count = 0
+      for (comment of comments) {
+        if (!comment.deleted) {
+          count += 1
+          if (comment.replies.length) {
+            count += countComments(comment.replies)
+          }
+        }
+      }
+      return count
+    }
+
+    function findCommentByID (id, comments, depth = 1) {
+      for (comment of comments) {
+        if (comment._id.equals(id)) {
+          return { commentParent: comment, depth }
+        } else {
+          if (comment.replies.length > 0) {
+            const searchReplies = findCommentByID(id, comment.replies, depth + 1)
+            if (searchReplies !== 0) {
+              return searchReplies
+            }
+          }
+        }
+      }
+      return 0
+    }
+
     const commentTimestamp = new Date()
     const commentId = mongoose.Types.ObjectId()
 
@@ -339,12 +371,13 @@ module.exports = function (app) {
     Post.findOne({ _id: req.params.postid })
       .populate('author')
       .then(async (post) => {
+        var postType, postPrivacy
         if (post.communityId) {
-          var postType = 'community'
-          var postPrivacy = (await Community.findById(post.communityId)).settings.visibility
+          postType = 'community'
+          postPrivacy = (await Community.findById(post.communityId)).settings.visibility
         } else {
-          var postType = 'original'
-          var postPrivacy = post.privacy
+          postType = 'original'
+          postPrivacy = post.privacy
         }
 
         for (var inline of parsedResult.inlineElements) {
@@ -360,87 +393,41 @@ module.exports = function (app) {
         const contentHTML = await helper.renderHTMLContent(comment)
         comment.cachedHTML = { fullContentHTML: contentHTML }
 
-        let numberOfComments = 0
         let depth
-        const commentParent = false
+        let commentParent
         if (req.params.commentid === 'undefined') {
           depth = 1
+          commentParent = undefined
           // This is a top level comment with no parent (identified by commentid)
           post.comments.push(comment)
-
-          // Count total comments
-          function countComments (array) {
-            array.forEach((element) => {
-              if (!element.deleted) {
-                numberOfComments++
-              }
-              if (element.replies) {
-                var replies = countComments(element.replies)
-                if (replies) {
-                  return replies
-                }
-              }
-            })
-            return numberOfComments
-          }
-          post.numberOfComments = countComments(post.comments)
         } else {
           // This is a child level comment so we have to drill through the comments
           // until we find it
-          let commentParent
+          ({ commentParent, depth } = findCommentByID(req.params.commentid, post.comments))
+          if (!commentParent) {
+            res.status(403).send('parent comment not found')
+            return
+          } else if (depth > 5) {
+            res.status(403).send('comment too deep')
+            return
+          }
+          commentParent.replies.push(comment)
+        }
 
-          function findNested (array, id, depthSoFar = 2) {
-            var foundElement = false
-            array.forEach((element) => {
-              if (element._id && element._id.equals(id)) {
-                if (depthSoFar > 5) {
-                  res.status(403).send('>:^(')
-                  return undefined
-                } else {
-                  depth = depthSoFar
-                  element.replies.push(comment)
-                  foundElement = element
-                  commentParent = element
-                }
-              }
-              if (!element.deleted) {
-                numberOfComments++
-              }
-              if (element.replies) {
-                var found = findNested(element.replies, id, depthSoFar + 1)
-                if (found) {
-                  foundElement = element
-                  commentParent = element
-                  return found
-                }
-              }
-            })
-            return foundElement
-          }
-          var target = findNested(post.comments, req.params.commentid)
-          if (target) {
-            post.numberOfComments = numberOfComments
-          }
-        }
-        if (!depth) {
-          // if depth was left undefined then it was found to be invalid (i.e. > 5), let's get out of here
-          return
-        }
-        var postPrivacy = post.privacy
+        post.numberOfComments = countComments(post.comments)
+        console.log('just-commented-on post has', post.numberOfComments, 'comments')
         post.lastUpdated = new Date()
+
         // Add user to subscribed users for post
         if ((!post.author._id.equals(req.user._id) && !post.subscribedUsers.includes(req.user._id.toString()))) { // Don't subscribe to your own post, or to a post you're already subscribed to
           post.subscribedUsers.push(req.user._id.toString())
         }
+
         post.save()
           .then(async () => {
             // Notify any and all interested parties
             User.findOne({ _id: post.author })
               .then((originalPoster) => {
-                // remove duplicates from subscribed/unsubscribed users
-                subscribedUsers = post.subscribedUsers.filter((v, i, a) => a.indexOf(v) === i)
-                unsubscribedUsers = post.unsubscribedUsers.filter((v, i, a) => a.indexOf(v) === i)
-
                 // NOTIFY EVERYONE WHO IS MENTIONED
 
                 // we're never going to notify the author of the comment about them mentioning themself
@@ -484,7 +471,7 @@ module.exports = function (app) {
                           }
                         })
                       }).catch(err => {
-                        console.log('could not find document for mentioned user ' + mention + ', error:')
+                        console.log('could not find document for mentioned user ' + mentionedUsername + ', error:')
                         console.log(err)
                       })
                     })
@@ -603,7 +590,7 @@ module.exports = function (app) {
                     // don't notify parent comment author, if it's a child
                     // comment (because they get a different notification,
                     // above)
-                    (commentParent ? subscriberID !== parentCommentAuthor._id.toString() : true)
+                    (commentParent ? subscriberID !== commentParent.author._id.toString() : true)
                   ) {
                     console.log('Notifying subscribed user')
                     User.findById(subscriberID).then((subscriber) => {
@@ -990,11 +977,11 @@ module.exports = function (app) {
         User.findOne({ username: mention }).then(async mentioned => {
           if (post.community) {
             if (mentioned.communities.some(v => v.equals(post.community))) {
-              notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post')
+              notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + post.url, 'post')
             }
           } else if (req.body.postPrivacy === 'private') {
             if (await Relationship.findOne({ value: 'trust', fromUser: req.user._id, toUser: mentioned._id })) {
-              notifier.notify('user', 'mention', mentioned._id, req.user._id, newPostId, '/' + req.user.username + '/' + post.url, 'post')
+              notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + post.url, 'post')
             }
           } else {
             notifier.notify('user', 'mention', mentioned._id, req.user._id, post._id, '/' + req.user.username + '/' + post.url, 'post')
