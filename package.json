@@ -13,6 +13,7 @@
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@handlebars/allow-prototype-access": "^1.0.1",
     "@sendgrid/mail": "^6.3.1",
     "autolinker": "^3.0.5",
     "bcrypt-nodejs": "0.0.3",
@@ -50,9 +51,6 @@
     "sharp": "^0.23.0",
     "shortid": "^2.2.14",
     "web-push": "^3.3.5"
-  },
-  "resolutions": {
-	  "handlebars": "v4.5.3"
   },
   "devDependencies": {
     "eslint": "^6.8.0",

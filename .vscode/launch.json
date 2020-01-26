@@ -8,6 +8,8 @@
             "type": "node",
             "request": "attach",
             "name": "Attach",
+            "restart": true,
+            "stopOnEntry": false,
             "port": 5757
         },
         {
@@ -17,6 +19,17 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run-script", "debug"
+            ],
+            "port": 5757
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch via yarn",
+            "runtimeExecutable": "yarn",
+            "restart": true,
+            "runtimeArgs": [
+                "debug"
             ],
             "port": 5757
         },

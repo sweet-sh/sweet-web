@@ -632,7 +632,8 @@ module.exports = function (app) {
               ? '<span class="author-display-name"><a href="/' + req.user.username + '">' + req.user.displayName + '</a></span><span class="author-username">@' + req.user.username + '</span>'
               : '<span class="author-username"><a href="/' + req.user.username + '">@' + req.user.username + '</a></span>'
 
-            hbs.render('./views/partials/comment_dynamic.handlebars', {
+            app.render('partials/comment_dynamic', {
+              layout: false,
               image: image,
               name: name,
               username: req.user.username,
@@ -641,14 +642,16 @@ module.exports = function (app) {
               comment_id: commentId.toString(),
               post_id: post._id.toString(),
               depth: depth
+            }, (err, html) => {
+              if (err) {
+                throw Error('could not render new comment html\n' + err)
+              }
+              const result = {
+                comment: html
+              }
+              res.contentType('json')
+              res.send(JSON.stringify(result))
             })
-              .then(async html => {
-                const result = {
-                  comment: html
-                }
-                res.contentType('json')
-                res.send(JSON.stringify(result))
-              })
           })
           .catch((err) => {
             console.log('Database error: ' + err)
@@ -850,21 +853,24 @@ module.exports = function (app) {
           // This post has been written by the logged in user - we good
           var isCommunityPost = post.type === 'community'
           var content = await helper.renderHTMLContent(post, true)
-          hbs.render('./views/partials/posteditormodal.handlebars', {
+          app.render('partials/posteditormodal', {
+            layout: false,
             contentWarnings: post.contentWarnings,
             privacy: post.privacy,
             isCommunityPost: isCommunityPost,
             isDraft: post.type === 'draft',
             postID: post._id.toString()
+          }, (err, html) => {
+            if (err) {
+              throw Error('could not render post editor modal\n' + err)
+            }
+            var result = {
+              editor: html,
+              content: content
+            }
+            res.contentType('json')
+            res.send(JSON.stringify(result))
           })
-            .then(async html => {
-              var result = {
-                editor: html,
-                content: content
-              }
-              res.contentType('json')
-              res.send(JSON.stringify(result))
-            })
         } else {
           res.send('Hold up there scout')
         }

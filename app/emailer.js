@@ -175,17 +175,6 @@ async function sendUpdateEmail (user) {
           emailLog('info:\n' + JSON.stringify(info, null, 4) + '\n')
         }
       })
-      /*
-            //not for production, i only have this here bc i can't actually send emails and then look at them:
-            console.log(info);
-            var emailHTML = await hbs.render('./views/emails/update.handlebars', info.context);
-            fs.writeFile(user.username + 'Email.html', emailHTML, err => {
-                if (err) {
-                    emailLog('could not log text of email that was just sent to ' + user.username);
-                    emailLog('reason given: ' + err);
-                }
-            });
-            */
     } else {
       emailLog('\nlooks like ' + user.username + ' had no unread notifications! no email will be forthcoming')
     }

@@ -1,11 +1,13 @@
 // Initialization ======================================================================
 const express = require('express')
-const handlebars = require('express-handlebars')
 const app = express()
 const port = process.env.PORT || 8686
 const passport = require('passport')
 const flash = require('connect-flash')
-require('handlebars-helpers')()
+
+const hbs = require('./app/viewEngine.js')
+app.engine('handlebars', hbs.engine)
+app.set('view engine', 'handlebars')
 
 const compression = require('compression')
 app.use(compression())
@@ -26,47 +28,6 @@ app.use(cookieParser()) // read cookies (needed for auth)
 app.use(bodyParser()) // get information from html forms
 const mongoSanitize = require('express-mongo-sanitize') // sanitize information recieved from html forms
 app.use(mongoSanitize())
-
-// View engine (Handlebars)
-hbs = handlebars.create({
-  defaultLayout: 'main',
-  partialsDir: ['views/partials/', 'views/partials/scriptPartials/'],
-  helpers: {
-    plural: function (number, text) {
-      var singular = number === 1
-      // If no text parameter was given, just return a conditional s.
-      if (typeof text !== 'string') return singular ? '' : 's'
-      // Split with regex into group1/group2 or group1(group3)
-      var match = text.match(/^([^()\/]+)(?:\/(.+))?(?:\((\w+)\))?/)
-      // If no match, just append a conditional s.
-      if (!match) return text + (singular ? '' : 's')
-      // We have a good match, so fire away
-      return (
-        // Singular case
-        (singular && match[1]) ||
-        // Plural case: 'bagel/bagels' --> bagels
-        match[2] ||
-        // Plural case: 'bagel(s)' or 'bagel' --> bagels
-        match[1] + (match[3] || 's')
-      )
-    },
-    buildComment (comment, depth) {
-      if (!depth) depth = 1
-      var tree = []
-      tree.push({
-        comment: comment,
-        depth: depth
-      })
-      comment.replies.forEach((r) => {
-        depth = depth + 1
-        tree.comment.replies.depth = depth
-      })
-      return tree
-    }
-  }
-})
-app.engine('handlebars', hbs.engine)
-app.set('view engine', 'handlebars')
 
 // Static files
 app.use(express.static('public'))
@@ -173,7 +134,7 @@ require('autolinker')
 require('node-schedule')
 require('./config/globals')
 
-const writeMorganToSeparateFile = true // change to write full request log to stdout instead of a separate file
+const writeMorganToSeparateFile = false // change to write full request log to stdout instead of a separate file
 
 let stream
 if (writeMorganToSeparateFile) {

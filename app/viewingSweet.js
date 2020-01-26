@@ -8,6 +8,7 @@ const Relationship = require('./models/relationship')
 const Community = require('./models/community')
 const Post = require('./models/post')
 const Tag = require('./models/tag')
+const Image = require('./models/image')
 const helper = require('./utilityFunctionsMostlyText')
 const notifier = require('./notifier')
 const globals = require('../config/globals')
@@ -400,7 +401,6 @@ module.exports = function (app) {
     const followedUserData = []
     Relationship.find({ fromUser: req.user._id, value: 'follow' }).populate('toUser').then((followedUsers) => {
       followedUsers.forEach(relationship => {
-        console.log(relationship)
         var follower = {
           key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
           value: relationship.toUser.username,
