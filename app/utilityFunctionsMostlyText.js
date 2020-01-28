@@ -6,6 +6,7 @@ const path = require('path')
 const sanitizeHtml = require('sanitize-html')
 const hbs = require('./viewEngine.js')
 const User = require('./models/user')
+const Image = require('./models/image')
 
 // these requires are not in server.js bc they're only used here
 const urlParser = require('url')

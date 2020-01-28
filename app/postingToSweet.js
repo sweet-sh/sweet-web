@@ -319,7 +319,7 @@ module.exports = function (app) {
     // loop over the array of comments adding 1 +  countComments on its replies to the count variable.
     function countComments (comments) {
       let count = 0
-      for (comment of comments) {
+      for (const comment of comments) {
         if (!comment.deleted) {
           count += 1
           if (comment.replies.length) {
@@ -331,7 +331,7 @@ module.exports = function (app) {
     }
 
     function findCommentByID (id, comments, depth = 1) {
-      for (comment of comments) {
+      for (const comment of comments) {
         if (comment._id.equals(id)) {
           return { commentParent: comment, depth }
         } else {
@@ -357,7 +357,7 @@ module.exports = function (app) {
       return
     }
 
-    var comment = {
+    const comment = {
       _id: commentId,
       authorEmail: req.user.email,
       author: req.user._id,
