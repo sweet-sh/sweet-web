@@ -182,7 +182,7 @@ module.exports = function (app, passport) {
   app.post('/updateprofile', isLoggedInOrRedirect, function (req, res) {
     let imageEnabled = req.user.imageEnabled
     let imageFilename = req.user.image
-    if (Object.keys(req.files).length !== 0) {
+    if (req.files && req.files.imageUpload && req.files.imageUpload.data && req.files.imageUpload.data.length) {
       console.log(req.files.imageUpload.data.length)
       if (req.files.imageUpload.data.length > 3145728) {
         req.session.sessionFlash = {
@@ -223,7 +223,7 @@ module.exports = function (app, passport) {
               line = Autolinker.link(line)
               var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
               var mentionReplace = '$1<a href="/$2">@$2</a>'
-              var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
+              var hashtagRegex = /(^|>|\n| |\t)#(\w{1,60})\b/g
               var hashtagReplace = '$1<a href="/tag/$2">#$2</a>'
               line = line.replace(mentionRegex, mentionReplace).replace(hashtagRegex, hashtagReplace)
               parsedAboutArray.push(line)
