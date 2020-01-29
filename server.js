@@ -5,7 +5,7 @@ const port = process.env.PORT || 8686
 const passport = require('passport')
 const flash = require('connect-flash')
 
-const hbs = require('./app/viewEngine.js')
+const hbs = require('./app/pageRenderer')
 app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
 
@@ -134,7 +134,7 @@ require('autolinker')
 require('node-schedule')
 require('./config/globals')
 
-const writeMorganToSeparateFile = false // change to write full request log to stdout instead of a separate file
+const writeMorganToSeparateFile = false // false = write full request log to stdout instead of a separate file
 
 let stream
 if (writeMorganToSeparateFile) {
@@ -150,9 +150,11 @@ if (writeMorganToSeparateFile) {
 // log every request to the console w/ timestamp before it can crash the server
 app.use(morgan(function (tokens, req, res) { return moment().format(momentLogFormat) + ' ' + req.method.toLowerCase() + ' request for ' + req.url }, { immediate: true, stream: stream }))
 // add timestamps to all console logging functions
-for (var spicy of ['warn', 'error', 'log']) {
-  var vanilla = console[spicy]
-  console[spicy] = vanilla.bind(console, moment().format(momentLogFormat))
+for (const spicy of ['warn', 'error', 'log']) {
+  const vanilla = console[spicy]
+  console[spicy] = function () {
+    vanilla.call(console, ...[moment().format(momentLogFormat)].concat(Array.from(arguments)))
+  }
 }
 
 // routes ======================================================================

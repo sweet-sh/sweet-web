@@ -4,7 +4,7 @@ const fs = require('fs')
 const sharp = require('sharp')
 const path = require('path')
 const sanitizeHtml = require('sanitize-html')
-const hbs = require('./viewEngine.js')
+const hbs = require('./pageRenderer')
 const User = require('./models/user')
 const Image = require('./models/image')
 
