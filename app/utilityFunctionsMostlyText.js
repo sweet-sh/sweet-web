@@ -9,7 +9,7 @@ const User = require('./models/user')
 const Image = require('./models/image')
 
 // these requires are not in server.js bc they're only used here
-const urlParser = require('url')
+const { URL } = require('url')
 const metascraper = require('metascraper')([
   require('metascraper-description')(),
   require('metascraper-image')(),
@@ -155,12 +155,15 @@ module.exports = {
   },
   getLinkMetadata: async function (url) {
     // remove the protocol and the path if it's empty from the url bc that's how it's stored in the cache (that way it matches it with or without)
-    const parsedUrl = Object.assign(urlParser.parse(url), { protocol: '', slashes: false })
+    const parsedUrl = new URL(url)
+    parsedUrl.protocol = ''
+    parsedUrl.slashes = false
+
     if (parsedUrl.path === '/' && parsedUrl.pathname === '/') {
       parsedUrl.path = ''
       parsedUrl.pathname = ''
     }
-    const retrievalUrl = urlParser.format(parsedUrl)
+    const retrievalUrl = parsedUrl.toString()
     let finalUrl // this will have the correct protocol, obtained either by the cache or the request package
     const Cache = mongoose.model('Cached Link Metadata')
     const found = await Cache.findOne({ retrievalUrl: retrievalUrl })
@@ -190,7 +193,7 @@ module.exports = {
       image: metadata.image,
       title: metadata.title,
       description: metadata.description,
-      domain: urlParser.parse(finalUrl).hostname
+      domain: new URL(finalUrl).hostname
     }
     // taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
     const youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
