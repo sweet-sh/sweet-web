@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const DBReference = mongoose.Schema.Types.ObjectId
 
 // this is used by older posts instead of the below inlineElementSchema
-var embedSchema = new mongoose.Schema({
+const embedSchema = new mongoose.Schema({
   type: String, // "video" always
   linkUrl: String,
   embedUrl: String,
@@ -12,7 +12,7 @@ var embedSchema = new mongoose.Schema({
   domain: String
 })
 
-var inlineElementSchema = new mongoose.Schema({
+const inlineElementSchema = new mongoose.Schema({
   type: String, // either "link-preview" or "image(s)"
 
   position: Number, // what number "paragraph" this should be when it's mixed into parsedContent, where a paragraph is a <p>...</p>, <ul>...</ul>, or a <blockquote></blockquote>.
@@ -37,7 +37,7 @@ var inlineElementSchema = new mongoose.Schema({
 })
 
 // this is really similar to the embed schema but i only just realized that and i don't feel like changing this
-var linkPreviewCacheSchema = new mongoose.Schema({
+const linkPreviewCacheSchema = new mongoose.Schema({
   isEmbeddableVideo: Boolean,
   retrievalUrl: String, // the url without the protocol - this is used to retrieve the document (works if the user inputs the url with http://, https://, or neither)
   linkUrl: String, // the url with the correct protocol (determined by the request package)
@@ -48,7 +48,7 @@ var linkPreviewCacheSchema = new mongoose.Schema({
   domain: String
 })
 
-var commentSchema = new mongoose.Schema({
+const commentSchema = new mongoose.Schema({
   authorEmail: String,
   author: { type: DBReference, ref: 'User' },
   timestamp: Date,
@@ -76,13 +76,13 @@ var commentSchema = new mongoose.Schema({
 
 commentSchema.add({ replies: [commentSchema] })
 
-var boostSchema = new mongoose.Schema({
+const boostSchema = new mongoose.Schema({
   booster: { type: DBReference, ref: 'User', required: true },
   timestamp: { type: Date, required: true },
   boost: { type: DBReference, ref: 'Post' }
 })
 
-var postSchema = new mongoose.Schema({
+const postSchema = new mongoose.Schema({
   type: String, // "original", "community", or "boost". note that the equivalent "context" field in image documents stores either "user", "community", or "user"
   community: { type: DBReference, ref: 'Community' }, // hopefully undefined if type=="user"
   authorEmail: { type: String, required: true },

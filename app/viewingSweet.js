@@ -169,7 +169,7 @@ module.exports = function (app) {
       }
       const lastFortnight = moment(new Date()).subtract(14, 'days')
       async function getRelationships (id, type) {
-        var users = {}
+        const users = {}
         return Relationship.find({
           fromUser: id,
           value: type
@@ -401,7 +401,7 @@ module.exports = function (app) {
     const followedUserData = []
     Relationship.find({ fromUser: req.user._id, value: 'follow' }).populate('toUser').then((followedUsers) => {
       followedUsers.forEach(relationship => {
-        var follower = {
+        const follower = {
           key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
           value: relationship.toUser.username,
           image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
@@ -482,13 +482,13 @@ module.exports = function (app) {
                 .sort('-lastUpdated')
                 .limit(resultsPerPage)
                 .then(communityResults => {
-                  var combinedResults = userResults.concat(communityResults, tagResults)
+                  const combinedResults = userResults.concat(communityResults, tagResults)
                   if (!combinedResults.length) {
                     res.sendStatus(404)
                   } else {
-                    var parsedResults = []
+                    let parsedResults = []
                     combinedResults.forEach(result => {
-                      var constructedResult = {}
+                      const constructedResult = {}
                       if (result.username) {
                         // It's a user
                         constructedResult.type = '<i class="fas fa-user"></i> User'
@@ -522,8 +522,8 @@ module.exports = function (app) {
                       parsedResults.push(constructedResult)
                     })
                     parsedResults.sort(function (a, b) {
-                      var timestampA = a.sort
-                      var timestampB = b.sort
+                      const timestampA = a.sort
+                      const timestampB = b.sort
                       // sort timestamp descending
                       if (timestampA > timestampB) {
                         return -1
@@ -534,7 +534,7 @@ module.exports = function (app) {
                       return 0
                     })
                     parsedResults = parsedResults.slice(0, resultsPerPage)
-                    var oldesttimestamp = parsedResults[parsedResults.length - 1].sort
+                    const oldesttimestamp = parsedResults[parsedResults.length - 1].sort
                     res.render('partials/searchresults', {
                       layout: false,
                       loggedIn: true,
@@ -555,12 +555,12 @@ module.exports = function (app) {
         if (!posts.length) {
           res.sendStatus(404)
         } else {
-          for (var post of posts) {
+          for (const post of posts) {
             await keepCachedHTMLUpToDate(post)
             post.internalPostHTML = post.cachedHTML.fullContentHTML
             post.commentsDisabled = true
             post.isYourPost = true
-            var momentTimestamp = moment(post.timestamp)
+            const momentTimestamp = moment(post.timestamp)
             if (momentTimestamp.isSame(moment(), 'd')) {
               post.parsedTimestamp = momentTimestamp.fromNow()
             } else if (momentTimestamp.isSame(moment(), 'y')) {
@@ -586,10 +586,10 @@ module.exports = function (app) {
 
   // this function checks if there are some newer posts than the given timestamp for the user's home feed. it duplicates some query logic from /showposts to do this.
   app.get('/heyaretherenewposts/:newerthanthis', isLoggedInOrRedirect, async function (req, res) {
-    var myFollowedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: 'follow' })).map(v => v.toUser))
-    var myMutedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: 'mute' })).map(v => v.toUser))
-    var usersWhoTrustMe = ((await Relationship.find({ toUser: req.user._id, value: 'trust' })).map(v => v.fromUser))
-    var query = {
+    const myFollowedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: 'follow' })).map(v => v.toUser))
+    const myMutedUserIds = ((await Relationship.find({ fromUser: req.user._id, value: 'mute' })).map(v => v.toUser))
+    const usersWhoTrustMe = ((await Relationship.find({ toUser: req.user._id, value: 'trust' })).map(v => v.fromUser))
+    const query = {
       $and: [{
         $or: [
           { $and: [{ author: { $in: myFollowedUserIds } }, { $or: [{ type: { $ne: 'community' } }, { community: { $in: req.user.communities } }] }] }, { community: { $in: req.user.communities } }
@@ -601,8 +601,8 @@ module.exports = function (app) {
       ]
     }
     const sortMethod = req.user.settings.homeTagTimelineSorting === 'fluid' ? 'lastUpdated' : 'timestamp'
-    var newerThanDate = new Date(parseInt(req.params.newerthanthis))
-    var newerThanQuery = {}
+    const newerThanDate = new Date(parseInt(req.params.newerthanthis))
+    const newerThanQuery = {}
     newerThanQuery[sortMethod] = { $gt: newerThanDate }
     query.$and.push(newerThanQuery)
     Post.find(query).then(async posts => {
@@ -633,7 +633,7 @@ module.exports = function (app) {
       res.setHeader('content-type', 'text/plain')
 
       for (const post of posts) {
-        var postCommunity = post.community ? (await Community.findById(post.community)) : undefined
+        const postCommunity = post.community ? (await Community.findById(post.community)) : undefined
         if ((sortMethod === 'lastUpdated' && findNewComment(post)) && (post.type !== 'community' || !postCommunity.mutedMembers.includes(post.author))) {
           res.send('yeah')
           return
@@ -664,7 +664,7 @@ module.exports = function (app) {
   async function keepCachedHTMLUpToDate (post) {
     // only runs if cached html is out of date
     async function updateHTMLRecursive (displayContext) {
-      var html = await helper.renderHTMLContent(displayContext)
+      const html = await helper.renderHTMLContent(displayContext)
       if (displayContext.cachedHTML) {
         displayContext.cachedHTML.fullContentHTML = html
       } else {
@@ -754,7 +754,7 @@ module.exports = function (app) {
     case it returns a 404 error.
     */
   app.get('/showposts/:context/:identifier/:olderthanthis', async function (req, res) {
-    var loggedInUserData = {}
+    let loggedInUserData = {}
     if (req.isAuthenticated()) {
       loggedInUserData = req.user
     } else {
@@ -771,23 +771,32 @@ module.exports = function (app) {
     const postsPerPage = 10
     const olderthanthis = new Date(parseInt(req.params.olderthanthis))
     let isMuted
+    let flagged
+    let myMutedUserEmails
+    let myFollowedUserIds
+    let myCommunities
+    let usersWhoTrustMeEmails
+
+    // const myFlaggedUserEmails
+    // const myTrustedUserEmails
+    // const usersFlaggedByMyTrustedUsers
 
     // build some user lists. only a thing if the user is logged in.
     // todo: instead of pulling them from the relationships collection, at least the first 4 could be arrays of references to other users in the user document, that would speed things up
     if (req.isAuthenticated()) {
-      var myFollowedUserIds = ((await Relationship.find({ from: loggedInUserData.email, value: 'follow' })).map(v => v.toUser)).concat([req.user._id])
-      var myFlaggedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'flag' })).map(v => v.to))
-      var myMutedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'mute' })).map(v => v.to))
-      var myTrustedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'trust' })).map(v => v.to))
-      var usersFlaggedByMyTrustedUsers = ((await Relationship.find({ from: { $in: myTrustedUserEmails }, value: 'flag' })).map(v => v.to))
-      var usersWhoTrustMeEmails = ((await Relationship.find({ to: loggedInUserData.email, value: 'trust' })).map(v => v.from)).concat([req.user.email])
-      var myCommunities = req.user.communities
+      myFollowedUserIds = ((await Relationship.find({ from: loggedInUserData.email, value: 'follow' })).map(v => v.toUser)).concat([req.user._id])
+      const myFlaggedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'flag' })).map(v => v.to))
+      myMutedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'mute' })).map(v => v.to))
+      const myTrustedUserEmails = ((await Relationship.find({ from: loggedInUserData.email, value: 'trust' })).map(v => v.to))
+      const usersFlaggedByMyTrustedUsers = ((await Relationship.find({ from: { $in: myTrustedUserEmails }, value: 'flag' })).map(v => v.to))
+      usersWhoTrustMeEmails = ((await Relationship.find({ to: loggedInUserData.email, value: 'trust' })).map(v => v.from)).concat([req.user.email])
+      myCommunities = req.user.communities
       if (req.params.context === 'community' && req.isAuthenticated()) {
         isMuted = (await Community.findById(req.params.identifier)).mutedMembers.some(v => v.equals(req.user._id))
       } else {
         isMuted = false
       }
-      var flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email)
+      flagged = usersFlaggedByMyTrustedUsers.concat(myFlaggedUserEmails).filter(e => e !== loggedInUserData.email)
     }
 
     const today = moment().clone().startOf('day')
@@ -798,6 +807,7 @@ module.exports = function (app) {
 
     let matchPosts
     let sortMethod
+    let thisComm
     if (req.params.context === 'home') {
       // on the home page, we're looking for posts (and boosts) created by users we follow as well as posts in communities that we're in.
       // we're assuming the user is logged in if this request is being made (it's only made by code on a page that only loads if the user is logged in.)
@@ -842,7 +852,7 @@ module.exports = function (app) {
         }
       }
     } else if (req.params.context === 'community') {
-      var thisComm = await Community.findById(req.params.identifier)
+      thisComm = await Community.findById(req.params.identifier)
       // we want posts from the community, but only if it's public or we belong to it:
       if (thisComm.settings.visibility === 'public' || myCommunities.some(v => v.toString() === req.params.identifier)) {
         matchPosts = {
@@ -856,7 +866,7 @@ module.exports = function (app) {
         sortMethod = req.user.settings.communityTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
       }
     } else if (req.params.context === 'tag') {
-      function getTag () {
+      const getTag = () => {
         return Tag.findOne({ name: req.params.identifier })
           .then((tag) => {
             return { _id: { $in: tag.posts }, type: { $ne: 'draft' } }
@@ -865,7 +875,7 @@ module.exports = function (app) {
       matchPosts = await getTag()
       sortMethod = req.user.settings.homeTagTimelineSorting === 'fluid' ? '-lastUpdated' : '-timestamp'
     } else if (req.params.context === 'single') {
-      var author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }))
+      const author = (await User.findOne({ username: req.singlepostUsername }, { _id: 1 }))
       matchPosts = {
         author: author ? author._id : undefined, // won't find anything if the author corresponding to the username couldn't be found
         url: req.params.identifier,
@@ -884,7 +894,7 @@ module.exports = function (app) {
       matchPosts[sortMethod.substring(1, sortMethod.length)] = { $lt: olderthanthis }
     }
 
-    var query = Post
+    const query = Post
       .find(matchPosts)
       .sort(sortMethod)
       .limit(postsPerPage)
@@ -901,7 +911,7 @@ module.exports = function (app) {
       .populate('boostsV2.booster')
 
     // so this will be called when the query retrieves the posts we want
-    var posts = await query
+    const posts = await query
 
     if (!posts || !posts.length) {
       res.status(404).render('singlepost', { // The 404 is required so InfiniteScroll.js stops loading the feed
@@ -916,22 +926,23 @@ module.exports = function (app) {
     }
 
     let displayedPost
+    let oldesttimestamp
 
     if (req.params.context !== 'single') {
       // this gets the timestamp of the last post, this tells the browser to ask for posts older than this next time. used in feeds, not with single posts
-      var oldesttimestamp = '' + posts[posts.length - 1][sortMethod.substring(1, sortMethod.length)].getTime()
+      oldesttimestamp = '' + posts[posts.length - 1][sortMethod.substring(1, sortMethod.length)].getTime()
     }
 
-    var displayedPosts = [] // populated by the for loop below
+    const displayedPosts = [] // populated by the for loop below
 
-    for (var post of posts) {
+    for (const post of posts) {
       // figure out if there is a newer instance of the post we're looking at. if it's an original post, check the boosts from
       // the context's relevant users; if it's a boost, check the original post if we're in fluid mode to see if lastUpdated is more
       // recent (meaning the original was bumped up from recieving a comment) and then for both fluid and chronological we have to check
       // to see if there is a more recent boost.
       if (req.params.context !== 'community' && req.params.context !== 'single') {
-        var isThereNewerInstance = false
-        var whosePostsCount = req.params.context === 'user' ? [new ObjectId(req.params.identifier)] : myFollowedUserIds
+        let isThereNewerInstance = false
+        const whosePostsCount = req.params.context === 'user' ? [new ObjectId(req.params.identifier)] : myFollowedUserIds
         if (post.type === 'original') {
           for (const boost of post.boostsV2) {
             if (boost.timestamp.getTime() > post.lastUpdated.getTime() && whosePostsCount.some(f => boost.booster.equals(f))) {
@@ -961,7 +972,7 @@ module.exports = function (app) {
         }
       }
 
-      var canDisplay = false
+      let canDisplay = false
       if (req.isAuthenticated()) {
         // logged in users can't see private posts by users who don't trust them or community posts by muted members
         if ((post.privacy === 'private' && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy === 'public') {
@@ -1021,7 +1032,7 @@ module.exports = function (app) {
         continue
       }
 
-      var displayContext = post
+      let displayContext = post
       if (post.type === 'boost') {
         displayContext = post.boostTarget
         displayContext.author = await User.findById(displayContext.author)
@@ -1041,16 +1052,18 @@ module.exports = function (app) {
         parsedTimestamp = moment(displayContext.timestamp).format('D MMM YYYY')
       }
 
+      let isYourPost
       if (req.isAuthenticated()) {
         // Used to check if you can delete a post
-        var isYourPost = displayContext.author._id.equals(req.user._id)
+        isYourPost = displayContext.author._id.equals(req.user._id)
       }
       // generate some arrays containing usernames that will be put in "boosted by" labels
       let boostsForHeader
+      let youBoosted
+      const followedBoosters = []
+      const notFollowingBoosters = []
       if (req.isAuthenticated() && (req.params.context !== 'community')) {
-        var followedBoosters = []
-        var notFollowingBoosters = []
-        var youBoosted = false
+        youBoosted = false
         if (displayContext.boostsV2.length > 0) {
           displayContext.boostsV2.forEach((v, i, a) => {
             if (!(v.timestamp.getTime() === displayContext.timestamp.getTime())) { // do not include implicit boost
@@ -1105,11 +1118,11 @@ module.exports = function (app) {
       }
 
       // get timestamps and full image urls for each comment
-      var latestTimestamp = 0
-      var sixHoursAgo = moment(new Date()).subtract(6, 'hours')
-      var threeHoursAgo = moment(new Date()).subtract(3, 'hours')
+      let latestTimestamp = 0
+      const sixHoursAgo = moment(new Date()).subtract(6, 'hours')
+      const threeHoursAgo = moment(new Date()).subtract(3, 'hours')
 
-      function parseComments (element, level) {
+      const parseComments = (element, level) => {
         if (!level) {
           level = 1
         }
@@ -1145,7 +1158,7 @@ module.exports = function (app) {
           if (req.isAuthenticated() && momentifiedTimestamp.isAfter(threeHoursAgo) && !comment.author._id.equals(req.user._id)) {
             comment.isRecent = true
           }
-          for (var i = 0; i < comment.images.length; i++) {
+          for (let i = 0; i < comment.images.length; i++) {
             comment.images[i] = '/api/image/display/' + comment.images[i]
           }
           // If the comment's author is logged in, or the displayContext's author is logged in
@@ -1189,7 +1202,7 @@ module.exports = function (app) {
       return
     }
 
-    var metadata = {}
+    let metadata = {}
     if (req.params.context === 'single') {
       // For single posts, we are going to render a different template so that we can include its metadata in the HTML "head" section
       // We can only get the post metadata if the post array is filled (and it'll only be filled
@@ -1211,7 +1224,7 @@ module.exports = function (app) {
         } else {
           metadataImage = 'https://sweet.sh/images/cake.svg'
         }
-        var firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
+        let firstLine = /<p>(.+?)<\/p>|<ul><li>(.+?)<\/li>|<blockquote>(.+?)<\/blockquote>/.exec(displayedPost.internalPostHTML)
         if (firstLine && firstLine[1]) {
           firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '')
         } else {
@@ -1289,7 +1302,7 @@ module.exports = function (app) {
       console.error(e)
     }
 
-    var profileData = await User.findOne({ username: req.params.username }).catch(err => {
+    const profileData = await User.findOne({ username: req.params.username }).catch(err => {
       console.error('error in username query in /:username')
       console.error(err)
     })
@@ -1298,15 +1311,15 @@ module.exports = function (app) {
       res.status(404).redirect('/404')
       return
     }
-    var communitiesData = await Community.find({ members: profileData._id }).catch(c) // given to the renderer at the end
-    var followersArray = (await Relationship.find({ to: profileData.email, value: 'follow' }, { from: 1 }).catch(c)).map(v => v.from) // only used for the below
-    var followers = await User.find({ email: { $in: followersArray } }).catch(c) // passed directly to the renderer
-    var theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: 'follow' }, { to: 1 }).catch(c)).map(v => v.to) // used in the below and to see if the profile user follows you
-    var theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } }) // passed directly to the renderer
-    var usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: 'trust' }).catch(c)).map(v => v.from) // only used for the below
-    var usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c) // passed directly to the renderer
-    var theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: 'trust' }).catch(c)).map(v => v.to) // used to see if the profile user trusts the logged in user (if not isOwnProfile) and the below
-    var theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c) // given directly to the renderer
+    const communitiesData = await Community.find({ members: profileData._id }).catch(c) // given to the renderer at the end
+    const followersArray = (await Relationship.find({ to: profileData.email, value: 'follow' }, { from: 1 }).catch(c)).map(v => v.from) // only used for the below
+    const followers = await User.find({ email: { $in: followersArray } }).catch(c) // passed directly to the renderer
+    const theirFollowedUserEmails = (await Relationship.find({ from: profileData.email, value: 'follow' }, { to: 1 }).catch(c)).map(v => v.to) // used in the below and to see if the profile user follows you
+    const theirFollowedUserData = await User.find({ email: { $in: theirFollowedUserEmails } }) // passed directly to the renderer
+    const usersWhoTrustThemArray = (await Relationship.find({ to: profileData.email, value: 'trust' }).catch(c)).map(v => v.from) // only used for the below
+    const usersWhoTrustThem = await User.find({ email: { $in: usersWhoTrustThemArray } }).catch(c) // passed directly to the renderer
+    const theirTrustedUserEmails = (await Relationship.find({ from: profileData.email, value: 'trust' }).catch(c)).map(v => v.to) // used to see if the profile user trusts the logged in user (if not isOwnProfile) and the below
+    const theirTrustedUserData = await User.find({ email: { $in: theirTrustedUserEmails } }).catch(c) // given directly to the renderer
 
     let userFollowsYou = false
     let userTrustsYou = false
@@ -1316,6 +1329,7 @@ module.exports = function (app) {
     let trusted
     let followed
     let muted
+    let myFlaggedUserData
     if (req.isAuthenticated()) {
       // Is this the logged in user's own profile?
       if (profileData.email === req.user.email) {
@@ -1327,12 +1341,12 @@ module.exports = function (app) {
         muted = false
         flagged = false
         flagsFromTrustedUsers = 0
-        var myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: 'flag' }).catch(c)).map(v => v.to) // only used in the below line
-        var myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c) // passed directly to the renderer, but only actually used if isOwnProfile, so we're only actually defining it in here
+        const myFlaggedUserEmails = (await Relationship.find({ from: req.user.email, value: 'flag' }).catch(c)).map(v => v.to) // only used in the below line
+        myFlaggedUserData = await User.find({ email: { $in: myFlaggedUserEmails } }).catch(c) // passed directly to the renderer, but only actually used if isOwnProfile, so we're only actually defining it in here
       } else {
         isOwnProfile = false
 
-        var myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: 'trust' }).catch(c)).map(v => v.to) // used for flag checking and to see if the logged in user trusts this user
+        const myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: 'trust' }).catch(c)).map(v => v.to) // used for flag checking and to see if the logged in user trusts this user
 
         // Check if profile user follows and/or trusts logged in user
         userTrustsYou = theirTrustedUserEmails.includes(req.user.email) // not sure if these includes are faster than an indexed query of the relationships collection would be
@@ -1343,10 +1357,10 @@ module.exports = function (app) {
         followed = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: 'follow' }).catch(c))
         muted = !!(await Relationship.findOne({ from: req.user.email, to: profileData.email, value: 'mute' }).catch(c))
 
-        var flagsOnUser = await Relationship.find({ to: profileData.email, value: 'flag' }).catch(c)
+        const flagsOnUser = await Relationship.find({ to: profileData.email, value: 'flag' }).catch(c)
         flagsFromTrustedUsers = 0
         flagged = false
-        for (var flag of flagsOnUser) {
+        for (const flag of flagsOnUser) {
           // Check if logged in user has flagged profile user
           if (flag.from === req.user.email) {
             flagged = true
@@ -1464,14 +1478,14 @@ module.exports = function (app) {
   })
 
   app.get('/admin/errorlogs/:password', function (req, res) {
-    var passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
+    const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
     if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'clientsideerrors.txt'))) {
       res.status(200).sendFile(path.resolve(global.appRoot, 'clientsideerrors.txt'))
     }
   })
 
   app.get('/admin/emaillogs/:password', function (req, res) {
-    var passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
+    const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
     if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'emailLog.txt'))) {
       res.status(200).sendFile(path.resolve(global.appRoot, 'emailLog.txt'))
     }

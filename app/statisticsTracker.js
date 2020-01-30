@@ -6,31 +6,31 @@ const User = require('./models/user')
 
 module.exports = function (app, mongoose) {
   // Fun stats tracker. Non-interactive.
-  var cameOnlineAt = new Date()
+  const cameOnlineAt = new Date()
   app.get('/admin/juststats', function (req, res) {
-    var currentTime = new Date()
-    var uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1)
+    const currentTime = new Date()
+    const uptime = new Date(currentTime - cameOnlineAt).toISOString().slice(11, -1)
     Post.countDocuments({}).then(numberOfPosts => {
       Image.countDocuments({}).then(numberOfImages => {
         mongoose.connection.db.collection('sessions', (_, collection) => {
           collection.find().toArray(function (_, activeSessions) {
-            var numberOfActiveSessions = activeSessions.length
-            var activeusers = []
+            const numberOfActiveSessions = activeSessions.length
+            const activeusers = []
             for (const sesh of activeSessions) {
-              var sessiondata = JSON.parse(sesh.session)
+              const sessiondata = JSON.parse(sesh.session)
               if (sessiondata.passport) {
                 if (!activeusers.includes(sessiondata.passport.user)) {
                   activeusers.push(sessiondata.passport.user)
                 }
               }
             }
-            var uniqueActiveSessions = activeusers.length
+            const uniqueActiveSessions = activeusers.length
             Post.find({
               timestamp: {
                 $gte: new Date(new Date().setDate(new Date().getDate() - 1))
               }
             }).then(posts => {
-              var funstats =
+              const funstats =
                                 '<strong>Uptime</strong> ' + uptime + '<br>' +
                                 '<strong>Active sessions</strong> ' + numberOfActiveSessions + '<br>' +
                                 '<strong>Unique active users</strong> ' + uniqueActiveSessions +
@@ -114,7 +114,7 @@ module.exports = function (app, mongoose) {
   })
 
   // storing a promise for the post table building function out here lets us check if the function is currently running so we don't call it again if it is
-  var postTablePromise = null
+  let postTablePromise = null
   // this function just checks if the file with the post totals by day exists and is up to date and then builds the graph from it if it does and is
   // and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
   app.get('/admin/justpostgraph', async function (req, res) {
@@ -135,10 +135,10 @@ module.exports = function (app, mongoose) {
     }
     await postTablePromise
     postTablePromise = null
-    var datapoints = await parseTableForGraph(postTableFileName, Post)
+    const datapoints = await parseTableForGraph(postTableFileName, Post)
     datapoints.label = 'cumulative sweet posts'
     datapoints.color = 'rgb(75, 192, 192)'
-    var dxdatapoints = getPerDayRate(datapoints)
+    const dxdatapoints = getPerDayRate(datapoints)
     dxdatapoints.label = 'sweet posts added per day'
     dxdatapoints.color = 'rgb(192,75,192)'
     res.render('partials/timeGraph', {
@@ -149,7 +149,7 @@ module.exports = function (app, mongoose) {
   })
 
   // storing a promise for the user table building function out here lets us check if the function is currently running so we don't call it again if it is
-  var userTablePromise = null
+  let userTablePromise = null
   // this function just checks if the file with the user totals by day exists and is up to date and then builds the graph from it if it does and is
   // and calls the function that creates the csv and waits for it to finish if it doesn't or isn't.
   app.get('/admin/justusergraph', async function (req, res) {
@@ -170,10 +170,10 @@ module.exports = function (app, mongoose) {
     }
     await userTablePromise
     userTablePromise = null
-    var datapoints = await parseTableForGraph(userTableFileName, User)
+    const datapoints = await parseTableForGraph(userTableFileName, User)
     datapoints.label = 'cumulative sweet users'
     datapoints.color = 'rgb(75, 192, 192)'
-    var dxdatapoints = getPerDayRate(datapoints)
+    const dxdatapoints = getPerDayRate(datapoints)
     dxdatapoints.label = 'sweet users added per day'
     dxdatapoints.color = 'rgb(192,75,192)'
     res.render('partials/timeGraph', {
@@ -199,7 +199,7 @@ module.exports = function (app, mongoose) {
     }
     await activeUsersTablePromise
     activeUsersTablePromise = undefined
-    var datapoints = await parseTableForGraph(activeUserTableFileName, null, getActiveUsersSinceLastSave)
+    const datapoints = await parseTableForGraph(activeUserTableFileName, null, getActiveUsersSinceLastSave)
     datapoints.label = 'active sweet users during 3-day intervals'
     datapoints.color = 'rgb(75, 192, 192)'
     res.render('partials/timeGraph', {
@@ -225,7 +225,7 @@ module.exports = function (app, mongoose) {
   })
 
   app.get('/admin/resetgraphs/:password', function (req, res) {
-    var passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
+    const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
     if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
       if (!postTablePromise && fs.existsSync(postTableFileName)) {
         fs.unlinkSync(path.resolve(global.appRoot, postTableFileName))
@@ -244,26 +244,26 @@ module.exports = function (app, mongoose) {
   })
 
   app.get('/admin/secretstuff/:password/lyds.txt', function (req, res) {
-    var passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
+    const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
     if (bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'lyds.txt'))) {
       res.status(200).sendFile(path.resolve(global.appRoot, 'lyds.txt'))
     }
   })
 }
 
-var postTableFileName = 'postTimeline.csv'
-var userTableFileName = 'userTimeline.csv'
-var activeUserTableFileName = 'activeUsersTimeline.csv'
+const postTableFileName = 'postTimeline.csv'
+const userTableFileName = 'userTimeline.csv'
+const activeUserTableFileName = 'activeUsersTimeline.csv'
 
 // Checks if the last line of the table file is for a day more recent than dateInterval days ago.
 function tableNotUpToDate (tableFilename, dateInterval = 1) {
-  var lastLine = ''
+  let lastLine = ''
   fs.readFileSync(tableFilename, 'utf-8').split('\n').forEach(function (line) {
     if (line && line !== '\n') {
       lastLine = line
     }
   })
-  var shouldBeInThere = new Date()
+  const shouldBeInThere = new Date()
   shouldBeInThere.setDate(shouldBeInThere.getDate() - dateInterval)
   if (new Date(lastLine.split(',')[0]).getTime() > shouldBeInThere.getTime()) {
     return false
@@ -282,14 +282,14 @@ async function rebuildPostTable (startDate) {
     fs.unlinkSync(path.resolve(global.appRoot, postTableFileName))
   }
 
-  var today = new Date(new Date().setDate(new Date().getDate() - 1))
+  const today = new Date(new Date().setDate(new Date().getDate() - 1))
   today.setHours(23)
   today.setMinutes(59)
   today.setSeconds(59)
   today.setMilliseconds(999) // this actually sets today to the last millisecond that counts as yesterday. that's the most recent data we're looking at for end-of-day totals.
 
   // before will store the end of day time upon which we'll base our first end-of-day total.
-  var before
+  let before
   if (!startDate) {
     await Post.find({
       timestamp: {
@@ -303,13 +303,13 @@ async function rebuildPostTable (startDate) {
     before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999) // start with the day after the most recently saved one (hence the plus one)
   }
 
-  var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1 // it's plus one to account for the day before the date stored by before
+  const totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1 // it's plus one to account for the day before the date stored by before
 
-  var postCountByDay = []
+  let postCountByDay = []
 
   // populate postCountByDay with date objects that also have a property indicating what the post count was at the end of that day
-  for (var i = 0; i < totalDays; i++) {
-    var sequentialDate = new Date(before)
+  for (let i = 0; i < totalDays; i++) {
+    const sequentialDate = new Date(before)
     await Post.find({
       $or: [{
         timestamp: {
@@ -346,14 +346,14 @@ async function rebuildUserTable (startDate) {
     fs.unlinkSync(path.resolve(global.appRoot, userTableFileName))
   }
 
-  var today = new Date(new Date().setDate(new Date().getDate() - 1))
+  const today = new Date(new Date().setDate(new Date().getDate() - 1))
   today.setHours(23)
   today.setMinutes(59)
   today.setSeconds(59)
   today.setMilliseconds(999) // this actually sets today to the last millisecond that counts as yesterday. that's the most recent data we're looking at for end-of-day totals.
 
   // before will store the end of day time upon which we'll base our first end-of-day total.
-  var before
+  let before
   if (!startDate) {
     await User.find({
       joined: {
@@ -367,13 +367,13 @@ async function rebuildUserTable (startDate) {
     before = new Date(startDate[1], startDate[2], parseInt(startDate[3]) + 1, 23, 59, 59, 999) // start with the day after the most recently saved one (hence the plus one)
   }
 
-  var totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1 // it's plus one to account for the day before the date stored by before
+  const totalDays = (today.getTime() - before.getTime()) / (24 * 60 * 60 * 1000) + 1 // it's plus one to account for the day before the date stored by before
 
-  var userCountByDay = []
+  let userCountByDay = []
 
   // populate userCountByDay with date objects that also have a property indicating what the user count was at the end of that day
-  for (var i = 0; i < totalDays; i++) {
-    var sequentialDate = new Date(before)
+  for (let i = 0; i < totalDays; i++) {
+    const sequentialDate = new Date(before)
     await User.find({
       $or: [{
         joined: {
@@ -405,11 +405,11 @@ async function rebuildUserTable (startDate) {
 // decent argument for saving a json file in the first place, huh. this also adds a datapoint representing the current date/time/post count, which
 // should be current every time we build/display the graph. it either uses collection to query for the current y value or the callback we provide
 async function parseTableForGraph (filename, collection, callbackForCurrentY, endOfDay = true) {
-  var jsonVersion = []
+  const jsonVersion = []
   // reads in file values
   for (const line of fs.readFileSync(filename, 'utf-8').split('\n')) {
     if (line && line !== '\n') {
-      var lineComps = line.split(',')
+      const lineComps = line.split(',')
       jsonVersion.push({
         label: lineComps[0],
         year: lineComps[1],
@@ -480,14 +480,14 @@ async function rebuildActiveUsersTable (startDate, interval = 3) {
     fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName))
   }
 
-  var today = new Date()
+  const today = new Date()
   today.setHours(0)
   today.setMinutes(0)
   today.setSeconds(0)
   today.setMilliseconds(0)
 
   // before will store the time value for the beginning of the first day upon which we have a post
-  var before
+  let before
   if (!startDate) {
     await Post.find({
       timestamp: {
@@ -501,12 +501,12 @@ async function rebuildActiveUsersTable (startDate, interval = 3) {
     before = new Date(startDate[1], startDate[2], parseInt(startDate[3]), 0, 0, 0, 0) // our interval will start with the day most recently saved
   }
 
-  var activeUsersByInterval = []
+  let activeUsersByInterval = []
 
   // populate activeUsersByInterval with date objects that also have a property indicating how many active users there were in the three days previous
   while (true) {
-    var intervalStart = new Date(before)
-    var intervalEnd = new Date(new Date(before).setDate(before.getDate() + interval))
+    const intervalStart = new Date(before)
+    const intervalEnd = new Date(new Date(before).setDate(before.getDate() + interval))
     if (intervalEnd.getTime() >= today.getTime()) {
       break
     }
@@ -530,7 +530,7 @@ async function rebuildActiveUsersTable (startDate, interval = 3) {
 // this is a helper function that gets the number of active users during a time interval. it's called by the above function and also passed to
 // parseTableForGraph so that that function can figure out how many users were active right up until the present moment.
 async function getActiveUsersForInterval (intervalStart, intervalEnd) {
-  var count = await Post.aggregate([{
+  const count = await Post.aggregate([{
     // find posts that either themselves were made during this time interval or have comments that were
     $match: {
       $or: [{
@@ -612,13 +612,13 @@ async function getActiveUsersForInterval (intervalStart, intervalEnd) {
 }
 
 async function getActiveUsersSinceLastSave () {
-  var lastLine = ''
+  let lastLine = ''
   fs.readFileSync(activeUserTableFileName, 'utf-8').split('\n').forEach(function (line) {
     if (line && line !== '\n') {
       lastLine = line
     }
   })
-  var lastLineSplit = lastLine.split(',')
-  var lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 0, 0, 0, 0)
-  return await getActiveUsersForInterval(lastSave, new Date())
+  const lastLineSplit = lastLine.split(',')
+  const lastSave = new Date(lastLineSplit[1], lastLineSplit[2], lastLineSplit[3], 0, 0, 0, 0)
+  return getActiveUsersForInterval(lastSave, new Date())
 }

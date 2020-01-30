@@ -40,7 +40,7 @@ module.exports = function (app, passport) {
 
       req.getValidationResult().then(function (result) {
         if (!result.isEmpty()) {
-          var errors = result.array().map(function (elem) {
+          const errors = result.array().map(function (elem) {
             return elem.msg
           }).join('<hr>')
           req.session.sessionFlash = {
@@ -79,7 +79,7 @@ module.exports = function (app, passport) {
       res.setHeader('Pragma', 'no-cache') // HTTP 1.0.
       res.setHeader('Expires', '0') // Proxies.
       if (!result.isEmpty()) {
-        var errors = result.array().map(function (elem) {
+        const errors = result.array().map(function (elem) {
           return elem.msg
         }).join('<hr>')
         req.session.sessionFlash = {
@@ -221,10 +221,10 @@ module.exports = function (app, passport) {
             if (line !== '') {
               line = '<p>' + line + '</p>'
               line = Autolinker.link(line)
-              var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-              var mentionReplace = '$1<a href="/$2">@$2</a>'
-              var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
-              var hashtagReplace = '$1<a href="/tag/$2">#$2</a>'
+              const mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
+              const mentionReplace = '$1<a href="/$2">@$2</a>'
+              const hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
+              const hashtagReplace = '$1<a href="/tag/$2">#$2</a>'
               line = line.replace(mentionRegex, mentionReplace).replace(hashtagRegex, hashtagReplace)
               parsedAboutArray.push(line)
             }
@@ -304,7 +304,7 @@ module.exports = function (app, passport) {
     console.log(newSets)
     const oldSets = req.user.settings
 
-    var emailSetsChanged = false
+    let emailSetsChanged = false
     if (newSets.digestEmailFrequency !== oldSets.digestEmailFrequency || newSets.timezone !== oldSets.timezone || newSets.autoDetectedTimeZone !== oldSets.autoDetectedTimeZone || newSets.emailTime !== oldSets.emailTime || newSets.emailDay !== oldSets.emailDay) {
       emailSetsChanged = true
     }
@@ -393,7 +393,7 @@ module.exports = function (app, passport) {
     req.getValidationResult().then(function (result) {
       if (!result.isEmpty()) {
         console.log('Not an email')
-        var errors = result.array().map(function (elem) {
+        const errors = result.array().map(function (elem) {
           return elem.msg
         }).join('<hr>')
         req.session.sessionFlash = {
@@ -662,7 +662,7 @@ module.exports = function (app, passport) {
           req.checkBody('password', 'Passwords do not match.').equals(req.body.passwordrepeat)
           req.getValidationResult().then(function (result) {
             if (!result.isEmpty()) {
-              var errors = result.array().map(function (elem) {
+              const errors = result.array().map(function (elem) {
                 return elem.msg
               }).join('<hr>')
               req.session.sessionFlash = {
@@ -710,7 +710,7 @@ module.exports = function (app, passport) {
 
   app.post('/pushnotifs/subscribe', async function (req, res) {
     if (req.isAuthenticated()) {
-      var user = await User.findById(req.user._id)
+      const user = await User.findById(req.user._id)
       if (!user.pushNotifSubscriptions.some(v => { // check to make sure there isn't already a subscription set up with this endpoint
         return JSON.parse(v).endpoint === JSON.parse(req.body.subscription).endpoint
       })) {
@@ -723,7 +723,7 @@ module.exports = function (app, passport) {
 
   app.post('/pushnotifs/unsubscribe', async function (req, res) {
     if (req.isAuthenticated()) {
-      var user = await User.findById(req.user._id)
+      const user = await User.findById(req.user._id)
       user.pushNotifSubscriptions = user.pushNotifSubscriptions.filter(v => { // check to make sure there isn't already a subscription set up with this endpoint
         return !(JSON.parse(v).endpoint === JSON.parse(req.body.subscription).endpoint)
       })

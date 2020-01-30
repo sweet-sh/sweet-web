@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const DBReference = mongoose.Schema.Types.ObjectId
 
-var commentSchema = new mongoose.Schema({
+const commentSchema = new mongoose.Schema({
   authorEmail: String,
   author: { type: DBReference, ref: 'User' },
   timestamp: Date,
@@ -11,7 +11,7 @@ var commentSchema = new mongoose.Schema({
   tags: [String]
 })
 
-var voteSchema = new mongoose.Schema({
+const voteSchema = new mongoose.Schema({
   status: String, // 'active' or 'expired'
   type: String, // no longer used, i believe
   community: { type: DBReference, ref: 'Community' },

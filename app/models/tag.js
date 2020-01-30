@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-var tagSchema = new mongoose.Schema({
+const tagSchema = new mongoose.Schema({
   name: String,
   posts: [String],
   lastUpdated: Date
