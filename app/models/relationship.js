@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const DBReference = mongoose.Schema.Types.ObjectId
 
 // define the schema for our user model
-var relationshipSchema = new mongoose.Schema({
+const relationshipSchema = new mongoose.Schema({
   from: {
     type: String,
     required: true

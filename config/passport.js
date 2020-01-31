@@ -86,10 +86,10 @@ function(req, email, password, done) {
             else {
               // if there is no user with that email
               // create the user
-              var newUser            = new User();
+              const newUser = new User();
 
               // set the user's local credentials
-              newUser.email    = email;
+              newUser.email = email;
               newUser.password = newUser.generateHash(password);
               newUser.username = req.body.username;
               newUser.joined = new Date();
@@ -111,7 +111,7 @@ function(req, email, password, done) {
                 };
                 sgMail.send(msg)
                 .then(() => {
-                  var sweetbotFollow = new Relationship();
+                  const sweetbotFollow = new Relationship();
                   sweetbotFollow.from = email;
                   sweetbotFollow.to = 'support@sweet.sh';
                   sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';

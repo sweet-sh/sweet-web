@@ -24,7 +24,7 @@ Vote.find({}).then(votes => {
       vote.save()
       // account for currently active votes that need to be scheduled to expire
     } else if (vote.status === 'active') {
-      var expireVote = schedule.scheduleJob(vote.expiryTime, function () {
+      const expireVote = schedule.scheduleJob(vote.expiryTime, function () {
         if (vote) {
           vote.status = 'expired'
           vote.save()
@@ -157,7 +157,7 @@ module.exports = function (app, passport) {
                 // Find the number of members who have been active on sweet in the last 2 weeks
                 // and are not muted - these are members allowed to vote - then work out the
                 // majority margin required for a vote to pass based on the number of those members
-                var currentFortnight = moment().clone().subtract(14, 'days').startOf('day')
+                const currentFortnight = moment().clone().subtract(14, 'days').startOf('day')
                 const recentlyActiveMembers = community.members.filter((member) => {
                   return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
                                         !mutedMemberIds.includes(member._id.toString())
@@ -248,8 +248,8 @@ module.exports = function (app, passport) {
                 })
             }
           }
-          var parsedDesc = (await helper.parseText(newCommunityData.communityDescription)).text
-          var parsedRules = (await helper.parseText(newCommunityData.communityRules)).text
+          const parsedDesc = (await helper.parseText(newCommunityData.communityDescription)).text
+          const parsedRules = (await helper.parseText(newCommunityData.communityRules)).text
 
           const community = new Community({
             created: new Date(),
@@ -294,7 +294,7 @@ module.exports = function (app, passport) {
   })
 
   app.post('/api/community/user/join/:communityid', isLoggedIn, async function (req, res) {
-    var community = await Community.findOne({ _id: req.params.communityid })
+    const community = await Community.findOne({ _id: req.params.communityid })
     if (community.bannedMembers.includes(req.user._id)) {
       return res.sendStatus(403)
     }
@@ -303,7 +303,7 @@ module.exports = function (app, passport) {
       await community.save()
       touchCommunity(req.params.communityid)
     }
-    var user = await User.findOne({ _id: req.user._id })
+    const user = await User.findOne({ _id: req.user._id })
     if (!user.communities.some(v => v.toString() === req.params.communityid)) {
       user.communities.push(req.params.communityid)
       await user.save()
@@ -388,7 +388,7 @@ module.exports = function (app, passport) {
           })
           vote.save()
             .then(vote => {
-              var expireVote = schedule.scheduleJob(expiryTime, function () {
+              const expireVote = schedule.scheduleJob(expiryTime, function () {
                 Vote.findOne({
                   _id: vote._id
                 })
@@ -448,7 +448,7 @@ module.exports = function (app, passport) {
           })
           vote.save()
             .then(vote => {
-              var expireVote = schedule.scheduleJob(expiryTime, function () {
+              const expireVote = schedule.scheduleJob(expiryTime, function () {
                 Vote.findOne({
                   _id: vote._id
                 })
@@ -508,7 +508,7 @@ module.exports = function (app, passport) {
           })
           vote.save()
             .then(vote => {
-              var expireVote = schedule.scheduleJob(expiryTime, function () {
+              const expireVote = schedule.scheduleJob(expiryTime, function () {
                 Vote.findOne({
                   _id: vote._id
                 })
@@ -568,7 +568,7 @@ module.exports = function (app, passport) {
           })
           vote.save()
             .then(vote => {
-              var expireVote = schedule.scheduleJob(expiryTime, function () {
+              const expireVote = schedule.scheduleJob(expiryTime, function () {
                 Vote.findOne({
                   _id: vote._id
                 })
@@ -644,7 +644,7 @@ module.exports = function (app, passport) {
   })
 
   app.post('/api/community/vote/create/:communityid', isLoggedIn, async function (req, res) {
-    var community = await Community.findOne({
+    const community = await Community.findOne({
       _id: req.params.communityid
     })
     if (!community.members.some(v => v.equals(req.user._id))) {
@@ -702,7 +702,7 @@ module.exports = function (app, passport) {
       30: '30 days'
     }
     const parsedReference = parsedReferences[req.body.reference]
-    var allowedChange = true // is there a change? and is it allowed?
+    let allowedChange = true // is there a change? and is it allowed?
     let proposedValue
     let parsedProposedValue
     if (req.body.reference === 'description' || req.body.reference === 'rules') {
@@ -731,7 +731,7 @@ module.exports = function (app, passport) {
     } else if (req.body.reference === 'name') { // this is where it gets complicated
       proposedValue = req.body.proposedValue
       parsedProposedValue = proposedValue
-      var slug = helper.slugify(proposedValue)
+      const slug = helper.slugify(proposedValue)
       if (!parsedProposedValue || community.name === proposedValue) {
         // not using allowedChange for this non-change bc by the time we get to the code that reacts to allowedChange it will have already returned a duplicate name complaint
         req.session.sessionFlash = {
@@ -753,7 +753,7 @@ module.exports = function (app, passport) {
         // a placeholder with our proposed name created between our check and our creation of the new one (bc we don't know what code will
         // execute while we are awaiting the save of the new one.) i think this could still result in two changes to the same name being
         // proposed at the same time and both of them being rejected, but that's incredibly unlikely and also oh well
-        var placeholder = new CommunityPlaceholder({
+        const placeholder = new CommunityPlaceholder({
           name: proposedValue,
           slug: helper.slugify(proposedValue)
         })
@@ -863,7 +863,7 @@ module.exports = function (app, passport) {
                 // Find the number of members who have been active on sweet in the last 2 weeks
                 // and are not muted - these are members allowed to vote - then work out the
                 // majority margin required for a vote to pass based on the number of those members
-                var currentFortnight = moment().clone().subtract(14, 'days').startOf('day')
+                const currentFortnight = moment().clone().subtract(14, 'days').startOf('day')
                 const recentlyActiveMembers = community.members.filter((member) => {
                   return moment(member.lastUpdated).isBetween(currentFortnight, moment()) &&
                                         !mutedMemberIds.includes(member._id.toString())
@@ -872,6 +872,7 @@ module.exports = function (app, passport) {
 
                 if (vote.votes >= majorityMargin) {
                   console.log('Vote passed!')
+                  let oldName
                   if (vote.reference === 'visibility') {
                     community.settings[vote.reference] = vote.proposedValue
                     Image.find({
@@ -897,7 +898,7 @@ module.exports = function (app, passport) {
                       community.save()
                     })
                   } else if (vote.reference === 'name') {
-                    var oldName = community.name
+                    oldName = community.name
                     community.name = vote.proposedValue
                     CommunityPlaceholder.deleteOne({ name: vote.proposedValue }, function (err) { console.error(err) })
                     community.slug = helper.slugify(vote.proposedValue) // i guess i'm assuming the "slugify" function hasn't been modified since the vote was created

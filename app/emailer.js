@@ -44,8 +44,8 @@ function emailLog (message) {
   fs.appendFileSync('emailLog.txt', message + '\n')
 }
 
-var scheduledEmails = {} // will store timeout objects representing scheduled calls to sendUpdateEmail and execution of next email scheduling code
-var logFormat = 'dddd, MMMM Do YYYY, h:mm a'
+const scheduledEmails = {} // will store timeout objects representing scheduled calls to sendUpdateEmail and execution of next email scheduling code
+const logFormat = 'dddd, MMMM Do YYYY, h:mm a'
 
 // utility function. note that this transforms the input object "in place", rather than returning the changed version
 function putInUsersLocalTime (momentObject, user) {
@@ -82,10 +82,10 @@ User.find({
 function emailScheduler (user, justSentOne = false) {
   // usersLocalTime starts out as just the current time in the user's time zone and then we change it piece by piece to be the time that we send the next email at!
 
-  var usersLocalTime = moment() // not actually in user's local time yet
+  const usersLocalTime = moment() // not actually in user's local time yet
   putInUsersLocalTime(usersLocalTime, user) // there we go
 
-  var emailTimeComps = user.settings.emailTime.split(':').map(v => {
+  const emailTimeComps = user.settings.emailTime.split(':').map(v => {
     return parseInt(v)
   })
 
@@ -96,8 +96,8 @@ function emailScheduler (user, justSentOne = false) {
       usersLocalTime.add(1, 'd') // then make this moment take place tomorrow
     }
   } else {
-    var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    var emailDayIndex = weekdays.indexOf(user.settings.emailDay)
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const emailDayIndex = weekdays.indexOf(user.settings.emailDay)
     // if we aren't sending this week's email (either we just sent one or the point at which we're supposed to send it this week has past)
     if (justSentOne || (usersLocalTime.day() > emailDayIndex) || (usersLocalTime.day() === emailDayIndex && usersLocalTime.hour() > emailTimeComps[0]) || (usersLocalTime.day() === emailDayIndex && usersLocalTime.hour() === emailTimeComps[0] && usersLocalTime.minute() > emailTimeComps[1])) {
       usersLocalTime.day(user.settings.emailDay) // set the day of the week
@@ -109,10 +109,10 @@ function emailScheduler (user, justSentOne = false) {
 
   // set its hour and minutes (the seconds and milliseconds are just gonna be what they're gonna be):
   usersLocalTime.hour(emailTimeComps[0]).minute(emailTimeComps[1]) // now usersLocalTime stores the time at which the next email will be sent
-  var msTillSendingTime = usersLocalTime.diff(moment()) // find the difference between that time and the current time
+  const msTillSendingTime = usersLocalTime.diff(moment()) // find the difference between that time and the current time
   scheduledEmails[user._id.toString()] = setTimeout(() => { // schedule an email sending at that time
     sendUpdateEmail(user)
-    var emailSentTime = moment()
+    const emailSentTime = moment()
     emailLog('sendUpdateEmail ran for ' + user.username + ' on ' + emailSentTime.format(logFormat) + ' our time, our time zone being UTC' + emailSentTime.format('Z z'))
     putInUsersLocalTime(emailSentTime, user)
     emailLog('that is equivalent to ' + emailSentTime.format(logFormat) + ' their time!')
@@ -123,7 +123,7 @@ function emailScheduler (user, justSentOne = false) {
     emailLog('\n')
     emailScheduler(user, true) // schedule their next email
   }, msTillSendingTime)
-  var nextEmailTime = moment().add(msTillSendingTime, 'ms')
+  const nextEmailTime = moment().add(msTillSendingTime, 'ms')
   emailLog('scheduled email for user ' + user.username + ' to be sent on ' + nextEmailTime.format(logFormat) + ' our time, our time zone being UTC' + nextEmailTime.format('Z z'))
   putInUsersLocalTime(nextEmailTime, user)
   emailLog('that is equivalent to ' + nextEmailTime.format(logFormat) + ' their time!')

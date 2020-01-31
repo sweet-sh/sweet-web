@@ -36,11 +36,11 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
             const notifEmails = {
               mention: 'mentioned you on sweet 🙌'
             }
-            var text = notifTexts[cause]
-            var image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg')
-            var username = '@' + user.username
-            var final = '<strong>' + username + '</strong> ' + text
-            var emailText = notifEmails[cause] ? notifEmails[cause] : ''
+            const text = notifTexts[cause]
+            const image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg')
+            const username = '@' + user.username
+            const final = '<strong>' + username + '</strong> ' + text
+            const emailText = notifEmails[cause] ? notifEmails[cause] : ''
             return {
               image: image,
               text: final,
@@ -54,7 +54,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
               _id: subjectId
             })
               .then(community => {
-                var commNotifTexts = {
+                const commNotifTexts = {
                   request: '<strong>@' + user.username + '</strong> has asked to join <strong>' + community.name + '</strong>.',
                   requestResponse: 'Your request to join <strong>' + community.name + '</strong> has been ' + context + '.',
                   vote: 'A vote has been ' + context + ' in <strong>' + community.name + '</strong>.',
@@ -63,8 +63,8 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
                   managementResponse: 'You have been ' + context + ' from <strong>' + community.name + '</strong>.',
                   nameChange: 'The name of the community <strong>' + context + '</strong> has been changed to <strong>' + community.name + '</strong>.'
                 }
-                var text = commNotifTexts[cause]
-                var image = '/images/communities/' + (community.imageEnabled ? community.image : 'cake.svg')
+                const text = commNotifTexts[cause]
+                const image = '/images/communities/' + (community.imageEnabled ? community.image : 'cake.svg')
                 return {
                   image: image,
                   text: text
@@ -105,7 +105,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
             emailer.sendSingleNotificationEmail(notifiedUser, response, url)
           }
           // if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
-          var lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
+          const lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
           let notification
           if (
             lastNotif &&

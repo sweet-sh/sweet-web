@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt-nodejs')
 const mongoose = require('mongoose')
 const DBReference = mongoose.Schema.Types.ObjectId
 
-var notificationSchema = new mongoose.Schema({
+const notificationSchema = new mongoose.Schema({
   category: String,
   sourceId: String,
   subjectId: String,
@@ -15,7 +15,7 @@ var notificationSchema = new mongoose.Schema({
 })
 
 // define the schema for our user model
-var userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   joined: Date,
   lastOnline: Date,
   lastUpdated: { type: Date, required: true, default: Date.now() },

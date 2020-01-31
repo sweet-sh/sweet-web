@@ -1,7 +1,7 @@
 let sgMail
 
 if (process.env.NODE_ENV === 'production') {
-  var apiConfig = require('./apis.js')
+  const apiConfig = require('./apis.js')
   sgMail = require('@sendgrid/mail')
   sgMail.setApiKey(apiConfig.sendgrid)
 } else {

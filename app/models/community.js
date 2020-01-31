@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const DBReference = mongoose.Schema.Types.ObjectId
 
 // define the schema for our user model
-var communitySchema = new mongoose.Schema({
+const communitySchema = new mongoose.Schema({
   created: Date,
   lastUpdated: Date,
   name: String,
@@ -55,7 +55,7 @@ communitySchema.pre('validate', function (next) {
 
 communitySchema.index({ slug: 1 })
 
-var communityPlaceholderSchema = new mongoose.Schema({
+const communityPlaceholderSchema = new mongoose.Schema({
   name: String,
   slug: String,
   community: { type: DBReference, ref: 'Community' },

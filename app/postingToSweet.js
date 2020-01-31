@@ -21,7 +21,7 @@ module.exports = function (app) {
   // it's moved to the image folder that post images are loaded from upon being displayed. A thumbnail version of the uploaded image, complete with final flattening and rotation,
   // is sent in data url form in the response, along with the filename of the image as it is stored on the server
   app.post('/api/image/v2', isLoggedInOrErrorResponse, async function (req, res) {
-    var imageQualitySettingsArray = {
+    const imageQualitySettingsArray = {
       standard: {
         resize: 1200,
         filetype: 'jpg',
@@ -38,7 +38,7 @@ module.exports = function (app) {
         jpegQuality: 95
       }
     }
-    var imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality]
+    const imageQualitySettings = imageQualitySettingsArray[req.user.settings.imageQuality]
     if (req.files.image) {
       if (req.files.image.size <= 10485760) {
         let sharpImage
@@ -56,7 +56,7 @@ module.exports = function (app) {
         const imageUrl = shortid.generate()
         if (imageFormat === 'gif') {
           if (req.files.image.size <= 5242880) {
-            var imageData = req.files.image.data
+            const imageData = req.files.image.data
             fs.writeFile('./cdn/images/temp/' + imageUrl + '.gif', imageData, 'base64', function (err) { // to temp
               if (err) {
                 return console.log(err)
@@ -87,9 +87,9 @@ module.exports = function (app) {
 
           // send the client a thumbnail bc a) maybe the image is being rotated according to exif data or is a png with transparency being removed, and b) bc using a really small thumbnail in the browser speeds subsequent front-end interactions way up, at least on my phone
           // IN THEORY we should just be able to .clone() sharpImage and operate on the result of that instead of making this new object for the thumbnail, but i'll be damned if i can get that to behave, i get cropped images somehow
-          var thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true })
+          let thumbnail = sharp(req.files.image.data).resize({ height: 200, withoutEnlargement: true })
           thumbnail = await (finalFormat === 'jpeg' ? thumbnail.rotate().flatten({ background: { r: 255, g: 255, b: 255 } }).jpeg() : thumbnail.rotate().png()).toBuffer()
-          var response = { url: imageUrl + '.' + finalFormat, thumbnail: 'data:image/' + finalFormat + ';base64,' + thumbnail.toString('base64') }
+          const response = { url: imageUrl + '.' + finalFormat, thumbnail: 'data:image/' + finalFormat + ';base64,' + thumbnail.toString('base64') }
 
           await sharpImage.toFile('./cdn/images/temp/' + imageUrl + '.' + finalFormat) // to temp
             .catch(err => {
@@ -140,7 +140,7 @@ module.exports = function (app) {
       parsedResult.tags = []
     }
 
-    var imagePrivacy
+    let imagePrivacy
 
     if (req.body.communityId) {
       imagePrivacy = (await Community.findById(req.body.communityId)).settings.visibility
@@ -150,25 +150,25 @@ module.exports = function (app) {
       imagePrivacy = req.body.postPrivacy
     }
 
-    for (var inline of parsedResult.inlineElements) {
+    for (const inline of parsedResult.inlineElements) {
       if (inline.type === 'image(s)') {
         // calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-        var horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? 'community' : req.body.isDraft ? 'draft' : 'original'), req.body.communityId, req.user._id, imagePrivacy, req.user.settings.imageQuality)
+        const horizOrVertics = await helper.finalizeImages(inline.images, (req.body.communityId ? 'community' : req.body.isDraft ? 'draft' : 'original'), req.body.communityId, req.user._id, imagePrivacy, req.user.settings.imageQuality)
         inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal
         inline.imageIsVertical = horizOrVertics.imageIsVertical
       }
     }
 
-    var newPostUrl = shortid.generate()
+    const newPostUrl = shortid.generate()
     const postCreationTime = new Date()
 
     if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { // in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
       res.status(400).send('bad post op')
       return
     }
-    var isCommunityPost = !!req.body.communityId
+    const isCommunityPost = !!req.body.communityId
 
-    var post = new Post({
+    const post = new Post({
       type: isCommunityPost ? 'community' : req.body.isDraft ? 'draft' : 'original',
       community: isCommunityPost ? req.body.communityId : undefined,
       authorEmail: req.user.email,
@@ -258,12 +258,12 @@ module.exports = function (app) {
           }
 
           if (postOrComment.comments && postOrComment.comments.length) {
-            for (var comment of postOrComment.comments) {
+            for (const comment of postOrComment.comments) {
               deleteImagesRecursive(comment)
             }
           }
           if (postOrComment.replies && postOrComment.replies.length) {
-            for (var reply of postOrComment.replies) {
+            for (const reply of postOrComment.replies) {
               deleteImagesRecursive(reply)
             }
           }
@@ -371,7 +371,8 @@ module.exports = function (app) {
     Post.findOne({ _id: req.params.postid })
       .populate('author')
       .then(async (post) => {
-        var postType, postPrivacy
+        let postType
+        let postPrivacy
         if (post.communityId) {
           postType = 'community'
           postPrivacy = (await Community.findById(post.communityId)).settings.visibility
@@ -380,10 +381,10 @@ module.exports = function (app) {
           postPrivacy = post.privacy
         }
 
-        for (var inline of parsedResult.inlineElements) {
+        for (const inline of parsedResult.inlineElements) {
           if (inline.type === 'image(s)') {
             // calling this function also moves the images out of temp storage and saves documents for them in the images collection in the database
-            var horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality)
+            const horizOrVertics = await helper.finalizeImages(inline.images, postType, post.communityId, req.user._id, postPrivacy, req.user.settings.imageQuality)
             inline.imageIsHorizontal = horizOrVertics.imageIsHorizontal
             inline.imageIsVertical = horizOrVertics.imageIsVertical
           }
@@ -521,7 +522,7 @@ module.exports = function (app) {
 
                 // NOTIFY PEOPLE WHO BOOSTED THE POST
                 if (post.boostsV2.length > 0) {
-                  var boosterIDs = []
+                  const boosterIDs = []
                   post.populate('boostV2.booster', (err, populatedPost) => {
                     if (err) {
                       console.log('could not notify people who boosted post ' + post._id.toString() + ' of a recent reply:')
@@ -543,7 +544,7 @@ module.exports = function (app) {
                     }
                     // if there are boosters, we notify the other "subscribers" here, because here we have the full list of
                     // boosters and can check the subscribers against it before notifying them
-                    var workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u))
+                    const workingSubscribers = post.subscribedUsers.filter(u => !boosterIDs.includes(u))
                     notifySubscribers(workingSubscribers)
                   })
                 }
@@ -775,7 +776,7 @@ module.exports = function (app) {
           res.status(400).send('post is not public and therefore may not be boosted')
           return
         }
-        var boost = new Post({
+        const boost = new Post({
           type: 'boost',
           authorEmail: req.user.email,
           author: req.user._id,
@@ -814,7 +815,7 @@ module.exports = function (app) {
   app.post('/removeboost/:postid', isLoggedInOrRedirect, function (req, res) {
     Post.findOne({ _id: req.params.postid }, { boostsV2: 1, privacy: 1, author: 1, url: 1, timestamp: 1 })
       .then((boostedPost) => {
-        var boost = boostedPost.boostsV2.find(b => {
+        const boost = boostedPost.boostsV2.find(b => {
           return b.booster.equals(req.user._id)
         })
         boostedPost.boostsV2 = boostedPost.boostsV2.filter(boost => {
@@ -838,8 +839,8 @@ module.exports = function (app) {
       .then(async post => {
         if (post.author.equals(req.user._id)) {
           // This post has been written by the logged in user - we good
-          var isCommunityPost = post.type === 'community'
-          var content = await helper.renderHTMLContent(post, true)
+          const isCommunityPost = post.type === 'community'
+          const content = await helper.renderHTMLContent(post, true)
           app.render('partials/posteditormodal', {
             layout: false,
             contentWarnings: post.contentWarnings,
@@ -851,7 +852,7 @@ module.exports = function (app) {
             if (err) {
               throw Error('could not render post editor modal\n' + err)
             }
-            var result = {
+            const result = {
               editor: html,
               content: content
             }
@@ -865,11 +866,11 @@ module.exports = function (app) {
   })
 
   app.post('/saveedits/:postid', isLoggedInOrErrorResponse, async function (req, res) {
-    var post = await Post.findById(req.params.postid)
+    const post = await Post.findById(req.params.postid)
     if (!post.author._id.equals(req.user._id)) {
       return res.sendStatus(403)
     }
-    var parsedPost = await helper.parseText(JSON.parse(req.body.postContent))
+    const parsedPost = await helper.parseText(JSON.parse(req.body.postContent))
     if (!(parsedPost.inlineElements.length || parsedPost.text.trim())) {
       // ignore the edit if it results in an empty post; it's an invalid request, the client side code also works to prevent this
       return res.sendStatus(403)
@@ -892,9 +893,9 @@ module.exports = function (app) {
     // of how it was stored for images already in the post in potentially a completely different format and image order; if this code gives too much trouble probably just switch to that.
 
     // create lookup tables: oldHorizontalImages[imageFileName] will contain the value of imageIsHorizontal corresponding to that filename, and the same for vertical ones
-    var horizontalityLookup = {}
-    var verticalityLookup = {}
-    var oldPostImages = []
+    const horizontalityLookup = {}
+    const verticalityLookup = {}
+    let oldPostImages = []
     if (post.images && post.images.length) {
       oldPostImages = post.images
       if (post.imageIsHorizontal && post.imageIsVertical) {
@@ -927,12 +928,12 @@ module.exports = function (app) {
     }
     // finalize each new image with the helper function; retrieve the orientation of the already existing ones from the lookup table by their filename.
     // change the privacy of old image documents if the post's privacy changed.
-    var currentPostImages = []
+    const currentPostImages = []
     for (const e of parsedPost.inlineElements) {
       if (e.type === 'image(s)') {
         e.imageIsVertical = []
         e.imageIsHorizontal = []
-        for (var i = 0; i < e.images.length; i++) {
+        for (let i = 0; i < e.images.length; i++) {
           currentPostImages.push(e.images[i])
           let horizOrVertic
           if (!oldPostImages.includes(e.images[i])) {
@@ -948,7 +949,7 @@ module.exports = function (app) {
             e.imageIsVertical.push(verticalityLookup[e.images[i]])
             e.imageIsHorizontal.push(horizontalityLookup[e.images[i]])
             if (imagePrivacyChanged) {
-              var imageDoc = await Image.findOne({ filename: e.images[i] })
+              const imageDoc = await Image.findOne({ filename: e.images[i] })
               imageDoc.privacy = imagePrivacy
               await imageDoc.save()
             }
@@ -957,7 +958,7 @@ module.exports = function (app) {
       }
     }
 
-    var deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v))
+    const deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v))
     for (const image of deletedImages) {
       Image.deleteOne({ filename: image })
       fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
@@ -971,7 +972,7 @@ module.exports = function (app) {
     post.imageIsVertical = undefined
     post.embeds = undefined
 
-    var newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v))
+    const newMentions = parsedPost.mentions.filter(v => !post.mentions.includes(v))
     for (const mention of newMentions) {
       if (mention !== req.user.username) {
         User.findOne({ username: mention }).then(async mentioned => {
@@ -991,11 +992,11 @@ module.exports = function (app) {
     }
     post.mentions = parsedPost.mentions
 
-    var newTags = parsedPost.tags.filter(v => !post.tags.includes(v))
+    const newTags = parsedPost.tags.filter(v => !post.tags.includes(v))
     for (const tag of newTags) {
       Tag.findOneAndUpdate({ name: tag }, { $push: { posts: post._id.toString() }, $set: { lastUpdated: new Date() } }, { upsert: true, new: true }, function (error, result) { if (error) console.error('could not update tag upon post editing\n' + error) })
     }
-    var deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
+    const deletedTags = post.tags.filter(v => !parsedPost.tags.includes(v))
     for (const tag of deletedTags) {
       Tag.findOneAndUpdate({ name: tag }, { $pull: { posts: post._id.toString() } }).catch(err => console.error('could not remove edited post ' + post._id.toString() + ' from tag ' + tag + '\n' + err))
     }
@@ -1016,7 +1017,7 @@ module.exports = function (app) {
     }
 
     if (post.type === 'draft' && !req.body.isDraft) {
-      var timePublished = new Date()
+      const timePublished = new Date()
       post.timestamp = timePublished
       post.lastUpdated = timePublished
       post.lastEdited = undefined

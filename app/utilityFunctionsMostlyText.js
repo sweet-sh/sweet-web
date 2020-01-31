@@ -9,7 +9,7 @@ const User = require('./models/user')
 const Image = require('./models/image')
 
 // these requires are not in server.js bc they're only used here
-const urlParser = require('url')
+const { URL } = require('url')
 const metascraper = require('metascraper')([
   require('metascraper-description')(),
   require('metascraper-image')(),
@@ -24,7 +24,7 @@ module.exports = {
     console.log('Parsing content')
     let inlineElements
     if (typeof rawText !== 'string') { // it is an array of paragraphs and inline elements
-      var parsedParagraphList = await this.parseParagraphList(rawText)
+      const parsedParagraphList = await this.parseParagraphList(rawText)
       rawText = parsedParagraphList.text
       inlineElements = parsedParagraphList.inlineElements
     } else {
@@ -35,10 +35,10 @@ module.exports = {
       rawText = rawText.replace(/(<p>(<br>|\s)<\/p>){2,}/g, '<p><br></p>') // filters out multiple blank lines in a row within the post
     }
 
-    var mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
-    var mentionReplace = '$1<a href="/$2">@$2</a>'
-    var hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
-    var hashtagReplace = '$1<a href="/tag/$2">#$2</a>'
+    const mentionRegex = /(^|[^@\w])@([\w-]{1,30})[\b-]*/g
+    const mentionReplace = '$1<a href="/$2">@$2</a>'
+    const hashtagRegex = /(^|>|\n|\ |\t)#(\w{1,60})\b/g
+    const hashtagReplace = '$1<a href="/tag/$2">#$2</a>'
 
     if (urlsEnabled) {
       rawText = Autolinker.link(rawText)
@@ -67,7 +67,7 @@ module.exports = {
       })
     }
 
-    var parsedStuff = {
+    const parsedStuff = {
       text: rawText, // well, not raw anymore
       mentions: trimmedMentions,
       tags: trimmedTags,
@@ -79,13 +79,13 @@ module.exports = {
     return parsedStuff
   },
   parseParagraphList: async function (pList) {
-    var inlineElements = []
+    const inlineElements = []
     // iterate over list, remove blank lines from the beginning, collapse consecutive blank lines into one, and finally remove the last line if it's blank
     // also, pull out the inline elements and put them in their own array with their position
-    var lastWasBlank = false
-    for (var i = 0; i < pList.length; i++) {
+    let lastWasBlank = false
+    for (let i = 0; i < pList.length; i++) {
       if (typeof pList[i] === 'string') {
-        var isBlank = pList[i].match(/^<p>(<br>|\s)*<\/p>$/)
+        const isBlank = pList[i].match(/^<p>(<br>|\s)*<\/p>$/)
         if (((i === 0 && !inlineElements.length) || lastWasBlank) && isBlank) {
           pList.splice(i, 1)
           i--
@@ -138,7 +138,7 @@ module.exports = {
   },
   // stolen from mustache.js (https://github.com/janl/mustache.js/blob/master/mustache.js#L73) via stack overflow (https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery)
   escapeHTMLChars: function (string) {
-    var entityMap = {
+    const entityMap = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
@@ -155,15 +155,18 @@ module.exports = {
   },
   getLinkMetadata: async function (url) {
     // remove the protocol and the path if it's empty from the url bc that's how it's stored in the cache (that way it matches it with or without)
-    const parsedUrl = Object.assign(urlParser.parse(url), { protocol: '', slashes: false })
+    const parsedUrl = new URL(url)
+    parsedUrl.protocol = ''
+    parsedUrl.slashes = false
+
     if (parsedUrl.path === '/' && parsedUrl.pathname === '/') {
       parsedUrl.path = ''
       parsedUrl.pathname = ''
     }
-    const retrievalUrl = urlParser.format(parsedUrl)
+    const retrievalUrl = parsedUrl.toString()
     let finalUrl // this will have the correct protocol, obtained either by the cache or the request package
-    const cache = mongoose.model('Cached Link Metadata')
-    const found = await cache.findOne({ retrievalUrl: retrievalUrl })
+    const Cache = mongoose.model('Cached Link Metadata')
+    const found = await Cache.findOne({ retrievalUrl: retrievalUrl })
     const cacheHit = !!found
     let metadata
     if (!cacheHit) {
@@ -183,17 +186,17 @@ module.exports = {
       metadata = found
       finalUrl = metadata.linkUrl
     }
-    var result = {
+    const result = {
       type: 'link-preview',
       retrievalUrl: retrievalUrl,
       linkUrl: finalUrl,
       image: metadata.image,
       title: metadata.title,
       description: metadata.description,
-      domain: urlParser.parse(finalUrl).hostname
+      domain: new URL(finalUrl).hostname
     }
     // taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
-    var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+    const youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
     // taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
     const vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
     let parsed
@@ -202,9 +205,9 @@ module.exports = {
       result.embedUrl = 'https://www.youtube.com/embed/' + parsed[5] + '?autoplay=1' // won't actually autoplay until link preview is clicked
       isEmbeddableVideo = true
       try {
-        var time = /t=(?:([0-9]*)m)?((?:[0-9])*)(?:s)?/.exec(parsed[6])
+        const time = /t=(?:([0-9]*)m)?((?:[0-9])*)(?:s)?/.exec(parsed[6])
         if (time) {
-          var seconds = 0
+          let seconds = 0
           if (time[2]) {
             seconds += parseInt(time[2])
           }
@@ -225,15 +228,15 @@ module.exports = {
     }
     result.isEmbeddableVideo = isEmbeddableVideo
     if (!cacheHit) {
-      (new cache(result)).save()
+      (new Cache(result)).save()
     }
     return result
   },
   // moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
   // the non-first arguments are just stored in the image documents in the database. postType is "original" or "community"
   finalizeImages: async function (imageFileNames, postType, community, posterID, privacy, postImageQuality, imagesCurrentFolder = (global.appRoot + '/cdn/images/temp/')) {
-    var imageIsVertical = []
-    var imageIsHorizontal = []
+    const imageIsVertical = []
+    const imageIsHorizontal = []
     for (const imageFileName of imageFileNames) {
       await new Promise((resolve, reject) => {
         fs.rename(imagesCurrentFolder + imageFileName, './cdn/images/' + imageFileName, function (e) {
@@ -242,8 +245,8 @@ module.exports = {
         })
       })
 
-      var metadata = await sharp('./cdn/images/' + imageFileName).metadata()
-      var image = new Image({
+      const metadata = await sharp('./cdn/images/' + imageFileName).metadata()
+      const image = new Image({
         // posts' types are either original or community; the image's contexts are either user or community, meaning the same things.
         context: postType === 'community' ? 'community' : 'user',
         community: postType === 'community' ? community : undefined,
@@ -296,13 +299,13 @@ module.exports = {
     let filenames
     let html
     if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
-      var lines = [] // they're more like paragraphs, really
+      const lines = [] // they're more like paragraphs, really
       const lineFinder = /(<p>.*?<\/p>)|(<ul>.*?<\/ul>)|(<blockquote>.*?<\/blockquote>)/g
       let line
       while (line = lineFinder.exec(cleanedParsedContent)) {
         lines.push(line[0])
       }
-      var addedLines = 0
+      let addedLines = 0
       for (const il of postOrComment.inlineElements) {
         if (il.type === 'link-preview') {
           if (forEditor) {
@@ -319,7 +322,7 @@ module.exports = {
         } else if (il.type === 'image(s)') {
           if (forEditor) {
             html = ''
-            for (var i = 0; i < il.images.length; i++) {
+            for (let i = 0; i < il.images.length; i++) {
               html += (await hbs.render('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: il.images[i], imageUrl: '/api/image/display/' + il.images[i], description: il.imageDescriptions[i] }))
             }
           } else {
@@ -336,7 +339,7 @@ module.exports = {
       }
       return lines.join('')
     } else if ((postOrComment.images && postOrComment.images.length) || (postOrComment.embeds && postOrComment.embeds.length)) {
-      var endHTML = ''
+      let endHTML = ''
       if (postOrComment.embeds && postOrComment.embeds.length) {
         // this is a post from before the inlineElements array, render its embed (mandated to be just one) and put it at the end of html
         if (forEditor) {
@@ -348,7 +351,7 @@ module.exports = {
       }
       if (postOrComment.images && postOrComment.images.length) {
         // if it's not a comment and it either has no registered image version or the registered image version is less than 2, it uses the old url scheme.
-        var imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? '/images/uploads/' : '/api/image/display/'
+        const imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? '/images/uploads/' : '/api/image/display/'
         if (forEditor) {
           for (let i = 0; i < postOrComment.images.length; i++) {
             endHTML += (await hbs.render('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>' // is this line long enough yet
@@ -400,33 +403,33 @@ function wordCount (str) {
 // called by parse text to turn the quilljs delta format (which can be used for text with embeds) into html
 function parseDeltaNotUsedRightNow (delta) {
   // taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
-  var youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
+  const youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
   // taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js
-  var vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
+  const vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
 
   // this starts the first line. it may be modified if it turns out this is a line in a list or blockquote
-  var linesOfParsedString = ['<p>']
+  const linesOfParsedString = ['<p>']
 
-  var inlineElements = []
-  var imagesAdded = 0
-  var linkPreviewsAdded = 0
+  const inlineElements = []
+  let imagesAdded = 0
+  let linkPreviewsAdded = 0
   const imagesAllowed = 4
   const linkPreviewsAllowed = 4
 
-  var linesFinished = 0 // the assumption is that the text parsing in parseText will not add or remove any lines
-  var withinList = false
+  let linesFinished = 0 // the assumption is that the text parsing in parseText will not add or remove any lines
+  let withinList = false
   // the delta format stores a series of operations in "ops." in this context, they will all be "insert" ops, with their main content in .insert and the extra attributes of that content in .attributes
   // the best way to understand this function is probably to step through it. basically, we start with a line "in progress" (the <p> that starts the array above) and add each insert onto it,
   // accompanied by the tags for its formatting, until we hit an end of line signal, when we finish the line with an end tag. it may turn out that the end of line is blockquote or list formatted,
   // in which case we have to go back and start the line with the appropriate tag (or tags in the case of lists, <ul> and <li>), and then for lists we start starting lines with <li> and then
   // when we leave that formatting mode (when we hit a non list-fomatted newline) we have to end the previous (finished) line with </li> and </ul> and go back and start the current one with <p>.
   // embeds are added with a position attribute describing how many lines have been completed when they are encountered, which serves to place them in the text later.
-  for (var i = 0; i < delta.ops.length; i++) {
-    var op = delta.ops[i]
+  for (let i = 0; i < delta.ops.length; i++) {
+    const op = delta.ops[i]
     if (typeof op.insert === 'string' && (op.insert !== '' || op.attributes)) {
       op.insert = this.escapeHTMLChars(op.insert)
-      var formattingStartTags = ''
-      var formattingEndTags = ''
+      let formattingStartTags = ''
+      let formattingEndTags = ''
       if (op.attributes) {
         // blockquote and list formatted lines end with "\n"s with that formatting attached, that's the only way you can tell what they are. as far as i can tell, it is guaranteed that only
         // newlines will have this formatting.
