@@ -423,8 +423,8 @@ module.exports = function (app) {
   app.get('/showsearch/:query/:olderthanthis', isLoggedInOrRedirect, (req, res) => {
     const resultsPerPage = 10
     const olderthan = new Date(parseInt(req.params.olderthanthis))
-
     const query = req.params.query.trim()
+
     if (!query.length) {
       res.status(404).send('Not found')
     } else {
