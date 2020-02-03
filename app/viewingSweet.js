@@ -447,18 +447,18 @@ module.exports = function (app) {
                   $options: 'i'
                 }
               },
-                {
-                  displayName: {
-                    $regex: query,
-                    $options: 'i'
-                  }
-                },
-                {
-                  aboutParsed: {
-                    $regex: query,
-                    $options: 'i'
-                  }
+              {
+                displayName: {
+                  $regex: query,
+                  $options: 'i'
                 }
+              },
+              {
+                aboutParsed: {
+                  $regex: query,
+                  $options: 'i'
+                }
+              }
               ],
               lastUpdated: { $lt: olderthan }
             })
@@ -473,12 +473,12 @@ module.exports = function (app) {
                       $options: 'i'
                     }
                   },
-                    {
-                      descriptionParsed: {
-                        $regex: query,
-                        $options: 'i'
-                      }
+                  {
+                    descriptionParsed: {
+                      $regex: query,
+                      $options: 'i'
                     }
+                  }
                   ],
                   lastUpdated: { $lt: olderthan }
                 })

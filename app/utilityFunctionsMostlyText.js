@@ -201,7 +201,7 @@ module.exports = {
     const vimeoUrlFindingRegex = /^(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)$/
     let parsed
     let isEmbeddableVideo = false
-    if (parsed = youtubeUrlFindingRegex.exec(finalUrl)) {
+    if ((parsed = youtubeUrlFindingRegex.exec(finalUrl))) {
       result.embedUrl = 'https://www.youtube.com/embed/' + parsed[5] + '?autoplay=1' // won't actually autoplay until link preview is clicked
       isEmbeddableVideo = true
       try {
@@ -222,7 +222,7 @@ module.exports = {
         console.log('youtube link had time specifier that was apparently malformed! error:')
         console.log(err)
       }
-    } else if (parsed = vimeoUrlFindingRegex.exec(finalUrl)) {
+    } else if ((parsed = vimeoUrlFindingRegex.exec(finalUrl))) {
       result.embedUrl = 'https://player.vimeo.com/video/' + parsed[4] + '?autoplay=1' // won't actually autoplay until link preview is clicked
       isEmbeddableVideo = true
     }
@@ -302,7 +302,7 @@ module.exports = {
       const lines = [] // they're more like paragraphs, really
       const lineFinder = /(<p>.*?<\/p>)|(<ul>.*?<\/ul>)|(<blockquote>.*?<\/blockquote>)/g
       let line
-      while (line = lineFinder.exec(cleanedParsedContent)) {
+      while ((line = lineFinder.exec(cleanedParsedContent))) {
         lines.push(line[0])
       }
       let addedLines = 0
