@@ -216,7 +216,7 @@ module.exports = function (app, passport) {
     Community.findOne({
       slug: newCommunitySlug
     })
-      .then(async community => {
+      .then(async (community) => {
         if (community) {
           req.session.sessionFlash = {
             type: 'warning',
@@ -227,7 +227,7 @@ module.exports = function (app, passport) {
         } else {
           let imageEnabled = false
           const communityUrl = shortid.generate()
-          if (req.files.imageUpload) {
+          if (req.files && req.files.imageUpload) {
             if (req.files.imageUpload.data.length > 3145728) {
               console.error('Image too large!')
               req.session.sessionFlash = {
@@ -854,9 +854,10 @@ module.exports = function (app, passport) {
         vote.voters.push(req.user._id)
         vote.save()
           .then(vote => {
-            Community.findOne({
-              _id: req.params.communityid
-            })
+            Community
+              .findOne({
+                _id: req.params.communityid
+              })
               .populate('members')
               .then(community => {
                 const mutedMemberIds = community.mutedMembers.map(a => a._id.toString())
@@ -873,6 +874,7 @@ module.exports = function (app, passport) {
                 if (vote.votes >= majorityMargin) {
                   console.log('Vote passed!')
                   let oldName
+                  // TODO: This if/elif chain is a good candidate for a switch statement
                   if (vote.reference === 'visibility') {
                     community.settings[vote.reference] = vote.proposedValue
                     Image.find({
@@ -892,11 +894,9 @@ module.exports = function (app, passport) {
                     community[vote.reference + 'Raw'] = vote.proposedValue
                     community[vote.reference + 'Parsed'] = vote.parsedProposedValue
                   } else if (vote.reference === 'image') {
-                    fs.rename(global.appRoot + '/public/images/communities/staging/' + vote.proposedValue, global.appRoot + '/public/images/communities/' + vote.proposedValue, function () {
-                      community[vote.reference] = vote.proposedValue
-                      community.imageEnabled = true
-                      community.save()
-                    })
+                    fs.renameSync(global.appRoot + '/public/images/communities/staging/' + vote.proposedValue, global.appRoot + '/public/images/communities/' + vote.proposedValue)
+                    community[vote.reference] = vote.proposedValue
+                    community.imageEnabled = true
                   } else if (vote.reference === 'name') {
                     oldName = community.name
                     community.name = vote.proposedValue

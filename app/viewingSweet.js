@@ -374,7 +374,7 @@ module.exports = function (app) {
   // Responds to get requests for /search.
   // Input: none
   // Output: renders search page unless isLoggedInOrRedirect redirects you
-  app.get('/search', isLoggedInOrRedirect, function (req, res) {
+  app.get('/search', isLoggedInOrRedirect, (req, res) => {
     res.render('search', {
       loggedIn: true,
       loggedInUserData: req.user,
@@ -385,7 +385,7 @@ module.exports = function (app) {
   // Responds to get requests for /search that include a query.
   // Input: the query
   // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
-  app.get('/search/:query', isLoggedInOrRedirect, function (req, res) {
+  app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
     res.render('search', {
       loggedIn: true,
       loggedInUserData: req.user,
@@ -420,7 +420,7 @@ module.exports = function (app) {
   // Responds to requests for search queries by page.
   // Input: query, timestamp of oldest result yet loaded (in milliseconds)
   // Output: 404 response if no results, the rendered search results otherwise, unless isLoggedInOrRedirect redirects you
-  app.get('/showsearch/:query/:olderthanthis', isLoggedInOrRedirect, function (req, res) {
+  app.get('/showsearch/:query/:olderthanthis', isLoggedInOrRedirect, (req, res) => {
     const resultsPerPage = 10
     const olderthan = new Date(parseInt(req.params.olderthanthis))
 
@@ -428,57 +428,60 @@ module.exports = function (app) {
     if (!query.length) {
       res.status(404).send('Not found')
     } else {
-      Tag.find({
-        name: {
-          $regex: query,
-          $options: 'i'
-        },
-        lastUpdated: { $lt: olderthan }
-      })
+      Tag
+        .find({
+          name: {
+            $regex: query,
+            $options: 'i'
+          },
+          lastUpdated: { $lt: olderthan }
+        })
         .sort('-lastUpdated')
         .limit(resultsPerPage) // this won't completely keep us from getting more than we need, but the point is we'll never need more results than this per page load from any collection
-        .then(tagResults => {
-          User.find({
-            $or: [{
-              username: {
-                $regex: query,
-                $options: 'i'
-              }
-            },
-            {
-              displayName: {
-                $regex: query,
-                $options: 'i'
-              }
-            },
-            {
-              aboutParsed: {
-                $regex: query,
-                $options: 'i'
-              }
-            }
-            ],
-            lastUpdated: { $lt: olderthan }
-          })
-            .sort('-lastUpdated')
-            .limit(resultsPerPage)
-            .then((userResults) => {
-              Community.find({
-                $or: [{
-                  name: {
+        .then((tagResults) => {
+          User
+            .find({
+              $or: [{
+                username: {
+                  $regex: query,
+                  $options: 'i'
+                }
+              },
+                {
+                  displayName: {
                     $regex: query,
                     $options: 'i'
                   }
                 },
                 {
-                  descriptionParsed: {
+                  aboutParsed: {
                     $regex: query,
                     $options: 'i'
                   }
                 }
-                ],
-                lastUpdated: { $lt: olderthan }
-              })
+              ],
+              lastUpdated: { $lt: olderthan }
+            })
+            .sort('-lastUpdated')
+            .limit(resultsPerPage)
+            .then((userResults) => {
+              Community
+                .find({
+                  $or: [{
+                    name: {
+                      $regex: query,
+                      $options: 'i'
+                    }
+                  },
+                    {
+                      descriptionParsed: {
+                        $regex: query,
+                        $options: 'i'
+                      }
+                    }
+                  ],
+                  lastUpdated: { $lt: olderthan }
+                })
                 .sort('-lastUpdated')
                 .limit(resultsPerPage)
                 .then(communityResults => {
@@ -545,6 +548,9 @@ module.exports = function (app) {
                   }
                 })
             })
+        })
+        .catch((err) => {
+          console.warn(`Error in search: ${err}`)
         })
     }
   })
