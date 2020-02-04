@@ -1,3 +1,3 @@
 module.exports = {
-    maximumCommentDepth: 5
-};
+  maximumCommentDepth: 5
+}

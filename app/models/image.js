@@ -1,6 +1,8 @@
-var imageSchema = new mongoose.Schema({
-  context: String, //either "user" or "community", corresponding to the post schema's type field's values "original" and "community"
-  filename: {type: String, unique: true},
+const mongoose = require('mongoose')
+
+const imageSchema = new mongoose.Schema({
+  context: String, // either "user" or "community", corresponding to the post schema's type field's values "original" and "community"
+  filename: { type: String, unique: true },
   privacy: String,
   accessToken: String,
   user: String,
@@ -9,9 +11,9 @@ var imageSchema = new mongoose.Schema({
   description: String,
   height: Number,
   width: Number,
-  quality: String,
-});
+  quality: String
+})
 
-imageSchema.index({filename:1});
+imageSchema.index({ filename: 1 })
 
-module.exports = mongoose.model('Image', imageSchema);
+module.exports = mongoose.model('Image', imageSchema)

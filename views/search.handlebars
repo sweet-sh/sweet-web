@@ -20,11 +20,10 @@
 </div>
 
 <script>
-
 $(function(){
   $('#resultsContainer').on('load.infiniteScroll', function (event, response, path) {
       var newlyLoadedStuff = $(response);
-      needPostsOlderThan = newlyLoadedStuff.find(".oldesttimestamp").html(); //the new oldest-result-loaded timestamp is provided by the server in this element
+      needPostsOlderThan = newlyLoadedStuff.find('.oldesttimestamp').html(); //the new oldest-result-loaded timestamp is provided by the server in this element
   })
 
   $('#resultsContainer').infiniteScroll({
@@ -41,16 +40,16 @@ $(function(){
     e.preventDefault();
     //-------------------------------------//
     $('#resultsContainer').infiniteScroll('destroy');
-    $('#resultsContainer').html("");
-    $('#searchTitle').text($("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search");
+    $('#resultsContainer').html('');
+    $('#searchTitle').text($('#searchQuery').val().trim() != '' ? $('#searchQuery').val() : 'Search');
     historyData = {
-      url: '/showsearch/' + $("#searchQuery").val(),
-      title: $("#searchQuery").val().trim() != "" ? $("#searchQuery").val() : "Search"
+      url: '/showsearch/' + $('#searchQuery').val(),
+      title: $('#searchQuery').val().trim() != '' ? $('#searchQuery').val() : 'Search'
     }
-    history.pushState(historyData, 'sweet', '/search/' + $("#searchQuery").val());
+    history.pushState(historyData, 'sweet', '/search/' + $('#searchQuery').val());
     $('#resultsContainer').infiniteScroll({
       path: function() {
-        return '/showsearch/' + $("#searchQuery").val() + '/' + needPostsOlderThan;
+        return '/showsearch/' + $('#searchQuery').val() + '/' + needPostsOlderThan;
       },
       append: '.content-box',
       prefill: true,
@@ -61,7 +60,7 @@ $(function(){
 
   window.onpopstate = function(history) {
     $('#resultsContainer').infiniteScroll('destroy');
-    $('#resultsContainer').html("");
+    $('#resultsContainer').html('');
     $('#searchTitle').text(history.state.title);
     $('#resultsContainer').infiniteScroll({
       path: function() {
