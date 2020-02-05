@@ -118,7 +118,7 @@ const vm = new Vue({
 Vue.component('search-result', {
 props: ['image'],
 template: `<div class="col commentContent">
-          <p class="text-muted"><slot name="typeLabel"></slot</p>
+          <p class="text-muted"><slot name="typeLabel"></slot></p>
           <p class="mb-2" style="font-size:1.3em">
               <img class="postAuthorImage" v-bind:src="image" />
               <slot name="title"></slot>
