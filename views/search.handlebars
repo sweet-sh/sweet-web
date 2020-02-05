@@ -1,12 +1,16 @@
+<style>
+  [v-cloak] {display: none}
+</style>
+
 {{{{vueTemplate}}}}
 <div id="homeBody" class="row justify-content-center">
     <div class="col-lg-8">
-        <h3 id="searchTitle" class="page-header mx-2">{{query ? query : "Search"}}</h3>
+        <h3 id="searchTitle" class="page-header mx-2" v-cloak>{{query ? query : "Search"}}</h3>
         <form id="searchForm">
             <input v-model="searchBox" id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags." />
             <button v-on:click.prevent="searchSubmit" class="button">Search</button>
         </form>
-        <div v-if="firstPageFetched" class="compact-container" id="resultsContainer">
+        <div v-cloak v-if="firstPageFetched" class="compact-container" id="resultsContainer">
             <template v-for="result in results">
                 <div class="content-box">
                     <div class="row">
@@ -101,7 +105,7 @@ const vm = new Vue({
               if ($(document).height() <= $(window).height()) {
                   vueData.fetchResults()
               }
-          }, 'json').fail(function() {
+          }, 'json').fail(function() { // recieving a 404 response from the server is currently how we find out we're out of results; this should be changed to be less ambiguous
               vueData.allResultsLoaded = true
               vueData.loading = false
           })
