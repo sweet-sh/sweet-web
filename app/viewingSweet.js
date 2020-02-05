@@ -456,7 +456,7 @@ module.exports = function (app) {
                   { descriptionParsed: queryObject }
                 ],
                 lastUpdated: { $lt: olderthan }
-              }, { lastUpdated: 1, name: 1, descriptionParsed: 1, membersCount: 1, image: 1, slug: 1 })
+              }, { lastUpdated: 1, name: 1, descriptionParsed: 1, membersCount: 1, image: 1, slug: 1, imageEnabled: 1 })
                 .sort('-lastUpdated')
                 .limit(resultsPerPage)
                 .then(communityResults => {

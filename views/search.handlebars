@@ -38,7 +38,7 @@ const vm = new Vue({
     el: "#homeBody",
 
     data: {
-        loading: true,
+        loading: false,
         query: '{{query}}',
         searchBox: '{{query}}',
         oldestResultLoaded: new Date().getTime(),
@@ -66,7 +66,7 @@ const vm = new Vue({
         }
         $(window).scroll(function() {
             const w = $(window)
-            if ($(document).height() - (w.scrollTop() + w.height()) < 400 && !vueData.allResultsLoaded) {
+            if ($(document).height() - (w.scrollTop() + w.height()) < 400 && !vueData.allResultsLoaded && !vueData.loading) {
                 vueData.fetchResults()
             }
         })
@@ -81,21 +81,25 @@ const vm = new Vue({
         newQuery: function() {
             this.oldestResultLoaded = new Date().getTime()
             this.allResultsLoaded = false
-            this.loading = true
             this.results = []
             this.fetchResults()
         },
         fetchResults: function() {
+            if(this.allResultsLoaded || this.loading){
+              return
+            }
+            this.loading = true
             var vueData = this
             $.get('/showsearch/' + this.query + '/' + this.oldestResultLoaded, null, function(results) {
                 vueData.oldestResultLoaded = results.oldestTimestamp
                 vueData.results = vueData.results.concat(results.results)
                 vueData.loading = false
-                if ($(document).height() <= $(window).height() && !vueData.allResultsLoaded) {
+                if ($(document).height() <= $(window).height()) {
                     vueData.fetchResults()
                 }
             }, 'json').fail(function() {
                 vueData.allResultsLoaded = true
+                this.loading = false
             })
         }
     }
@@ -155,7 +159,7 @@ Vue.component('user-result', {
 
 Vue.component('community-result', {
   props: ['result'],
-  template: `<search-result v-bind:image="result.imageEnabled ? result.image : '/images/cake.svg'">
+  template: `<search-result v-bind:image="result.imageEnabled ? '/images/communities/' + result.image : '/images/communities/cake.svg'">
               <template v-slot:typeLabel>
                 <i class="fas fa-leaf"></i> Community
               </template>
