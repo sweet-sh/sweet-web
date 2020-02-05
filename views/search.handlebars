@@ -1,75 +1,180 @@
+{{{{vueTemplate}}}}
 <div id="homeBody" class="row justify-content-center">
-  <div class="col-lg-8">
-    <h3 id="searchTitle" class="page-header mx-2">{{#if query}}{{#eq query ""}}Search{{else}}Search: {{query}}{{/eq}}{{else}}Search{{/if}}</h3>
-      <form id="searchForm">
-        <input id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags."/>
-        <button type="submit" class="button">Search</button>
-      </form>
-		<div class="compact-container" id="resultsContainer"></div>
-    <div class="page-load-status">
-      <div class="loader-ellips infinite-scroll-request">
-        <span class="loader-ellips__dot"></span>
-        <span class="loader-ellips__dot"></span>
-        <span class="loader-ellips__dot"></span>
-        <span class="loader-ellips__dot"></span>
-      </div>
-      <p class="infinite-scroll-last">No more results.</p>
-      <p class="infinite-scroll-error">No more results.</p>
+    <div class="col-lg-8">
+        <h3 id="searchTitle" class="page-header mx-2">{{query ? query : "Search"}}</h3>
+        <form id="searchForm">
+            <input v-model="searchBox" id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags." />
+            <button v-on:click.prevent="searchSubmit" class="button">Search</button>
+        </form>
+        <div v-if="firstPageFetched" class="compact-container" id="resultsContainer">
+            <template v-for="result in results">
+                <div class="content-box">
+                    <div class="row">
+                        <tag-result v-bind:result="result" v-if="result.type=='tag'"></tag-result>
+                        <user-result v-bind:result="result" v-else-if="result.type=='user'"></user-result>
+                        <community-result v-bind:result="result" v-else-if="result.type=='community'"></community-result>
+                    </div>
+                </div>
+            </template>
+        </div>
+        <div class="page-load-status">
+            <div v-if="loading && query && !allResultsLoaded" class="loader-ellips infinite-scroll-request">
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+            </div>
+            <p v-if="allResultsLoaded && firstPageFetched">No more results.</p>
+            <p v-else-if="allResultsLoaded && !firstPageFetched">No results found, sorry.</p>
+        </div>
     </div>
-  </div>
 </div>
 
+{{{{/vueTemplate}}}}
+
+<script src="https://unpkg.com/vue"></script>
 <script>
-$(function(){
-  $('#resultsContainer').on('load.infiniteScroll', function (event, response, path) {
-      var newlyLoadedStuff = $(response);
-      needPostsOlderThan = newlyLoadedStuff.find('.oldesttimestamp').html(); //the new oldest-result-loaded timestamp is provided by the server in this element
-  })
+const vm = new Vue({
+    el: "#homeBody",
 
-  $('#resultsContainer').infiniteScroll({
-    path: function() {
-      return '/showsearch/{{query}}/' + needPostsOlderThan;
+    data: {
+        loading: true,
+        query: '{{query}}',
+        searchBox: '{{query}}',
+        oldestResultLoaded: new Date().getTime(),
+        results: [],
+        allResultsLoaded: false
     },
-    append: '.content-box',
-    prefill: true,
-    history: true,
-    status: '.page-load-status'
-  });
 
-  $('#searchForm').submit(function (e) {
-    e.preventDefault();
-    //-------------------------------------//
-    $('#resultsContainer').infiniteScroll('destroy');
-    $('#resultsContainer').html('');
-    $('#searchTitle').text($('#searchQuery').val().trim() != '' ? $('#searchQuery').val() : 'Search');
-    historyData = {
-      url: '/showsearch/' + $('#searchQuery').val(),
-      title: $('#searchQuery').val().trim() != '' ? $('#searchQuery').val() : 'Search'
+    computed: {
+        firstPageFetched: function() {
+            return this.results.length > 0;
+        }
+    },
+
+    created: function() {
+        if (this.query !== '') {
+            this.fetchResults()
+        }
+        var vueData = this
+        history.replaceState({ query: this.query }, this.query, "/search/" + this.query)
+        window.onpopstate = function(event) {
+            console.log(event)
+            vueData.query = event.state.query
+            vueData.searchBox = event.state.query
+            vueData.newQuery()
+        }
+        $(window).scroll(function() {
+            const w = $(window)
+            if ($(document).height() - (w.scrollTop() + w.height()) < 400 && !vueData.allResultsLoaded) {
+                vueData.fetchResults()
+            }
+        })
+    },
+
+    methods: {
+        searchSubmit: function() {
+            this.query = this.searchBox
+            history.pushState({ query: this.query }, this.query, "/search/" + this.query)
+            this.newQuery()
+        },
+        newQuery: function() {
+            this.oldestResultLoaded = new Date().getTime()
+            this.allResultsLoaded = false
+            this.loading = true
+            this.results = []
+            this.fetchResults()
+        },
+        fetchResults: function() {
+            var vueData = this
+            $.get('/showsearch/' + this.query + '/' + this.oldestResultLoaded, null, function(results) {
+                vueData.oldestResultLoaded = results.oldestTimestamp
+                vueData.results = vueData.results.concat(results.results)
+                vueData.loading = false
+                if ($(document).height() <= $(window).height() && !vueData.allResultsLoaded) {
+                    vueData.fetchResults()
+                }
+            }, 'json').fail(function() {
+                vueData.allResultsLoaded = true
+            })
+        }
     }
-    history.pushState(historyData, 'sweet', '/search/' + $('#searchQuery').val());
-    $('#resultsContainer').infiniteScroll({
-      path: function() {
-        return '/showsearch/' + $('#searchQuery').val() + '/' + needPostsOlderThan;
-      },
-      append: '.content-box',
-      prefill: true,
-      history: true
-    });
-    return false;
-  });
-
-  window.onpopstate = function(history) {
-    $('#resultsContainer').infiniteScroll('destroy');
-    $('#resultsContainer').html('');
-    $('#searchTitle').text(history.state.title);
-    $('#resultsContainer').infiniteScroll({
-      path: function() {
-        return history.state.url + '/' + needPostsOlderThan;
-      },
-      append: '.content-box',
-      prefill: true,
-      history: true
-    });
-  };
 })
+
+{{{{vueTemplate}}}}
+
+Vue.component('search-result', {
+props: ['image'],
+template: `<div class="col commentContent">
+          <p class="text-muted"><slot name="typeLabel"></slot</p>
+          <p class="mb-2" style="font-size:1.3em">
+              <img class="postAuthorImage" v-bind:src="image" />
+              <slot name="title"></slot>
+          </p>
+            <slot name="description"></slot>
+        </div>`})
+
+Vue.component('tag-result', {
+props: ['result'],
+template: `<search-result image="/images/biscuit.svg">
+
+            <template v-slot:typeLabel>
+              <i class="fas fa-hashtag"></i> Tag
+            </template>
+
+            <template v-slot:title>
+              <strong><a class="authorLink" v-bind:href="'/tag/'+result.name">#{{ result.name }}</a></strong>
+            </template>
+
+            <template v-slot:description>
+              <p>{{result.posts}} post{{(result.posts === 1 ? '' : 's')}}</p>
+            </template>
+
+          </search-result>`})
+
+Vue.component('user-result', {
+  props: ['result'],
+  template:`<search-result v-bind:image="result.imageEnabled ? '/images/' + result.image : '/images/cake.svg'">
+
+            <template v-slot:typeLabel>
+              <i class="fas fa-user"></i> User
+            </template>
+
+            <template v-if="result.displayName" v-slot:title>
+              <strong><a class="authorLink" v-bind:href="'/' + result.username">{{result.displayName}}</a></strong> &middot; <span class="text-muted">@{{result.username}}</span>
+            </template>
+            <template v-else v-slot:title>
+              <strong><a class="authorLink" v-bind:href="'/' + result.username">@{{result.username}}</a></strong>
+            </template>
+
+            <template v-slot:description>
+              <p v-html="result.aboutParsed"></p>
+            </template>
+
+          </search-result>`})
+
+Vue.component('community-result', {
+  props: ['result'],
+  template: `<search-result v-bind:image="result.imageEnabled ? result.image : '/images/cake.svg'">
+              <template v-slot:typeLabel>
+                <i class="fas fa-leaf"></i> Community
+              </template>
+
+              <template v-slot:title>
+                <strong>
+                  <a class="authorLink" v-bind:href="'/community/' + result.slug">{{result.name}}</a> &middot;
+                </strong>
+                <span class="text-muted">
+                  {{result.membersCount}} member{{(result.membersCount === 1 ? '' : 's')}}
+                </span>
+              </template>
+
+              <template v-slot:description>
+                <p v-html="result.descriptionParsed"></p>
+              </template>
+
+            </search-result>`})
+
+    {{{{/vueTemplate}}}}
+
 </script>
