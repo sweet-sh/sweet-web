@@ -38,8 +38,8 @@ const vm = new Vue({
     el: "#homeBody",
 
     data: {
-        loading: false,
-        query: '{{query}}',
+        loading: false, // only should be set in the fetchResults function that contains the beginning and end of the loading process
+        query: '{{query}}', // these are filled in by handlebars from the url if the query was initially entered somewhere other than this page
         searchBox: '{{query}}',
         oldestResultLoaded: new Date().getTime(),
         results: [],
@@ -51,7 +51,9 @@ const vm = new Vue({
             return this.results.length > 0;
         }
     },
-
+    
+    // makes the initial request for results if we have a query from the url initially; uses the history api to change the query without reloading the page
+    // every time a new search is made; sets up a listener that requests more results if the user scrolls down far enough
     created: function() {
         if (this.query !== '') {
             this.fetchResults()
@@ -73,34 +75,36 @@ const vm = new Vue({
     },
 
     methods: {
-        searchSubmit: function() {
-            this.query = this.searchBox
-            history.pushState({ query: this.query }, this.query, "/search/" + this.query)
-            this.newQuery()
-        },
-        newQuery: function() {
-            this.oldestResultLoaded = new Date().getTime()
-            this.allResultsLoaded = false
-            this.results = []
-            this.fetchResults()
-        },
-        fetchResults: function() {
-            if(this.allResultsLoaded || this.loading){
-              return
-            }
-            this.loading = true
-            var vueData = this
-            $.get('/showsearch/' + this.query + '/' + this.oldestResultLoaded, null, function(results) {
-                vueData.oldestResultLoaded = results.oldestTimestamp
-                vueData.results = vueData.results.concat(results.results)
-                vueData.loading = false
-                if ($(document).height() <= $(window).height()) {
-                    vueData.fetchResults()
-                }
-            }, 'json').fail(function() {
-                vueData.allResultsLoaded = true
-                this.loading = false
-            })
+      // called directly by the event listener
+      searchSubmit: function() {
+          this.query = this.searchBox
+          history.pushState({ query: this.query }, this.query, "/search/" + this.query)
+          this.newQuery()
+      },
+      newQuery: function() {
+          this.oldestResultLoaded = new Date().getTime()
+          this.allResultsLoaded = false
+          this.results = []
+          this.fetchResults()
+      },
+      fetchResults: function() {
+          if(this.allResultsLoaded || this.loading){
+            return
+          }
+          this.loading = true
+          var vueData = this
+          $.get('/showsearch/' + this.query + '/' + this.oldestResultLoaded, null, function(results) {
+              vueData.oldestResultLoaded = results.oldestTimestamp
+              vueData.results = vueData.results.concat(results.results)
+              vueData.loading = false
+              // if the page isn't filled up yet, load more
+              if ($(document).height() <= $(window).height()) {
+                  vueData.fetchResults()
+              }
+          }, 'json').fail(function() {
+              vueData.allResultsLoaded = true
+              vueData.loading = false
+          })
         }
     }
 })
