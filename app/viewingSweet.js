@@ -459,8 +459,12 @@ module.exports = function (app) {
               }, { lastUpdated: 1, name: 1, descriptionParsed: 1, membersCount: 1, image: 1, slug: 1, imageEnabled: 1 })
                 .sort('-lastUpdated')
                 .limit(resultsPerPage)
-                .then(communityResults => {
-                  userResults = userResults.map(u => { return { ...u.toObject(), ...{ type: 'user' } } })
+                .then(async communityResults => {
+                  const flaggedByMe = (await Relationship.find({ fromUser: req.user._id, value: 'flag' }, { toUser: 1 })).map(v => v.toUser)
+                  const myTrustedUsers = (await Relationship.find({ fromUser: req.user._id, value: 'trust' }, { toUser: 1 })).map(v => v.toUser)
+                  const flaggedByTrusted = (await Relationship.find({ from: { $in: myTrustedUsers }, value: 'flag' }, { toUser: 1 })).map(v => v.toUser)
+                  const allFlaggedUsers = new Set((flaggedByMe.concat(flaggedByTrusted)).map(v => v.toString()))
+                  userResults = userResults.map(u => { return { ...u.toObject(), ...{ type: 'user', flagged: allFlaggedUsers.has(u._id.toString()) } } })
                   communityResults = communityResults.map(c => { return { ...c.toObject(), ...{ type: 'community' } } })
                   tagResults = tagResults.map(t => { return { ...t.toObject(), ...{ type: 'tag', posts: t.posts.length } } })
                   const combinedResults = (userResults.concat(communityResults, tagResults))
@@ -469,8 +473,8 @@ module.exports = function (app) {
                   } else {
                     const results = (combinedResults.sort((a, b) => b.lastUpdated - a.lastUpdated)).slice(0, resultsPerPage)
                     const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
-                    //TODO: remove this for production
-                    setTimeout(()=>{res.json({ results, oldestTimestamp })}, 1500)
+                    // TODO: remove this for production
+                    setTimeout(() => { res.json({ results, oldestTimestamp }) }, 1500)
                   }
                 })
             })
