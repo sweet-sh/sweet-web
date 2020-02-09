@@ -1,7 +1,7 @@
 <template>
     <div id="homeBody" class="row justify-content-center">
         <div class="col-lg-8">
-            <h3 id="searchTitle" class="page-header mx-2" v-cloak>{{query ? query : "Search"}}</h3>
+            <h3 id="searchTitle" class="page-header mx-2" v-cloak>{{query ? "Search: " + query : "Search"}}</h3>
             <form id="searchForm">
                 <input v-model="searchBox" id="searchQuery" style="flex:1" type="text" class="form-control mr-2" placeholder="Search for users, communities, and tags." />
                 <button v-on:click.prevent="searchSubmit" class="button">Search</button>
@@ -29,6 +29,7 @@ import infiniteLoader from './infinite-loader-mixin.js'
 const path = window.location.pathname
 const initialQuery = path[path.length-1] == '/' ? '' : path.split('/')[2]
 export default {
+  
     components: {
       loadingSpinner
     },
@@ -46,13 +47,12 @@ export default {
         if (this.query !== '') {
             this.startLoading('/showsearch/'+this.query+'/')
         }
-        var vueData = this
         history.replaceState({ query: this.query }, this.query, "/search/" + this.query)
-        window.onpopstate = function(event) {
+        window.onpopstate = (event) => {
             console.log(event)
-            vueData.query = event.state.query
-            vueData.searchBox = event.state.query
-            this.startLoading('/search' + event.state.query + '/')
+            this.query = event.state.query
+            this.searchBox = event.state.query
+            this.startLoading('/showsearch/' + event.state.query + '/')
         }
     },
 
@@ -61,7 +61,7 @@ export default {
       searchSubmit: function() {
           this.query = this.searchBox
           history.pushState({ query: this.query }, this.query, "/search/" + this.query)
-          this.startLoading("/search/" + this.query + '/')
+          this.startLoading("/showsearch/" + this.query + '/')
       }          
     }
 }

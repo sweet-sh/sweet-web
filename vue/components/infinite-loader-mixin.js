@@ -5,7 +5,13 @@ export default {
       oldestResultLoaded: new Date().getTime(),
       results: [],
       allResultsLoaded: false,
-      baseURL: ''
+      baseURL: '',
+      listener: () => {
+        const w = $(window)
+        if ($(document).height() - (w.scrollTop() + w.height()) < 400) {
+          this.fetchResults()
+        }
+      }
     }
   },
   computed: {
@@ -13,19 +19,17 @@ export default {
       return this.results.length > 0
     }
   },
+  destroyed: function () {
+    window.removeEventListener('scroll', this.listener)
+  },
   methods: {
     startLoading: function (baseURL) {
-      console.log('started loading w', baseURL)
+      this.loading = false
       this.baseURL = baseURL
       this.oldestResultLoaded = new Date().getTime()
       this.allResultsLoaded = false
       this.results = []
-      window.addEventListener('scroll', () => {
-        const w = $(window)
-        if ($(document).height() - (w.scrollTop() + w.height()) < 400) {
-          this.fetchResults()
-        }
-      })
+      window.addEventListener('scroll', this.listener)
       this.fetchResults()
     },
     fetchResults: function () {
@@ -34,7 +38,15 @@ export default {
       }
       this.loading = true
       var vueData = this
-      $.get(this.baseURL + this.oldestResultLoaded, null, function (results) {
+      const thisReqsBaseURL = this.baseURL
+      $.get(thisReqsBaseURL + this.oldestResultLoaded, null, function (results) {
+        if (!results.oldestTimestamp) {
+          console.error('oldestTimestamp not present in items loaded by infinite-loader')
+        }
+        if (vueData.baseURL !== thisReqsBaseURL) {
+          console.log('old results rejected')
+          return // this means that the query has changed since the request was made
+        }
         vueData.oldestResultLoaded = results.oldestTimestamp
         vueData.results = vueData.results.concat(results.results)
         vueData.loading = false
