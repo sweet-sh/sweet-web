@@ -24,6 +24,7 @@
 
 <script>
 import loadingSpinner from './loading-spinner.vue'
+import infiniteLoader from './infinite-loader-mixin.js'
 //TODO: replace with proper routing, someday
 const path = window.location.pathname
 const initialQuery = path[path.length-1] == '/' ? '' : path.split('/')[2]
@@ -31,27 +32,19 @@ export default {
     components: {
       loadingSpinner
     },
-    
+
+    mixins: [infiniteLoader],
+
     data: function () { return {
-        loading: false, // only should be set in the fetchResults function that contains the beginning and end of the loading process
         query: initialQuery,
-        searchBox: initialQuery,
-        oldestResultLoaded: new Date().getTime(),
-        results: [],
-        allResultsLoaded: false
+        searchBox: initialQuery
     } },
 
-    computed: {
-        firstPageFetched: function() {
-            return this.results.length > 0;
-        }
-    },
-    
     // makes the initial request for results if we have a query from the url initially; uses the history api to change the query without reloading the page
-    // every time a new search is made; sets up a listener that requests more results if the user scrolls down far enough
+    // every time a new search is made
     created: function() {
         if (this.query !== '') {
-            this.fetchResults()
+            this.startLoading('/showsearch/'+this.query+'/')
         }
         var vueData = this
         history.replaceState({ query: this.query }, this.query, "/search/" + this.query)
@@ -59,14 +52,8 @@ export default {
             console.log(event)
             vueData.query = event.state.query
             vueData.searchBox = event.state.query
-            vueData.newQuery()
+            this.startLoading('/search' + event.state.query + '/')
         }
-        $(window).scroll(function() {
-            const w = $(window)
-            if ($(document).height() - (w.scrollTop() + w.height()) < 400 && !vueData.allResultsLoaded && !vueData.loading) {
-                vueData.fetchResults()
-            }
-        })
     },
 
     methods: {
@@ -74,33 +61,8 @@ export default {
       searchSubmit: function() {
           this.query = this.searchBox
           history.pushState({ query: this.query }, this.query, "/search/" + this.query)
-          this.newQuery()
-      },
-      newQuery: function() {
-          this.oldestResultLoaded = new Date().getTime()
-          this.allResultsLoaded = false
-          this.results = []
-          this.fetchResults()
-      },
-      fetchResults: function() {
-          if(this.allResultsLoaded || this.loading){
-            return
-          }
-          this.loading = true
-          var vueData = this
-          $.get('/showsearch/' + this.query + '/' + this.oldestResultLoaded, null, function(results) {
-              vueData.oldestResultLoaded = results.oldestTimestamp
-              vueData.results = vueData.results.concat(results.results)
-              vueData.loading = false
-              // if the page isn't filled up yet, load more
-              if ($(document).height() <= $(window).height()) {
-                  vueData.fetchResults()
-              }
-          }, 'json').fail(function() { // recieving a 404 response from the server is currently how we find out we're out of results; this should be changed to be less ambiguous
-              vueData.allResultsLoaded = true
-              vueData.loading = false
-          })
-        }
+          this.startLoading("/search/" + this.query + '/')
+      }          
     }
 }
 
