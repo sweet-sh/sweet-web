@@ -9,6 +9,37 @@ const hbs = require('./app/pageRenderer')
 app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
 
+const webpack = require('webpack')
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const compiler = webpack({
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  entry: {
+    search: './vue/search.js'
+  },
+  output: {
+    filename: './public/js/vue/[name].js',
+    path: __dirname
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [new VueLoaderPlugin()]
+})
+
+compiler.watch({
+  aggregateTimeout: 300,
+  ignored: /node_modules/,
+  poll: 1000
+}, (err, stats) => {
+  err && console.error(err)
+  stats.compilation.errors.length && console.error(...stats.compilation.errors)
+})
+
 const compression = require('compression')
 app.use(compression())
 
