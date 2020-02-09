@@ -17,26 +17,22 @@
                     </div>
                 </template>
             </div>
-            <div class="page-load-status">
-                <div v-if="loading && query && !allResultsLoaded" class="loader-ellips infinite-scroll-request">
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                </div>
-                <p v-if="allResultsLoaded && firstPageFetched">No more results.</p>
-                <p v-else-if="allResultsLoaded && !firstPageFetched">No results found, sorry.</p>
-            </div>
+            <loadingSpinner v-bind:loading="loading" v-bind:message="loading ? '' : (firstPageFetched ? 'No more results.' : 'No results found, sorry.')" />
         </div>
     </div>
 </template>
 
 <script>
+import loadingSpinner from './loading-spinner.vue'
 //TODO: replace with proper routing, someday
 const path = window.location.pathname
 const initialQuery = path[path.length-1] == '/' ? '' : path.split('/')[2]
-module.exports = {
-    data: function() { return {
+export default {
+    components: {
+      loadingSpinner
+    },
+    
+    data: function () { return {
         loading: false, // only should be set in the fetchResults function that contains the beginning and end of the loading process
         query: initialQuery,
         searchBox: initialQuery,
