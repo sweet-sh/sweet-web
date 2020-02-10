@@ -14,7 +14,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const compiler = webpack({
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: {
-    search: './vue/search.js'
+    search: './vue/searchPageEntry.js'
   },
   output: {
     filename: './public/js/vue/[name].js',
@@ -31,13 +31,22 @@ const compiler = webpack({
   plugins: [new VueLoaderPlugin()]
 })
 
+let lastCompilationHadError = false
 compiler.watch({
   aggregateTimeout: 300,
   ignored: /node_modules/,
   poll: 1000
 }, (err, stats) => {
-  err && console.error(err)
-  stats.compilation.errors.length && console.error(...stats.compilation.errors)
+  if (err) {
+    console.error(err)
+    lastCompilationHadError = true
+  } else if (stats.compilation.errors.length) {
+    console.error(...stats.compilation.errors)
+    lastCompilationHadError = true
+  } else if (lastCompilationHadError) {
+    console.log('no errors now 👍')
+    lastCompilationHadError = false
+  }
 })
 
 const compression = require('compression')
