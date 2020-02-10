@@ -6,11 +6,11 @@
         </template>
 
         <template v-slot:title>
-            <strong><a class="authorLink" v-bind:href="'/tag/'+result.name">#{{ result.name }}</a></strong>
+            <strong><a class="authorLink" v-bind:href="'/tag/'+name">#{{ name }}</a></strong>
         </template>
 
         <template v-slot:description>
-            <p>{{result.posts}} post{{(result.posts === 1 ? '' : 's')}}</p>
+            <p>{{posts}} post{{(posts === 1 ? '' : 's')}}</p>
         </template>
 
     </searchResult>
@@ -20,6 +20,15 @@
 import searchResult from './searchResultOutline.vue'
 export default {
     components: {searchResult},
-    props: ['result']
+    props: {
+        name: {
+            type: String,
+            required: true
+        },
+        posts: {
+            type: Number,
+            required: true
+        }
+    }
 }
 </script>

@@ -10,9 +10,9 @@
                 <template v-for="result in results">
                     <div v-bind:key="result._id" class="content-box">
                         <div class="row">
-                            <tagResult v-bind:result="result" v-if="result.type=='tag'"></tagResult>
-                            <userResult v-bind:result="result" v-else-if="result.type=='user'"></userResult>
-                            <communityResult v-bind:result="result" v-else-if="result.type=='community'"></communityResult>
+                            <tagResult v-bind="result" v-if="result.type=='tag'"></tagResult>
+                            <userResult v-bind="result" v-else-if="result.type=='user'"></userResult>
+                            <communityResult v-bind="result" v-else-if="result.type=='community'"></communityResult>
                         </div>
                     </div>
                 </template>
