@@ -52,7 +52,7 @@ export default {
             console.log(event)
             this.query = event.state.query
             this.searchBox = event.state.query
-            this.startLoading('/showsearch/' + event.state.query + '/')
+            this.startLoading('/showsearch/' + event.state.query + '/', true)
         }
     },
 
@@ -61,8 +61,8 @@ export default {
       searchSubmit: function() {
           this.query = this.searchBox
           history.pushState({ query: this.query }, this.query, "/search/" + this.query)
-          this.startLoading("/showsearch/" + this.query + '/')
-      }          
+          this.startLoading("/showsearch/" + this.query + '/', false)
+      }
     }
 }
 

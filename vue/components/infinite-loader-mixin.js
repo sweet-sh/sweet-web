@@ -1,3 +1,9 @@
+const scrollThreshold = 400
+function needMoreResults () {
+  const w = $(window)
+  const d = $(document)
+  return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || w.height() < d.height()
+}
 export default {
   data: function () {
     return {
@@ -7,11 +13,11 @@ export default {
       allResultsLoaded: false,
       baseURL: '',
       listener: () => {
-        const w = $(window)
-        if ($(document).height() - (w.scrollTop() + w.height()) < 400) {
+        if (needMoreResults()) {
           this.fetchResults()
         }
-      }
+      },
+      resultsHistory: {}
     }
   },
   computed: {
@@ -23,14 +29,20 @@ export default {
     window.removeEventListener('scroll', this.listener)
   },
   methods: {
-    startLoading: function (baseURL) {
+    startLoading: function (baseURL, useHistory = true) {
       this.loading = false
       this.baseURL = baseURL
       this.oldestResultLoaded = new Date().getTime()
       this.allResultsLoaded = false
       this.results = []
       window.addEventListener('scroll', this.listener)
-      this.fetchResults()
+      if (useHistory && this.resultsHistory[baseURL]) {
+        this.oldestResultLoaded = this.resultsHistory[baseURL].oldestResultLoaded
+        this.results = this.resultsHistory[baseURL].results
+      }
+      if (needMoreResults()) {
+        this.fetchResults()
+      }
     },
     fetchResults: function () {
       if (this.allResultsLoaded || this.loading) {
@@ -43,6 +55,9 @@ export default {
         if (!results.oldestTimestamp) {
           console.error('oldestTimestamp not present in items loaded by infinite-loader')
         }
+        !vueData.resultsHistory[thisReqsBaseURL] && (vueData.resultsHistory[thisReqsBaseURL] = {})
+        vueData.resultsHistory[thisReqsBaseURL].oldestResultLoaded = results.oldestTimestamp
+        vueData.resultsHistory[thisReqsBaseURL].results = vueData.results.concat(results.results)
         if (vueData.baseURL !== thisReqsBaseURL) {
           console.log('old results rejected')
           return // this means that the query has changed since the request was made
@@ -51,7 +66,7 @@ export default {
         vueData.results = vueData.results.concat(results.results)
         vueData.loading = false
         // if the page isn't filled up yet, load more
-        if ($(document).height() <= $(window).height()) {
+        if (needMoreResults()) {
           vueData.fetchResults()
         }
       }, 'json').fail(function () { // recieving a 404 response from the server is currently how we find out we're out of results; this should be changed to be less ambiguous
