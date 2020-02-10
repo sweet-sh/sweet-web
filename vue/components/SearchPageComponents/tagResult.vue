@@ -19,6 +19,7 @@
 <script>
 import searchResult from './searchResultOutline.vue'
 export default {
+    components: {searchResult},
     props: ['result']
 }
 </script>

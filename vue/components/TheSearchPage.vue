@@ -10,14 +10,14 @@
                 <template v-for="result in results">
                     <div v-bind:key="result._id" class="content-box">
                         <div class="row">
-                            <tag-result v-bind:result="result" v-if="result.type=='tag'"></tag-result>
-                            <user-result v-bind:result="result" v-else-if="result.type=='user'"></user-result>
-                            <community-result v-bind:result="result" v-else-if="result.type=='community'"></community-result>
+                            <tagResult v-bind:result="result" v-if="result.type=='tag'"></tagResult>
+                            <userResult v-bind:result="result" v-else-if="result.type=='user'"></userResult>
+                            <communityResult v-bind:result="result" v-else-if="result.type=='community'"></communityResult>
                         </div>
                     </div>
                 </template>
             </div>
-            <loadingSpinner v-bind:loading="loading" v-bind:message="loading ? '' : (firstPageFetched ? 'No more results.' : 'No results found, sorry.')" />
+            <loadingSpinner v-if="loading || allResultsLoaded" v-bind:loading="loading" v-bind:message="loading ? '' : (firstPageFetched ? 'No more results.' : 'No results found, sorry.')" />
         </div>
     </div>
 </template>
@@ -29,12 +29,12 @@ import tagResult from './SearchPageComponents/tagResult.vue'
 import userResult from './SearchPageComponents/userResult.vue'
 import communityResult from './SearchPageComponents/communityResult.vue'
 //TODO: replace with proper routing, someday
-const path = window.location.pathname
-const initialQuery = path[path.length-1] == '/' ? '' : path.split('/')[2]
+const path = window.location.pathname.split('/')
+const initialQuery = path[2] || ''
 export default {
   
     components: {
-      loadingSpinner
+      loadingSpinner, tagResult, userResult, communityResult
     },
 
     mixins: [infiniteLoader],
