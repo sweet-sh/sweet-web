@@ -4,6 +4,11 @@ function needMoreResults () {
   const d = $(document)
   return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || w.height() < d.height()
 }
+
+// infinite-loader-mixin: add to your component, call startLoading(string baseURL, boolean useHistory) to (re)start it as many times as you want, and access
+// the results through the results array and access the loading state, if you want to display it, through loading (boolean) and allResultsLoaded (boolean).
+// overwrite the getNextRequestURL(string baseURL) method to use non-oldest-result-loaded-timestamp-based pagination methods.
+// Accessing or modifying the state through any other means is done completely at your own risk.
 export default {
   data: function () {
     return {
@@ -12,12 +17,14 @@ export default {
       results: [],
       allResultsLoaded: false,
       baseURL: '',
+      // this is implemented as an arrow function so `this` refers to the current component and so there will be a new instance of the function generated
+      // once per component, so this can be attached as an event listener once per component (js won't attach the same instance of the function twice)
       listener: () => {
         if (needMoreResults()) {
           this.fetchResults()
         }
       },
-      resultsHistory: {}
+      resultsHistory: {} // caches fetched results. uses format: { '/example/base/url/': { oldestDateLoaded: timestamp, results: [] } }
     }
   },
   computed: {
@@ -29,6 +36,9 @@ export default {
     window.removeEventListener('scroll', this.listener)
   },
   methods: {
+    getNextRequestURL: function (baseURL) {
+      return baseURL + this.oldestResultLoaded
+    },
     startLoading: function (baseURL, useHistory = true) {
       this.loading = false
       this.baseURL = baseURL
@@ -51,11 +61,13 @@ export default {
       this.loading = true
       var vueData = this
       const thisReqsBaseURL = this.baseURL
-      $.get(thisReqsBaseURL + this.oldestResultLoaded, null, function (results) {
+      $.get(this.getNextRequestURL(thisReqsBaseURL), null, function (results) {
         if (!results.oldestTimestamp) {
           console.error('oldestTimestamp not present in items loaded by infinite-loader')
         }
-        !vueData.resultsHistory[thisReqsBaseURL] && (vueData.resultsHistory[thisReqsBaseURL] = {})
+        if (!vueData.resultsHistory[thisReqsBaseURL]) {
+          vueData.resultsHistory[thisReqsBaseURL] = {}
+        }
         vueData.resultsHistory[thisReqsBaseURL].oldestResultLoaded = results.oldestTimestamp
         vueData.resultsHistory[thisReqsBaseURL].results = vueData.results.concat(results.results)
         if (vueData.baseURL !== thisReqsBaseURL) {
