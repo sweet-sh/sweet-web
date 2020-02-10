@@ -39,14 +39,14 @@ export default {
     getNextRequestURL: function (baseURL) {
       return baseURL + this.oldestResultLoaded
     },
-    startLoading: function (baseURL, useHistory = true) {
+    startLoading: function (baseURL, useCachedResults = true) {
       this.loading = false
       this.baseURL = baseURL
       this.oldestResultLoaded = new Date().getTime()
       this.allResultsLoaded = false
       this.results = []
       window.addEventListener('scroll', this.listener)
-      if (useHistory && this.resultsHistory[baseURL]) {
+      if (useCachedResults && this.resultsHistory[baseURL]) {
         this.oldestResultLoaded = this.resultsHistory[baseURL].oldestResultLoaded
         this.results = this.resultsHistory[baseURL].results
       }
@@ -72,7 +72,7 @@ export default {
         vueData.resultsHistory[thisReqsBaseURL].results = vueData.results.concat(results.results)
         if (vueData.baseURL !== thisReqsBaseURL) {
           console.log('old results rejected')
-          return // this means that the query has changed since the request was made
+          return // this means that the currently active query has changed since the request was made
         }
         vueData.oldestResultLoaded = results.oldestTimestamp
         vueData.results = vueData.results.concat(results.results)
