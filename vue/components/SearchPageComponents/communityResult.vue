@@ -43,6 +43,10 @@ export default {
         descriptionParsed: {
             type: String,
             required: true
+        },
+        slug: {
+            type: String,
+            required: true
         }
     }
 }

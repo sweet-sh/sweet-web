@@ -44,7 +44,7 @@ compiler.watch({
     console.error(...stats.compilation.errors)
     lastCompilationHadError = true
   } else if (lastCompilationHadError) {
-    console.log('no errors now 👍')
+    console.log('no webpack compilation errors now 👍')
     lastCompilationHadError = false
   }
 })
