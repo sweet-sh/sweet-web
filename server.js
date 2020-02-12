@@ -28,26 +28,40 @@ const compiler = webpack({
       }
     ]
   },
+  resolve: {
+    alias: {
+      vue: process.env.NODE_ENV === 'production' ? 'vue/dist/vue.min.js' : 'vue/dist/vue.js'
+    }
+  },
   plugins: [new VueLoaderPlugin()]
 })
 
-let lastCompilationHadError = false
-compiler.watch({
-  aggregateTimeout: 300,
-  ignored: /node_modules/,
-  poll: 1000
-}, (err, stats) => {
-  if (err) {
-    console.error(err)
-    lastCompilationHadError = true
-  } else if (stats.compilation.errors.length) {
-    console.error(...stats.compilation.errors)
-    lastCompilationHadError = true
-  } else if (lastCompilationHadError) {
-    console.log('no webpack compilation errors now 👍')
-    lastCompilationHadError = false
-  }
-})
+if (process.env.NODE_ENV !== 'production') {
+  let lastCompilationHadError = false
+  compiler.watch({
+    aggregateTimeout: 300,
+    ignored: /node_modules/,
+    poll: 1000
+  }, (err, stats) => {
+    if (err) {
+      console.error(err)
+      lastCompilationHadError = true
+    } else if (stats.compilation.errors.length) {
+      console.error(...stats.compilation.errors)
+      lastCompilationHadError = true
+    } else if (lastCompilationHadError) {
+      console.log('no webpack compilation errors now 👍')
+      lastCompilationHadError = false
+    }
+  })
+} else {
+  compiler.run((err, stats) => {
+    if (err || stats.compilation.errors.length) {
+      console.error('webpack failed to compile!')
+      console.error(err, ...stats.compilation.errors)
+    }
+  })
+}
 
 const compression = require('compression')
 app.use(compression())
