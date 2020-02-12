@@ -1,5 +1,8 @@
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
+
 // define the schema for our user model
-var communitySchema = new mongoose.Schema({
+const communitySchema = new mongoose.Schema({
   created: Date,
   lastUpdated: Date,
   name: String,
@@ -30,38 +33,37 @@ var communitySchema = new mongoose.Schema({
   membershipRequests: [{ type: DBReference, ref: 'User' }],
   posts: [{ type: DBReference, ref: 'Post' }],
   votes: [{ type: DBReference, ref: 'Vote' }]
-});
+})
 
 communitySchema.pre('validate', function (next) {
-  if (!this.votingMembersCount)
-    this.votingMembersCount = this.members.length;
+  if (!this.votingMembersCount) { this.votingMembersCount = this.members.length }
   this.membersCount = this.members.length
   this.requestsCount = this.membershipRequests.length
   this.mutedMembersCount = this.mutedMembers.length
-  membersIds = this.members.map(String)
-  mutedMembersIds = this.mutedMembers.map(String)
-  mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
-  votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
-  this.votingMembersCount = votingMembers;
+  const membersIds = this.members.map(String)
+  const mutedMembersIds = this.mutedMembers.map(String)
+  const mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
+  const votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
+  this.votingMembersCount = votingMembers
   if (this.membersCount === 0) {
-    this.settings.joinType = "open";
-    this.membershipRequests = [];
-    this.requestsCount = 0;
+    this.settings.joinType = 'open'
+    this.membershipRequests = []
+    this.requestsCount = 0
   }
-  next();
-});
+  next()
+})
 
-communitySchema.index({slug:1});
+communitySchema.index({ slug: 1 })
 
-var communityPlaceholderSchema = new mongoose.Schema({
+const communityPlaceholderSchema = new mongoose.Schema({
   name: String,
   slug: String,
   community: { type: DBReference, ref: 'Community' },
   vote: { type: DBReference, ref: 'Vote' }
 })
 
-//just retrieve this with mongoose.model('Community Placeholder') in the one place in which it is needed
-mongoose.model('Community Placeholder', communityPlaceholderSchema);
+// just retrieve this with mongoose.model('Community Placeholder') in the one place in which it is needed
+mongoose.model('Community Placeholder', communityPlaceholderSchema)
 
 // create the model for users and expose it to our app
-module.exports = mongoose.model('Community', communitySchema);
+module.exports = mongoose.model('Community', communitySchema)

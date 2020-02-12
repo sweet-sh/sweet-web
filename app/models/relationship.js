@@ -1,5 +1,8 @@
+const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
+
 // define the schema for our user model
-var relationshipSchema = new mongoose.Schema({
+const relationshipSchema = new mongoose.Schema({
   from: {
     type: String,
     required: true
@@ -11,16 +14,16 @@ var relationshipSchema = new mongoose.Schema({
   fromUser: { type: DBReference, ref: 'User' },
   toUser: { type: DBReference, ref: 'User' },
   value: {
-		type: String,
-		required: true //currently implemented possible values: follow, trust, flag, mute
-	},
+    type: String,
+    required: true // currently implemented possible values: follow, trust, flag, mute
+  },
   note: {
     type: String
   }
-});
+})
 
-relationshipSchema.index({fromUser:1,toUser:1})
-relationshipSchema.index({value:1});
+relationshipSchema.index({ fromUser: 1, toUser: 1 })
+relationshipSchema.index({ value: 1 })
 
 // create the model for users and expose it to our app
-module.exports = mongoose.model('Relationship', relationshipSchema);
+module.exports = mongoose.model('Relationship', relationshipSchema)
