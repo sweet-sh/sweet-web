@@ -1,6 +1,7 @@
 const Autolinker = require('autolinker')
 const sharp = require('sharp')
 const bcrypt = require('bcrypt-nodejs')
+const sanitizeHTML = require('sanitize-html')
 const Post = require('./models/post')
 const User = require('./models/user')
 const Relationship = require('./models/relationship')
@@ -208,9 +209,7 @@ module.exports = function (app, passport) {
         imageFilename = req.user._id + '.jpg'
       }
     }
-    User.findOne({
-      _id: req.user._id
-    })
+    User.findOne({ _id: req.user._id })
       .then((user) => {
         let parsedAbout = req.user.aboutParsed
         if (req.body.about !== req.user.aboutRaw) {
@@ -239,14 +238,14 @@ module.exports = function (app, passport) {
         user.aboutParsed = parsedAbout
         user.location = req.body.location.substring(0, 50)
         user.websiteRaw = req.body.website.substring(0, 50)
-        user.websiteParsed = Autolinker.link(helper.escapeHTMLChars(req.body.website.substring(0, 50)))
+        user.websiteParsed = sanitizeHTML(Autolinker.link(req.body.website.substring(0, 50)), { allowedTags: ['a'] })
         user.image = imageFilename
         user.imageEnabled = imageEnabled
         user.save().then(() => {
           res.redirect('back')
         })
           .catch((err) => {
-            console.log('Database error: ' + err)
+            console.log('Error updating user profile data: ' + err)
           })
       })
   })
