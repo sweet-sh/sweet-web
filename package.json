@@ -9,13 +9,17 @@
     "start": "nodemon server.js & npm run watch-sass",
     "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch",
     "lint": "eslint --fix",
-    "test": "jest"
+    "test": "vue-cli-service test:unit"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
   "jest": {
     "collectCoverage": true,
-    "collectCoverageFrom": ["**/vue/**"],
+    "collectCoverageFrom": [
+      "vue/**/*.{js,vue}",
+      "!**/node_modules/**",
+      "!**/public/**"
+    ],
     "moduleFileExtensions": [
       "js",
       "vue"
@@ -29,7 +33,9 @@
     ]
   },
   "babel": {
-    "presets": ["@babel/preset-env"]
+    "presets": [
+      "@babel/preset-env"
+    ]
   },
   "dependencies": {
     "@handlebars/allow-prototype-access": "^1.0.1",
@@ -75,7 +81,10 @@
     "webpack": "^4.41.5"
   },
   "devDependencies": {
+    "@babel/core": "^7.8.4",
     "@babel/preset-env": "^7.8.4",
+    "@vue/cli-plugin-unit-jest": "^4.2.2",
+    "@vue/cli-service": "^4.2.2",
     "@vue/test-utils": "^1.0.0-beta.31",
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "^25.1.0",
@@ -89,7 +98,7 @@
     "jest": "^25.1.0",
     "node-sass": "^4.12.0",
     "nodemon": "^1.19.1",
-    "vue-jest": "^3.0.5",
+    "vue-jest": "4.0.0-beta.2",
     "vue-loader": "^15.9.0"
   }
 }
