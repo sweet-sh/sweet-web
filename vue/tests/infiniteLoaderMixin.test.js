@@ -21,11 +21,14 @@ describe('infiniteLoaderMixin', () => {
     expect($.get).toBeCalled()
   })
 
-  test('does not request more results if already loading', () => {
+  test('does not request more results if already loading or if not needed according needMoreResults()', () => {
     $.get = jest.fn(() => null)
     const wrapper = mount(infiniteLoaderHost)
     wrapper.setData({ loading: true })
     wrapper.vm.fetchResults()
+    expect($.get).not.toBeCalled()
+    wrapper.setMethods({ needMoreResults: () => false })
+    wrapper.vm.startLoading('mock/mock/', false)
     expect($.get).not.toBeCalled()
   })
 
