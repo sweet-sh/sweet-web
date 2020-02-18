@@ -3,12 +3,14 @@ import searchResult from '../components/SearchPageComponents/searchResultOutline
 import tagResult from '../components/SearchPageComponents/tagResult'
 import userResult from '../components/SearchPageComponents/userResult'
 import communityResult from '../components/SearchPageComponents/communityResult'
-import loadingSpinner from '../components/SharedSubComponents/loadingSpinner'
 import { mount } from '@vue/test-utils'
 import $ from 'jquery'
 global.$ = global.jQuery = $
 
 describe('TheSearchPage', () => {
+  const startLoading = jest.fn()
+  const mountOptions = { methods: { startLoading } }
+
   test('pulls search query out of url', () => {
     window.history.pushState({}, 'sweet', '/search/dog')
     let wrapper = mount(searchPage)
@@ -23,8 +25,7 @@ describe('TheSearchPage', () => {
   })
 
   test('calls infinite scroll and pushes history state when search is submitted', () => {
-    const startLoading = jest.fn()
-    const wrapper = mount(searchPage, { methods: { startLoading } })
+    const wrapper = mount(searchPage, mountOptions)
     wrapper.setData({ searchBox: 'cat' })
     wrapper.find('button').trigger('click')
     expect(startLoading).toBeCalledWith('/showsearch/cat/', false)
@@ -33,8 +34,7 @@ describe('TheSearchPage', () => {
 
   test('calls infinite scroll and when started with a query in the url', () => {
     window.history.pushState({}, 'sweet', '/search/dog')
-    const startLoading = jest.fn()
-    const wrapper = mount(searchPage, { methods: { startLoading } })
+    const wrapper = mount(searchPage, mountOptions)
     expect(startLoading).toBeCalledWith('/showsearch/dog/', false)
   })
 
@@ -55,7 +55,7 @@ describe('TheSearchPage', () => {
     expect(wrapper.find(userResult).exists()).toBe(true)
     wrapper.setData({ results: [{ type: 'user', imageEnabled: true, image: 'image.jpg', aboutParsed: '<p>hi</p>', displayName: 'b', username: 'c', flagged: true }] })
     await wrapper.vm.$nextTick()
-    expect(wrapper.find(userResult)).toBeTruthy()
+    expect(wrapper.find(userResult).exists()).toBe(true)
     expect(wrapper.find(userResult).find(searchResult).vm.image).toEqual(expect.stringContaining('image.jpg'))
     expect(wrapper.find('.text-danger').exists()).toBe(true)
     expect(wrapper.html()).toEqual(expect.stringContaining('<p>hi</p>'))
@@ -74,9 +74,8 @@ describe('TheSearchPage', () => {
   })
 
   test('restores state after history events', async () => {
-    const startLoading = jest.fn()
     window.history.replaceState({}, 'sweet', '/search/cat')
-    const wrapper = mount(searchPage, { methods: { startLoading } })
+    const wrapper = mount(searchPage, mountOptions)
 
     wrapper.setData({ searchBox: 'dog' })
     wrapper.find('button').trigger('click')
@@ -84,24 +83,5 @@ describe('TheSearchPage', () => {
     expect(wrapper.vm.searchBox).toBe('cat')
     expect(wrapper.vm.query).toBe('cat')
     expect(startLoading).toBeCalledWith('/showsearch/cat/', true)
-  })
-
-  // TODO: factor this out so that other components that use both loadingSpinner and infiniteScrollMixin can use this
-  test('renders loading spinner appropriately', async () => {
-    const wrapper = mount(searchPage)
-
-    wrapper.setData({ loading: true, allResultsLoaded: false, results: [] })
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find(loadingSpinner).find('p').exists()).toBe(false)
-    expect(wrapper.find(loadingSpinner).find('.loader-ellips').exists()).toBe(true)
-
-    wrapper.setData({ loading: false, allResultsLoaded: true, results: [] })
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find(loadingSpinner).find('p').exists()).toBe(true)
-    expect(wrapper.find(loadingSpinner).find('.loader-ellips').exists()).toBe(false)
-
-    wrapper.setData({ loading: false, allResultsLoaded: false, results: [] })
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find(loadingSpinner).exists()).toBe(false)
   })
 })
