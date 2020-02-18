@@ -1,9 +1,4 @@
 const scrollThreshold = 400
-function needMoreResults () {
-  const w = $(window)
-  const d = $(document)
-  return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || w.height() < d.height()
-}
 
 // infinite-loader-mixin: add to your component, call startLoading(string baseURL, boolean useHistory) to (re)start it as many times as you want, and access
 // the results through the results array and access the loading state, if you want to display it, through loading (boolean) and allResultsLoaded (boolean).
@@ -20,7 +15,7 @@ export default {
       // this is implemented as an arrow function so `this` refers to the current component and so there will be a new instance of the function generated
       // once per component, so this can be attached as an event listener once per component (js won't attach the same instance of the function twice)
       listener: () => {
-        if (needMoreResults()) {
+        if (this.needMoreResults()) {
           this.fetchResults()
         }
       },
@@ -36,6 +31,11 @@ export default {
     window.removeEventListener('scroll', this.listener)
   },
   methods: {
+    needMoreResults () {
+      const w = $(window)
+      const d = $(document)
+      return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || w.height() < d.height()
+    },
     getNextRequestURL: function (baseURL) {
       return baseURL + this.oldestResultLoaded
     },
@@ -50,7 +50,7 @@ export default {
         this.oldestResultLoaded = this.resultsHistory[baseURL].oldestResultLoaded
         this.results = this.resultsHistory[baseURL].results
       }
-      if (needMoreResults()) {
+      if (this.needMoreResults()) {
         this.fetchResults()
       }
     },
@@ -78,7 +78,7 @@ export default {
         vueData.results = vueData.results.concat(results.results)
         vueData.loading = false
         // if the page isn't filled up yet, load more
-        if (needMoreResults()) {
+        if (vueData.needMoreResults()) {
           vueData.fetchResults()
         }
       }, 'json').fail(function () { // recieving a 404 response from the server is currently how we find out we're out of results; this should be changed to be less ambiguous
