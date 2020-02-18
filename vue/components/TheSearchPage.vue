@@ -28,9 +28,6 @@ import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin.js'
 import tagResult from './SearchPageComponents/tagResult.vue'
 import userResult from './SearchPageComponents/userResult.vue'
 import communityResult from './SearchPageComponents/communityResult.vue'
-//TODO: replace with proper routing, someday
-const path = window.location.pathname.split('/')
-const initialQuery = path[2] || ''
 export default {
   
     components: {
@@ -40,19 +37,24 @@ export default {
     mixins: [infiniteLoader],
 
     data: function () { return {
-        query: initialQuery,
-        searchBox: initialQuery
+        query: '',
+        searchBox: ''
     } },
 
     // makes the initial request for results if we have a query from the url initially; uses the history api to change the query without reloading the page
     // every time a new search is made
     created: function() {
-        if (this.query !== '') {
-            this.startLoading('/showsearch/'+this.query+'/')
+        //TODO: replace with proper routing, someday
+        const path = window.location.pathname.split('/')
+        const initialQuery = path[2] || ''
+        if (initialQuery !== '') {
+            this.query = initialQuery
+            this.searchBox = initialQuery
+            this.startLoading('/showsearch/'+this.query+'/', false)
         }
         history.replaceState({ query: this.query }, this.query, "/search/" + this.query)
         window.onpopstate = (event) => {
-            console.log(event)
+            console.log('popping state')
             this.query = event.state.query
             this.searchBox = event.state.query
             this.startLoading('/showsearch/' + event.state.query + '/', true)
