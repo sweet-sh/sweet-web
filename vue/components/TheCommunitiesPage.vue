@@ -51,7 +51,7 @@
 
       <div id="communitiesTabContent" class="tab-content">
         <div
-          v-if="joinedTabOpen"
+          v-show="joinedTabOpen"
           id="communitiesList"
           class="tab-pane fade show active"
           role="tabpanel"
@@ -62,16 +62,16 @@
           </div>
         </div>
         <div
-          v-if="newCommTabOpen"
+          v-show="newCommTabOpen"
           id="newCommunity"
           class="tab-pane fade show active"
           role="tabpanel"
           aria-labelledby="newCommunityTab"
         >
-          NEW COMMUNITY FORM...
+          <newCommunityForm />
         </div>
         <div
-          v-if="directoryTabOpen"
+          v-show="directoryTabOpen"
           id="directory"
           class="tab-pane fade show active"
           role="tabpanel"
@@ -93,10 +93,11 @@
 
 <script>
 import communitiesList from './CommunitiesPageComponents/communitiesList.vue'
+import newCommunityForm from './CommunitiesPageComponents/newCommunityForm.vue'
 import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin'
 import loadingSpinner from './SharedSubComponents/loadingSpinner.vue'
 export default {
-  components: { communitiesList, loadingSpinner },
+  components: { communitiesList, loadingSpinner, newCommunityForm },
   mixins: [infiniteLoader],
   data () {
     return {
