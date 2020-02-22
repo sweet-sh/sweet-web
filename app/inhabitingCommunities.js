@@ -80,6 +80,29 @@ module.exports = function (app, passport) {
       })
   })
 
+  app.get('/vueCommunities', isLoggedIn, function (req, res) {
+    Community.find({ members: req.user._id },
+      {
+        name: 1,
+        imageEnabled: 1,
+        image: 1,
+        slug: 1,
+        membersCount: 1,
+        descriptionParsed: 1
+      })
+      .collation({
+        locale: 'en'
+      })
+      .sort('name')
+      .then((communities) => {
+        res.render('vueCommunities', {
+          loggedIn: true,
+          loggedInUserData: req.user,
+          communitiesJSON: JSON.stringify(communities.map(c => c.toObject()))
+        })
+      })
+  })
+
   app.get('/community', function (req, res) {
     res.redirect('../communities')
   })
