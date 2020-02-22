@@ -77,9 +77,14 @@
           role="tabpanel"
           aria-labelledby="directoryTab"
         >
-          <div id="directoryResults" class="compact-container">
-            <communitiesList :list="[]" />
+          <div v-if="firstPageFetched" id="directoryResults" class="compact-container">
+            <communitiesList :list="results" />
           </div>
+          <loadingSpinner
+            v-if="loading || allResultsLoaded"
+            :loading="loading"
+            :message="loading ? '' : (firstPageFetched ? 'No more communities.' : 'No communities found, sorry.')"
+          />
         </div>
       </div>
     </div>
@@ -89,8 +94,9 @@
 <script>
 import communitiesList from './CommunitiesPageComponents/communitiesList.vue'
 import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin'
+import loadingSpinner from './SharedSubComponents/loadingSpinner.vue'
 export default {
-  components: { communitiesList },
+  components: { communitiesList, loadingSpinner },
   mixins: [infiniteLoader],
   data () {
     return {
@@ -113,13 +119,16 @@ export default {
   },
   methods: {
     switchToJoinedTab () {
+      this.pauseLoading()
       this.currentTab = 0
     },
     switchToNewCommTab () {
+      this.pauseLoading()
       this.currentTab = 1
     },
     switchToDirectoryTab () {
       this.currentTab = 2
+      this.startLoading('/api/community/getall/json/', true)
     }
   }
 }

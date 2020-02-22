@@ -13,7 +13,7 @@
             </a></strong>
             &middot;
             <span class="text-muted">
-              {{ comm.membersCount + "member" + (comm.membersCount === 1 ? "" : "s") }}
+              {{ comm.membersCount + " member" + (comm.membersCount === 1 ? "" : "s") }}
             </span>
           </p>
           <p v-html="comm.descriptionParsed" />

@@ -12,6 +12,16 @@ const User = require('./models/user')
 const Post = require('./models/post')
 const notifier = require('./notifier')
 
+const communityStubProjection = {
+  name: 1,
+  imageEnabled: 1,
+  image: 1,
+  slug: 1,
+  membersCount: 1,
+  descriptionParsed: 1,
+  lastUpdated: 1
+}
+
 // this is never read from but it could be someday i guess
 const expiryTimers = []
 
@@ -36,6 +46,7 @@ Vote.find({}).then(votes => {
 })
 
 module.exports = function (app, passport) {
+  // soon to be deprecated
   app.get('/api/community/getall/:page', isLoggedIn, function (req, res) {
     const postsPerPage = 10
     const page = req.params.page - 1
@@ -54,6 +65,24 @@ module.exports = function (app, passport) {
             loggedInUserData: req.user,
             communities: communities
           })
+        }
+      })
+  })
+
+  app.get('/api/community/getall/json/:olderthanthis', isLoggedIn, function (req, res) {
+    const postsPerPage = 10
+
+    Community.find({ lastUpdated: { $lt: parseInt(req.params.olderthanthis) } }, communityStubProjection)
+      .sort('-lastUpdated')
+      .limit(postsPerPage)
+      .then(communities => {
+        if (!communities.length) {
+          res.status(404).send('Not found')
+        } else {
+          const results = communities.map(c => c.toObject())
+          const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
+          // TODO: remove delay for production
+          setTimeout(() => res.json({ results, oldestTimestamp }), 2000)
         }
       })
   })
@@ -81,15 +110,7 @@ module.exports = function (app, passport) {
   })
 
   app.get('/vueCommunities', isLoggedIn, function (req, res) {
-    Community.find({ members: req.user._id },
-      {
-        name: 1,
-        imageEnabled: 1,
-        image: 1,
-        slug: 1,
-        membersCount: 1,
-        descriptionParsed: 1
-      })
+    Community.find({ members: req.user._id }, communityStubProjection)
       .collation({
         locale: 'en'
       })
