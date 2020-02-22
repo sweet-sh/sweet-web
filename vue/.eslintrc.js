@@ -1,13 +1,9 @@
 module.exports = {
     env: {
-      browser: true,
-      commonjs: true,
-      es6: true,
-      jest: true
+      node: true
     },
     extends: [
-      "plugin:vue/essential",
-      "@vue/prettier"
+      "plugin:vue/strongly-recommended",
     ],
     globals: {
       Atomics: 'readonly',
@@ -17,7 +13,12 @@ module.exports = {
       ecmaVersion: 2018
     },
     rules: {
-      'no-useless-escape': 'off'
+       "vue/max-len": ["error", {
+        "code": 100,
+        "template": 120,
+       }
+      ],
+      "vue/max-attributes-per-line": ["error", {"singleline": 3}]
     },
     "ignorePatterns": ["*.js"]
   }
