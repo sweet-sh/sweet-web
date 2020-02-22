@@ -8,10 +8,43 @@
     "generate-dark-mode": "node-sass --source-map true --output-style compressed scss/dark-mode.scss public/css/dark-mode.css --watch",
     "start": "nodemon server.js & npm run watch-sass",
     "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "test": "vue-cli-service test:unit"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "vue/**/*.{js,vue}",
+      "!**/node_modules/**",
+      "!**/public/**"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "vue"
+    ],
+    "transform": {
+      "^.+\\.(js|jsx)?$": "<rootDir>/node_modules/babel-jest",
+      ".*\\.(vue)$": "<rootDir>/node_modules/vue-jest"
+    },
+    "transformIgnorePatterns": [
+      "<rootDir>/node_modules/"
+    ],
+    "testURL": "http://localhost/"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ]
+  },
   "dependencies": {
     "@handlebars/allow-prototype-access": "^1.0.1",
     "@sendgrid/mail": "^6.3.1",
@@ -31,6 +64,7 @@
     "express-validator": "^5.3.1",
     "got": "^9.6.0",
     "handlebars-helpers": "^0.10.0",
+    "jquery": "^3.4.1",
     "metascraper": "^5.4.0",
     "metascraper-description": "^5.4.0",
     "metascraper-image": "^5.4.0",
@@ -50,16 +84,30 @@
     "sanitize-html": "^1.20.0",
     "sharp": "^0.23.0",
     "shortid": "^2.2.14",
-    "web-push": "^3.3.5"
+    "vue": "^2.6.11",
+    "vue-template-compiler": "^2.6.11",
+    "web-push": "^3.3.5",
+    "webpack": "^4.41.5"
   },
   "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "@vue/cli-plugin-unit-jest": "^4.2.2",
+    "@vue/cli-service": "^4.2.2",
+    "@vue/test-utils": "^1.0.0-beta.31",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-jest": "^25.1.0",
+    "babel-loader": "^8.0.6",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.20.0",
     "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "jest": "^25.1.0",
     "node-sass": "^4.12.0",
-    "nodemon": "^1.19.1"
+    "nodemon": "^1.19.1",
+    "vue-jest": "4.0.0-beta.2",
+    "vue-loader": "^15.9.0"
   }
 }
