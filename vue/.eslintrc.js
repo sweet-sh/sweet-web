@@ -18,7 +18,7 @@ module.exports = {
         "template": 120,
        }
       ],
-      "vue/max-attributes-per-line": ["error", {"singleline": 3}]
+      "vue/max-attributes-per-line": ["error", {"singleline": 5}]
     },
     "ignorePatterns": ["*.js"]
   }
