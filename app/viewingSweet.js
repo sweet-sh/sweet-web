@@ -473,8 +473,7 @@ module.exports = function (app) {
                   } else {
                     const results = (combinedResults.sort((a, b) => b.lastUpdated - a.lastUpdated)).slice(0, resultsPerPage)
                     const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
-                    // TODO: remove this for production
-                    setTimeout(() => { res.json({ results, oldestTimestamp }) }, 1500)
+                    res.json({ results, oldestTimestamp })
                   }
                 })
             })
