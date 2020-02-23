@@ -7,7 +7,6 @@
       <ul id="communitiesTabs" class="nav nav-tabs" role="tablist">
         <li class="nav-item">
           <a
-            id="communitiesListTab"
             class="nav-link"
             :class="joinedTabOpen ? 'active' : ''"
             href
@@ -21,7 +20,6 @@
         </li>
         <li class="nav-item">
           <a
-            id="newCommunityTab"
             class="nav-link"
             :class="newCommTabOpen ? 'active' : ''"
             href
@@ -35,7 +33,6 @@
         </li>
         <li class="nav-item">
           <a
-            id="directoryTab"
             class="nav-link"
             :class="directoryTabOpen ? 'active' : ''"
             href

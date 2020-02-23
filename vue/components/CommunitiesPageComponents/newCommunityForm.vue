@@ -8,18 +8,16 @@
     </p>
 
     <form
-      @submit="submitNewCommunity"
       action="/api/community/create"
       method="post"
       enctype="multipart/form-data"
-      id="newCommunityForm"
+      ref="newCommunityForm"
     >
       <div class="form-group">
         <label for="communityName">Name</label>
         <input
           type="text"
           class="form-control"
-          id="communityName"
           name="communityName"
           maxlength="80"
           required
@@ -31,18 +29,18 @@
       </div>
       <div class="form-group">
         <label for="communityDescription">Description</label>
-        <div class="form-control editable-text" style="height:auto;" id="communityDescriptionHTML" />
+        <div class="form-control editable-text" style="height:auto;" ref="communityDescriptionHTML" />
       </div>
       <div class="form-group">
         <label for="communityRules">Rules</label>
-        <div class="form-control editable-text" style="height:auto;" id="communityRulesHTML">
+        <div class="form-control editable-text" style="height:auto;" ref="communityRulesHTML">
           Please follow the guidelines laid out in the Community Covenant, available to read here:
           https://community-covenant.net/version/1/0/
         </div>
       </div>
       <div class="form-group">
         <label for="communityVisibility">Post visibility</label>
-        <select v-model="visibility" class="form-control" id="communityVisibility" name="communityVisibility">
+        <select class="form-control" name="communityVisibility">
           <option value="public">
             Public (posts visible to all sweet users)
           </option>
@@ -53,7 +51,7 @@
       </div>
       <div class="form-group">
         <label for="communityJoinType">Joining method</label>
-        <select v-model="joiningMethod" class="form-control" id="communityJoinType" name="communityJoinType">
+        <select class="form-control" name="communityJoinType">
           <option value="open">
             Open (anyone is free to join)
           </option>
@@ -64,7 +62,7 @@
       </div>
       <div class="form-group">
         <label for="communityVoteLength">Vote length</label>
-        <select v-model="voteLength" class="form-control" id="communityVoteLength" name="communityVoteLength">
+        <select class="form-control" name="communityVoteLength">
           <option value="1">
             1 day
           </option>
@@ -95,7 +93,7 @@
           <input @change="imageSelected" type="file" name="imageUpload" id="image-upload" accept="image/*">
         </div>
       </div>
-      <button id="createCommunity" type="submit" class="button">
+      <button @click="submitButtonPressed" id="createCommunity" type="submit" class="button">
         Create
       </button>
     </form>
@@ -106,16 +104,13 @@
 export default {
   data () {
     return {
-      name: '',
-      visibility: 'public',
-      joiningMethod: 'open',
-      voteLength: '7',
-      imagePreview: '/images/communities/cake.svg'
+      imagePreview: '/images/communities/cake.svg',
+      name: ''
     }
   },
   mounted () {
-    const descField = document.getElementById('communityDescriptionHTML')
-    const rulesField = document.getElementById('communityRulesHTML')
+    const descField = this.$refs.communityDescriptionHTML
+    const rulesField = this.$refs.communityRulesHTML
     attachQuill(descField, 'Write something. Highlight to format', true)
     attachQuill(rulesField, 'Write something. Highlight to format', true)
   },
@@ -123,27 +118,33 @@ export default {
     imageSelected (e) {
       this.imagePreview = URL.createObjectURL(e.target.files[0])
     },
-    submitNewCommunity (e) {
-      const fd = new FormData(e.target)
-      fd.append('communityDescription', this.descHTML())
-      fd.append('communityRules', this.rulesHTML())
+    submitButtonPressed (e) {
+      const newCommForm = this.$refs.newCommunityForm
+      const descInput = document.createElement('input')
+      descInput.setAttribute('type', 'hidden')
+      descInput.setAttribute('name', 'communityDescription')
+      descInput.setAttribute('value', this.descHTML())
+      newCommForm.appendChild(descInput)
+
+      const rulesInput = document.createElement('input')
+      rulesInput.setAttribute('type', 'hidden')
+      rulesInput.setAttribute('name', 'communityRules')
+      rulesInput.setAttribute('value', this.rulesHTML())
+      newCommForm.appendChild(rulesInput)
+
+      const fd = new FormData(newCommForm)
       console.log('creating new community with values:')
       for (var pair of fd.entries()) {
         console.log(pair[0] + ', ' + pair[1])
       }
+
       return true
     },
     descHTML () {
-      return document
-        .getElementById('communityDescriptionHTML')
-        .querySelector('.ql-editor')
-        .innerHTML
+      return this.$refs.communityDescriptionHTML.querySelector('.ql-editor').innerHTML
     },
     rulesHTML () {
-      return document
-        .getElementById('communityRulesHTML')
-        .querySelector('.ql-editor')
-        .innerHTML
+      return this.$refs.communityRulesHTML.querySelector('.ql-editor').innerHTML
     }
   },
   computed: {
