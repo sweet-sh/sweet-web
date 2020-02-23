@@ -218,7 +218,7 @@ require('./app/statisticsTracker.js')(app, mongoose)
 require('./app/notifier.js')
 require('./app/emailer.js')
 require('./app/personalAccountActions.js')(app, passport)
-require('./app/inhabitingCommunities.js')(app, passport)
+require('./app/inhabitingCommunities.js')(app)
 require('./app/viewingSweet.js')(app)
 require('./app/postingToSweet.js')(app)
 

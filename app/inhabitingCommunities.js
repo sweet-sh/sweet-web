@@ -45,30 +45,7 @@ Vote.find({}).then(votes => {
   }
 })
 
-module.exports = function (app, passport) {
-  // soon to be deprecated
-  app.get('/api/community/getall/:page', isLoggedIn, function (req, res) {
-    const postsPerPage = 10
-    const page = req.params.page - 1
-
-    Community.find()
-      .sort('-lastUpdated')
-      .skip(postsPerPage * page)
-      .limit(postsPerPage)
-      .then(communities => {
-        if (!communities.length) {
-          res.status(404)
-            .send('Not found')
-        } else {
-          res.render('partials/communities', {
-            layout: false,
-            loggedInUserData: req.user,
-            communities: communities
-          })
-        }
-      })
-  })
-
+module.exports = function (app) {
   app.get('/api/community/getall/json/:olderthanthis', isLoggedIn, function (req, res) {
     const postsPerPage = 10
 
@@ -81,35 +58,12 @@ module.exports = function (app, passport) {
         } else {
           const results = communities.map(c => c.toObject())
           const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
-          // TODO: remove delay for production
-          setTimeout(() => res.json({ results, oldestTimestamp }), 2000)
+          res.json({ results, oldestTimestamp })
         }
       })
   })
 
   app.get('/communities', isLoggedIn, function (req, res) {
-    Community.find({
-      members: req.user._id
-    })
-      .collation({
-        locale: 'en'
-      })
-      .sort('name')
-      .then((communities) => {
-        res.render('communities', {
-          loggedIn: true,
-          loggedInUserData: req.user,
-          communities: communities,
-          activePage: 'communities'
-        })
-      })
-      .catch((err) => {
-        console.log('Error in profileData.')
-        console.log(err)
-      })
-  })
-
-  app.get('/vueCommunities', isLoggedIn, function (req, res) {
     Community.find({ members: req.user._id }, communityStubProjection)
       .collation({
         locale: 'en'
