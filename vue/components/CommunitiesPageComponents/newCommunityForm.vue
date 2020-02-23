@@ -7,12 +7,15 @@
       to change them by a majority vote!
     </p>
 
-    <form
-      action="/api/community/create"
-      method="post"
-      enctype="multipart/form-data"
-      ref="newCommunityForm"
+    <div
+      v-if="warning !== ''"
+      class="message warning"
+      style="max-width: 500px; margin: 1rem auto 0 auto;"
     >
+      {{ warning }}
+    </div>
+
+    <form @submit.prevent="formSubmitted">
       <div class="form-group">
         <label for="communityName">Name</label>
         <input
@@ -93,10 +96,13 @@
           <input @change="imageSelected" type="file" name="imageUpload" id="image-upload" accept="image/*">
         </div>
       </div>
-      <button @click="submitButtonPressed" id="createCommunity" type="submit" class="button">
+      <button id="createCommunity" type="submit" class="button">
         Create
       </button>
     </form>
+    <div style="display: none;" ref="modal">
+      {{ warning }}
+    </div>
   </div>
 </template>
 
@@ -105,7 +111,8 @@ export default {
   data () {
     return {
       imagePreview: '/images/communities/cake.svg',
-      name: ''
+      name: '',
+      warning: ''
     }
   },
   mounted () {
@@ -116,29 +123,40 @@ export default {
   },
   methods: {
     imageSelected (e) {
-      this.imagePreview = URL.createObjectURL(e.target.files[0])
+      if (e.target.files[0].size > 3145728) {
+        this.warning = 'Image too large! Max file size is 3MB'
+        e.target.value = ''
+      } else {
+        this.imagePreview = URL.createObjectURL(e.target.files[0])
+      }
     },
-    submitButtonPressed (e) {
-      const newCommForm = this.$refs.newCommunityForm
-      const descInput = document.createElement('input')
-      descInput.setAttribute('type', 'hidden')
-      descInput.setAttribute('name', 'communityDescription')
-      descInput.setAttribute('value', this.descHTML())
-      newCommForm.appendChild(descInput)
+    formSubmitted (e) {
+      const fd = new FormData(e.target)
 
-      const rulesInput = document.createElement('input')
-      rulesInput.setAttribute('type', 'hidden')
-      rulesInput.setAttribute('name', 'communityRules')
-      rulesInput.setAttribute('value', this.rulesHTML())
-      newCommForm.appendChild(rulesInput)
+      fd.append('communityRules', this.rulesHTML())
+      fd.append('communityDescription', this.descHTML())
 
-      const fd = new FormData(newCommForm)
       console.log('creating new community with values:')
       for (var pair of fd.entries()) {
         console.log(pair[0] + ', ' + pair[1])
       }
 
-      return true
+      $.ajax({
+        url: '/api/community/create',
+        data: fd,
+        cache: false,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        type: 'POST',
+        success: (result) => {
+          if (result.succeeded) {
+            window.location.href = result.resultLocatedAt
+          } else {
+            this.warning = result.errorMessage
+          }
+        }
+      })
     },
     descHTML () {
       return this.$refs.communityDescriptionHTML.querySelector('.ql-editor').innerHTML
@@ -161,6 +179,11 @@ export default {
         .replace(/\-\-+/g, '-') // Replace multiple - with single -
         .replace(/^-+/, '') // Trim - from start of text
         .replace(/-+$/, '') // Trim - from end of text
+    }
+  },
+  watch: {
+    warning (newWarning) {
+      bootbox.alert(newWarning)
     }
   }
 }
