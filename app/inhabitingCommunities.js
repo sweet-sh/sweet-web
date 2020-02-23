@@ -73,7 +73,7 @@ module.exports = function (app) {
         res.render('vueCommunities', {
           loggedIn: true,
           loggedInUserData: req.user,
-          communitiesJSON: JSON.stringify(communities.map(c => c.toObject()))
+          initialPageState: JSON.stringify({ joinedCommunities: communities.map(c => c.toObject()) })
         })
       })
   })

@@ -409,11 +409,12 @@ module.exports = function (app) {
   // Input: the query
   // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
   app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
+    const initialState = { query: req.params.query }
     res.render('search', {
       loggedIn: true,
       loggedInUserData: req.user,
       activePage: 'search',
-      query: req.params.query
+      initialPageState: JSON.stringify(initialState)
     })
   })
 
