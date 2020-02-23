@@ -93,14 +93,13 @@ import communitiesList from './CommunitiesPageComponents/communitiesList.vue'
 import newCommunityForm from './CommunitiesPageComponents/newCommunityForm.vue'
 import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin'
 import loadingSpinner from './SharedSubComponents/loadingSpinner.vue'
+import initialPageState from '../initialPageState'
 export default {
   components: { communitiesList, loadingSpinner, newCommunityForm },
   mixins: [infiniteLoader],
   data () {
     return {
-      joinedCommunities: JSON.parse(
-        document.getElementById('joinedCommunities').innerHTML
-      ),
+      joinedCommunities: initialPageState.joinedCommunities,
       currentTab: 0
     }
   },

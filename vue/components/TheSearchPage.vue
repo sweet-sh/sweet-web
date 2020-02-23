@@ -43,6 +43,7 @@ import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin.js'
 import tagResult from './SearchPageComponents/tagResult.vue'
 import userResult from './SearchPageComponents/userResult.vue'
 import communityResult from './SearchPageComponents/communityResult.vue'
+import initialPageState from '../initialPageState'
 export default {
 
   components: {
@@ -53,8 +54,8 @@ export default {
 
   data: function () {
     return {
-      query: '',
-      searchBox: ''
+      query: initialPageState.query,
+      searchBox: initialPageState.query
     }
   },
 
