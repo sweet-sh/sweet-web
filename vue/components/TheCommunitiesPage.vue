@@ -93,13 +93,18 @@ import communitiesList from './CommunitiesPageComponents/communitiesList.vue'
 import newCommunityForm from './CommunitiesPageComponents/newCommunityForm.vue'
 import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin'
 import loadingSpinner from './SharedSubComponents/loadingSpinner.vue'
-import initialPageState from '../initialPageState'
 export default {
   components: { communitiesList, loadingSpinner, newCommunityForm },
   mixins: [infiniteLoader],
+  props: {
+    initialJoinedCommunities: {
+      type: Array,
+      required: true
+    }
+  },
   data () {
     return {
-      joinedCommunities: initialPageState.joinedCommunities,
+      joinedCommunities: this.initialJoinedCommunities,
       currentTab: 0
     }
   },

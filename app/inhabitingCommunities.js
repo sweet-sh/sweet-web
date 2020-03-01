@@ -70,10 +70,10 @@ module.exports = function (app) {
       })
       .sort('name')
       .then((communities) => {
-        res.render('vueCommunities', {
+        res.render('vuePage', {
           loggedIn: true,
           loggedInUserData: req.user,
-          initialPageState: JSON.stringify({ joinedCommunities: communities.map(c => c.toObject()) })
+          initialPageState: JSON.stringify({ page: 'communities', joinedCommunities: communities.map(c => c.toObject()) })
         })
       })
   })

@@ -46,7 +46,8 @@ export default {
     },
     aboutParsed: {
       type: String,
-      required: true
+      required: false,
+      default: ''
     },
     flagged: {
       type: Boolean,

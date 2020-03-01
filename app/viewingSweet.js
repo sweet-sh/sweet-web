@@ -398,10 +398,11 @@ module.exports = function (app) {
   // Input: none
   // Output: renders search page unless isLoggedInOrRedirect redirects you
   app.get('/search', isLoggedInOrRedirect, (req, res) => {
-    res.render('search', {
+    res.render('vuePage', {
       loggedIn: true,
       loggedInUserData: req.user,
-      activePage: 'search'
+      activePage: 'search',
+      initialPageState: JSON.stringify({ page: 'search', query: '' })
     })
   })
 
@@ -409,8 +410,8 @@ module.exports = function (app) {
   // Input: the query
   // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
   app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
-    const initialState = { query: req.params.query }
-    res.render('search', {
+    const initialState = { page: 'search', query: req.params.query }
+    res.render('vuePage', {
       loggedIn: true,
       loggedInUserData: req.user,
       activePage: 'search',
@@ -474,8 +475,7 @@ module.exports = function (app) {
                   } else {
                     const results = (combinedResults.sort((a, b) => b.lastUpdated - a.lastUpdated)).slice(0, resultsPerPage)
                     const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
-                    // TODO: remove this for production
-                    setTimeout(() => { res.json({ results, oldestTimestamp }) }, 1500)
+                    res.json({ results, oldestTimestamp })
                   }
                 })
             })

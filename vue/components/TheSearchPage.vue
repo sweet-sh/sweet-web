@@ -43,7 +43,6 @@ import infiniteLoader from './SharedSubComponents/infiniteLoaderMixin.js'
 import tagResult from './SearchPageComponents/tagResult.vue'
 import userResult from './SearchPageComponents/userResult.vue'
 import communityResult from './SearchPageComponents/communityResult.vue'
-import initialPageState from '../initialPageState'
 export default {
 
   components: {
@@ -52,10 +51,17 @@ export default {
 
   mixins: [infiniteLoader],
 
+  props: {
+    initialQuery: {
+      type: String,
+      required: true
+    }
+  },
+
   data: function () {
     return {
-      query: initialPageState.query,
-      searchBox: initialPageState.query
+      query: this.initialQuery,
+      searchBox: this.initialQuery
     }
   },
 
@@ -63,12 +69,7 @@ export default {
   // uses the history api to change the query without reloading the page every time
   // a new search is made
   created: function () {
-    // TODO: replace with proper routing, someday
-    const path = window.location.pathname.split('/')
-    const initialQuery = path[2] || ''
-    if (initialQuery !== '') {
-      this.query = initialQuery
-      this.searchBox = initialQuery
+    if (this.query !== '') {
       this.startLoading('/showsearch/' + this.query + '/', false)
     }
     history.replaceState({ query: this.query }, this.query, '/search/' + this.query)

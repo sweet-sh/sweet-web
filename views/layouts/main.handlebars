@@ -46,12 +46,6 @@
   <link rel="stylesheet" href="/css/tribute.css" />
   <script src="/js/tribute.min.js" crossorigin="anonymous"></script>
 
-  {{#if initialPageState}}
-  <script type="application/json" id="initialPageState">
-    {{{initialPageState}}}
-  </script>
-  {{/if}}
-
   {{> clientSideCodeErrorReporter }}
 
   {{#if loggedIn}}
