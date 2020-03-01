@@ -29,7 +29,7 @@ export default {
     }
   },
   destroyed: function () {
-    this.pause()
+    this.pauseLoading()
   },
   methods: {
     beginScrollListening () {
