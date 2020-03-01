@@ -14,7 +14,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const compiler = webpack({
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: {
-    searchPage: './vue/searchPageEntry.js'
+    index: './vue/vueIndex.js'
   },
   output: {
     filename: './public/js/vue/[name].js',
@@ -217,7 +217,7 @@ require('./app/statisticsTracker.js')(app, mongoose)
 require('./app/notifier.js')
 require('./app/emailer.js')
 require('./app/personalAccountActions.js')(app, passport)
-require('./app/inhabitingCommunities.js')(app, passport)
+require('./app/inhabitingCommunities.js')(app)
 require('./app/viewingSweet.js')(app)
 require('./app/postingToSweet.js')(app)
 

@@ -7,6 +7,7 @@ const scrollThreshold = 400
 export default {
   data: function () {
     return {
+      paused: true,
       loading: false,
       oldestResultLoaded: new Date().getTime(),
       results: [],
@@ -15,7 +16,7 @@ export default {
       // this is implemented as an arrow function so `this` refers to the current component and so there will be a new instance of the function generated
       // once per component, so this can be attached as an event listener once per component (js won't attach the same instance of the function twice)
       listener: () => {
-        if (this.needMoreResults()) {
+        if (!this.paused && !this.loading && !this.allResultsLoaded && this.needMoreResults()) {
           this.fetchResults()
         }
       },
@@ -28,34 +29,45 @@ export default {
     }
   },
   destroyed: function () {
-    window.removeEventListener('scroll', this.listener)
+    this.pauseLoading()
   },
   methods: {
+    beginScrollListening () {
+      this.paused = false
+      window.addEventListener('scroll', this.listener)
+    },
+    pauseLoading () {
+      this.paused = true
+      window.removeEventListener('scroll', this.listener)
+    },
+    /* istanbul ignore next */
     needMoreResults () {
       const w = $(window)
       const d = $(document)
-      return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || w.height() < d.height()
+      return d.height() - (w.scrollTop() + w.height()) < scrollThreshold || d.height() <= w.height()
     },
     getNextRequestURL: function (baseURL) {
       return baseURL + this.oldestResultLoaded
     },
     startLoading: function (baseURL, useCachedResults = true) {
-      this.loading = false
-      this.baseURL = baseURL
-      this.oldestResultLoaded = new Date().getTime()
-      this.allResultsLoaded = false
-      this.results = []
-      window.addEventListener('scroll', this.listener)
-      if (useCachedResults && this.resultsHistory[baseURL]) {
-        this.oldestResultLoaded = this.resultsHistory[baseURL].oldestResultLoaded
-        this.results = this.resultsHistory[baseURL].results
-      }
-      if (this.needMoreResults()) {
-        this.fetchResults()
-      }
+      this.$nextTick(() => {
+        this.loading = false
+        this.baseURL = baseURL
+        this.oldestResultLoaded = new Date().getTime()
+        this.allResultsLoaded = false
+        this.results = []
+        if (useCachedResults && this.resultsHistory[baseURL]) {
+          this.oldestResultLoaded = this.resultsHistory[baseURL].oldestResultLoaded
+          this.results = this.resultsHistory[baseURL].results
+        }
+        this.beginScrollListening()
+        if (this.needMoreResults()) {
+          this.fetchResults()
+        }
+      })
     },
     fetchResults: function () {
-      if (this.allResultsLoaded || this.loading) {
+      if (this.allResultsLoaded || this.loading || this.paused) {
         return
       }
       this.loading = true
@@ -78,9 +90,11 @@ export default {
         vueData.results = vueData.results.concat(results.results)
         vueData.loading = false
         // if the page isn't filled up yet, load more
-        if (vueData.needMoreResults()) {
-          vueData.fetchResults()
-        }
+        vueData.$nextTick(() => {
+          if (vueData.needMoreResults()) {
+            vueData.fetchResults()
+          }
+        })
       }, 'json').fail(function () { // recieving a 404 response from the server is currently how we find out we're out of results; this should be changed to be less ambiguous
         vueData.allResultsLoaded = true
         vueData.loading = false

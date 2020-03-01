@@ -21,34 +21,37 @@ describe('infiniteLoaderMixin', () => {
     wrapper = mount(infiniteLoaderHost, { methods: { needMoreResults } })
   })
 
-  test('fetches results when given a new baseURL', () => {
+  test('fetches results when given a new baseURL', async () => {
     $.get = jest.fn((url, options, success, dataType) => {
       success({ oldestTimestamp: 10, results: [{ _id: needMoreResultsCounter, type: 'not real' }] })
       return { fail: () => null }
     })
     wrapper.vm.startLoading('/mock/url/', false)
+    await wrapper.vm.$nextTick()
     expect(wrapper.vm.baseURL).toBe('/mock/url/')
     expect($.get).toBeCalled()
   })
 
-  test('stops fetching results upon receiving an error', () => {
+  test('stops fetching results upon receiving an error', async () => {
     $.get = jest.fn(() => { return { fail: (f) => f() } })
     wrapper.vm.startLoading('/mock/url/', false)
+    await wrapper.vm.$nextTick()
     expect($.get).toBeCalledTimes(1)
     expect(wrapper.vm.loading).toBe(false)
     expect(wrapper.vm.allResultsLoaded).toBe(true)
   })
 
-  test('does not request more results if already loading or if not needed according needMoreResults()', () => {
+  test('does not request more results if already loading or if not needed according needMoreResults()', async () => {
     wrapper.setData({ loading: true })
     wrapper.vm.fetchResults()
     expect($.get).not.toBeCalled()
     wrapper.setMethods({ needMoreResults: () => false })
     wrapper.vm.startLoading('mock/mock/', false)
+    await wrapper.vm.$nextTick()
     expect($.get).not.toBeCalled()
   })
 
-  test('rejects results if the query has changed since they were requested and shows error if oldestTimestamp is missing', () => {
+  test('rejects results if the query has changed since they were requested and shows error if oldestTimestamp is missing', async () => {
     const errorLogger = jest.spyOn(console, 'error')
     const result = { _id: needMoreResultsCounter, type: 'result for old baseURL' }
     $.get = jest.fn((url, options, success, dataType) => {
@@ -57,30 +60,33 @@ describe('infiniteLoaderMixin', () => {
       return { fail: () => null }
     })
     wrapper.vm.startLoading('/mock/url2/', false)
+    await wrapper.vm.$nextTick()
     expect(wrapper.vm.results).not.toContain(result)
     expect(errorLogger).toBeCalled()
   })
 
-  test('uses cached results if so prompted', () => {
+  test('uses cached results if so prompted', async () => {
     needMoreResultsCounter = 3
     const fakeResult = { type: 'not real' }
     wrapper.setData({ resultsHistory: { '/mock/whatever/': { oldestResultLoaded: 10, results: [fakeResult] } } })
     wrapper.vm.startLoading('/mock/whatever/', true)
+    await wrapper.vm.$nextTick()
     expect(wrapper.vm.results).toContain(fakeResult)
     expect(wrapper.vm.oldestResultLoaded).toBe(10)
   })
 
-  test('scroll listener is attached and removed upon creation and destruction', () => {
+  test('scroll listener is attached and removed upon creation and destruction', async () => {
     const listenerAdder = jest.spyOn(window, 'addEventListener')
     const listenerRemover = jest.spyOn(window, 'removeEventListener')
     wrapper.vm.startLoading('/mock/url/whatever')
+    await wrapper.vm.$nextTick()
     expect(listenerAdder).toBeCalledWith('scroll', wrapper.vm.listener)
     wrapper.destroy()
     expect(listenerRemover).toBeCalledWith('scroll', wrapper.vm.listener)
   })
 
   test('scroll listener requests results appropriately when called', async () => {
-    wrapper.setData({ baseURL: '/mock/url3' })
+    wrapper.setData({ baseURL: '/mock/url3', paused: false })
     wrapper.vm.listener()
     expect($.get).toBeCalledTimes(1)
     wrapper.setMethods({ needMoreResults: () => false })

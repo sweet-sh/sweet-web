@@ -12,6 +12,16 @@ const User = require('./models/user')
 const Post = require('./models/post')
 const notifier = require('./notifier')
 
+const communityStubProjection = {
+  name: 1,
+  imageEnabled: 1,
+  image: 1,
+  slug: 1,
+  membersCount: 1,
+  descriptionParsed: 1,
+  lastUpdated: 1
+}
+
 // this is never read from but it could be someday i guess
 const expiryTimers = []
 
@@ -35,48 +45,36 @@ Vote.find({}).then(votes => {
   }
 })
 
-module.exports = function (app, passport) {
-  app.get('/api/community/getall/:page', isLoggedIn, function (req, res) {
+module.exports = function (app) {
+  app.get('/api/community/getall/json/:olderthanthis', isLoggedIn, function (req, res) {
     const postsPerPage = 10
-    const page = req.params.page - 1
 
-    Community.find()
+    Community.find({ lastUpdated: { $lt: parseInt(req.params.olderthanthis) } }, communityStubProjection)
       .sort('-lastUpdated')
-      .skip(postsPerPage * page)
       .limit(postsPerPage)
       .then(communities => {
         if (!communities.length) {
-          res.status(404)
-            .send('Not found')
+          res.status(404).send('Not found')
         } else {
-          res.render('partials/communities', {
-            layout: false,
-            loggedInUserData: req.user,
-            communities: communities
-          })
+          const results = communities.map(c => c.toObject())
+          const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
+          res.json({ results, oldestTimestamp })
         }
       })
   })
 
   app.get('/communities', isLoggedIn, function (req, res) {
-    Community.find({
-      members: req.user._id
-    })
+    Community.find({ members: req.user._id }, communityStubProjection)
       .collation({
         locale: 'en'
       })
       .sort('name')
       .then((communities) => {
-        res.render('communities', {
+        res.render('vuePage', {
           loggedIn: true,
           loggedInUserData: req.user,
-          communities: communities,
-          activePage: 'communities'
+          initialPageState: JSON.stringify({ page: 'communities', joinedCommunities: communities.map(c => c.toObject()) })
         })
-      })
-      .catch((err) => {
-        console.log('Error in profileData.')
-        console.log(err)
       })
   })
 
@@ -213,29 +211,32 @@ module.exports = function (app, passport) {
     console.log('Creating community')
     const newCommunityData = req.body
     const newCommunitySlug = helper.slugify(newCommunityData.communityName)
-    Community.findOne({
-      slug: newCommunitySlug
-    })
+    if (!newCommunityData.name) {
+      const errorResponse = {
+        succeeded: false,
+        errorMessage: 'Community name must be present'
+      }
+      return res.json(errorResponse)
+    }
+    Community.findOne({ slug: newCommunitySlug })
       .then(async (community) => {
         if (community) {
-          req.session.sessionFlash = {
-            type: 'warning',
-            message: 'A community with this URL (' + newCommunitySlug + ') already exists.',
-            newCommunityData: newCommunityData
+          const errorResponse = {
+            succeeded: false,
+            errorMessage: 'A community with this URL (' + newCommunitySlug + ') already exists.'
           }
-          return res.redirect('back')
+          return res.json(errorResponse)
         } else {
           let imageEnabled = false
           const communityUrl = shortid.generate()
           if (req.files && req.files.imageUpload) {
             if (req.files.imageUpload.data.length > 3145728) {
               console.error('Image too large!')
-              req.session.sessionFlash = {
-                type: 'warning',
-                message: 'File too large. The file size limit is 3MB.',
-                communityData: newCommunityData
+              const errorResponse = {
+                succeeded: false,
+                errorMessage: 'File too large. The file size limit is 3MB.'
               }
-              return res.redirect('back')
+              return res.json(errorResponse)
             } else {
               console.log('Saving image')
               imageEnabled = true
@@ -244,7 +245,7 @@ module.exports = function (app, passport) {
                 .jpeg({ quality: 70 })
                 .toFile('./public/images/communities/' + communityUrl + '.jpg')
                 .catch(err => {
-                  console.error(err)
+                  console.error('cound not save new community image', err)
                 })
             }
           }
@@ -270,21 +271,20 @@ module.exports = function (app, passport) {
             },
             members: [req.user._id]
           })
-          community.save()
-            .then(community => {
-              User.findOne({
-                _id: req.user._id
-              })
-                .then(user => {
-                  user.communities.push(community._id)
-                  user.save()
-                })
-                .then(user => {
-                  touchCommunity(community._id)
-                  console.log('Created community!')
-                  res.redirect('/community/' + newCommunitySlug)
-                })
+          try {
+            await community.save()
+            const creatingUser = await User.findOne({ _id: req.user._id }, { communities: 1 })
+            creatingUser.communities.push(community._id)
+            await creatingUser.save()
+            touchCommunity(community._id)
+            res.json({
+              succeeded: true,
+              resultLocatedAt: '/community/' + newCommunitySlug
             })
+          } catch (err) {
+            console.error('error saving community', err)
+            res.json({ succeeded: false, errorMessage: 'Bizarre database error, sorry :( Try again?' })
+          }
         }
       })
   })

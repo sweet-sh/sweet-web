@@ -398,10 +398,11 @@ module.exports = function (app) {
   // Input: none
   // Output: renders search page unless isLoggedInOrRedirect redirects you
   app.get('/search', isLoggedInOrRedirect, (req, res) => {
-    res.render('search', {
+    res.render('vuePage', {
       loggedIn: true,
       loggedInUserData: req.user,
-      activePage: 'search'
+      activePage: 'search',
+      initialPageState: JSON.stringify({ page: 'search', query: '' })
     })
   })
 
@@ -409,11 +410,12 @@ module.exports = function (app) {
   // Input: the query
   // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
   app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
-    res.render('search', {
+    const initialState = { page: 'search', query: req.params.query }
+    res.render('vuePage', {
       loggedIn: true,
       loggedInUserData: req.user,
       activePage: 'search',
-      query: req.params.query
+      initialPageState: JSON.stringify(initialState)
     })
   })
 
