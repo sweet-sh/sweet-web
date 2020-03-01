@@ -40,6 +40,7 @@ export default {
       this.paused = true
       window.removeEventListener('scroll', this.listener)
     },
+    /* istanbul ignore next */
     needMoreResults () {
       const w = $(window)
       const d = $(document)
