@@ -910,6 +910,7 @@ module.exports = function (app) {
       let canDisplay = false
       if (req.isAuthenticated()) {
         // logged in users can't see private posts by users who don't trust them or community posts by muted members
+        // TODO: urgent: fix this now that post.authorEmail no longer exists
         if ((post.privacy === 'private' && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy === 'public') {
           canDisplay = true
         }
@@ -959,6 +960,7 @@ module.exports = function (app) {
       }
 
       // As a final hurrah, just hide all posts and boosts made by users you've muted
+      // TODO: urgent: fix this now that post.authorEmail no longer exists
       if (req.isAuthenticated() && myMutedUserEmails.includes(post.authorEmail)) {
         canDisplay = false
       }

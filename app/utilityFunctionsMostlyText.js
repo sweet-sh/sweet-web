@@ -165,8 +165,8 @@ module.exports = {
     }
     const retrievalUrl = parsedUrl.toString()
     let finalUrl // this will have the correct protocol, obtained either by the cache or the request package
-    const Cache = mongoose.model('Cached Link Metadata')
-    const found = await Cache.findOne({ retrievalUrl: retrievalUrl })
+    const LinkMetadata = mongoose.model('Cached Link Metadata')
+    const found = await LinkMetadata.findOne({ retrievalUrl: retrievalUrl })
     const cacheHit = !!found
     let metadata
     if (!cacheHit) {
@@ -228,7 +228,7 @@ module.exports = {
     }
     result.isEmbeddableVideo = isEmbeddableVideo
     if (!cacheHit) {
-      (new Cache(result)).save()
+      await (new LinkMetadata(result)).save()
     }
     return result
   },
