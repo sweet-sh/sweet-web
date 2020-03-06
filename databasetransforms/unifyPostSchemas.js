@@ -1,31 +1,53 @@
 const Post = require('../app/models/post.js')
 const Image = require('../app/models/image')
-const LinkMetadata = mongoose.model('Cached Link Metadata')
 const helper = require('../app/utilityFunctionsMostlyText.js')
-const sharp = require('sharp')
 var configDatabase = require('../config/database.js')
+const sharp = require('sharp')
 var mongoose = require('mongoose')
+const fs = require('fs')
+const LinkMetadata = mongoose.model('Cached Link Metadata')
 const ObjectId = require('mongoose').Types.ObjectId
 mongoose.connect(configDatabase.url, {
   useNewUrlParser: true
 })
 
-async function updateImageDocsFromParallelArrays (doc, images, imageDescriptions, parentPost, position = -1) {
+function getOrientation (width, height) {
+  if (width / height < 0.75) {
+    return 'vertical'
+  } else if (width / height > 1.33) {
+    return 'horizontal'
+  } else {
+    return 'neutral'
+  }
+}
+
+async function updateImageDocsFromParallelArrays (doc, images, imageDescriptions, parentPost) {
   const imageDBReferences = []
   for (let i = 0; i < images.length; i++) {
     const filename = images[i]
     const desc = imageDescriptions[i]
-    const image = await Image.find({ filename })
+    let image = await Image.findOne({ filename })
+    if (!image) {
+      try {
+        await sharp('../public/images/uploads/' + filename).metadata().then(async metadata => {
+          image = new Image({
+            filename,
+            width: metadata.width,
+            height: metadata.height,
+            orientation: getOrientation(metadata.width, metadata.height)
+            // other fields filled in below
+          })
+        })
+        fs.renameSync(global.appRoot + '/public/images/uploads/' + filename, global.appRoot + '/cdn/images/' + filename)
+      } catch (err) {
+        console.error(`could not find image ${filename} in the database or retrieve from the uploads folder!`)
+        console.error(err)
+      }
+    }
     image.description = desc
     image.post = parentPost._id
-    if (image.height && image.width) {
-      if (image.width / image.height < 0.75) {
-        image.orientation = 'vertical'
-      } else if (image.width / image.height > 1.33) {
-        image.orientation = 'horizontal'
-      } else {
-        image.orientation = 'neutral'
-      }
+    if (image.width && image.height) {
+      image.orientation = getOrientation(image.width, image.height)
     }
     await image.save()
     imageDBReferences.push(image._id)
@@ -43,10 +65,10 @@ async function updateImageDocsFromInlineElements (doc, inlineElements, parentPos
 }
 
 async function recursiveImageUpdate (doc, post) {
-  if (doc.images) {
+  if (doc.images && doc.images.length) {
     const imageDBReferences = await updateImageDocsFromParallelArrays(doc, doc.images, doc.imageDescriptions, post)
     doc.contents = [{ type: 'html', html: doc.parsedContents }, { type: 'image(s)', images: imageDBReferences }]
-    if (doc.embeds) {
+    if (doc.embeds && doc.embeds.length) {
       for (const embed of doc.embeds) {
         let embedMetadata = LinkMetadata.findOne({ linkUrl: embed.linkUrl })
         if (!embedMetadata) {
@@ -56,7 +78,7 @@ async function recursiveImageUpdate (doc, post) {
         doc.contents.push({ type: 'link preview', linkPreview: embedMetadata._id })
       }
     }
-  } else if (doc.inlineElements) {
+  } else if (doc.inlineElements && doc.inlineElements.length) {
     const imageGroups = updateImageDocsFromInlineElements(doc, doc.inlineElements, post)
     const contents = [...doc.parsedContents.matchAll(/(<p>.*?<\/p>)|(<ul>.*?<\/ul>)|(<blockquote>.*?<\/blockquote>)/g)]
     let addedElements = 0
