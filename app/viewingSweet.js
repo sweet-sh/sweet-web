@@ -387,29 +387,6 @@ module.exports = function (app) {
     })
   })
 
-  // Responds to get requests for /search.
-  // Input: none
-  // Output: renders search page unless isLoggedInOrRedirect redirects you
-  app.get('/search', isLoggedInOrRedirect, (req, res) => {
-    res.render('search', {
-      loggedIn: true,
-      loggedInUserData: req.user,
-      activePage: 'search'
-    })
-  })
-
-  // Responds to get requests for /search that include a query.
-  // Input: the query
-  // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
-  app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
-    res.render('search', {
-      loggedIn: true,
-      loggedInUserData: req.user,
-      activePage: 'search',
-      query: req.params.query
-    })
-  })
-
   // Responds to post requests (?) for the users that follow the logged in user. used to build the @ mention list for tribute to auto-suggest stuff.
   // Input: none
   // Output: JSON data describing the users that follow the logged in user or a redirect from isLoggedInOrRedirect.
@@ -433,6 +410,29 @@ module.exports = function (app) {
       })
   })
 
+  // Responds to get requests for /search.
+  // Input: none
+  // Output: renders search page unless isLoggedInOrRedirect redirects you
+  app.get('/search', isLoggedInOrRedirect, (req, res) => {
+    res.render('search', {
+      loggedIn: true,
+      loggedInUserData: req.user,
+      activePage: 'search'
+    })
+  })
+
+  // Responds to get requests for /search that include a query.
+  // Input: the query
+  // Output: the rendered search page, unless isLoggedInOrRedirect redirects you
+  app.get('/search/:query', isLoggedInOrRedirect, (req, res) => {
+    res.render('search', {
+      loggedIn: true,
+      loggedInUserData: req.user,
+      activePage: 'search',
+      query: req.params.query
+    })
+  })
+
   // Responds to requests for search queries by page.
   // Input: query, timestamp of oldest result yet loaded (in milliseconds)
   // Output: 404 response if no results, the rendered search results otherwise, unless isLoggedInOrRedirect redirects you
@@ -444,123 +444,52 @@ module.exports = function (app) {
     if (!query.length) {
       res.status(404).send('Not found')
     } else {
-      Tag
-        .find({
-          name: {
-            $regex: query,
-            $options: 'i'
-          },
-          lastUpdated: { $lt: olderthan }
-        })
+      const queryObject = {
+        $regex: query,
+        $options: 'i'
+      }
+      Tag.find({
+        name: queryObject,
+        lastUpdated: { $lt: olderthan }
+      }, { name: 1, posts: 1, lastUpdated: 1 })
         .sort('-lastUpdated')
         .limit(resultsPerPage) // this won't completely keep us from getting more than we need, but the point is we'll never need more results than this per page load from any collection
         .then((tagResults) => {
-          User
-            .find({
-              $or: [{
-                username: {
-                  $regex: query,
-                  $options: 'i'
-                }
-              },
-              {
-                displayName: {
-                  $regex: query,
-                  $options: 'i'
-                }
-              },
-              {
-                aboutParsed: {
-                  $regex: query,
-                  $options: 'i'
-                }
-              }
-              ],
-              lastUpdated: { $lt: olderthan }
-            })
+          User.find({
+            $or: [
+              { username: queryObject },
+              { displayName: queryObject },
+              { aboutParsed: queryObject }
+            ],
+            lastUpdated: { $lt: olderthan }
+          }, { displayName: 1, username: 1, aboutParsed: 1, lastUpdated: 1, image: 1, imageEnabled: 1 })
             .sort('-lastUpdated')
             .limit(resultsPerPage)
             .then((userResults) => {
-              Community
-                .find({
-                  $or: [{
-                    name: {
-                      $regex: query,
-                      $options: 'i'
-                    }
-                  },
-                  {
-                    descriptionParsed: {
-                      $regex: query,
-                      $options: 'i'
-                    }
-                  }
-                  ],
-                  lastUpdated: { $lt: olderthan }
-                })
+              Community.find({
+                $or: [
+                  { name: queryObject },
+                  { descriptionParsed: queryObject }
+                ],
+                lastUpdated: { $lt: olderthan }
+              }, { lastUpdated: 1, name: 1, descriptionParsed: 1, membersCount: 1, image: 1, slug: 1, imageEnabled: 1 })
                 .sort('-lastUpdated')
                 .limit(resultsPerPage)
-                .then(communityResults => {
-                  const combinedResults = userResults.concat(communityResults, tagResults)
+                .then(async communityResults => {
+                  const flaggedByMe = (await Relationship.find({ fromUser: req.user._id, value: 'flag' }, { toUser: 1 })).map(v => v.toUser)
+                  const myTrustedUsers = (await Relationship.find({ fromUser: req.user._id, value: 'trust' }, { toUser: 1 })).map(v => v.toUser)
+                  const flaggedByTrusted = (await Relationship.find({ from: { $in: myTrustedUsers }, value: 'flag' }, { toUser: 1 })).map(v => v.toUser)
+                  const allFlaggedUsers = new Set((flaggedByMe.concat(flaggedByTrusted)).map(v => v.toString()))
+                  userResults = userResults.map(u => { return { ...u.toObject(), ...{ type: 'user', flagged: allFlaggedUsers.has(u._id.toString()) } } })
+                  communityResults = communityResults.map(c => { return { ...c.toObject(), ...{ type: 'community' } } })
+                  tagResults = tagResults.map(t => { return { ...t.toObject(), ...{ type: 'tag', posts: t.posts.length } } })
+                  const combinedResults = (userResults.concat(communityResults, tagResults))
                   if (!combinedResults.length) {
                     res.sendStatus(404)
                   } else {
-                    let parsedResults = []
-                    combinedResults.forEach(result => {
-                      const constructedResult = {}
-                      if (result.username) {
-                        // It's a user
-                        constructedResult.type = '<i class="fas fa-user"></i> User'
-                        constructedResult.sort = result.lastUpdated
-                        constructedResult.email = result.email
-                        if (result.displayName) {
-                          constructedResult.title = '<strong><a class="authorLink" href="/' + result.username + '">' + result.displayName + '</a></strong> &middot; <span class="text-muted">@' + result.username + '</span>'
-                        } else {
-                          constructedResult.title = '<strong><a class="authorLink" href="/' + result.username + '">@' + result.username + '</a></strong>'
-                        }
-                        constructedResult.url = '/' + result.username
-                        if (result.imageEnabled) { constructedResult.image = '/images/' + result.image } else { constructedResult.image = '/images/cake.svg' }
-                        constructedResult.description = result.aboutParsed
-                      } else if (result.members) {
-                        // It's a community
-                        constructedResult.type = '<i class="fas fa-leaf"></i> Community'
-                        constructedResult.sort = result.lastUpdated
-                        constructedResult.title = '<strong><a class="authorLink" href="/community/' + result.slug + '">' + result.name + '</a></strong> &middot; <span class="text-muted">' + result.membersCount + ' member' + (result.membersCount === 1 ? '' : 's') + '</span>'
-                        constructedResult.url = '/community/' + result.slug
-                        if (result.imageEnabled) { constructedResult.image = '/images/communities/' + result.image } else { constructedResult.image = '/images/communities/cake.svg' }
-                        constructedResult.description = result.descriptionParsed
-                      } else {
-                        // It's a tag
-                        constructedResult.type = '<i class="fas fa-hashtag"></i> Tag'
-                        constructedResult.sort = result.lastUpdated
-                        constructedResult.title = '<strong><a class="authorLink" href="/tag/' + result.name + '">#' + result.name + '</a></strong>'
-                        constructedResult.url = '/tag/' + result.name
-                        constructedResult.description = '<p>' + result.posts.length + ' post' + (result.posts.length === 1 ? '' : 's') + '</p>'
-                        constructedResult.image = '/images/biscuit.svg'
-                      }
-                      parsedResults.push(constructedResult)
-                    })
-                    parsedResults.sort(function (a, b) {
-                      const timestampA = a.sort
-                      const timestampB = b.sort
-                      // sort timestamp descending
-                      if (timestampA > timestampB) {
-                        return -1
-                      }
-                      if (timestampA < timestampB) {
-                        return 1
-                      }
-                      return 0
-                    })
-                    parsedResults = parsedResults.slice(0, resultsPerPage)
-                    const oldesttimestamp = parsedResults[parsedResults.length - 1].sort
-                    res.render('partials/searchresults', {
-                      layout: false,
-                      loggedIn: true,
-                      loggedInUserData: req.user,
-                      oldesttimestamp: oldesttimestamp.getTime(),
-                      results: parsedResults.slice(0, resultsPerPage)
-                    })
+                    const results = (combinedResults.sort((a, b) => b.lastUpdated - a.lastUpdated)).slice(0, resultsPerPage)
+                    const oldestTimestamp = results[results.length - 1].lastUpdated.getTime()
+                    res.json({ results, oldestTimestamp })
                   }
                 })
             })

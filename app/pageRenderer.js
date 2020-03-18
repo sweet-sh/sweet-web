@@ -10,6 +10,9 @@ const hbs = expressHandlebars.create({
   helpers: {
     ...helpers,
     ...{
+      vueTemplate: function (options) {
+        return options.fn()
+      },
       plural: function (number, text) {
         const singular = number === 1
         // If no text parameter was given, just return a conditional s.
