@@ -1,5 +1,5 @@
 const sharp = require('sharp')
-const shortid = require('shortid')
+const nanoid = require('nanoid')
 const mongoose = require('mongoose')
 const moment = require('moment')
 const fs = require('fs')
@@ -53,7 +53,7 @@ module.exports = function (app) {
           return
         }
         const imageFormat = imageMeta.format
-        const imageUrl = shortid.generate()
+        const imageUrl = nanoid()
         if (imageFormat === 'gif') {
           if (req.files.image.size <= 5242880) {
             const imageData = req.files.image.data
@@ -115,7 +115,7 @@ module.exports = function (app) {
   // Inputs: image file name
   // Outputs: the image presumably in the temp folder with that filename is deleted
   app.post('/cleartempimage', isLoggedInOrErrorResponse, function (req, res) {
-    if (req.body.imageURL.match(/^(\w|-){7,14}.(jpeg|jpg|png|gif)$/)) { // makes sure the incoming imageURL matches the shortid format and then a . and then an image extension
+    if (req.body.imageURL.match(/^(\w|-){21,}.(jpeg|jpg|png|gif)$/)) { // makes sure the incoming imageURL matches the nanoid format and then a . and then an image extension
       fs.unlink('./cdn/images/temp/' + req.body.imageURL, function (e) {
         if (e) {
           console.log('could not delete image ' + './cdn/images/temp/' + req.body.imageURL)
@@ -159,7 +159,7 @@ module.exports = function (app) {
       }
     }
 
-    const newPostUrl = shortid.generate()
+    const newPostUrl = nanoid()
     const postCreationTime = new Date()
 
     if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { // in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
@@ -780,7 +780,7 @@ module.exports = function (app) {
           type: 'boost',
           authorEmail: req.user.email,
           author: req.user._id,
-          url: shortid.generate(),
+          url: nanoid(),
           privacy: 'public',
           timestamp: boostedTimestamp,
           lastUpdated: boostedTimestamp,
@@ -961,7 +961,13 @@ module.exports = function (app) {
     const deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v))
     for (const image of deletedImages) {
       Image.deleteOne({ filename: image })
-      fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
+      s3.deleteObject({
+        Bucket: 'sweet-images', 
+        Key: 'images/' + image
+      }).promise()
+      .catch((e) => console.error('Error deleting unused images from edited post', e))
+      
+      // fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
     }
 
     post.inlineElements = parsedPost.inlineElements

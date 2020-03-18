@@ -202,8 +202,16 @@ module.exports = function (app, passport) {
           .jpeg({
             quality: 85
           })
-          .toFile('./public/images/' + req.user._id + '.jpg')
+          .toBuffer()
+          .then(buffer => s3.putObject({
+              Body: buffer,
+              Bucket: 'sweet-images',
+              Key: 'users/' + req.user._id + '.jpg',
+              ACL: 'public-read'
+            }).promise()
+          )
           .catch(err => {
+            console.log('Error processing user profile image with sharp')
             console.error(err)
           })
         imageFilename = req.user._id + '.jpg'

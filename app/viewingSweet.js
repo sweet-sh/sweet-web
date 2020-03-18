@@ -14,7 +14,7 @@ const notifier = require('./notifier')
 const globals = require('../config/globals')
 
 // used on the settings page to set up push notifications
-const auth = require('../config/auth.js')
+const auth = require('../config/auth')
 
 const ObjectId = mongoose.Types.ObjectId
 
@@ -25,18 +25,34 @@ module.exports = function (app) {
   // Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function (req, res) {
     function sendImageFile () {
-      const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
-      try {
-        if (fs.existsSync(imagePath)) {
-          res.sendFile(imagePath)
+      const params = {
+        Bucket: 'sweet-images',
+        Key: 'images/' + req.params.filename
+      };
+      s3.getObject(params, (err, data) => {
+        if (err) {
+          console.log('Image ' + req.params.filename + " doesn't exist in S3 bucket!")
+          console.log(err)
+          res.status('404')
+          res.redirect('/404')
+        } else {
+          res.send(data.Body)
         }
-      } catch (err) {
-        // Image file doesn't exist on server
-        console.log('Image ' + req.params.filename + " doesn't exist on server!")
-        console.log(err)
-        res.status('404')
-        res.redirect('/404')
-      }
+      });
+
+      // const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
+      // try {
+      //   if (fs.existsSync(imagePath)) {
+      //     res.sendFile(imagePath)
+      //   }
+      // } catch (err) {
+      //   // Image file doesn't exist on server
+      //   console.log('Image ' + req.params.filename + " doesn't exist on server!")
+      //   console.log(err)
+      //   res.status('404')
+      //   res.redirect('/404')
+      // }
+      // res.send(url)
     }
 
     Image.findOne({ filename: req.params.filename }).then(image => {

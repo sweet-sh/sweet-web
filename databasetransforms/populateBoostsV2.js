@@ -1,7 +1,7 @@
 const User = require('../app/models/user');
 const Post = require('../app/models/post');
 var configDatabase = require('../config/database.js');
-const shortid = require('shortid')
+const nanoid = require('nanoid')
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, {
     useNewUrlParser: true
@@ -83,7 +83,7 @@ async function createBoostsField() {
                                     type: 'boost',
                                     authorEmail: post.authorEmail,
                                     author: post.author,
-                                    url: shortid.generate(),
+                                    url: nanoid(),
                                     privacy: 'public',
                                     timestamp: boost.timestamp,
                                     lastUpdated: boost.timestamp,

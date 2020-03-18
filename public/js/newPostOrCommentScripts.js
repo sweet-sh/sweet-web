@@ -132,9 +132,9 @@ $(function() {
                 //we have to first create the editor, then attach quill, then append the content, quill will get angry if we attach it to a div with embeds already in it
                 attachQuill(editModal.find('#editPostContent')[0]);
                 var newEditor = editModal.find('.ql-editor');
-                if (tribute) {
-                    tribute.attach(newEditor);
-                }
+                // if (tribute) {
+                //     tribute.attach(newEditor);
+                // }
                 newEditor.empty(); //bc the editor is automatically supplied with a blank line at the top at first
                 newEditor.append(response.content);
                 newEditor.find('.image-move').each(function(i, e) { e.addEventListener('touchstart', touchStartOnHandle, { passive: false }) });

@@ -1,7 +1,7 @@
 User = require('../app/models/user');
 Post = require('../app/models/post');
 ObjectId = require('mongoose').Types.ObjectId;
-var shortid = require('shortid');
+var nanoid = require('nanoid');
 var configDatabase = require('../config/database.js');
 var mongoose = require('mongoose');
 mongoose.connect(configDatabase.url, {
@@ -46,7 +46,7 @@ async function createPosts() {
                 type: 'original',
                 authorEmail: poster.email,
                 author: poster.id,
-                url: shortid.generate(),
+                url: nanoid(),
                 privacy: 'public',
                 timestamp: postTime,
                 lastUpdated: postTime,
@@ -79,7 +79,7 @@ async function createPosts() {
                     type: 'boost',
                     authorEmail: poster.email,
                     author: poster.id,
-                    url: shortid.generate(),
+                    url: nanoid(),
                     privacy: 'public',
                     timestamp: boostTime,
                     lastUpdated: boostTime,
@@ -131,7 +131,7 @@ async function createBoostsV2Posts() {
                 type: 'original',
                 authorEmail: poster.email,
                 author: poster.id,
-                url: shortid.generate(),
+                url: nanoid(),
                 privacy: 'public',
                 timestamp: postTime,
                 lastUpdated: postTime,
