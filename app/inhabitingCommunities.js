@@ -171,6 +171,7 @@ module.exports = function (app, passport) {
                   }
                 })
                 res.render('community', {
+                  s3Bucket: s3Bucket,
                   loggedIn: isLoggedIn,
                   loggedInUserData: req.user,
                   communityData: community,
@@ -246,7 +247,7 @@ module.exports = function (app, passport) {
               .toBuffer()
               .then(buffer => s3.putObject({
                   Body: buffer,
-                  Bucket: 'sweet-images',
+                  Bucket: s3Bucket,
                   Key: 'communities/' + communityUrl + '.jpg',
                   ACL: 'public-read'
                 }).promise()
@@ -681,7 +682,7 @@ module.exports = function (app, passport) {
           .toBuffer()
           .then(buffer => s3.putObject({
               Body: buffer,
-              Bucket: 'sweet-images',
+              Bucket: s3Bucket,
               Key: 'communities/staging/' + imageUrl,
               ACL: 'public-read'
             }).promise()
@@ -911,8 +912,10 @@ module.exports = function (app, passport) {
                     community[vote.reference + 'Parsed'] = vote.parsedProposedValue
                   } else if (vote.reference === 'image') {
                     // Copy the S3 image object to a new location
+                    // We give it a new filename otherwise S3 doesn't show an updated
+                    // overwritten file immediately, which is confusing for users
                     s3.copyObject({
-                      Bucket: 'sweet-images', 
+                      Bucket: s3Bucket, 
                       CopySource: 'sweet-images/communities/staging/' + vote.proposedValue, 
                       Key: 'communities/' + vote.proposedValue,
                       ACL: 'public-read'
@@ -920,11 +923,13 @@ module.exports = function (app, passport) {
                     .then(() => 
                       // Delete the old object
                       s3.deleteObject({
-                        Bucket: 'sweet-images', 
+                        Bucket: s3Bucket, 
                         Key: 'communities/staging/' + vote.proposedValue
                       }).promise()
                     )
                     .catch((e) => console.error('Error moving community image from staging', e))
+                    // Update image entry in the db
+                    community[vote.reference] = vote.proposedValue
                     community.imageEnabled = true
                   } else if (vote.reference === 'name') {
                     oldName = community.name

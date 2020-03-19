@@ -10,6 +10,7 @@ const notifier = require('./notifier')
 const reservedUsernames = require('../config/reserved-usernames.js')
 const sgMail = require('./mail')
 const emailer = require('./emailer')
+const nanoid = require('nanoid')
 
 module.exports = function (app, passport) {
   // Responds to a post request containing signup information.
@@ -193,8 +194,9 @@ module.exports = function (app, passport) {
         return res.redirect('back')
       } else {
         imageEnabled = true
-        const eventImageBuffer = req.files.imageUpload.data
-        sharp(eventImageBuffer)
+        const newFilename = 'users/' + nanoid() + '.jpg'
+        const imageBuffer = req.files.imageUpload.data
+        sharp(imageBuffer)
           .resize({
             width: 600,
             height: 600
@@ -205,16 +207,27 @@ module.exports = function (app, passport) {
           .toBuffer()
           .then(buffer => s3.putObject({
               Body: buffer,
-              Bucket: 'sweet-images',
-              Key: 'users/' + req.user._id + '.jpg',
+              Bucket: s3Bucket,
+              Key: newFilename,
               ACL: 'public-read'
             }).promise()
+            .then(() => 
+              // Delete the old object
+              s3.deleteObject({
+                Bucket: s3Bucket, 
+                Key: 'users/' + imageFilename
+              }).promise()
+            )
+            .catch(err => {
+              console.log('Error uploading user profile image to S3')
+              console.error(err)
+            })
           )
           .catch(err => {
             console.log('Error processing user profile image with sharp')
             console.error(err)
           })
-        imageFilename = req.user._id + '.jpg'
+        imageFilename = newFilename
       }
     }
     User.findOne({ _id: req.user._id })

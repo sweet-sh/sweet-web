@@ -1,5 +1,5 @@
 <div id="profileImageContainer" class="community-image">
-  <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}/images/communities/{{communityData.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+  <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}https://{{s3Bucket}}.s3.amazonaws.com/communities/{{communityData.image}}{{else}}/images/communities/cake.svg{{/if}}" />
 </div>
 
 <h3 class="page-header community-name">

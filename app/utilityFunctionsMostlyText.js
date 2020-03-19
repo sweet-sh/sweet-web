@@ -243,7 +243,7 @@ module.exports = {
       const metadata = await sharp(imagesCurrentFolder + imageFileName).metadata()
       const imageUrl = await new Promise((resolve, reject) => {
         // call S3 to retrieve upload file to specified bucket
-        var uploadParams = {Bucket: 'sweet-images', Key: '', Body: '', ACL: 'public-read', Metadata: {height: metadata.height.toString(), width: metadata.width.toString()}}
+        var uploadParams = {Bucket: s3Bucket, Key: '', Body: '', ACL: 'public-read', Metadata: {height: metadata.height.toString(), width: metadata.width.toString()}}
 
         // Configure the file stream and obtain the upload parameters
         var fileStream = fs.createReadStream(file);
@@ -284,15 +284,8 @@ module.exports = {
         width: metadata.width
       })
       await image.save()
-
-      // if (fs.existsSync(path.resolve('./cdn/images/' + imageFileName))) {
-        imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? 'vertical-image' : '')
-        imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? 'horizontal-image' : '')
-      // } else {
-      //   console.log('image ' + './cdn/images/' + imageFileName + ' not found when determining orientation! Oh no')
-      //   imageIsVertical.push('')
-      //   imageIsHorizontal.push('')
-      // }
+      imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? 'vertical-image' : '')
+      imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? 'horizontal-image' : '')
     }
     return { imageIsHorizontal: imageIsHorizontal, imageIsVertical: imageIsVertical }
   },

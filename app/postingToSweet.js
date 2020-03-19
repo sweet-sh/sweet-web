@@ -5,6 +5,7 @@ const moment = require('moment')
 const fs = require('fs')
 const Post = require('./models/post')
 const Community = require('./models/community')
+const Image = require('./models/image')
 const User = require('./models/user')
 const Tag = require('./models/tag')
 const Relationship = require('./models/relationship')
@@ -241,18 +242,22 @@ module.exports = function (app) {
             for (const il of postOrComment.inlineElements) {
               if (il.type === 'image(s)') {
                 for (const image of il.images) {
-                  fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                    if (err) console.log('Image deletion error ' + err)
-                  })
+                  s3.deleteObject({
+                    Bucket: s3Bucket, 
+                    Key: 'images/' + image
+                  }).promise()
+                  .catch((e) => console.error('Error deleting images with post', e))
                   Image.deleteOne({ filename: image })
                 }
               }
             }
           } else if (postOrComment.images && postOrComment.images.length) {
             for (const image of postOrComment.images) {
-              fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                if (err) console.log('Image deletion error ' + err)
-              })
+              s3.deleteObject({
+                Bucket: s3Bucket, 
+                Key: 'images/' + image
+              }).promise()
+              .catch((e) => console.error('Error deleting images with post', e))
               Image.deleteOne({ filename: image })
             }
           }
@@ -698,18 +703,22 @@ module.exports = function (app) {
 
         if (target.images && target.images.length) {
           for (const image of target.images) {
-            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-              if (err) console.log('Image deletion error ' + err)
-            })
+            s3.deleteObject({
+              Bucket: s3Bucket, 
+              Key: 'images/' + image
+            }).promise()
+            .catch((e) => console.error('Error deleting images with comment', e))
             Image.deleteOne({ filename: image })
           }
         } else if (target.inlineElements && target.inlineElements.length) {
           for (const ie of target.inlineElements) {
             if (ie.type === 'image(s)') {
               for (const image of ie.images) {
-                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                  if (err) console.log('Image deletion error ' + err)
-                })
+                s3.deleteObject({
+                  Bucket: s3Bucket, 
+                  Key: 'images/' + image
+                }).promise()
+                .catch((e) => console.error('Error deleting images with comment', e))
                 Image.deleteOne({ filename: image })
               }
             }
@@ -962,12 +971,10 @@ module.exports = function (app) {
     for (const image of deletedImages) {
       Image.deleteOne({ filename: image })
       s3.deleteObject({
-        Bucket: 'sweet-images', 
+        Bucket: s3Bucket, 
         Key: 'images/' + image
       }).promise()
       .catch((e) => console.error('Error deleting unused images from edited post', e))
-      
-      // fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
     }
 
     post.inlineElements = parsedPost.inlineElements

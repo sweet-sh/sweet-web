@@ -26,7 +26,7 @@ module.exports = function (app) {
   app.get('/api/image/display/:filename', function (req, res) {
     function sendImageFile () {
       const params = {
-        Bucket: 'sweet-images',
+        Bucket: s3Bucket,
         Key: 'images/' + req.params.filename
       };
       s3.getObject(params, (err, data) => {
@@ -39,20 +39,6 @@ module.exports = function (app) {
           res.send(data.Body)
         }
       });
-
-      // const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
-      // try {
-      //   if (fs.existsSync(imagePath)) {
-      //     res.sendFile(imagePath)
-      //   }
-      // } catch (err) {
-      //   // Image file doesn't exist on server
-      //   console.log('Image ' + req.params.filename + " doesn't exist on server!")
-      //   console.log(err)
-      //   res.status('404')
-      //   res.redirect('/404')
-      // }
-      // res.send(url)
     }
 
     Image.findOne({ filename: req.params.filename }).then(image => {
@@ -394,12 +380,14 @@ module.exports = function (app) {
     const followedUserData = []
     Relationship.find({ fromUser: req.user._id, value: 'follow' }).populate('toUser').then((followedUsers) => {
       followedUsers.forEach(relationship => {
-        const follower = {
-          key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
-          value: relationship.toUser.username,
-          image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
+        if (relationship.toUser) {
+          const follower = {
+            key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
+            value: relationship.toUser.username,
+            image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
+          }
+          followedUserData.push(follower)
         }
-        followedUserData.push(follower)
       })
       res.setHeader('content-type', 'text/plain')
       res.end(JSON.stringify({ followers: followedUserData }))
