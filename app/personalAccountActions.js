@@ -215,7 +215,7 @@ module.exports = function (app, passport) {
               // Delete the old object
               s3.deleteObject({
                 Bucket: s3Bucket, 
-                Key: 'users/' + imageFilename
+                Key: imageFilename
               }).promise()
             )
             .catch(err => {

@@ -1,5 +1,5 @@
 <div id="profileImageContainer" class="community-image">
-  <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}https://{{s3Bucket}}.s3.amazonaws.com/communities/{{communityData.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+  <img alt="Display image for the community '{{ communityData.name }}'" id="profileImage" src="{{#if communityData.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{communityData.image}}{{else}}/images/communities/cake.svg{{/if}}" />
 </div>
 
 <h3 class="page-header community-name">
@@ -94,7 +94,7 @@
         <div id="membersList" class="user-list">
           {{#each communityData.members}}
             <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top">
-                <img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                <img src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                 {{#if this.isRecentlyActive}}
                     <i class="recently-active-marker fas fa-circle"></i>
                 {{/if}}

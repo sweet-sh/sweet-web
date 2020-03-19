@@ -243,8 +243,16 @@ module.exports = {
       const metadata = await sharp(imagesCurrentFolder + imageFileName).metadata()
       const imageUrl = await new Promise((resolve, reject) => {
         // call S3 to retrieve upload file to specified bucket
-        var uploadParams = {Bucket: s3Bucket, Key: '', Body: '', ACL: 'public-read', Metadata: {height: metadata.height.toString(), width: metadata.width.toString()}}
-
+        var uploadParams = {
+          Bucket: s3Bucket,
+          Key: '',
+          Body: '',
+          ACL: 'public-read',
+          Metadata: {
+            height: metadata.height.toString(),
+            width: metadata.width.toString()
+          }
+        }
         // Configure the file stream and obtain the upload parameters
         var fileStream = fs.createReadStream(file);
         fileStream.on('error', function(err) {
@@ -275,7 +283,7 @@ module.exports = {
         // posts' types are either original or community; the image's contexts are either user or community, meaning the same things.
         context: postType === 'community' ? 'community' : 'user',
         community: postType === 'community' ? community : undefined,
-        filename: imageFileName,
+        filename: 'images/' + imageFileName,
         url: imageUrl,
         privacy: privacy,
         user: posterID,

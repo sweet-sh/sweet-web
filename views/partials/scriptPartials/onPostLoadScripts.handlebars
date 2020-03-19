@@ -28,7 +28,7 @@ $(function(){
         tribute = new Tribute({
             values: followers,
             menuItemTemplate: function (item) {
-                return '<img class="tribute-image" src="/images/' + item.original.image + '"><span class="tribute-text">' + item.string + '</span>';
+                return '<img class="tribute-image" src="' + item.original.image + '"><span class="tribute-text">' + item.string + '</span>';
             },
             searchOpts: {
                 pre: '<strong>',

@@ -11,7 +11,7 @@
 
             {{#each communities}}
                 <a href="/community/{{this.slug}}">
-                    <img src="https://sweet.sh/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}"/>
+                    <img src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}"/>
                     {{this.name}}
                 </a>
             {{/each}}

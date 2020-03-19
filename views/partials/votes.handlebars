@@ -4,7 +4,7 @@
     <header>
         <div class="post-header-left">
             <a href="/{{this.creator.username}}">
-                <img class="author-image" alt="Profile image of @{{this.creator.username}}" src="/images/{{#if this.creator.imageEnabled}}{{this.creator.image}}{{else}}cake.svg{{/if}}" />
+                <img class="author-image" alt="Profile image of @{{this.creator.username}}" src="{{#if this.creator.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.creator.image}}{{else}}/images/cake.svg{{/if}}" />
             </a>
         </div>
         <div class="post-header-right">
@@ -56,7 +56,7 @@
             </p>
             {{#eq this.reference "image"}}
                 <div class="post-images one-image" style="margin-bottom:1rem;">
-                    <img class="post-single-image" src="https://sweet-images.s3.amazonaws.com/communities/staging/{{this.proposedValue}}"/>
+                    <img class="post-single-image" src="https://sweet-images.s3.amazonaws.com/{{this.proposedValue}}"/>
                 </div>
             {{else}}
             {{#eq this.reference "name"}}

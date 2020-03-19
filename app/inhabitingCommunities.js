@@ -171,7 +171,6 @@ module.exports = function (app, passport) {
                   }
                 })
                 res.render('community', {
-                  s3Bucket: s3Bucket,
                   loggedIn: isLoggedIn,
                   loggedInUserData: req.user,
                   communityData: community,
@@ -270,7 +269,7 @@ module.exports = function (app, passport) {
             descriptionParsed: parsedDesc,
             rulesRaw: newCommunityData.communityRules,
             rulesParsed: parsedRules,
-            image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
+            image: imageEnabled ? 'communities/' + communityUrl + '.jpg' : 'cake.svg',
             imageEnabled: imageEnabled,
             settings: {
               visibility: newCommunityData.communityVisibility,
@@ -743,8 +742,8 @@ module.exports = function (app, passport) {
       parsedProposedValue = parsedVoteLength[req.body.proposedValue]
       allowedChange = (parsedProposedValue && community.settings.voteLength !== parseInt(proposedValue))
     } else if (req.body.reference === 'image') {
-      proposedValue = imageUrl
-      parsedProposedValue = imageUrl
+      proposedValue = 'communities/staging/' + imageUrl
+      parsedProposedValue = 'communities/staging/' + imageUrl
     } else if (req.body.reference === 'name') { // this is where it gets complicated
       proposedValue = req.body.proposedValue
       parsedProposedValue = proposedValue
@@ -914,22 +913,23 @@ module.exports = function (app, passport) {
                     // Copy the S3 image object to a new location
                     // We give it a new filename otherwise S3 doesn't show an updated
                     // overwritten file immediately, which is confusing for users
+                    const imageFilename = 'communities/' + nanoid() + '.jpg'
                     s3.copyObject({
                       Bucket: s3Bucket, 
-                      CopySource: 'sweet-images/communities/staging/' + vote.proposedValue, 
-                      Key: 'communities/' + vote.proposedValue,
+                      CopySource: 'sweet-images/' + vote.proposedValue, // sweet-images/[communities/staging/filename.jpg]
+                      Key: imageFilename, // [communities/newfilename.jpg]
                       ACL: 'public-read'
                     }).promise()
                     .then(() => 
                       // Delete the old object
                       s3.deleteObject({
                         Bucket: s3Bucket, 
-                        Key: 'communities/staging/' + vote.proposedValue
+                        Key: vote.proposedValue // [communities/staging/filename.jpg]
                       }).promise()
                     )
                     .catch((e) => console.error('Error moving community image from staging', e))
                     // Update image entry in the db
-                    community[vote.reference] = vote.proposedValue
+                    community[vote.reference] = imageFilename
                     community.imageEnabled = true
                   } else if (vote.reference === 'name') {
                     oldName = community.name

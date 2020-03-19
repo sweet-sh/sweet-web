@@ -31,7 +31,7 @@ module.exports = function (app) {
       };
       s3.getObject(params, (err, data) => {
         if (err) {
-          console.log('Image ' + req.params.filename + " doesn't exist in S3 bucket!")
+          console.log("Image images/" + req.params.filename + " doesn't exist in S3 bucket!")
           console.log(err)
           res.status('404')
           res.redirect('/404')
@@ -41,7 +41,7 @@ module.exports = function (app) {
       });
     }
 
-    Image.findOne({ filename: req.params.filename }).then(image => {
+    Image.findOne({ filename: 'images/' + req.params.filename }).then(image => {
       if (image) {
         if (image.privacy === 'public') {
           sendImageFile()
@@ -384,8 +384,9 @@ module.exports = function (app) {
           const follower = {
             key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
             value: relationship.toUser.username,
-            image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
+            image: (relationship.toUser.imageEnabled ? relationship.toUser.image : '/images/cake.svg')
           }
+          console.log(follower)
           followedUserData.push(follower)
         }
       })

@@ -244,7 +244,7 @@ module.exports = function (app) {
                 for (const image of il.images) {
                   s3.deleteObject({
                     Bucket: s3Bucket, 
-                    Key: 'images/' + image
+                    Key: image // [images/image.jpg]
                   }).promise()
                   .catch((e) => console.error('Error deleting images with post', e))
                   Image.deleteOne({ filename: image })
@@ -255,7 +255,7 @@ module.exports = function (app) {
             for (const image of postOrComment.images) {
               s3.deleteObject({
                 Bucket: s3Bucket, 
-                Key: 'images/' + image
+                Key: image // [images/image.jpg]
               }).promise()
               .catch((e) => console.error('Error deleting images with post', e))
               Image.deleteOne({ filename: image })
@@ -705,7 +705,7 @@ module.exports = function (app) {
           for (const image of target.images) {
             s3.deleteObject({
               Bucket: s3Bucket, 
-              Key: 'images/' + image
+              Key: image // [images/image.jpg]
             }).promise()
             .catch((e) => console.error('Error deleting images with comment', e))
             Image.deleteOne({ filename: image })
@@ -716,7 +716,7 @@ module.exports = function (app) {
               for (const image of ie.images) {
                 s3.deleteObject({
                   Bucket: s3Bucket, 
-                  Key: 'images/' + image
+                  Key: image // [images/image.jpg]
                 }).promise()
                 .catch((e) => console.error('Error deleting images with comment', e))
                 Image.deleteOne({ filename: image })
@@ -972,7 +972,7 @@ module.exports = function (app) {
       Image.deleteOne({ filename: image })
       s3.deleteObject({
         Bucket: s3Bucket, 
-        Key: 'images/' + image
+        Key: image // [images/image.jpg]
       }).promise()
       .catch((e) => console.error('Error deleting unused images from edited post', e))
     }
