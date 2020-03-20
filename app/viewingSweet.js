@@ -41,7 +41,7 @@ module.exports = function (app) {
       });
     }
 
-    Image.findOne({ filename: 'images/' + req.params.filename }).then(image => {
+    Image.findOne({ $or: [ { filename: 'images/' + req.params.filename }, { filename: req.params.filename } ] }).then(image => {
       if (image) {
         if (image.privacy === 'public') {
           sendImageFile()
