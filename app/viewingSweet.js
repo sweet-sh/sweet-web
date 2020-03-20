@@ -41,8 +41,11 @@ module.exports = function (app) {
       });
     }
 
+    console.log("Fetching",req.params.filename)
+
     Image.findOne({ $or: [ { filename: 'images/' + req.params.filename }, { filename: req.params.filename } ] }).then(image => {
       if (image) {
+        console.log("Image found",image)
         if (image.privacy === 'public') {
           sendImageFile()
         } else if (image.privacy === 'private') {
@@ -386,7 +389,6 @@ module.exports = function (app) {
             value: relationship.toUser.username,
             image: (relationship.toUser.imageEnabled ? relationship.toUser.image : '/images/cake.svg')
           }
-          console.log(follower)
           followedUserData.push(follower)
         }
       })
