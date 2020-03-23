@@ -77,7 +77,7 @@ const userSchema = new mongoose.Schema({
 
 // Middleware
 userSchema.pre('validate', function(next) {
-  if (!this.image.startsWith('images/')) {
+  if (this.image && this.image.length > 1 && !this.image.startsWith('images/')) {
     this.image = 'images/' + this.image
   }
   next()
