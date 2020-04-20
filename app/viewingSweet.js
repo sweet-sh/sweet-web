@@ -18,77 +18,78 @@ const auth = require('../config/auth.js')
 
 const ObjectId = mongoose.Types.ObjectId
 
+async function hasPermissionToViewPost (isLoggedIn, userDoc, postDoc) {
+  if (!isLoggedIn) {
+    if (postDoc.privacy === 'private') {
+      return false
+    } else {
+      if (postDoc.type === 'user') {
+        if (!postDoc.populated('author')) {
+          await postDoc.populate('author').execPopulate()
+        }
+        return postDoc.author.settings.profileVisibility === 'profileAndPosts'
+      } else if (postDoc.type === 'community') {
+        if (!postDoc.populated('community')) {
+          await postDoc.populate('community').execPopulate()
+        }
+        return postDoc.community.settings.visibility === 'public'
+      }
+    }
+  } else {
+    const postAuthorID = postDoc.populated('author') ? postDoc.author._id : postDoc.author
+    if (postDoc.type === 'draft') {
+      return postAuthorID.equals(userDoc._id)
+    } else if (postDoc.type === 'community') {
+      if (!postDoc.populated('community')) {
+        await postDoc.populate('community').execPopulate()
+      }
+      return postDoc.community.settings.visibility === 'public' ||
+             postDoc.community.members.some(m => m.equals(userDoc._id))
+    } else if (postDoc.type === 'original') {
+      if (postDoc.privacy === 'public') {
+        return true
+      } else {
+        return !!(await Relationship.findOne({ fromUser: postAuthorID, toUser: userDoc._id, type: 'trust' }))
+      }
+    }
+  }
+}
+
 module.exports = function (app) {
   // Responds to get requests for images on the server. If the image is private, checks to see
   // if the user is trusted/in the community first.
   // Input: URL of an image
   // Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function (req, res) {
-    function sendImageFile () {
-      const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
-      try {
-        if (fs.existsSync(imagePath)) {
-          res.sendFile(imagePath)
-        }
-      } catch (err) {
-        // Image file doesn't exist on server
-        console.log('Image ' + req.params.filename + " doesn't exist on server!")
-        console.log(err)
-        res.status('404')
-        res.redirect('/404')
-      }
-    }
-
-    Image.findOne({ filename: req.params.filename }).then(image => {
+    Image.findOne({ filename: req.params.filename }).then(async image => {
       if (image) {
-        if (image.privacy === 'public') {
-          sendImageFile()
-        } else if (image.privacy === 'private') {
-          if (req.isAuthenticated()) {
-            if (image.user === req.user._id.toString()) {
-              sendImageFile()
-            } else if (image.context === 'user') {
-              Relationship.findOne({ toUser: req.user._id, value: 'trust', fromUser: image.user }).then(rel => {
-                if (rel) {
-                  sendImageFile()
-                } else {
-                  // User not trusted by image's uploader
-                  console.log('User not trusted!')
-                  res.status('404')
-                  res.redirect('/404')
-                }
-              })
-            } else if (image.context === 'community') {
-              Community.findOne({ _id: image.community, members: req.user._id }).then(comm => {
-                if (comm) {
-                  sendImageFile()
-                } else {
-                  // User not a member of this community
-                  console.log(req)
-                  console.log(image)
-                  console.log('User not a community member!')
-                  res.status('404')
-                  res.redirect('/404')
-                }
-              })
+        const parentPost = await Post.findById(image.post)
+        if (hasPermissionToViewPost(req.isAuthenticated(), req.user, parentPost)) {
+          const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
+          try {
+            if (fs.existsSync(imagePath)) {
+              res.sendFile(imagePath)
             }
-          } else {
-            // User not logged in, but has to be to see this image
-            console.log('User not logged in!')
+          } catch (err) {
+            // Image file doesn't exist on server
+            console.log('Image ' + req.params.filename + " doesn't exist on server!")
+            console.log(err)
             res.status('404')
             res.redirect('/404')
           }
+        } else {
+          console.log(`permission denied to view image: ${req.params.filename}`)
+          res.status('404')
+          res.redirect('/404')
         }
       } else {
-        // Image entry not found in database
         console.log('Image ' + image.filename + ' not in database!')
         res.status('404')
         res.redirect('/404')
       }
     })
       .catch(error => {
-        // Unexpected error
-        console.log('Unexpected error displaying image')
+        console.log('Unexpected error retrieving image document from database')
         console.log(error)
         res.status('404')
         res.redirect('/404')
@@ -712,10 +713,6 @@ module.exports = function (app) {
     let myCommunities
     let usersWhoTrustMeEmails
 
-    // const myFlaggedUserEmails
-    // const myTrustedUserEmails
-    // const usersFlaggedByMyTrustedUsers
-
     // build some user lists. only a thing if the user is logged in.
     // todo: instead of pulling them from the relationships collection, at least the first 4 could be arrays of references to other users in the user document, that would speed things up
     if (req.isAuthenticated()) {
@@ -845,7 +842,6 @@ module.exports = function (app) {
       .populate('boostTarget')
       .populate('boostsV2.booster')
 
-    // so this will be called when the query retrieves the posts we want
     const posts = await query
 
     if (!posts || !posts.length) {
@@ -910,6 +906,7 @@ module.exports = function (app) {
       let canDisplay = false
       if (req.isAuthenticated()) {
         // logged in users can't see private posts by users who don't trust them or community posts by muted members
+        // TODO: urgent: fix this now that post.authorEmail no longer exists
         if ((post.privacy === 'private' && usersWhoTrustMeEmails.includes(post.authorEmail)) || post.privacy === 'public') {
           canDisplay = true
         }
@@ -959,6 +956,7 @@ module.exports = function (app) {
       }
 
       // As a final hurrah, just hide all posts and boosts made by users you've muted
+      // TODO: urgent: fix this now that post.authorEmail no longer exists
       if (req.isAuthenticated() && myMutedUserEmails.includes(post.authorEmail)) {
         canDisplay = false
       }

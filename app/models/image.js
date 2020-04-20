@@ -1,17 +1,13 @@
 const mongoose = require('mongoose')
+const DBReference = mongoose.Schema.Types.ObjectId
 
 const imageSchema = new mongoose.Schema({
-  context: String, // either "user" or "community", corresponding to the post schema's type field's values "original" and "community"
   filename: { type: String, unique: true },
-  privacy: String,
-  accessToken: String,
-  user: String,
-  community: String,
-  tags: String,
+  post: { type: DBReference, ref: 'Post' },
   description: String,
   height: Number,
   width: Number,
-  quality: String
+  orientation: { type: String, enum: ['horizontal', 'vertical', 'neutral'] }
 })
 
 imageSchema.index({ filename: 1 })
