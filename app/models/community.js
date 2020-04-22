@@ -36,19 +36,21 @@ const communitySchema = new mongoose.Schema({
 })
 
 communitySchema.pre('validate', function (next) {
-  if (!this.votingMembersCount) { this.votingMembersCount = this.members.length }
-  this.membersCount = this.members.length
-  this.requestsCount = this.membershipRequests.length
-  this.mutedMembersCount = this.mutedMembers.length
-  const membersIds = this.members.map(String)
-  const mutedMembersIds = this.mutedMembers.map(String)
-  const mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
-  const votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
-  this.votingMembersCount = votingMembers
-  if (this.membersCount === 0) {
-    this.settings.joinType = 'open'
-    this.membershipRequests = []
-    this.requestsCount = 0
+  if (this.members) {
+    if (!this.votingMembersCount) { this.votingMembersCount = this.members.length }
+    this.membersCount = this.members.length
+    this.requestsCount = this.membershipRequests.length
+    this.mutedMembersCount = this.mutedMembers.length
+    const membersIds = this.members.map(String)
+    const mutedMembersIds = this.mutedMembers.map(String)
+    const mutedUsersWhoAreMembers = mutedMembersIds.filter(id => membersIds.includes(id))
+    const votingMembers = this.membersCount - mutedUsersWhoAreMembers.length
+    this.votingMembersCount = votingMembers
+    if (this.membersCount === 0) {
+      this.settings.joinType = 'open'
+      this.membershipRequests = []
+      this.requestsCount = 0
+    }
   }
   next()
 })
