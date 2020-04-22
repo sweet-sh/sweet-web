@@ -49,5 +49,5 @@ async function changeCommunityImages() {
     })
 }
 
-// changeUserImages();
+changeUserImages();
 changeCommunityImages();
