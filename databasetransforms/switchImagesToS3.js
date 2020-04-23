@@ -17,15 +17,25 @@ async function asyncForEach(array, callback) {
 
 async function changeUserImages() {
   await User.find({}, {
-    image: 1
+    image: 1,
+    notifications: 1
   }).then(async users => {
     await asyncForEach(users, async function (user) {
       if (user.image) {
         let a = user.image.split("/");
         let f = a[a.length - 1];
         user.image = 'users/' + f;
-        user.save()
       }
+      if (user.notifications) {
+        user.notifications.forEach(n => {
+          if (n.image) {
+            let a = n.image.split("/");
+            let f = a[a.length - 1];
+            n.image = 'users/' + f;
+          }
+        })
+      }
+      user.save()
     });
   });
 }
