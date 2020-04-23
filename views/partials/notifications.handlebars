@@ -1,38 +1,41 @@
 {{#if loggedIn}}
 {{#if notifications}}
-  <script>
+<script>
   notificationsCount = 0;
-  </script>
+</script>
 
-  {{#each notifications}}
-    <a href="{{this.url}}" class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}" id="{{this._id}}">
-      <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{this.image}}"/>
-      <span class="notification-text">
-        {{{this.text}}}
-      </span>
-    </a>
-    {{#unless this.seen}}
-      <script>notificationsCount = (notificationsCount < 9 ? notificationsCount + 1 : notificationsCount);</script>
-    {{/unless}}
-  {{/each}}
+{{#each notifications}}
+<a href="{{this.url}}"
+  class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}"
+  id="{{this._id}}">
+  <img class="postAuthorImage mr-2" style="width:25px;height:25px;"
+    src="https://sweet-images.s3.amazonaws.com/{{this.image}}" />
+  <span class="notification-text">
+    {{{this.text}}}
+  </span>
+</a>
+{{#unless this.seen}}
+<script>notificationsCount = (notificationsCount < 9 ? notificationsCount + 1 : notificationsCount);</script>
+{{/unless}}
+{{/each}}
 
-  <script type="text/javascript">
-    if (notificationsCount > 0) {
-      $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
-      document.title = '(⚐) sweet';
-    }
-    else {
-      $(".notifications-count").html('');
-      document.title = 'sweet';
-    }
-  </script>
+<script type="text/javascript">
+  if (notificationsCount > 0) {
+    $(".notifications-count").html('<i class="fas fa-dot-circle"></i>');
+    document.title = '(⚐) sweet';
+  }
+  else {
+    $(".notifications-count").html('');
+    document.title = 'sweet';
+  }
+</script>
 {{else}}
-  <p class="mt-2 text-muted text-center">
-    You're up to date!
-  </p>
+<p class="mt-2 text-muted text-center">
+  You're up to date!
+</p>
 {{/if}}
 {{else}}
-  <div class="d-flex align-items-center p-2 list-group-item notificationLink">
-    You are not logged in.
-  </div>
+<div class="d-flex align-items-center p-2 list-group-item notificationLink">
+  You are not logged in.
+</div>
 {{/if}}

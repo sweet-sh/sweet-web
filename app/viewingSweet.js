@@ -14,7 +14,7 @@ const notifier = require('./notifier')
 const globals = require('../config/globals')
 
 // used on the settings page to set up push notifications
-const auth = require('../config/auth.js')
+const auth = require('../config/auth')
 
 const ObjectId = mongoose.Types.ObjectId
 
@@ -24,23 +24,25 @@ module.exports = function (app) {
   // Input: URL of an image
   // Output: Responds with either the image file or a redirect response to /404 with 404 status.
   app.get('/api/image/display/:filename', function (req, res) {
-    function sendImageFile () {
-      const imagePath = global.appRoot + '/cdn/images/' + req.params.filename
-      try {
-        if (fs.existsSync(imagePath)) {
-          res.sendFile(imagePath)
-        }
-      } catch (err) {
-        // Image file doesn't exist on server
-        console.log('Image ' + req.params.filename + " doesn't exist on server!")
-        console.log(err)
-        res.status('404')
-        res.redirect('/404')
-      }
+    function sendImageFile() {
+      const params = {
+        Bucket: s3Bucket,
+        Key: 'images/' + req.params.filename
+      };
+      s3.getObject(params)
+        .createReadStream()
+        .on('error', error => {
+          console.log("Image images/" + req.params.filename + " doesn't exist in S3 bucket!")
+          console.log(error)
+          res.status('404')
+          res.redirect('/404')
+        })
+        .pipe(res)
     }
 
-    Image.findOne({ filename: req.params.filename }).then(image => {
+    Image.findOne({ $or: [{ filename: 'images/' + req.params.filename }, { filename: req.params.filename }] }).then(image => {
       if (image) {
+        console.log("Image found", image)
         if (image.privacy === 'public') {
           sendImageFile()
         } else if (image.privacy === 'private') {
@@ -159,7 +161,7 @@ module.exports = function (app) {
   // Input: none
   // Output: the home page, if isLoggedInOrRedirect doesn't redirect you.
   app.get('/home', isLoggedInOrRedirect, async function (req, res) {
-    async function getRecommendations () {
+    async function getRecommendations() {
       // console.time('getRecommendationsFunction')
       let popularCommunities = []
       const recommendedUsers = {}
@@ -168,7 +170,7 @@ module.exports = function (app) {
         follow: 0.5
       }
       const lastFortnight = moment(new Date()).subtract(14, 'days')
-      async function getRelationships (id, type) {
+      async function getRelationships(id, type) {
         const users = {}
         return Relationship.find({
           fromUser: id,
@@ -378,12 +380,14 @@ module.exports = function (app) {
     const followedUserData = []
     Relationship.find({ fromUser: req.user._id, value: 'follow' }).populate('toUser').then((followedUsers) => {
       followedUsers.forEach(relationship => {
-        const follower = {
-          key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
-          value: relationship.toUser.username,
-          image: (relationship.toUser.imageEnabled ? relationship.toUser.image : 'cake.svg')
+        if (relationship.toUser) {
+          const follower = {
+            key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
+            value: relationship.toUser.username,
+            image: (relationship.toUser.imageEnabled ? relationship.toUser.image : '/images/cake.svg')
+          }
+          followedUserData.push(follower)
         }
-        followedUserData.push(follower)
       })
       res.setHeader('content-type', 'text/plain')
       res.end(JSON.stringify({ followers: followedUserData }))
@@ -545,7 +549,7 @@ module.exports = function (app) {
       // look new, but we only want those with a comment that's newer than
       // our newerthan timesamp AND wasn't left by the logged in user, who
       // knows about their own comments. so, we search recursively for that.
-      function findNewComment (postOrComment) {
+      function findNewComment(postOrComment) {
         if (postOrComment.timestamp > newerThanDate && !postOrComment.author.equals(req.user._id)) {
           return true
         }
@@ -596,9 +600,9 @@ module.exports = function (app) {
 
   // this function is called per post in the post displaying function below to keep the cached html for image galleries and embeds up to date
   // in the post and all of its comments.
-  async function keepCachedHTMLUpToDate (post) {
+  async function keepCachedHTMLUpToDate(post) {
     // only runs if cached html is out of date
-    async function updateHTMLRecursive (displayContext) {
+    async function updateHTMLRecursive(displayContext) {
       const html = await helper.renderHTMLContent(displayContext)
       if (displayContext.cachedHTML) {
         displayContext.cachedHTML.fullContentHTML = html
@@ -833,10 +837,10 @@ module.exports = function (app) {
       .find(matchPosts)
       .sort(sortMethod)
       .limit(postsPerPage)
-    // these populate commands retrieve the complete data for these things that are referenced in the post documents
+      // these populate commands retrieve the complete data for these things that are referenced in the post documents
       .populate('author', '-password')
       .populate('community')
-    // If there's a better way to populate a nested tree lmk because this is... dumb. Mitch says: probably just fetching the authors recursively in actual code below
+      // If there's a better way to populate a nested tree lmk because this is... dumb. Mitch says: probably just fetching the authors recursively in actual code below
       .populate('comments.author')
       .populate('comments.replies.author')
       .populate('comments.replies.replies.author')
@@ -1232,7 +1236,7 @@ module.exports = function (app) {
   // Inputs: username is the user's username.
   // Outputs: a 404 if the user isn't found
   app.get('/:username', async function (req, res) {
-    function c (e) {
+    function c(e) {
       console.error('error in query in /:username user list builders')
       console.error(e)
     }
@@ -1348,7 +1352,7 @@ module.exports = function (app) {
         'notifications.$.seen': true
       }
     },
-    (_, doc) => res.sendStatus(200)
+      (_, doc) => res.sendStatus(200)
     )
   })
 
@@ -1428,7 +1432,7 @@ module.exports = function (app) {
 }
 
 // For post and get requests where the browser will handle the response automatically and so redirects will work
-function isLoggedInOrRedirect (req, res, next) {
+function isLoggedInOrRedirect(req, res, next) {
   if (req.isAuthenticated()) {
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
     const currentTime = new Date()

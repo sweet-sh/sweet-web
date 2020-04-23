@@ -20,7 +20,7 @@
               <div class="row">
                 <div class="col commentContent">
                   <p class="mb-2" style="font-size:1.3em">
-                    <img class="postAuthorImage" src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" />
+                    <img class="postAuthorImage" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
                     <strong><a class="authorLink" href="/community/{{this.slug}}">{{this.name}}</a></strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
                   </p>
                   <p>

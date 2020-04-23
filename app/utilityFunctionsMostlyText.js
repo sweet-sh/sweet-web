@@ -238,19 +238,53 @@ module.exports = {
     const imageIsVertical = []
     const imageIsHorizontal = []
     for (const imageFileName of imageFileNames) {
-      await new Promise((resolve, reject) => {
-        fs.rename(imagesCurrentFolder + imageFileName, './cdn/images/' + imageFileName, function (e) {
-          if (e) { console.error('could not move ' + imageFileName + ' out of temp\n' + e) }
-          resolve()
-        })
-      })
+      var file = imagesCurrentFolder + imageFileName
+      // Get metadata while image exists
+      const metadata = await sharp(imagesCurrentFolder + imageFileName).metadata()
+      const imageUrl = await new Promise((resolve, reject) => {
+        // call S3 to retrieve upload file to specified bucket
+        var uploadParams = {
+          Bucket: s3Bucket,
+          Key: '',
+          Body: '',
+          ACL: 'public-read',
+          Metadata: {
+            height: metadata.height.toString(),
+            width: metadata.width.toString()
+          }
+        }
+        // Configure the file stream and obtain the upload parameters
+        var fileStream = fs.createReadStream(file);
+        fileStream.on('error', function(err) {
+          console.log('Error streaming file from temp directory', err);
+        });
+        uploadParams.Body = fileStream;
+        var path = require('path');
+        uploadParams.Key = 'images/' + path.basename(file);
 
-      const metadata = await sharp('./cdn/images/' + imageFileName).metadata()
+        // call S3 to upload file to specified bucket
+        s3.upload (uploadParams, function (err, data) {
+          if (err) {
+            console.log('Could not upload temporary image ./cdn/images/temp/' + imageFileName + ' to S3 bucket', err);
+          } if (data) {
+            console.log("Temporary image successfully uploaded to S3:", data.Location);
+            // Now delete the temporary image
+            fs.unlink('./cdn/images/temp/' + imageFileName, function (e) {
+              if (e) {
+                console.log('Could not delete temporary image ./cdn/images/temp/' + imageFileName)
+                console.log(e)
+              }
+            })
+            resolve(data.Location)
+          }
+        });
+      })
       const image = new Image({
         // posts' types are either original or community; the image's contexts are either user or community, meaning the same things.
         context: postType === 'community' ? 'community' : 'user',
         community: postType === 'community' ? community : undefined,
-        filename: imageFileName,
+        filename: 'images/' + imageFileName,
+        url: imageUrl,
         privacy: privacy,
         user: posterID,
         quality: postImageQuality,
@@ -258,15 +292,8 @@ module.exports = {
         width: metadata.width
       })
       await image.save()
-
-      if (fs.existsSync(path.resolve('./cdn/images/' + imageFileName))) {
-        imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? 'vertical-image' : '')
-        imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? 'horizontal-image' : '')
-      } else {
-        console.log('image ' + './cdn/images/' + imageFileName + ' not found when determining orientation! Oh no')
-        imageIsVertical.push('')
-        imageIsHorizontal.push('')
-      }
+      imageIsVertical.push(((metadata.width / metadata.height) < 0.75) ? 'vertical-image' : '')
+      imageIsHorizontal.push(((metadata.width / metadata.height) > 1.33) ? 'horizontal-image' : '')
     }
     return { imageIsHorizontal: imageIsHorizontal, imageIsVertical: imageIsVertical }
   },

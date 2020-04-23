@@ -75,6 +75,14 @@ const userSchema = new mongoose.Schema({
   hiddenRecommendedCommunities: [String]
 })
 
+// Middleware
+userSchema.pre('validate', function (next) {
+  if (this.image && this.image.length > 1 && !this.image.startsWith('users/')) {
+    this.image = 'users/' + this.image
+  }
+  next()
+});
+
 // methods ======================
 // generating a hash
 userSchema.methods.generateHash = function (password) {

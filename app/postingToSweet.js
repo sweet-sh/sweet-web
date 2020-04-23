@@ -1,10 +1,11 @@
 const sharp = require('sharp')
-const shortid = require('shortid')
+const nanoid = require('nanoid')
 const mongoose = require('mongoose')
 const moment = require('moment')
 const fs = require('fs')
 const Post = require('./models/post')
 const Community = require('./models/community')
+const Image = require('./models/image')
 const User = require('./models/user')
 const Tag = require('./models/tag')
 const Relationship = require('./models/relationship')
@@ -53,7 +54,7 @@ module.exports = function (app) {
           return
         }
         const imageFormat = imageMeta.format
-        const imageUrl = shortid.generate()
+        const imageUrl = nanoid()
         if (imageFormat === 'gif') {
           if (req.files.image.size <= 5242880) {
             const imageData = req.files.image.data
@@ -115,7 +116,7 @@ module.exports = function (app) {
   // Inputs: image file name
   // Outputs: the image presumably in the temp folder with that filename is deleted
   app.post('/cleartempimage', isLoggedInOrErrorResponse, function (req, res) {
-    if (req.body.imageURL.match(/^(\w|-){7,14}.(jpeg|jpg|png|gif)$/)) { // makes sure the incoming imageURL matches the shortid format and then a . and then an image extension
+    if (req.body.imageURL.match(/^(\w|-){21,}.(jpeg|jpg|png|gif)$/)) { // makes sure the incoming imageURL matches the nanoid format and then a . and then an image extension
       fs.unlink('./cdn/images/temp/' + req.body.imageURL, function (e) {
         if (e) {
           console.log('could not delete image ' + './cdn/images/temp/' + req.body.imageURL)
@@ -159,7 +160,7 @@ module.exports = function (app) {
       }
     }
 
-    const newPostUrl = shortid.generate()
+    const newPostUrl = nanoid()
     const postCreationTime = new Date()
 
     if (!(parsedResult.inlineElements.length || parsedResult.text.trim())) { // in case someone tries to make a blank post with a custom ajax post request. storing blank posts = not to spec
@@ -213,7 +214,7 @@ module.exports = function (app) {
         { name: tag },
         { $push: { posts: newPostId.toString() }, $set: { lastUpdated: postCreationTime } },
         { upsert: true, new: true },
-        () => {}
+        () => { }
       )
     }
 
@@ -236,23 +237,27 @@ module.exports = function (app) {
           return
         }
 
-        function deleteImagesRecursive (postOrComment) {
+        function deleteImagesRecursive(postOrComment) {
           if (postOrComment.inlineElements && postOrComment.inlineElements.length) {
             for (const il of postOrComment.inlineElements) {
               if (il.type === 'image(s)') {
                 for (const image of il.images) {
-                  fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                    if (err) console.log('Image deletion error ' + err)
-                  })
+                  s3.deleteObject({
+                    Bucket: s3Bucket,
+                    Key: image // [images/image.jpg]
+                  }).promise()
+                    .catch((e) => console.error('Error deleting images with post', e))
                   Image.deleteOne({ filename: image })
                 }
               }
             }
           } else if (postOrComment.images && postOrComment.images.length) {
             for (const image of postOrComment.images) {
-              fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                if (err) console.log('Image deletion error ' + err)
-              })
+              s3.deleteObject({
+                Bucket: s3Bucket,
+                Key: image // [images/image.jpg]
+              }).promise()
+                .catch((e) => console.error('Error deleting images with post', e))
               Image.deleteOne({ filename: image })
             }
           }
@@ -317,7 +322,7 @@ module.exports = function (app) {
   // moves comment images out of temp. Also, notify the owner of the post, people subscribed to the post, and everyone who was mentioned.
   app.post('/createcomment/:postid/:commentid', isLoggedInOrErrorResponse, async function (req, res) {
     // loop over the array of comments adding 1 +  countComments on its replies to the count variable.
-    function countComments (comments) {
+    function countComments(comments) {
       let count = 0
       for (const comment of comments) {
         if (!comment.deleted) {
@@ -330,7 +335,7 @@ module.exports = function (app) {
       return count
     }
 
-    function findCommentByID (id, comments, depth = 1) {
+    function findCommentByID(id, comments, depth = 1) {
       for (const comment of comments) {
         if (comment._id.equals(id)) {
           return { commentParent: comment, depth }
@@ -535,9 +540,9 @@ module.exports = function (app) {
                         // and make sure we're not notifying anyone who was @ed (they'll have gotten a notification above),
                         // or anyone who unsubscribed from the post
                         if (!boost.booster._id.equals(req.user._id) &&
-                                                    !boost.booster._id.equals(originalPoster._id) &&
-                                                    !parsedResult.mentions.includes(boost.booster.username) &&
-                                                    !post.unsubscribedUsers.includes(boost.booster._id.toString())) {
+                          !boost.booster._id.equals(originalPoster._id) &&
+                          !parsedResult.mentions.includes(boost.booster.username) &&
+                          !post.unsubscribedUsers.includes(boost.booster._id.toString())) {
                           notifier.notify('user', 'boostedPostReply', boost.booster._id, req.user._id, post._id, '/' + originalPoster.username + '/' + post.url, 'post')
                         }
                       })
@@ -557,7 +562,7 @@ module.exports = function (app) {
                 }
 
                 // checks each subscriber for trustedness if this is a private post, notifies all of 'em otherwise
-                function notifySubscribers (subscriberList) {
+                function notifySubscribers(subscriberList) {
                   if (postPrivacy === 'private') {
                     subscriberList.forEach(subscriberID => {
                       Relationship.findOne({
@@ -579,7 +584,7 @@ module.exports = function (app) {
                   }
                 }
 
-                function notifySubscriber (subscriberID) {
+                function notifySubscriber(subscriberID) {
                   if (
                     // Do not notify the comment's author about the comment
                     (subscriberID !== req.user._id.toString()) &&
@@ -660,7 +665,7 @@ module.exports = function (app) {
         let numberOfComments = 0
         let target
 
-        function findNested (array, id, parent) {
+        function findNested(array, id, parent) {
           array.forEach((element) => {
             if (!element.deleted) {
               numberOfComments++
@@ -698,18 +703,22 @@ module.exports = function (app) {
 
         if (target.images && target.images.length) {
           for (const image of target.images) {
-            fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-              if (err) console.log('Image deletion error ' + err)
-            })
+            s3.deleteObject({
+              Bucket: s3Bucket,
+              Key: image // [images/image.jpg]
+            }).promise()
+              .catch((e) => console.error('Error deleting images with comment', e))
             Image.deleteOne({ filename: image })
           }
         } else if (target.inlineElements && target.inlineElements.length) {
           for (const ie of target.inlineElements) {
             if (ie.type === 'image(s)') {
               for (const image of ie.images) {
-                fs.unlink(global.appRoot + '/cdn/images/' + image, (err) => {
-                  if (err) console.log('Image deletion error ' + err)
-                })
+                s3.deleteObject({
+                  Bucket: s3Bucket,
+                  Key: image // [images/image.jpg]
+                }).promise()
+                  .catch((e) => console.error('Error deleting images with comment', e))
                 Image.deleteOne({ filename: image })
               }
             }
@@ -780,7 +789,7 @@ module.exports = function (app) {
           type: 'boost',
           authorEmail: req.user.email,
           author: req.user._id,
-          url: shortid.generate(),
+          url: nanoid(),
           privacy: 'public',
           timestamp: boostedTimestamp,
           lastUpdated: boostedTimestamp,
@@ -961,7 +970,11 @@ module.exports = function (app) {
     const deletedImages = oldPostImages.filter(v => !currentPostImages.includes(v))
     for (const image of deletedImages) {
       Image.deleteOne({ filename: image })
-      fs.unlink(global.appRoot + ((!post.imageVersion || post.imageVersion < 2) ? '/public/images/uploads/' : '/cdn/images/') + image, (err) => { if (err) { console.error('could not delete unused image from edited post:\n' + err) } })
+      s3.deleteObject({
+        Bucket: s3Bucket,
+        Key: image // [images/image.jpg]
+      }).promise()
+        .catch((e) => console.error('Error deleting unused images from edited post', e))
     }
 
     post.inlineElements = parsedPost.inlineElements
@@ -1012,8 +1025,8 @@ module.exports = function (app) {
     if (req.body.postContentWarnings) {
       // this bit does not need to be stored in the database, it's rendered in the feed by the posts_v2 handlebars file and that's fine
       newHTML = '<aside class="content-warning">' + req.body.postContentWarnings + '</aside>' +
-                '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
-                '<button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>'
+        '<div class="abbreviated-content content-warning-content" style="height:0">' + newHTML + '</div>' +
+        '<button type="button" class="button grey-button content-warning-show-more uppercase-button" data-state="contracted">Show post</button>'
     }
 
     if (post.type === 'draft' && !req.body.isDraft) {
@@ -1045,7 +1058,7 @@ module.exports = function (app) {
 // time limit is enabled by the fact that the vast, vast majority of temp images are going to be specifically cleared by the /cleartempimage route above; the only
 // images that are going to be picked up by this function are those uploaded by users whose device loses power, whose device loses internet connection and doesn't
 // regain it before they close the tab, and maybe those that are using a really weird browser or extensions.
-function cleanTempFolder () {
+function cleanTempFolder() {
   fs.readdir('./cdn/images/temp', function (_, files) {
     files.forEach(file => {
       if (file !== '.gitkeep' && file !== '') {
@@ -1067,7 +1080,7 @@ cleanTempFolder()
 setInterval(cleanTempFolder, 24 * 60 * 60 * 1000)
 
 // For post and get requests where the browser will handle the response automatically and so redirects will work
-function isLoggedInOrRedirect (req, res, next) {
+function isLoggedInOrRedirect(req, res, next) {
   if (req.isAuthenticated()) {
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
     const currentTime = new Date()
@@ -1087,7 +1100,7 @@ function isLoggedInOrRedirect (req, res, next) {
 }
 
 // For post requests where the jQuery code making the request will handle the response
-function isLoggedInOrErrorResponse (req, res, next) {
+function isLoggedInOrErrorResponse(req, res, next) {
   if (req.isAuthenticated()) {
     return next()
   }

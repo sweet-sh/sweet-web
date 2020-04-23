@@ -1,4 +1,4 @@
-<div class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
+<form class="contentForm" id="postForm" {{#if isMember}}communityid="{{communityData._id}}" {{/if}}>
 <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple style="display:none;">
     <div class="form-row" style="margin-bottom:0.5rem" id="postContentWarningsContainer">
       <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." {{#if sessionFlash.errorContentWarnings }}value="{{sessionFlash.errorContentWarnings}}" {{/if}} />
@@ -37,4 +37,4 @@
       <button type="submit" class="button" id="postSubmit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Uploading">Send <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
-</div>
+</form>

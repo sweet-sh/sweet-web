@@ -150,6 +150,13 @@ app.on('SIGINT', function () {
   })
 })
 
+// S3 API setup for image uploads and downloads
+const AWS = require('aws-sdk')
+// Set the region 
+AWS.config.update({region: 'eu-west-2'})
+s3 = new AWS.S3({apiVersion: '2006-03-01'})
+s3Bucket = 'sweet-images'
+
 // utilized by routes code =================================================================================
 const path = require('path')
 global.appRoot = path.resolve(__dirname)
@@ -182,7 +189,7 @@ moment.updateLocale('en', {
 const momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]'
 require('sanitize-html')
 require('sharp')
-require('shortid')
+require('nanoid')
 require('bcrypt-nodejs')
 require('autolinker')
 require('node-schedule')

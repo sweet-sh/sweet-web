@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const sharp = require('sharp')
-const shortid = require('shortid')
+const nanoid = require('nanoid')
 const schedule = require('node-schedule')
 const fs = require('fs')
 const moment = require('moment')
@@ -62,22 +62,22 @@ module.exports = function (app, passport) {
     Community.find({
       members: req.user._id
     })
-      .collation({
-        locale: 'en'
+    .collation({
+      locale: 'en'
+    })
+    .sort('name')
+    .then((communities) => {
+      res.render('communities', {
+        loggedIn: true,
+        loggedInUserData: req.user,
+        communities: communities,
+        activePage: 'communities'
       })
-      .sort('name')
-      .then((communities) => {
-        res.render('communities', {
-          loggedIn: true,
-          loggedInUserData: req.user,
-          communities: communities,
-          activePage: 'communities'
-        })
-      })
-      .catch((err) => {
-        console.log('Error in profileData.')
-        console.log(err)
-      })
+    })
+    .catch((err) => {
+      console.log('Error in profileData.')
+      console.log(err)
+    })
   })
 
   app.get('/community', function (req, res) {
@@ -226,26 +226,35 @@ module.exports = function (app, passport) {
           return res.redirect('back')
         } else {
           let imageEnabled = false
-          const communityUrl = shortid.generate()
+          const communityUrl = nanoid()
           if (req.files && req.files.imageUpload) {
-            if (req.files.imageUpload.data.length > 3145728) {
-              console.error('Image too large!')
+            if (req.files.imageUpload.data.length > 10485760) {
+              console.error('Community image too large!')
               req.session.sessionFlash = {
                 type: 'warning',
-                message: 'File too large. The file size limit is 3MB.',
+                message: 'Image file too large. The file size limit is 10MB.',
                 communityData: newCommunityData
               }
               return res.redirect('back')
             } else {
-              console.log('Saving image')
+              console.log('Saving community image')
               imageEnabled = true
+              // call S3 to upload file to specified bucket
               sharp(req.files.imageUpload.data)
-                .resize({ width: 600, height: 600 })
-                .jpeg({ quality: 70 })
-                .toFile('./public/images/communities/' + communityUrl + '.jpg')
-                .catch(err => {
-                  console.error(err)
-                })
+              .resize({ width: 600, height: 600 })
+              .jpeg({ quality: 70 })
+              .toBuffer()
+              .then(buffer => s3.putObject({
+                  Body: buffer,
+                  Bucket: s3Bucket,
+                  Key: 'communities/' + communityUrl + '.jpg',
+                  ACL: 'public-read'
+                }).promise()
+              )
+              .catch(err => {
+                console.log('Error processing community image with sharp')
+                console.error(err)
+              })
             }
           }
           const parsedDesc = (await helper.parseText(newCommunityData.communityDescription)).text
@@ -260,7 +269,7 @@ module.exports = function (app, passport) {
             descriptionParsed: parsedDesc,
             rulesRaw: newCommunityData.communityRules,
             rulesParsed: parsedRules,
-            image: imageEnabled ? communityUrl + '.jpg' : 'cake.svg',
+            image: imageEnabled ? 'communities/' + communityUrl + '.jpg' : 'cake.svg',
             imageEnabled: imageEnabled,
             settings: {
               visibility: newCommunityData.communityVisibility,
@@ -359,7 +368,7 @@ module.exports = function (app, passport) {
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        const voteUrl = shortid.generate()
+        const voteUrl = nanoid()
         const created = new Date()
         const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         let votesNumber
@@ -419,7 +428,7 @@ module.exports = function (app, passport) {
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        const voteUrl = shortid.generate()
+        const voteUrl = nanoid()
         const created = new Date()
         const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         let votesNumber
@@ -479,7 +488,7 @@ module.exports = function (app, passport) {
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        const voteUrl = shortid.generate()
+        const voteUrl = nanoid()
         const created = new Date()
         const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         let votesNumber
@@ -539,7 +548,7 @@ module.exports = function (app, passport) {
         if (memberIds.includes(req.user._id.toString())) {
           isMember = true
         }
-        const voteUrl = shortid.generate()
+        const voteUrl = nanoid()
         const created = new Date()
         const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
         let votesNumber
@@ -650,15 +659,14 @@ module.exports = function (app, passport) {
     if (!community.members.some(v => v.equals(req.user._id))) {
       return res.sendStatus(403)
     }
-    console.log(req.body)
     let imageUrl
     if (req.body.reference === 'image') {
-      imageUrl = shortid.generate() + '.jpg'
-      if (req.files.proposedValue.data.length > 3145728) {
+      imageUrl = nanoid() + '.jpg'
+      if (req.files.proposedValue.data.length > 10485760) {
         console.error('Image too large!')
         req.session.sessionFlash = {
           type: 'warning',
-          message: 'File too large. The file size limit is 3MB.'
+          message: 'File too large. The file size limit is 10MB.'
         }
         return res.redirect('back')
       } else {
@@ -670,8 +678,16 @@ module.exports = function (app, passport) {
           .jpeg({
             quality: 70
           })
-          .toFile('./public/images/communities/staging/' + imageUrl)
+          .toBuffer()
+          .then(buffer => s3.putObject({
+              Body: buffer,
+              Bucket: s3Bucket,
+              Key: 'communities/staging/' + imageUrl,
+              ACL: 'public-read'
+            }).promise()
+          )
           .catch(err => {
+            console.log('Error processing community image with sharp')
             console.error(err)
           })
       }
@@ -726,8 +742,8 @@ module.exports = function (app, passport) {
       parsedProposedValue = parsedVoteLength[req.body.proposedValue]
       allowedChange = (parsedProposedValue && community.settings.voteLength !== parseInt(proposedValue))
     } else if (req.body.reference === 'image') {
-      proposedValue = imageUrl
-      parsedProposedValue = imageUrl
+      proposedValue = 'communities/staging/' + imageUrl
+      parsedProposedValue = 'communities/staging/' + imageUrl
     } else if (req.body.reference === 'name') { // this is where it gets complicated
       proposedValue = req.body.proposedValue
       parsedProposedValue = proposedValue
@@ -776,7 +792,7 @@ module.exports = function (app, passport) {
       return res.redirect('back')
     }
     console.log(community)
-    const voteUrl = shortid.generate()
+    const voteUrl = nanoid()
     const created = new Date()
     const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
     let votesNumber
@@ -894,8 +910,26 @@ module.exports = function (app, passport) {
                     community[vote.reference + 'Raw'] = vote.proposedValue
                     community[vote.reference + 'Parsed'] = vote.parsedProposedValue
                   } else if (vote.reference === 'image') {
-                    fs.renameSync(global.appRoot + '/public/images/communities/staging/' + vote.proposedValue, global.appRoot + '/public/images/communities/' + vote.proposedValue)
-                    community[vote.reference] = vote.proposedValue
+                    // Copy the S3 image object to a new location
+                    // We give it a new filename otherwise S3 doesn't show an updated
+                    // overwritten file immediately, which is confusing for users
+                    const imageFilename = 'communities/' + nanoid() + '.jpg'
+                    s3.copyObject({
+                      Bucket: s3Bucket, 
+                      CopySource: 'sweet-images/' + vote.proposedValue, // sweet-images/[communities/staging/filename.jpg]
+                      Key: imageFilename, // [communities/newfilename.jpg]
+                      ACL: 'public-read'
+                    }).promise()
+                    .then(() => 
+                      // Delete the old object
+                      s3.deleteObject({
+                        Bucket: s3Bucket, 
+                        Key: vote.proposedValue // [communities/staging/filename.jpg]
+                      }).promise()
+                    )
+                    .catch((e) => console.error('Error moving community image from staging', e))
+                    // Update image entry in the db
+                    community[vote.reference] = imageFilename
                     community.imageEnabled = true
                   } else if (vote.reference === 'name') {
                     oldName = community.name

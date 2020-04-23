@@ -1,16 +1,19 @@
 {{#if isOwnProfile}}
 <div class="row mb-3">
   <div class="col-6 d-flex">
-{{/if}}
+    {{/if}}
     <div id="profileImageContainer" class="{{#if isOwnProfile}}own-profile-image{{else}}user-image{{/if}}">
-      <img alt="Profile image for the user @{{ profileData.username}}" id="profileImage" src="{{#if profileData.imageEnabled}}/images/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
+      <img alt="Profile image for the user @{{ profileData.username}}" id="profileImage"
+        src="{{#if profileData.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
     </div>
-{{#if isOwnProfile}}
+    {{#if isOwnProfile}}
   </div>
   <div class="col-6 d-flex align-items-start">
     <div id="profileControlsDesktopMobile" class="button-group">
-      <a href="#" id="switch-to-drafts" class="button outline-button full-width-button"><i class="fas fa-pencil-ruler"></i> See drafts</a>
-      <button type="button" class="button outline-button full-width-button" id="updateProfileButton" data-toggle="modal" data-target="#updateProfileModal"><i class="fas fa-user-circle"></i> Edit profile</button>
+      <a href="#" id="switch-to-drafts" class="button outline-button full-width-button"><i
+          class="fas fa-pencil-ruler"></i> See drafts</a>
+      <button type="button" class="button outline-button full-width-button" id="updateProfileButton" data-toggle="modal"
+        data-target="#updateProfileModal"><i class="fas fa-user-circle"></i> Edit profile</button>
       <a href="/settings" class="button outline-button full-width-button"><i class="fas fa-cog"></i> Settings</a>
       <a href="/logout" class="button outline-button full-width-button"><i class="fas fa-sign-out-alt"></i> Log out</a>
     </div>
@@ -20,158 +23,189 @@
 
 <h3 class="page-header">
   {{#if profileData.displayName }}
-    {{ profileData.displayName }}
+  {{ profileData.displayName }}
   {{/if}}
-  {{#if profileData.displayName }}<br /> <span class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}} {{#or flagged flagsFromTrustedUsers}}<i class="fas fa-exclamation-triangle user-flag"></i>{{/or}}
+  {{#if profileData.displayName }}<br /> <span
+    class="text-muted small">{{/if}}@{{ profileData.username}}{{#if profileData.displayName }}</span>{{/if}}
+  {{#or flagged flagsFromTrustedUsers}}<i class="fas fa-exclamation-triangle user-flag"></i>{{/or}}
 </h3>
 {{#if isOwnProfile}}
-  <div id="profileControlsTablet">
-    <a href="#" id="switch-to-drafts" class="button outline-button full-width-button"><i class="fas fa-pencil-ruler"></i> See drafts</a>
-    <button type="button" class="button outline-button full-width-button" id="updateProfileButton" data-toggle="modal" data-target="#updateProfileModal" style="margin-bottom: 0.5rem;"><i class="fas fa-user-circle"></i> Edit profile</button>
-    <a href="/settings" class="button outline-button full-width-button" style="margin-bottom: 0.5rem;"><i class="fas fa-cog"></i> Settings</a>
-    <a href="/logout" class="button outline-button full-width-button" style="margin-bottom: 0.5rem;"><i class="fas fa-sign-out-alt"></i> Log out</a>
-  </div>
+<div id="profileControlsTablet">
+  <a href="#" id="switch-to-drafts" class="button outline-button full-width-button"><i class="fas fa-pencil-ruler"></i>
+    See drafts</a>
+  <button type="button" class="button outline-button full-width-button" id="updateProfileButton" data-toggle="modal"
+    data-target="#updateProfileModal" style="margin-bottom: 0.5rem;"><i class="fas fa-user-circle"></i> Edit
+    profile</button>
+  <a href="/settings" class="button outline-button full-width-button" style="margin-bottom: 0.5rem;"><i
+      class="fas fa-cog"></i> Settings</a>
+  <a href="/logout" class="button outline-button full-width-button" style="margin-bottom: 0.5rem;"><i
+      class="fas fa-sign-out-alt"></i> Log out</a>
+</div>
 {{/if}}
 {{#unless isOwnProfile}}
-    <div class="user-tags">
-        {{#if userTrustsYou}}
-            <span class="tag tag-green">Trusts you</span>
-        {{/if}}
-        {{#if userFollowsYou}}
-            <span class="tag tag-green">Follows you</span>
-        {{/if}}
-    </div>
+<div class="user-tags">
+  {{#if userTrustsYou}}
+  <span class="tag tag-green">Trusts you</span>
+  {{/if}}
+  {{#if userFollowsYou}}
+  <span class="tag tag-green">Follows you</span>
+  {{/if}}
+</div>
 {{/unless}}
 {{#if profileData.aboutParsed}}
-    <section class="profile-about">
-        <p>
-          {{{profileData.aboutParsed}}}
-        </p>
-    </section>
+<section class="profile-about">
+  <p>
+    {{{profileData.aboutParsed}}}
+  </p>
+</section>
 {{/if}}
 {{#if profileData.pronouns}}
-  <p>
-    <i class="fas fa-fw fa-user-circle"></i> {{profileData.pronouns}}
-  </p>
+<p>
+  <i class="fas fa-fw fa-user-circle"></i> {{profileData.pronouns}}
+</p>
 {{/if}}
 
 {{#if profileData.location}}
-  <p>
-    <i class="fas fa-fw fa-map-marker-alt"></i> {{profileData.location}}
-  </p>
+<p>
+  <i class="fas fa-fw fa-map-marker-alt"></i> {{profileData.location}}
+</p>
 {{/if}}
 {{#if profileData.websiteParsed}}
-  <p>
-    <i class="fas fa-fw fa-link"></i> {{{profileData.websiteParsed}}}
-  </p>
+<p>
+  <i class="fas fa-fw fa-link"></i> {{{profileData.websiteParsed}}}
+</p>
 {{/if}}
 
 {{#unless isOwnProfile}}
-  {{#if loggedIn}}
-    <div id="userActionsButtons" class="mb-2">
-        {{#if followed}}
-          <button type="button" id="unfollowButton" class="button grey-button"><i class="fas fa-satellite-dish"></i> Unfollow</button>
-        {{else}}
-          <button type="button" id="followButton" class="button"><i class="fas fa-satellite-dish"></i> Follow</button>
-        {{/if}}
-        {{#if trusted}}
-          <button type="button" id="untrustButton" class="button grey-button">
-            <i class="fas fa-lock"></i> Untrust
-          </button>
-        {{else}}
-          <button type="button" id="trustButton" class="button">
-            <i class="fas fa-lock-open"></i> Trust
-          </button>
-        {{/if}}
-        <button class="button" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          More <i class="fas fa-caret-down"></i>
-        </button>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-          {{#if flagged}}
-            <button type="button" id="unflagButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i> Unflag</button>
-          {{else}}
-            <button type="button" id="flagButton" class="dropdown-item"><i class="fas fa-fw fa-exclamation-triangle"></i> Flag</button>
-          {{/if}}
-          {{#if muted}}
-            <button type="button" id="unmuteButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i> Unmute</button>
-          {{else}}
-            <button type="button" id="muteButton" class="dropdown-item"><i class="fas fa-fw fa-comment-slash"></i> Mute</button>
-          {{/if}}
-        </div>
-    </div>
-    {{#if flagsFromTrustedUsers}}
-      <div class="message w-100 my-2" style="text-align:center;">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{flagsFromTrustedUsers}} {{plural flagsFromTrustedUsers 'person/people'}} you trust {{plural flagsFromTrustedUsers 'has/have'}} flagged this user.
-      </div>
+{{#if loggedIn}}
+<div id="userActionsButtons" class="mb-2">
+  {{#if followed}}
+  <button type="button" id="unfollowButton" class="button grey-button"><i class="fas fa-satellite-dish"></i>
+    Unfollow</button>
+  {{else}}
+  <button type="button" id="followButton" class="button"><i class="fas fa-satellite-dish"></i> Follow</button>
+  {{/if}}
+  {{#if trusted}}
+  <button type="button" id="untrustButton" class="button grey-button">
+    <i class="fas fa-lock"></i> Untrust
+  </button>
+  {{else}}
+  <button type="button" id="trustButton" class="button">
+    <i class="fas fa-lock-open"></i> Trust
+  </button>
+  {{/if}}
+  <button class="button" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+    aria-expanded="false">
+    More <i class="fas fa-caret-down"></i>
+  </button>
+  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+    {{#if flagged}}
+    <button type="button" id="unflagButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i>
+      Unflag</button>
+    {{else}}
+    <button type="button" id="flagButton" class="dropdown-item"><i class="fas fa-fw fa-exclamation-triangle"></i>
+      Flag</button>
     {{/if}}
     {{#if muted}}
-      <div class="message w-100 my-2" style="text-align:center;">
-        <i class="fas fa-comment-slash"></i>
-        You have muted this user. Their posts are hidden from you.
-      </div>
+    <button type="button" id="unmuteButton" class="dropdown-item"><i class="fas fa-fw fa-check-circle"></i>
+      Unmute</button>
+    {{else}}
+    <button type="button" id="muteButton" class="dropdown-item"><i class="fas fa-fw fa-comment-slash"></i> Mute</button>
     {{/if}}
-  {{/if}}
+  </div>
+</div>
+{{#if flagsFromTrustedUsers}}
+<div class="message w-100 my-2" style="text-align:center;">
+  <i class="fas fa-exclamation-triangle"></i>
+  {{flagsFromTrustedUsers}} {{plural flagsFromTrustedUsers 'person/people'}} you trust
+  {{plural flagsFromTrustedUsers 'has/have'}} flagged this user.
+</div>
+{{/if}}
+{{#if muted}}
+<div class="message w-100 my-2" style="text-align:center;">
+  <i class="fas fa-comment-slash"></i>
+  You have muted this user. Their posts are hidden from you.
+</div>
+{{/if}}
+{{/if}}
 {{/unless}}
 
 {{#and loggedIn trustedUserData }}
-  {{#or userTrustsYou isOwnProfile}}
-    <h5>Trusts{{#gt trustedUserData.length 30}} <a class="user-list-toggle collapsed" href="#trustedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-    <div id="trustedUsersList" class="user-list{{#gt trustedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
-      {{#each trustedUserData}}
-        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
-      {{/each}}
-      <div style="height:10px;width:100%;"></div>
-    </div>
-  {{/or}}
+{{#or userTrustsYou isOwnProfile}}
+<h5>Trusts{{#gt trustedUserData.length 30}} <a class="user-list-toggle collapsed" href="#trustedUsersList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="trustedUsersList" class="user-list{{#gt trustedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each trustedUserData}}
+  <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
+{{/or}}
 {{/and}}
 {{#and loggedIn usersWhoTrustThemData.length }}
-  <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="user-list-toggle collapsed" href="#trustedByUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-  <div id="trustedByUsersList" class="user-list{{#gt usersWhoTrustThemData.length 30}} collapse{{else}} d-flex{{/gt}}">
-    {{#each usersWhoTrustThemData}}
-      <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
-    {{/each}}
-    <div style="height:10px;width:100%;"></div>
-  </div>
+<h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="user-list-toggle collapsed" href="#trustedByUsersList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="trustedByUsersList" class="user-list{{#gt usersWhoTrustThemData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each usersWhoTrustThemData}}
+  <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
 {{/and}}
 {{#if followedUserData}}
-  <h5>Follows{{#gt followedUserData.length 30}} <a class="user-list-toggle collapsed" href="#followedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-  <div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
-    {{#each followedUserData}}
-      <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
-    {{/each}}
-    <div style="height:10px;width:100%;"></div>
-  </div>
+<h5>Follows{{#gt followedUserData.length 30}} <a class="user-list-toggle collapsed" href="#followedUsersList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each followedUserData}}
+  <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
 {{/if}}
 {{#if followersData}}
-  <h5>Followed by{{#gt followersData.length 30}} <a class="user-list-toggle collapsed" href="#followersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-  <div id="followersList" class="user-list{{#gt followersData.length 30}} collapse{{else}} d-flex{{/gt}}">
-    {{#each followersData}}
-      <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
-    {{/each}}
-    <div style="height:10px;width:100%;"></div>
-  </div>
+<h5>Followed by{{#gt followersData.length 30}} <a class="user-list-toggle collapsed" href="#followersList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="followersList" class="user-list{{#gt followersData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each followersData}}
+  <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
 {{/if}}
 {{#if isOwnProfile}}
-  {{#if flaggedUserData}}
-    <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="user-list-toggle collapsed" href="#flaggedUsersList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-      <div id="flaggedUsersList" class="user-list{{#gt flaggedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
-        {{#each flaggedUserData}}
-          <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img src="{{#if this.imageEnabled}}/images/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
-        {{/each}}
-        <div style="height:10px;width:100%;"></div>
-      </div>
-  {{/if}}
+{{#if flaggedUserData}}
+<h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="user-list-toggle collapsed" href="#flaggedUsersList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="flaggedUsersList" class="user-list{{#gt flaggedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each flaggedUserData}}
+  <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
+{{/if}}
 {{/if}}
 
 {{#if communitiesData}}
-  <h5>Communities{{#gt communitiesData.length 30}} <a class="user-list-toggle collapsed" href="#communitiesList" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i class="fas fa-caret-right"></i></a>{{/gt}}</h5>
-  <div id="communitiesList" class="user-list{{#gt communitiesData.length 30}} collapse{{else}} d-flex{{/gt}}">
-    {{#each communitiesData}}
-      <a href="/community/{{this.slug}}" data-tooltip="{{this.name}}" class="tooltip-top"><img src="/images/communities/{{#if this.imageEnabled}}{{this.image}}{{else}}cake.svg{{/if}}" /></a>
-    {{/each}}
-    <div style="height:10px;width:100%;"></div>
-  </div>
+<h5>Communities{{#gt communitiesData.length 30}} <a class="user-list-toggle collapsed" href="#communitiesList"
+    data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i
+      class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+<div id="communitiesList" class="user-list{{#gt communitiesData.length 30}} collapse{{else}} d-flex{{/gt}}">
+  {{#each communitiesData}}
+  <a href="/community/{{this.slug}}" data-tooltip="{{this.name}}" class="tooltip-top"><img
+      src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" /></a>
+  {{/each}}
+  <div style="height:10px;width:100%;"></div>
+</div>
 {{/if}}
 <script>
   $('.user-list.collapse').on('hide.bs.collapse', function () {

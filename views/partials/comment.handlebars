@@ -1,7 +1,7 @@
 {{#if this.canDisplay}}
     <article class="comment" data-comment-id="{{this._id}}" id="comment-{{this._id}}">
         <header>
-            <img alt="Profile image of @{{this.author.username}}" class="author-image" src="/images/{{#if this.author.imageEnabled}}{{this.author.image}}{{else}}cake.svg{{/if}}" />
+            <img alt="Profile image of @{{this.author.username}}" class="author-image" src="{{#if this.author.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.author.image}}{{else}}/images/cake.svg{{/if}}" />
             <div class="comment-header-container">
                 <h3 class="author-name">
                     {{#if this.author.displayName}}

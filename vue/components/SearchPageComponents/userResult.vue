@@ -1,5 +1,5 @@
 <template>
-    <searchResult v-bind:image="imageEnabled ? '/images/' + image : '/images/cake.svg'">
+    <searchResult v-bind:image="imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + image : '/images/cake.svg'">
 
         <template v-slot:typeLabel>
             <i class="fas fa-user"></i> User
