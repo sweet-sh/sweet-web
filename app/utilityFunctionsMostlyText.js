@@ -255,7 +255,7 @@ module.exports = {
         }
         // Configure the file stream and obtain the upload parameters
         var fileStream = fs.createReadStream(file);
-        fileStream.on('error', function(err) {
+        fileStream.on('error', function (err) {
           console.log('Error streaming file from temp directory', err);
         });
         uploadParams.Body = fileStream;
@@ -263,7 +263,7 @@ module.exports = {
         uploadParams.Key = 'images/' + path.basename(file);
 
         // call S3 to upload file to specified bucket
-        s3.upload (uploadParams, function (err, data) {
+        s3.upload(uploadParams, function (err, data) {
           if (err) {
             console.log('Could not upload temporary image ./cdn/images/temp/' + imageFileName + ' to S3 bucket', err);
           } if (data) {
@@ -377,8 +377,7 @@ module.exports = {
         }
       }
       if (postOrComment.images && postOrComment.images.length) {
-        // if it's not a comment and it either has no registered image version or the registered image version is less than 2, it uses the old url scheme.
-        const imageUrlPrefix = !postOrComment.parent && (!postOrComment.imageVersion || postOrComment.imageVersion < 2) ? '/images/uploads/' : '/api/image/display/'
+        const imageUrlPrefix = '/api/image/display/'
         if (forEditor) {
           for (let i = 0; i < postOrComment.images.length; i++) {
             endHTML += (await hbs.render('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>' // is this line long enough yet
@@ -418,7 +417,7 @@ module.exports = {
   }
 }
 
-function wordCount (str) {
+function wordCount(str) {
   return str.split(' ').filter(function (n) { return n !== '' }).length
 }
 
@@ -428,7 +427,7 @@ function wordCount (str) {
 // custom formatted html if such a need ever arises.
 
 // called by parse text to turn the quilljs delta format (which can be used for text with embeds) into html
-function parseDeltaNotUsedRightNow (delta) {
+function parseDeltaNotUsedRightNow(delta) {
   // taken from https://stackoverflow.com/questions/19377262/regex-for-youtube-url
   const youtubeUrlFindingRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/
   // taken from https://github.com/regexhq/vimeo-regex/blob/master/index.js

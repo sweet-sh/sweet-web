@@ -1157,9 +1157,9 @@ module.exports = function (app) {
         if (displayedPost.inlineElements && displayedPost.inlineElements.length && (imageCont = (displayedPost.inlineElements.find(v => v.type === 'image(s)')))) {
           metadataImage = 'https://sweet.sh/api/image/display/' + imageCont.images[0]
         } else if (displayedPost.images && displayedPost.images.length) {
-          metadataImage = ((!displayedPost.imageVersion || displayedPost.imageVersion < 2) ? 'https://sweet.sh/images/uploads/' : 'https://sweet.sh/api/image/display/') + displayedPost.images[0]
+          metadataImage = 'https://sweet.sh/api/image/display/' + displayedPost.images[0]
         } else if (displayedPost.author.imageEnabled) {
-          metadataImage = 'https://sweet.sh/images/' + displayedPost.author.image
+          metadataImage = 'https://sweet-images.s3.amazonaws.com/' + displayedPost.author.image
         } else {
           metadataImage = 'https://sweet.sh/images/cake.svg'
         }
