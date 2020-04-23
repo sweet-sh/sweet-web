@@ -377,7 +377,7 @@ module.exports = {
         }
       }
       if (postOrComment.images && postOrComment.images.length) {
-        const imageUrlPrefix = '/api/image/display/'
+        const imageUrlPrefix = 'https://sweet-images.s3.eu-west-2.amazonaws.com/images/'
         if (forEditor) {
           for (let i = 0; i < postOrComment.images.length; i++) {
             endHTML += (await hbs.render('./views/partials/scriptPartials/imagePreview.handlebars', { editing: true, image: postOrComment.images[i], imageUrl: imageUrlPrefix + postOrComment.images[i], description: postOrComment.imageDescriptions[i] })) + '</div>' // is this line long enough yet
