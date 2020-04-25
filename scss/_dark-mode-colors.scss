@@ -27,11 +27,11 @@ $link-hover-color: $dark-pink;
 
 $blockquote-color: $darkest-grey;
 
-$button-color: lighten(desaturate($dark-pink, 5%), 5%);
+$button-color: $dark-pink;
 $button-hover-color: $darker-pink;
 
 $bg-color: $background-grey;
-$dot-color: lighten($background-grey, 7%);
+$dot-color: lighten($background-grey, 5%);
  
 $highlight: darken($sweet-red, 40%);
 $placeholder: $dark-grey;
@@ -43,8 +43,8 @@ $post-shadow: 0px 0px 6px rgba(0, 0, 0, 0.8);
 $button-shadow: none;
 $button-shadow-hover: none;
 
-$navigation-background: darken($background-grey, 5%);
-$element-background: #242424;
+$navigation-background: $background-grey;
+$element-background: #202020;
 $aside-background: $element-background;
 
 $navigation-border: $dark-red;
