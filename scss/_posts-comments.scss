@@ -36,7 +36,7 @@ article.post>.notifications div a:visited {
 }
 
 article.post>.notifications div a:hover {
-    color: $sweet-red;
+    color: $link-hover-color;
 }
 
 article.post>.notifications div.recently-commented-notification {
@@ -50,7 +50,7 @@ article.post>.notifications div.recently-commented-notification a:visited {
 }
 
 article.post>.notifications div.recently-commented-notification a:hover {
-    color: $sweet-red;
+    color: $link-hover-color;
 }
 
 article.post>.notifications div.community-notification {
@@ -136,7 +136,7 @@ article.comment>header .author-display-name a:hover,
 article.post>header .author-username a:hover,
 article.comment>header .author-username a:hover,
 #welcome-message-container>footer .author-username a:hover {
-    color: $sweet-red;
+    color: $link-hover-color;
 }
 
 article.post>header .author-username,
@@ -239,7 +239,7 @@ article.post:hover {
     padding: 0;
     &:hover {
         background: $element-background;
-        color: $sweet-red;
+        color: $link-hover-color;
     }
     @media screen and (max-width: 576px) {
         margin-right: 0;
@@ -345,7 +345,7 @@ a.show-more:hover {
 }
 
 .button.comment-toolbar-button:hover {
-    color: $sweet-red;
+    color: $link-hover-color;
 }
 
 .comment-deleted-message,
@@ -415,7 +415,7 @@ article.comment>header .timestamp {
 
 article.comment>.content {
     margin-top: 0.25rem;
-    background: $lightest-grey;
+    background: $comment-background;
     padding: 0.5rem;
     border: 1px solid $light-grey;
     border-radius: 4px;

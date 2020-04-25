@@ -312,5 +312,27 @@ $(function() {
     var embedurl = $(this).attr('embedurl');
     $(this).replaceWith('<div class="embedded-video-cont"><iframe class="embedded-video" src="'+embedurl+'" frameborder="0" allowfullscreen></iframe></div>')
   })
+  $(".switch-style").click(function(e){
+    e.preventDefault();
+    var currentStyle = $(this).attr('data-style');
+    if (currentStyle == "light"){
+        $( "body" ).fadeOut( function() {
+            $("#dark-mode-stylesheet").attr("href","/css/dark-mode.css");
+            $( this ).fadeIn();
+        } );
+        $(this).attr('data-style','dark');
+        $(this).html('<i class="fas fa-fw fa-sun"></i> light mode')
+        $.post('/api/user/changetheme/dark')
+    }
+    else {
+        $( "body" ).fadeOut( function() {
+            $("#dark-mode-stylesheet").attr("href","");
+            $( this ).fadeIn();
+        } );
+        $(this).attr('data-style','light');
+        $(this).html('<i class="fas fa-fw fa-moon"></i> dark mode')
+        $.post('/api/user/changetheme/light')
+    }
+  })
 });
 </script>

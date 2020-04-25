@@ -9,7 +9,7 @@ $light-grey: lighten($medium-grey, 10%); // Subtle dividers, comment content box
 $dark-grey: darken($medium-grey, 15%);
 $darkest-grey: darken($medium-grey, 30%); // Grey-colored text
 
-$light-blue: #339fdb; // Links
+$light-blue: #339fdb;
 
 $light-yellow: #fcfaea; // Recent comment flash
 
@@ -23,6 +23,14 @@ $light-pink: lighten($sweet-red, 40%);
 $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
 $dark-pink: lighten($sweet-red, 20%); // ...why is dark pink darker than darker pink
 // Because darker pink is darker than light pink, but dark pink is as dark as pink gets
+
+$link-color: $light-blue; // Links
+$link-hover-color: $sweet-red;
+
+$blockquote-color: darken($dark-grey, 10%);
+
+$button-color: $dark-pink;
+$button-hover-color: $sweet-red;
 
 $bg-color: lighten($background-grey, 1%);
 $dot-color: $light-grey;
@@ -47,25 +55,13 @@ $navigation-text: $darkest-grey;
 $navigation-active-text: $dark-pink;
 $navigation-hover-text: $sweet-red;
 
-.color-test {
-    margin-top: 80px;
-    display: inline-block;
-    width: 80px;
-    height: 80px;
-    &.medium-grey  {
-        background-color: $medium-grey;
-    }
-    &.lightest-grey {
-        background-color: $lightest-grey
-    }
-    &.light-grey {
-        background-color: $light-grey
+$notification-background: $lightest-grey;
+$notification-text: darken($dark-grey, 20%);
+$notification-active-background: $background-white;
 
-    }
-    &.dark-grey {
-        background-color: $dark-grey
-    }
-    &.darkest-grey {
-        background-color: $darkest-grey
-    }
-}
+$comment-background: $lightest-grey;
+
+$message-color: $dark-pink;
+$message-background: $lightest-pink;
+$message-border: $light-pink;
+

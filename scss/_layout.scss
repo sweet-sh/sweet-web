@@ -685,6 +685,8 @@ section {
 
 #votesContainer {
   margin-bottom: 1rem;
+  background: $lightest-pink;
+  border: 1px solid $medium-grey;
   @media(min-width:768px) {
     border-radius: $rounded-border;
   }
@@ -703,11 +705,6 @@ section {
 
 .post.vote:last-child {
     border-bottom: none;
-}
-
-#votesContainer {
-  background: $lightest-pink;
-  border: 1px solid $medium-grey;
 }
 
 // This is the box containing the new proposal in community votes

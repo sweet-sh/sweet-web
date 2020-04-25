@@ -18,6 +18,7 @@ textarea {
     border-radius: 3px;
     border: 1px solid $medium-grey;
     background: $editor-background;
+    color: $text;
 
     @include transition;
 
@@ -58,8 +59,8 @@ select {
     user-select: none;
     line-height: 1;
     color: $background-white;
-    background: $dark-pink;
-    border: $dark-pink;
+    background: $button-color;
+    border: $button-color;
     border-radius: 3px;
     box-shadow: $button-shadow;
     padding: .75rem .75rem;
@@ -69,7 +70,7 @@ select {
 
     &:hover {
         cursor: pointer;
-        background: $sweet-red;
+        background: $button-hover-color;
         box-shadow: $button-shadow-hover;
         color: #fff;
         text-decoration: none;
@@ -387,9 +388,8 @@ button.close {
     margin-bottom: 0;
     transition: all 0.1s ease-in-out;
     background-color: $editor-background;
-    color: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    // box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px rgba(255, 255, 255, 0.1);
+    color: $dark-grey;
+    border: 1px solid $dark-grey;
 }
 
 @media(max-width:500px){
@@ -401,7 +401,7 @@ button.close {
 }
 
 .switch-field input:checked+label {
-    background-color: $dark-pink;
+    background-color: $button-color;
     color: white;
     box-shadow: none;
 }
@@ -430,7 +430,7 @@ button.close {
 }
 
 .new-comment-form {
-    background-color: $lightest-grey;
+    background-color: $comment-background;
     padding: .75rem;
     border: 1px solid $light-grey;
     border-radius: 4px;

@@ -230,7 +230,7 @@
 
 // for change
 
-$tooltip-border-color: $text;
+$tooltip-border-color: $darkest-grey;
 $tooltip-distance: 4px;
 
 // do not touch
@@ -245,7 +245,7 @@ $position-after: calc(100% + 3px + #{$tooltip-distance});
   &:before {
     content: attr(data-tooltip);
     padding: 8px 16px;
-    color: #555;
+    color: $text;
     white-space: pre;
     border-radius: 4px;
     border: 1px solid  $tooltip-border-color;
@@ -270,7 +270,7 @@ $position-after: calc(100% + 3px + #{$tooltip-distance});
     position: absolute;
     cursor: default;
     opacity: 0;
-    background-color: #fff;
+    background-color: $element-background;
     pointer-events: none;
     transition: all ease-out .125s;
     box-shadow: none;

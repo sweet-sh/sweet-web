@@ -1046,7 +1046,7 @@ module.exports = function (app) {
         headerBoosters: boostsForHeader,
         recentlyCommented: false, // This gets set below
         lastCommentAuthor: '', // As does this
-        havePlused: displayContext.pluses.filter(plus => plus.author.equals(req.user._id))
+        havePlused: req.user ? displayContext.pluses.filter(plus => plus.author.equals(req.user._id)) : false
       })
 
       // these are only a thing for logged in users

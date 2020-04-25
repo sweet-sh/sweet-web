@@ -271,6 +271,24 @@ module.exports = function (app, passport) {
       })
   })
 
+  // Change the user's color theme. Separate from the normal settings edit stuff because you
+  // can switch it from your navbar.
+  // Inputs: the theme value ('light' or 'dark')
+  // Outputs: change the theme, send a 200 status (save the cheerleader, save the world)
+  app.post('/api/user/changetheme/:theme', isLoggedInOrRedirect, function (req, res) {
+    User.findOne({ _id: req.user._id })
+      .then((user) => {
+        user.settings.theme = req.params.theme
+        user.save()
+        .then(response => {
+          res.sendStatus(200)
+        })
+        .catch(error => {
+          console.error(error)
+        })
+      })
+  })
+
   // Responds to post requests from users who do not want notifications from activity on some post anymore.
   // Inputs: the id of the post
   // Outputs: removes the logged in user from the post's subscribedusers field, adds them to unsubscribedUsers
@@ -333,6 +351,7 @@ module.exports = function (app, passport) {
       _id: req.user._id
     }, {
       $set: {
+        'settings.theme': newSets.theme,
         'settings.timezone': newSets.timezone,
         'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone ? newSets.autoDetectedTimeZone : oldSets.autoDetectedTimeZone,
         'settings.profileVisibility': newSets.profileVisibility,

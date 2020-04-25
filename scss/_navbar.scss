@@ -380,8 +380,8 @@
 }
 
 .notificationLink {
-    background: $lightest-grey !important;
-    color: darken($dark-grey, 20%) !important;
+    background: $notification-background !important;
+    color: $notification-text !important;
 
     &:hover {
         background: $highlight !important;
@@ -390,6 +390,6 @@
 
 .notification-active {
     font-weight: 500;
-    background: $element-background !important;
-    color: $navigation-text !important;
+    background: $notification-active-background !important;
+    color: $notification-text !important;
 }

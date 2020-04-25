@@ -63,7 +63,7 @@
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown" id="userDropdownMenu">
                 <a class="dropdown-item" href="/{{loggedInUserData.username}}"><i class="fas fa-fw fa-user-circle"></i> profile</a>
                 <a class="dropdown-item" href="/settings"><i class="fas fa-fw fa-cog"></i> settings</a>
-                <!-- <a id="darkModeToggle" class="dropdown-item" href="#"><i class="fas fa-fw fa-moon"></i> dark mode</a> -->
+                <a class="dropdown-item switch-style" data-style="{{#eq loggedInUserData.settings.theme "dark"}}dark{{else}}light{{/eq}}" href="#"><i class="fas fa-fw fa-{{#eq loggedInUserData.settings.theme "dark"}}sun{{else}}moon{{/eq}}"></i> {{#eq loggedInUserData.settings.theme "dark"}}light{{else}}dark{{/eq}} mode</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="/support"><i class="fas fa-fw fa-question-circle"></i> support</a>
                 <div class="dropdown-divider"></div>
