@@ -85,15 +85,22 @@
     <footer class="toolbar">
         {{#unless this.commentsDisabled}}
             {{#if ../loggedIn}}
+              {{#if ../canReply}}
+                <div class="toolbar-button-container">
+                  <button type="button" class="button post-toolbar-button edit-plus {{#if this.havePlused}}have-plused{{/if}} tooltip-top" data-post-id="{{this._id}}" data-tooltip="Note this post">
+                      <i class="plus-icon {{#if this.havePlused}}fas{{else}}far{{/if}} fa-plus-circle"></i> <span class="pluses-number">{{#if this.numberOfPluses}}{{this.numberOfPluses}}{{/if}}</span>
+                    </button>
+                </div>
+              {{/if}}
             <div class="toolbar-button-container">
-            	<button type="button" class="button post-toolbar-button show-comments">
+            	<button type="button" class="button post-toolbar-button show-comments tooltip-top" data-tooltip="Show post comments">
                 	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                 </button>
             </div>
             {{else}}
                 {{#if this.numberOfComments}}
                		<div class="toolbar-button-container">
-                    	<button type="button" class="button post-toolbar-button show-comments">
+                    	<button type="button" class="button post-toolbar-button show-comments tooltip-top" data-tooltip="Show post comments">
                         	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>
                     	</button>
                     </div>
@@ -105,7 +112,7 @@
                 {{#isnt this.type "community"}}
                     <div class="toolbar-button-container">
                         <form action="/{{#if youBoosted}}remove{{else}}create{{/if}}boost/{{this._id}}" method="post" class="post-toolbar-form">
-                            <button type="submit" class="button post-toolbar-button boost-post">
+                            <button type="submit" class="button post-toolbar-button boost-post tooltip-top" data-tooltip="Boost this post">
                                 {{#if youBoosted}}
                                     <span class="fa-layers fa-fw">
                                         <i class="fas fa-retweet"></i>
@@ -122,7 +129,7 @@
         {{/eq}}
         {{#isnt this.type "draft"}}
         <div class="toolbar-button-container">
-            <a class="button post-toolbar-button" href="/{{this.author.username}}/{{this.url}}">
+            <a class="button post-toolbar-button tooltip-top" href="/{{this.author.username}}/{{this.url}}" data-tooltip="Permalink to this post">
                 <span class="fa-layers">
                   <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
                   <i class="far fa-sticky-note"></i>

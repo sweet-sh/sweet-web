@@ -3,7 +3,7 @@ const User = require('./models/user')
 const Community = require('./models/community')
 const emailer = require('./emailer')
 
-function markRead (userId, subjectId) {
+function markRead(userId, subjectId) {
   User.findOne({
     _id: userId
   }, 'notifications')
@@ -17,13 +17,24 @@ function markRead (userId, subjectId) {
     })
 }
 
-function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
-  function buildNotification () {
+/** 
+ * Notifier function.
+ * @param {string} type - The general subject of the notification. Either 'user' or 'community'.
+ * @param {string} cause - The specific action to be notified of.
+ * @param {string} notifieeID - ID of the person to whom the notification will be shown.
+ * @param {string} sourceID - ID of the person who did the action.
+ * @param {string} subjectId - ID of the community where the action occured
+ * @param {string} url - URL to send to the person who clicks the notification
+ * @param {string} context - A verb or noun relating to the action.
+ */
+function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
+  function buildNotification() {
     switch (type) {
       case 'user':
         return User.findOne({ _id: sourceId })
           .then(user => {
             const notifTexts = {
+              plus: 'noted your post.',
               reply: 'replied to your post.',
               boost: 'boosted your post.',
               subscribedReply: 'replied to a post you have also replied to.',
@@ -37,7 +48,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
               mention: 'mentioned you on sweet 🙌'
             }
             const text = notifTexts[cause]
-            const image = '/images/' + (user.imageEnabled ? user.image : 'cake.svg')
+            const image = (user.imageEnabled ? user.image : '/images/cake.svg')
             const username = '@' + user.username
             const final = '<strong>' + username + '</strong> ' + text
             const emailText = notifEmails[cause] ? notifEmails[cause] : ''
@@ -64,7 +75,7 @@ function notify (type, cause, notifieeID, sourceId, subjectId, url, context) {
                   nameChange: 'The name of the community <strong>' + context + '</strong> has been changed to <strong>' + community.name + '</strong>.'
                 }
                 const text = commNotifTexts[cause]
-                const image = '/images/communities/' + (community.imageEnabled ? community.image : 'cake.svg')
+                const image = (community.imageEnabled ? community.image : '/images/communities/cake.svg')
                 return {
                   image: image,
                   text: text

@@ -167,6 +167,11 @@ dyalog-apl:
     - dyalog
   label: Dyalog APL
   url: 'http://www.dyalog.com'
+econopublish:
+  icons:
+    - hat-cowboy-side
+  label: EconoPublish
+  url: 'https://www.econopublish.com'
 firstdraft:
   icons:
     - firstdraft
@@ -250,16 +255,34 @@ hips:
 hire-a-helper:
   icons:
     - archive
+    - blanket
+    - box-alt
+    - box-fragile
+    - box-full
     - box-open
+    - box-up
+    - boxes-alt
+    - container-storage
     - couch
     - dolly
+    - dolly-empty
+    - fragile
+    - lamp
+    - loveseat
     - people-carry
+    - person-carry
+    - person-dolly
+    - person-dolly-empty
+    - ramp-loading
     - route
     - sign
     - suitcase
     - tape
+    - truck-container
+    - truck-couch
     - truck-loading
     - truck-moving
+    - truck-ramp
     - wine-glass
   label: HireAHelper
   url: 'https://www.hireahelper.com'
@@ -327,11 +350,26 @@ med-apps:
 medapps:
   icons:
     - book-medical
+    - book-user
+    - books-medical
     - clinic-medical
+    - clipboard-user
+    - comment-alt-medical
     - comment-medical
     - crutch
+    - crutches
+    - disease
+    - files-medical
+    - head-side-brain
+    - head-side-medical
+    - hospital-user
+    - hospitals
     - laptop-medical
     - pager
+    - stretcher
+    - user-md-chat
+    - users-medical
+    - walker
   label: MedApps
   url: 'https://medapps.com.au'
 megaport:
@@ -468,19 +506,41 @@ rocket-chat:
   icons:
     - comment
     - comment-alt
+    - comment-alt-check
+    - comment-alt-dots
+    - comment-alt-edit
+    - comment-alt-exclamation
+    - comment-alt-lines
+    - comment-alt-minus
+    - comment-alt-plus
+    - comment-alt-slash
+    - comment-alt-smile
+    - comment-alt-times
+    - comment-check
     - comment-dots
+    - comment-edit
+    - comment-exclamation
+    - comment-lines
+    - comment-minus
+    - comment-plus
     - comment-slash
+    - comment-smile
+    - comment-times
     - comments
+    - comments-alt
     - frown
     - meh
     - phone
+    - phone-plus
     - phone-slash
     - poo
     - quote-left
     - quote-right
     - rocketchat
     - smile
+    - smile-plus
     - video
+    - video-plus
     - video-slash
   label: Rocket.Chat
   url: 'https://rocket.chat'
@@ -541,16 +601,36 @@ speakap:
   url: 'https://speakap.com'
 stay-linked:
   icons:
+    - barcode-alt
+    - barcode-read
+    - barcode-scan
     - box
+    - box-check
     - boxes
     - clipboard-check
     - clipboard-list
+    - conveyor-belt
+    - conveyor-belt-alt
     - dolly
+    - dolly-empty
     - dolly-flatbed
+    - dolly-flatbed-alt
+    - dolly-flatbed-empty
+    - forklift
+    - hand-holding-box
+    - hand-receiving
+    - inventory
     - pallet
+    - pallet-alt
+    - scanner
+    - scanner-keyboard
+    - scanner-touchscreen
     - shipping-fast
+    - shipping-timed
+    - tablet-rugged
     - truck
     - warehouse
+    - warehouse-alt
   label: StayLinked
   url: 'https://www.staylinked.com'
 sticker-mule:
@@ -566,18 +646,35 @@ studio-vinari:
 supple:
   icons:
     - ad
+    - analytics
+    - badge-check
+    - badge-dollar
+    - badge-percent
     - bullhorn
     - bullseye
+    - bullseye-arrow
+    - bullseye-pointer
+    - comment-alt-dollar
     - comment-dollar
+    - comments-alt-dollar
     - comments-dollar
+    - envelope-open-dollar
     - envelope-open-text
     - funnel-dollar
+    - gift-card
+    - lightbulb-dollar
+    - lightbulb-exclamation
+    - lightbulb-on
+    - lightbulb-slash
     - mail-bulk
+    - megaphone
     - poll
     - poll-h
     - search-dollar
     - search-location
     - supple
+    - user-crown
+    - users-crown
   label: Supple
   url: 'https://supple.com.au'
 the-red-yeti:
@@ -587,21 +684,36 @@ the-red-yeti:
   url: 'http://theredyeti.com'
 the-us-sunnah-foundation:
   icons:
+    - book-heart
+    - box-heart
+    - box-usd
     - dollar-sign
     - donate
     - dove
     - gift
     - globe
+    - hand-heart
     - hand-holding-heart
+    - hand-holding-seedling
     - hand-holding-usd
+    - hand-holding-water
+    - hands-heart
     - hands-helping
+    - hands-usd
     - handshake
+    - handshake-alt
     - heart
+    - heart-circle
+    - heart-square
+    - home-heart
     - leaf
+    - leaf-heart
     - parachute-box
     - piggy-bank
     - ribbon
     - seedling
+    - usd-circle
+    - usd-square
   label: The us-Sunnah Foundation
   url: 'https://www.ussunnah.org'
 themeco:
@@ -637,9 +749,13 @@ vaadin:
 via:
   icons:
     - car-crash
+    - draw-circle
     - draw-polygon
+    - draw-square
     - house-damage
     - layer-group
+    - layer-minus
+    - layer-plus
     - skull-crossbones
     - user-injured
   label: VIA Traffic Software Solutions

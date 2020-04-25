@@ -56,9 +56,16 @@ section {
 
 /*in handlebars files: community, communities, communitysidebar, settings, and support*/
 .pane {
-    padding: 15px;
-    background: $element-background;
-    border: 1px solid $medium-grey;
+  background: $element-background;
+  padding: .75rem;
+  border-top: 1px solid $medium-grey;
+  border-bottom: 1px solid $medium-grey;
+  @media(min-width:768px) {
+    border-radius: $rounded-border;
+    border-right: 1px solid $medium-grey;
+    border-left: 1px solid $medium-grey;
+    padding: 1rem;
+  }
 }
 
 .justify-content-center {
@@ -305,12 +312,22 @@ section {
     padding-bottom: 0px;
 }
 
-.community-container {
+.community-container,
+.user-container {
     display: none;
 }
 
 #mainBody {
     display: block;
+}
+
+#connectionsBody {
+  .compact-container {
+    margin-bottom: 1rem;
+  }
+  h4 {
+    color: $dark-pink;
+  }
 }
 
 #homeBody,
@@ -408,6 +425,9 @@ section {
     padding: 0.5rem 1rem 1rem 1rem;
     width: 350px;
     margin-bottom: 1rem;
+    @media(min-width:768px) {
+      border-radius: $rounded-border;
+    }
 }
 
 .hashtags p:nth-child(7) {
@@ -450,7 +470,13 @@ section {
 }
 
 #userActionsButtons {
-    margin: 1rem 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  button {
+    flex: 1;
+    margin: 2.5px;
+  }
 }
 
 /*some stuff user profile and community pages share*/
@@ -572,11 +598,17 @@ section {
     justify-content: space-between;
 
     .content-box-header {
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin-bottom: 1rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+
+        .postAuthorImage {
+          height: 32px;
+          width: 32px;
+          margin-right: .25rem !important;
+        }
 
         @media (min-width: 786px) {
             margin-bottom: 0;
@@ -652,13 +684,17 @@ section {
 }
 
 #votesContainer {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
+  @media(min-width:768px) {
+    border-radius: $rounded-border;
+  }
 }
 
 .post.vote {
     background: none;
     border: 0;
     border-bottom: 1px solid $medium-grey;
+    border-radius: 0;
 }
 
 .post.vote:hover {

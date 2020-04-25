@@ -82,6 +82,12 @@ const boostSchema = new mongoose.Schema({
   boost: { type: DBReference, ref: 'Post' }
 })
 
+const plusSchema = new mongoose.Schema({
+  author: { type: DBReference, ref: 'User', required: true },
+  timestamp: { type: Date, required: true },
+  type: String // Currently only "plus"
+})
+
 const postSchema = new mongoose.Schema({
   type: String, // "original", "community", or "boost". note that the equivalent "context" field in image documents stores either "user", "community", or "user"
   community: { type: DBReference, ref: 'Community' }, // hopefully undefined if type=="user"
@@ -99,6 +105,8 @@ const postSchema = new mongoose.Schema({
   numberOfComments: Number,
   mentions: [String],
   tags: [String],
+  pluses: [plusSchema],
+  numberOfPluses: Number,
   // boosts of this post will produce seperate post documents in the database that are linked to here. they link back to the original post through the boostTarget field.
   boostsV2: [{ type: boostSchema, required: true }],
   contentWarnings: String,

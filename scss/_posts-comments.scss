@@ -183,6 +183,9 @@ article.post {
     border: 1px solid $medium-grey;
     margin-bottom: 1rem;
     background: $element-background;
+    @media(min-width:768px) {
+      border-radius: $rounded-border;
+    }
 }
 
 article.post>.content {
@@ -243,9 +246,14 @@ article.post:hover {
     }
 }
 
-.comments-number {
+.comments-number,
+.pluses-number {
     font-size: smaller;
     margin-left: 3px;
+}
+
+.post-toolbar-button.have-plused {
+  font-weight: bold;
 }
 
 .content-warning {
