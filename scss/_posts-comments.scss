@@ -183,7 +183,9 @@ article.post {
     border: 1px solid $medium-grey;
     margin-bottom: 1rem;
     background: $element-background;
-    border-radius: $rounded-border;
+    @media(min-width:768px) {
+      border-radius: $rounded-border;
+    }
 }
 
 article.post>.content {

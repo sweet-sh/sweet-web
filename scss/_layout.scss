@@ -56,9 +56,16 @@ section {
 
 /*in handlebars files: community, communities, communitysidebar, settings, and support*/
 .pane {
-    padding: 15px;
-    background: $element-background;
-    border: 1px solid $medium-grey;
+  background: $element-background;
+  padding: .75rem;
+  border-top: 1px solid $medium-grey;
+  border-bottom: 1px solid $medium-grey;
+  @media(min-width:768px) {
+    border-radius: $rounded-border;
+    border-right: 1px solid $medium-grey;
+    border-left: 1px solid $medium-grey;
+    padding: 1rem;
+  }
 }
 
 .justify-content-center {
@@ -305,13 +312,6 @@ section {
     padding-bottom: 0px;
 }
 
-.simple-panel {
-  background: $element-background;
-  border-radius: $rounded-border;
-  border: 1px solid $medium-grey;
-  padding: 1rem;
-}
-
 .community-container,
 .user-container {
     display: none;
@@ -425,6 +425,9 @@ section {
     padding: 0.5rem 1rem 1rem 1rem;
     width: 350px;
     margin-bottom: 1rem;
+    @media(min-width:768px) {
+      border-radius: $rounded-border;
+    }
 }
 
 .hashtags p:nth-child(7) {
@@ -682,7 +685,9 @@ section {
 
 #votesContainer {
   margin-bottom: 1rem;
-  border-radius: $rounded-border;
+  @media(min-width:768px) {
+    border-radius: $rounded-border;
+  }
 }
 
 .post.vote {

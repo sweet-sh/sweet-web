@@ -237,7 +237,9 @@ button.close {
     background: $element-background;
     padding: 15px;
     margin-bottom: 1rem;
-    border-radius: $rounded-border;
+    @media(min-width:768px) {
+      border-radius: $rounded-border;
+    }
 }
 
 #searchForm {
