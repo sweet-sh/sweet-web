@@ -1,43 +1,127 @@
 <div id="userBody" class="row">
   <div class="col-md-4 mx-2 mx-md-0">
     {{#if loggedIn}}
-      {{> usersidebar}}
+    {{> usersidebar}}
     {{else}}
-      {{#contains visibleSidebarArray profileData.settings.profileVisibility}}
-        {{> usersidebar}}
-      {{else}}
-        <h3 class="page-header">
-          @{{ profileData.username}}
-        </h3>
-        <p>
-          Log in or sign up to see this profile!
-        </p>
-      {{/contains}}
+    {{#contains visibleSidebarArray profileData.settings.profileVisibility}}
+    {{> usersidebar}}
+    {{else}}
+    <h3 class="page-header">
+      @{{ profileData.username}}
+    </h3>
+    <p>
+      Log in or sign up to see this profile!
+    </p>
+    {{/contains}}
     {{/if}}
   </div>
   <div class="col-md-7">
-    {{#and loggedIn isOwnProfile}}
-  		{{> newpostform }}
-    {{/and}}
-    {{#unless loggedIn}}
-    <div class="message w-100 text-center" style="font-size:1.4em;">
-      <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a utopian social network. <a class="message-link" href="/signup">Join now</a>!
-    </div>
-    {{/unless}}
-    {{#if loggedIn}}
+    <div id="mainBody" class="user-container">
+      {{#and loggedIn isOwnProfile}}
+      {{> newpostform }}
+      {{/and}}
+      {{#unless loggedIn}}
+      <div class="message w-100 text-center" style="font-size:1.4em;">
+        <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a utopian social network. <a
+          class="message-link" href="/signup">Join now</a>!
+      </div>
+      {{/unless}}
+      {{#if loggedIn}}
       <div id="postsContainer"></div>
       {{> infiniteScrollLoadingSpinner}}
-    {{else}}
+      {{else}}
       {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
-  		  <div id="postsContainer"></div>
-        {{> infiniteScrollLoadingSpinner}}
+      <div id="postsContainer"></div>
+      {{> infiniteScrollLoadingSpinner}}
       {{/eq}}
-    {{/if}}
+      {{/if}}
+    </div>
+    <div id="connectionsBody" class="user-container">
+      <h3 class="page-header mx-2">Connections</h3>
+      {{#and loggedIn trustedUserData }}
+      {{#or userTrustsYou isOwnProfile}}
+      <h5>Trusts{{#gt trustedUserData.length 30}} <a class="user-list-toggle collapsed" href="#trustedUsersList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedUsersList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="trustedUsersList" class="user-list{{#gt trustedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each trustedUserData}}
+        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/or}}
+      {{/and}}
+      {{#and loggedIn usersWhoTrustThemData.length }}
+      <h5>Trusted by{{#gt usersWhoTrustThemData.length 30}} <a class="user-list-toggle collapsed" href="#trustedByUsersList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="trustedByUsersList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="trustedByUsersList" class="user-list{{#gt usersWhoTrustThemData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each usersWhoTrustThemData}}
+        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/and}}
+      {{#if followedUserData}}
+      <h5>Follows{{#gt followedUserData.length 30}} <a class="user-list-toggle collapsed" href="#followedUsersList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followedUsersList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="followedUsersList" class="user-list{{#gt followedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each followedUserData}}
+        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/if}}
+      {{#if followersData}}
+      <h5>Followed by{{#gt followersData.length 30}} <a class="user-list-toggle collapsed" href="#followersList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="followersList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="followersList" class="user-list{{#gt followersData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each followersData}}
+        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/if}}
+      {{#if isOwnProfile}}
+      {{#if flaggedUserData}}
+      <h5>Flagged users{{#gt flaggedUserData.length 30}} <a class="user-list-toggle collapsed" href="#flaggedUsersList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="flaggedUsersList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="flaggedUsersList" class="user-list{{#gt flaggedUserData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each flaggedUserData}}
+        <a href="/{{this.username}}" data-tooltip="@{{this.username}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{#if communitiesData}}
+      <h5>Communities{{#gt communitiesData.length 30}} <a class="user-list-toggle collapsed" href="#communitiesList"
+          data-toggle="collapse" role="button" aria-expanded="false" aria-controls="communitiesList"><i
+            class="fas fa-caret-right"></i></a>{{/gt}}</h5>
+      <div id="communitiesList" class="user-list{{#gt communitiesData.length 30}} collapse{{else}} d-flex{{/gt}}">
+        {{#each communitiesData}}
+        <a href="/community/{{this.slug}}" data-tooltip="{{this.name}}" class="tooltip-top"><img
+            src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" /></a>
+        {{/each}}
+        <div style="height:10px;width:100%;"></div>
+      </div>
+      {{/if}}
+    </div>
   </div>
 </div>
 
 {{#if isOwnProfile}}
-<div class="modal fade" id="updateProfileModal" tabindex="-1" role="dialog" aria-labelledby="updateProfileModalLabel" aria-hidden="true">
+<div class="modal fade" id="updateProfileModal" tabindex="-1" role="dialog" aria-labelledby="updateProfileModalLabel"
+  aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -47,37 +131,38 @@
         </button>
       </div>
       <form id="updateProfileForm" action="/updateprofile" method="post" enctype="multipart/form-data">
-			<div class="modal-body">
-        <div class="form-group">
-    		<label for="displayName">Display name</label>
-    		<input type="text" class="form-control" name="displayName" value="{{profileData.displayName}}" maxlength="50">
-    	</div>
-        <div class="form-group">
-          <label for="about">About</label>
-          <textarea class="form-control" name="about"  maxlength="500">{{profileData.aboutRaw}}</textarea>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="displayName">Display name</label>
+            <input type="text" class="form-control" name="displayName" value="{{profileData.displayName}}"
+              maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="about">About</label>
+            <textarea class="form-control" name="about" maxlength="500">{{profileData.aboutRaw}}</textarea>
+          </div>
+          <div class="form-group">
+            <label for="pronouns">Pronouns</label>
+            <input type="text" class="form-control" name="pronouns" value="{{profileData.pronouns}}" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" name="location" value="{{profileData.location}}" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="website">Website</label>
+            <input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}" maxlength="50">
+          </div>
+          <label>Profile image (maximum file size 3MB)</label>
+          <div id="image-preview">
+            <label for="image-upload" id="image-label">Choose image</label>
+            <input type="file" name="imageUpload" id="image-upload" accept="image/*" />
+          </div>
         </div>
-        <div class="form-group">
-          <label for="pronouns">Pronouns</label>
-          <input type="text" class="form-control" name="pronouns" value="{{profileData.pronouns}}" maxlength="50">
+        <div class="modal-footer">
+          <button type="button" class="button" data-dismiss="modal">Close</button>
+          <button type="submit" class="button">Update</button>
         </div>
-        <div class="form-group">
-    		<label for="location">Location</label>
-    		<input type="text" class="form-control" name="location" value="{{profileData.location}}" maxlength="50">
-    	</div>
-        <div class="form-group">
-			<label for="website">Website</label>
-			<input type="text" class="form-control" name="website" value="{{profileData.websiteRaw}}" maxlength="50">
-		</div>
-        <label>Profile image (maximum file size 3MB)</label>
-  			<div id="image-preview">
-  				<label for="image-upload" id="image-label">Choose image</label>
-  				<input type="file" name="imageUpload" id="image-upload" accept="image/*" />
-  			</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="button" data-dismiss="modal">Close</button>
-        <button type="submit" class="button">Update</button>
-      </div>
       </form>
     </div>
   </div>
@@ -88,52 +173,72 @@
 
 
 <script>
-    draftsMode = false;
-    function startInfiniteScroll() {
-        $('#postsContainer').infiniteScroll({
-            path: function() {
-                if ($(".oldesttimestamp").length) {
-                    //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-                    return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
-                }
-                //and then this is for when the feed is currently empty and being loaded/reloaded
-                return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
-            },
-            append: '.post',
-            prefill: true,
-            history: false,
-            status: '.page-load-status'
-        });
+  draftsMode = false;
+  function startInfiniteScroll() {
+    $('#postsContainer').infiniteScroll({
+      path: function () {
+        if ($(".oldesttimestamp").length) {
+          //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+          return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
+        }
+        //and then this is for when the feed is currently empty and being loaded/reloaded
+        return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
+      },
+      append: '.post',
+      prefill: true,
+      history: false,
+      status: '.page-load-status'
+    });
+  }
+  startInfiniteScroll();
+  $(".user-panel-link").click(function () {
+    var element = $(this);
+    var currentVisibility = element.attr("data-shown");
+    $(".user-container").hide();
+    $(".user-panel-link").each(function (i, link) {
+      $(this).html($(this).attr("data-hidden-text"))
+      $(this).attr("data-shown", "false")
+    });
+    if (currentVisibility == "false") {
+      $(element.attr("data-target")).show();
+      element.html(element.attr("data-shown-text"))
+      element.attr("data-shown", "true")
     }
-    startInfiniteScroll();
-    {{#if isOwnProfile}}
-    $(function() {
-        $("#switch-to-drafts").click(function(e) {
-            e.preventDefault();
-            if(!draftsMode){
-              draftsMode = true;
-              $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text)
-              $(this).html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
-              restartInfiniteScroll();
-            }else{
-              draftsMode = false;
-              $(this).html('<i class="fas fa-pencil-ruler"></i> See drafts');
-              //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
-              $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked",true);
-              restartInfiniteScroll();
-            }
-            //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
-            var postsContainer = $("#postsContainer");
-            if(getTop(postsContainer) > $(window).scrollTop()+$(window).height()){
-              function scrollToCont(){
-                $('html').animate({scrollTop:getTop($("#postForm")) - $("#topNav").outerHeight()}, 200);
-                postsContainer.off("append.infiniteScroll", scrollToCont);
-              }
-              postsContainer.on("append.infiniteScroll", scrollToCont);
-            }
-        })
+    else if (currentVisibility == "true") {
+      $("#mainBody").show();
+      element.html(element.attr("data-hidden-text"))
+      element.attr("data-shown", "false")
+    }
+  });
+
+  {{#if isOwnProfile}}
+  $(function () {
+    $("#switch-to-drafts").click(function (e) {
+      e.preventDefault();
+      if (!draftsMode) {
+        draftsMode = true;
+        $("#pseudoPrivacy-draft").prop("checked", true); //set post form to create drafts when entering the drafts feed (silent - won't trigger the text)
+        $(this).html('<span class="fa-layers fa-fw"><i class="fas fa-bars" data-fa-transform="shrink-8"></i><i class="far fa-sticky-note"></i></span> See posts');
+        restartInfiniteScroll();
+      } else {
+        draftsMode = false;
+        $(this).html('<i class="fas fa-pencil-ruler"></i> See drafts');
+        //switch the post form back from the drafts setting when going back to posts feed (also won't trigger the text)
+        $("#postPrivacy-{{profileData.settings.newPostPrivacy}}").prop("checked", true);
+        restartInfiniteScroll();
+      }
+      //on mobile, the posts container is not on screen when this button is pushed, so let's scroll down to it once the feed loads with a one-time event listener
+      var postsContainer = $("#postsContainer");
+      if (getTop(postsContainer) > $(window).scrollTop() + $(window).height()) {
+        function scrollToCont() {
+          $('html').animate({ scrollTop: getTop($("#postForm")) - $("#topNav").outerHeight() }, 200);
+          postsContainer.off("append.infiniteScroll", scrollToCont);
+        }
+        postsContainer.on("append.infiniteScroll", scrollToCont);
+      }
     })
-    {{/if}}
+  })
+  {{/if}}
 </script>
 
 {{> profilescripts}}

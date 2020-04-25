@@ -305,7 +305,8 @@ section {
     padding-bottom: 0px;
 }
 
-.community-container {
+.community-container,
+.user-container {
     display: none;
 }
 
@@ -450,7 +451,13 @@ section {
 }
 
 #userActionsButtons {
-    margin: 1rem 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  button {
+    flex: 1;
+    margin: 2.5px;
+  }
 }
 
 /*some stuff user profile and community pages share*/

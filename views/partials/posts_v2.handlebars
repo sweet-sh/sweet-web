@@ -85,11 +85,13 @@
     <footer class="toolbar">
         {{#unless this.commentsDisabled}}
             {{#if ../loggedIn}}
-            <div class="toolbar-button-container">
-            	<button type="button" class="button post-toolbar-button edit-plus {{#if this.havePlused}}have-plused{{/if}} tooltip-top" data-post-id="{{this._id}}" data-tooltip="Note this post">
-                	<i class="plus-icon {{#if this.havePlused}}fas{{else}}far{{/if}} fa-plus-circle"></i> <span class="pluses-number">{{#if this.numberOfPluses}}{{this.numberOfPluses}}{{/if}}</span>
-                </button>
-            </div>
+              {{#if ../canReply}}
+                <div class="toolbar-button-container">
+                  <button type="button" class="button post-toolbar-button edit-plus {{#if this.havePlused}}have-plused{{/if}} tooltip-top" data-post-id="{{this._id}}" data-tooltip="Note this post">
+                      <i class="plus-icon {{#if this.havePlused}}fas{{else}}far{{/if}} fa-plus-circle"></i> <span class="pluses-number">{{#if this.numberOfPluses}}{{this.numberOfPluses}}{{/if}}</span>
+                    </button>
+                </div>
+              {{/if}}
             <div class="toolbar-button-container">
             	<button type="button" class="button post-toolbar-button show-comments tooltip-top" data-tooltip="Show post comments">
                 	<i class="far fa-comment"></i> <span class="comments-number">{{#if this.numberOfComments}}{{this.numberOfComments}}{{/if}}</span>

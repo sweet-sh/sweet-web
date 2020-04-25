@@ -1270,6 +1270,9 @@ module.exports = function (app) {
     let followed
     let muted
     let myFlaggedUserData
+    let mutualTrusts
+    let mutualFollows
+    let mutualCommunities
     if (req.isAuthenticated()) {
       // Is this the logged in user's own profile?
       if (profileData.email === req.user.email) {
@@ -1287,6 +1290,13 @@ module.exports = function (app) {
         isOwnProfile = false
 
         const myTrustedUserEmails = (await Relationship.find({ from: req.user.email, value: 'trust' }).catch(c)).map(v => v.to) // used for flag checking and to see if the logged in user trusts this user
+        const myFollowedUserEmails = (await Relationship.find({ from: req.user.email, value: 'follow' }).catch(c)).map(v => v.to) // Used for mutual follows notification
+        const myCommunities = await Community.find({ members: req.user._id }).catch(c) // Used for mutual communities notification
+
+        // Check if profile user and logged in user have mutual trusts, follows, and communities
+        mutualTrusts = theirTrustedUserEmails.filter(user => myTrustedUserEmails.includes(user))
+        mutualFollows = theirFollowedUserEmails.filter(user => myFollowedUserEmails.includes(user))
+        mutualCommunities = communitiesData.filter(community1 => myCommunities.some(community2 => community1._id.equals(community2._id))).map(community => community._id)
 
         // Check if profile user follows and/or trusts logged in user
         userTrustsYou = theirTrustedUserEmails.includes(req.user.email) // not sure if these includes are faster than an indexed query of the relationships collection would be
@@ -1336,6 +1346,9 @@ module.exports = function (app) {
       communitiesData: communitiesData,
       flaggedUserData: myFlaggedUserData,
       flagsFromTrustedUsers: flagsFromTrustedUsers,
+      mutualTrusts: mutualTrusts,
+      mutualFollows: mutualFollows,
+      mutualCommunities: mutualCommunities,
       activePage: profileData.username,
       visibleSidebarArray: ['profileOnly', 'profileAndPosts']
     })
