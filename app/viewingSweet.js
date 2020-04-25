@@ -1294,8 +1294,10 @@ module.exports = function (app) {
         const myCommunities = await Community.find({ members: req.user._id }).catch(c) // Used for mutual communities notification
 
         // Check if profile user and logged in user have mutual trusts, follows, and communities
-        mutualTrusts = theirTrustedUserEmails.filter(user => myTrustedUserEmails.includes(user))
-        mutualFollows = theirFollowedUserEmails.filter(user => myFollowedUserEmails.includes(user))
+        mutualTrusts = usersWhoTrustThemArray.filter(user => myTrustedUserEmails.includes(user))
+        mutualFollows = followersArray.filter(user => myFollowedUserEmails.includes(user))
+        console.log(theirFollowedUserEmails)
+        console.log(mutualFollows)
         mutualCommunities = communitiesData.filter(community1 => myCommunities.some(community2 => community1._id.equals(community2._id))).map(community => community._id)
 
         // Check if profile user follows and/or trusts logged in user

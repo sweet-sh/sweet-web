@@ -305,6 +305,13 @@ section {
     padding-bottom: 0px;
 }
 
+.simple-panel {
+  background: $element-background;
+  border-radius: $rounded-border;
+  border: 1px solid $medium-grey;
+  padding: 1rem;
+}
+
 .community-container,
 .user-container {
     display: none;
@@ -312,6 +319,15 @@ section {
 
 #mainBody {
     display: block;
+}
+
+#connectionsBody {
+  .compact-container {
+    margin-bottom: 1rem;
+  }
+  h4 {
+    color: $dark-pink;
+  }
 }
 
 #homeBody,
@@ -579,11 +595,17 @@ section {
     justify-content: space-between;
 
     .content-box-header {
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin-bottom: 1rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+
+        .postAuthorImage {
+          height: 32px;
+          width: 32px;
+          margin-right: .25rem !important;
+        }
 
         @media (min-width: 786px) {
             margin-bottom: 0;
