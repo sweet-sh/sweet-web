@@ -1212,6 +1212,7 @@ module.exports = function (app) {
             case 'user':
               return true
             case 'community':
+              return myCommunities.some(m => { return m.equals(req.params.identifier) });
             default:
               return false
           }
