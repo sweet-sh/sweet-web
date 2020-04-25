@@ -593,7 +593,7 @@ button.close {
     margin: 0 0 0 10px;
     text-align: left;
     resize: none;
-    background: white;
+    background: $editor-background;
 }
 
 @media(max-width:500px){
@@ -608,7 +608,7 @@ button.close {
 }
 
 .embedspacer {
-    background: white;
+    background: $editor-background;
     border: dashed 1px $medium-grey;
 }
 
