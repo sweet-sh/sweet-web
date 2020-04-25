@@ -652,13 +652,15 @@ section {
 }
 
 #votesContainer {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-radius: $rounded-border;
 }
 
 .post.vote {
     background: none;
     border: 0;
     border-bottom: 1px solid $medium-grey;
+    border-radius: 0;
 }
 
 .post.vote:hover {

@@ -764,6 +764,40 @@ module.exports = function (app) {
       })
   })
 
+  app.post('/editplus/:postid', isLoggedInOrErrorResponse, function (req, res) {
+    let plusAction;
+    Post.findOne({
+      _id: req.params.postid
+    }, {
+      url: 1,
+      author: 1,
+      pluses: 1,
+      numberOfPluses: 1
+    }).populate('author').then((post) => {
+      if (post.pluses.some(plus => plus.author.equals(req.user._id))) {
+        // This post already has a plus from this user, so we're unplussing it
+        post.pluses = post.pluses.filter(plus => !plus.author.equals(req.user._id))
+        plusAction = 'remove'
+      } else {
+        post.pluses.push({ author: req.user._id, type: 'plus', timestamp: new Date() })
+        plusAction = 'add'
+      }
+      post.numberOfPluses = post.pluses.length
+      post.save().then((updatedPost) => {
+        // Don't notify yourself if you plus your own posts, you weirdo
+        if (plusAction === 'add' && !post.author._id.equals(req.user._id)) {
+          notifier.notify('user', 'plus', post.author._id, req.user._id, null, '/' + post.author.username + '/' + post.url, 'post');
+        }
+        res.end(JSON.stringify({
+          success: "Edited plus successfully",
+          plusesNumber: post.numberOfPluses,
+          plusAction: plusAction,
+          status: 200
+        }))
+      })
+    })
+  })
+
   // Responds to a post request that boosts a post.
   // Inputs: id of the post to be boosted
   // Outputs: a new post of type boost, adds the id of that new post into the boosts field of the old post, sends a notification to the

@@ -237,6 +237,7 @@ button.close {
     background: $element-background;
     padding: 15px;
     margin-bottom: 1rem;
+    border-radius: $rounded-border;
 }
 
 #searchForm {
@@ -428,7 +429,7 @@ button.close {
 
 .new-comment-form {
     background-color: $lightest-grey;
-    padding: .75rem 1rem;
+    padding: .75rem;
     border: 1px solid $light-grey;
     border-radius: 4px;
     margin: 0 0 1rem;

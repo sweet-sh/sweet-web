@@ -1045,7 +1045,8 @@ module.exports = function (app) {
         internalPostHTML: displayContext.cachedHTML.fullContentHTML,
         headerBoosters: boostsForHeader,
         recentlyCommented: false, // This gets set below
-        lastCommentAuthor: '' // As does this
+        lastCommentAuthor: '', // As does this
+        havePlused: displayContext.pluses.filter(plus => plus.author.equals(req.user._id))
       })
 
       // these are only a thing for logged in users

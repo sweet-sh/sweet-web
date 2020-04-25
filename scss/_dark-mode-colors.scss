@@ -1,7 +1,7 @@
 $text: #fff; // Text for dark mode.
 
 $background-white: #fff;
-$background-grey: #f9f9fa; // Page background
+$background-grey: #2d2d2d; // Page background
 
 $lightest-grey: #3d3e44; // Form input backgrounds, comment content box backgrounds
 $light-grey: #aaa; // Subtle dividers, comment content box borders
@@ -21,6 +21,9 @@ $lightest-pink: #fffafc;
 $light-pink: lighten($sweet-red, 40%);
 $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
 $dark-pink: lighten($sweet-red, 20%);
+
+$bg-color: $background-grey;
+$dot-color: $lightest-grey;
 
 $highlight: darken($sweet-red, 40%);
 $placeholder: $darkest-grey;

@@ -163,7 +163,6 @@ $(function() {
         })
       }
     })
-
   })
   $('body').on('click', '.show-more', function() {
     var state = $(this).attr("data-state");
@@ -286,6 +285,25 @@ $(function() {
         $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
           button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
         })
+      }
+    })
+  })
+  $('body').on('click', '.edit-plus', function(e) {
+    var button = $(this);
+    var counterToChange = $(this).find('.pluses-number')
+    var iconToChange = $(this).find('.plus-icon')
+    $.post("/editplus/"+button.attr("data-post-id"), function( data ) {
+      let payload = JSON.parse(data);
+      if (payload.success) {
+        let plusesNumber = payload.plusesNumber === 0 ? '' : payload.plusesNumber
+        counterToChange.html(plusesNumber)
+        if (payload.plusAction === "remove") {
+          button.removeClass("have-plused")
+          iconToChange.addClass("far").removeClass("fas")
+        } else {
+          button.addClass("have-plused")
+          iconToChange.addClass("fas").removeClass("far")
+        }
       }
     })
   })

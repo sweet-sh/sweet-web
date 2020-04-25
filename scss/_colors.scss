@@ -24,6 +24,9 @@ $darker-pink: lighten($sweet-red, 30%); // 'Recently commented' notifications
 $dark-pink: lighten($sweet-red, 20%); // ...why is dark pink darker than darker pink
 // Because darker pink is darker than light pink, but dark pink is as dark as pink gets
 
+$bg-color: lighten($background-grey, 1%);
+$dot-color: $light-grey;
+
 $highlight: $lightest-pink;
 $placeholder: $dark-grey;
 $editor-background: lighten($lightest-grey, 2%);

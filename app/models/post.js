@@ -106,6 +106,7 @@ const postSchema = new mongoose.Schema({
   mentions: [String],
   tags: [String],
   pluses: [plusSchema],
+  numberOfPluses: Number,
   // boosts of this post will produce seperate post documents in the database that are linked to here. they link back to the original post through the boostTarget field.
   boostsV2: [{ type: boostSchema, required: true }],
   contentWarnings: String,
