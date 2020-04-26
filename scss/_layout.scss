@@ -610,7 +610,6 @@ section {
   .list-box__header {
       flex: 1;
       font-size: 1rem;
-      margin-bottom: 1rem;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -633,15 +632,12 @@ section {
         font-size: .95rem;
         white-space: normal;
       }
-
-      @media (min-width: 786px) {
-          margin-bottom: 0;
-      }
   }
 
   .list-box__actions {
     justify-content: flex-start;
     display: flex;
+    margin-top: 1rem;
 
     button:not(:last-child) {
         margin-right: 0.25rem;
@@ -649,6 +645,7 @@ section {
 
     @media (min-width: 786px) {
         justify-content: flex-end;
+        margin-top: 0;
     }
   }
 
