@@ -298,10 +298,10 @@ $(function() {
         let plusesNumber = payload.plusesNumber === 0 ? '' : payload.plusesNumber
         counterToChange.html(plusesNumber)
         if (payload.plusAction === "remove") {
-          button.removeClass("have-plused")
+          button.removeClass("have-plused").attr("data-tooltip", "Note this post")
           iconToChange.addClass("far").removeClass("fas")
         } else {
-          button.addClass("have-plused")
+          button.addClass("have-plused").attr("data-tooltip", "Remove note from this post")
           iconToChange.addClass("fas").removeClass("far")
         }
       }
