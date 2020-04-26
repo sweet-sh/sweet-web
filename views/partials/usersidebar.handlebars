@@ -91,8 +91,7 @@
   You have muted this user. Their posts are hidden from you.
 </div>
 {{/if}}
-{{/if}}
-{{/unless}}
+{{/if}} {{! End if logged in}}
 
 {{#if this.mutualTrusts}}
 <div class="message w-100 my-2" style="text-align:center;">
@@ -113,6 +112,7 @@
   with you
 </div>
 {{/if}}
+{{/unless}} {{! End unless is own profile}}
 
 <button type="button" id="toggle-connections" class="button full-width-button user-panel-link"
   data-target="#connectionsBody" data-shown="false" data-shown-text="<i class='fas fa-users'></i> Hide all connections"
@@ -120,6 +120,7 @@
   <i class="fas fa-users"></i> See all connections
 </button>
 
+{{#unless isOwnProfile}}
 <div id="userActionsButtons" class="mb-2">
   {{#if followed}}
   <button type="button" id="unfollowButton" class="button grey-button"><i class="fas fa-satellite-dish"></i>
@@ -156,12 +157,4 @@
     {{/if}}
   </div>
 </div>
-
-<script>
-  $('.user-list.collapse').on('hide.bs.collapse', function () {
-    $(this).prev().find(".user-list-toggle")[0].innerHTML = '<i class="fas fa-caret-right"></i>';
-  })
-  $('.user-list.collapse').on('show.bs.collapse', function () {
-    $(this).prev().find(".user-list-toggle")[0].innerHTML = '<i class="fas fa-caret-down"></i>';
-  })
-</script>
+{{/unless}} {{! End unless is own profile}}
