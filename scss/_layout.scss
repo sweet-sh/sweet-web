@@ -583,12 +583,17 @@ section {
     margin-bottom: 0 !important;
 }
 
-/* Shows a list of users or communities */
+/** Shows a list of users or communities
+  *  .compact-list and .content-box are deprecated and only used for search results
+  * .list-container and .list-box are the new ones
+  */
+.compact-container,
 .list-container {
   border: 1px solid $medium-grey;
   margin-bottom: 2rem;
 }
 /*used for listing items inside .list-container*/
+.content-box,
 .list-box {
   padding: 15px;
   border-bottom: 1px solid $medium-grey;
@@ -651,7 +656,7 @@ section {
       flex-direction: row;
   }
 }
-
+.content-box:last-of-type,
 .list-box:last-of-type {
   border-bottom: 0;
 }

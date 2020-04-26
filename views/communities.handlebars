@@ -133,7 +133,7 @@ $("#newCommunityForm").submit(function(e){
           var pageNumber = ( this.loadCount + 1 );
           return '/api/community/getall/' + pageNumber;
         },
-        append: '.content-box',
+        append: '.list-box',
         prefill: true,
         history: true,
         status: '.page-load-status'

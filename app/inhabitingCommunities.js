@@ -35,7 +35,7 @@ Vote.find({}).then(votes => {
   }
 })
 
-module.exports = function (app, passport) {
+module.exports = function (app) {
   app.get('/api/community/getall/:page', isLoggedIn, function (req, res) {
     const postsPerPage = 10
     const page = req.params.page - 1
@@ -49,6 +49,7 @@ module.exports = function (app, passport) {
           res.status(404)
             .send('Not found')
         } else {
+          communities.forEach(community => community.excerpt = community.descriptionParsed.replace(/<[^>]+>/g, ' ').replace(/^(.{160}[^\s]*).*/, "$1..."))
           res.render('partials/communities', {
             layout: false,
             loggedInUserData: req.user,

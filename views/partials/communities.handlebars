@@ -1,15 +1,13 @@
 {{#each communities}}
-  <div class="content-box">
-    <div class="row">
-      <div class="col commentContent">
-        <p class="mb-2" style="font-size:1.3em">
-          <img class="postAuthorImage" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
-          <strong><a class="authorLink" href="/community/{{this.slug}}">{{this.name}}</a></strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
-        </p>
-        <p>
-          {{{this.descriptionParsed}}}
-        </p>
+  <div class="list-box">
+    <a class="list-box__header" href="/community/{{this.slug}}" alt="{{this.name}}">
+      <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+      <span class="list-box__name">
+        <strong>{{this.name}}</strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
+      </span>
+      <div class="list-box__description">
+        {{this.excerpt}}
       </div>
-    </div>
+    </a>
   </div>
 {{/each}}
