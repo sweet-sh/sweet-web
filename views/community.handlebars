@@ -69,28 +69,24 @@
       <div id="requestsBody" class="community-container">
         <h3 class="page-header mx-2">Membership requests</h3>
 
-        <div class="compact-container" id="resultsContainer">
+        <div class="list-container" id="resultsContainer">
           {{#each communityData.membershipRequests}}
-            <div class="content-box">
-              <div class="row">
-                <div class="col commentContent">
-                  <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
-                    <div class="d-flex align-items-center">
-                      <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                      {{#if this.displayName}}
-                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                      {{else}}
-                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                    </div>
-                    <div class="ml-auto mt-2 mt-lg-0">
-                      <button type="button" class="button community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
-                      <button type="button" class="button community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
-                    </div>
-                  </div>
-                </div>
+            <div class="list-box">
+              <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
+                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                <span class="list-box__name"
+                  {{#if this.displayName}}
+                    <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                  {{else}}
+                    <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
+                  {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                </span>
+              </a>
+              <div class="list-box__actions">
+                <button type="button" class="button community-action-button approveUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Approve</button>
+                <button type="button" class="button community-action-button rejectUser" data-user-id="{{this._id}}"><i class="fas fa-times-circle"></i> Reject</button>
               </div>
-            </div>
+            </a>
           {{/each}}
         </div>
       </div>
@@ -226,53 +222,51 @@
       </div>
       <div id="membersBody" class="community-container">
         <h3 class="page-header mx-2">Member manager</h3>
-        <div class="compact-container" id="resultsContainer">
+        <div class="list-container" id="resultsContainer">
           {{#each communityData.members}}
             {{#contains this.mutedCommunities ../communityData._id}}
             {{else}}
-              <div class="content-box">
-                  <div class="content-box-header">
-                      <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                      {{#if this.displayName}}
-                        <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                      {{else}}
-                        <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                      {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                  </div>
-                  <div class="content-box-actions">
-                        <button type="button" class="button community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
-                        <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
-                  </div>
+              <div class="list-box">
+                <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <span class="list-box__name">
+                    {{#if this.displayName}}
+                      <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                    {{else}}
+                      <strong>@{{this.username}}</strong>
+                    {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                  </span>
+                </a>
+                <div class="list-box__actions">
+                  <button type="button" class="button community-action-button muteUser" data-user-id="{{this._id}}"><i class="fas fa-comment-slash"></i> Mute</button>
+                  <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                </div>
               </div>
             {{/contains}}
           {{/each}}
         </div>
         {{#if communityData.mutedMembers}}
           <h5 class="mt-4 px-2">Muted users</h5>
-          <div class="compact-container" id="resultsContainer">
+          <div class="list-container" id="resultsContainer">
             {{#each communityData.mutedMembers}}
-              <div class="content-box">
-                <div class="row">
-                  <div class="col commentContent">
-                    <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
-                      <div class="d-flex align-items-center">
-                        <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                        {{#if this.displayName}}
-                          <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                        {{else}}
-                          <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                        {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                      </div>
-                      <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="button community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
-                        {{#if this.isBanned}}
-                          <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
-                        {{else}}
-                          <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
-                        {{/if}}
-                      </div>
-                    </div>
-                  </div>
+              <div class="list-box">
+                <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <span class="list-box__name">
+                    {{#if this.displayName}}
+                      <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                    {{else}}
+                      <strong>@{{this.username}}</strong>
+                    {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                  </span>
+                </a>
+                <div class="list-box__actions">
+                  <button type="button" class="button community-action-button unmuteUser" data-user-id="{{this._id}}"><i class="fas fa-comment"></i> Unmute</button>
+                  {{#if this.isBanned}}
+                    <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
+                  {{else}}
+                    <button type="button" class="button community-action-button banUser" data-user-id="{{this._id}}"><i class="fas fa-ban"></i> Ban</button>
+                  {{/if}}
                 </div>
               </div>
             {{/each}}
@@ -280,25 +274,21 @@
         {{/if}}
         {{#if communityData.bannedMembers}}
           <h5 class="mt-4 px-2">Banned users</h5>
-          <div class="compact-container" id="resultsContainer">
+          <div class="list-container" id="resultsContainer">
             {{#each communityData.bannedMembers}}
-              <div class="content-box">
-                <div class="row">
-                  <div class="col commentContent">
-                    <div class="mb-2 d-lg-flex align-items-center" style="font-size:1.3em">
-                      <div class="d-flex align-items-center">
-                        <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                        {{#if this.displayName}}
-                          <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                        {{else}}
-                          <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                        {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-                      </div>
-                      <div class="ml-auto mt-3 mt-lg-0">
-                        <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
-                      </div>
-                    </div>
-                  </div>
+              <div class="list-box">
+                <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <span class="list-box__name">
+                    {{#if this.displayName}}
+                      <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
+                    {{else}}
+                      <strong>@{{this.username}}</strong>
+                    {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
+                  </span>
+                </a>
+                <div class="list-box__actions">
+                  <button type="button" class="button community-action-button unbanUser" data-user-id="{{this._id}}"><i class="fas fa-check-circle"></i> Unban</button>
                 </div>
               </div>
             {{/each}}

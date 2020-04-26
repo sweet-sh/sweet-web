@@ -41,88 +41,43 @@
       {{#and loggedIn trustedUserData }}
       {{#or userTrustsYou isOwnProfile}}
       <h4>Trusts</h4>
-      <div class="compact-container">
+      <div class="list-container">
         {{#each trustedUserData}}
-          <div class="content-box">
-            <div class="content-box-header">
-                <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                {{#if this.displayName}}
-                  <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                {{else}}
-                  <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-            </div>
-          </div>
+          {{> userlist}}
         {{/each}}
       </div>
       {{/or}}
       {{/and}}
       {{#and loggedIn usersWhoTrustThemData.length }}
       <h4>Trusted by</h4>
-      <div class="compact-container">
+      <div class="list-container">
         {{#each usersWhoTrustThemData}}
-          <div class="content-box">
-            <div class="content-box-header">
-                <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                {{#if this.displayName}}
-                  <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                {{else}}
-                  <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-            </div>
-          </div>
+          {{> userlist}}
         {{/each}}
       </div>
       {{/and}}
       {{#if followedUserData}}
       <h4>Follows</h4>
-      <div class="compact-container">
+      <div class="list-container">
       {{#each followedUserData}}
-        <div class="content-box">
-            <div class="content-box-header">
-                <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                {{#if this.displayName}}
-                  <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                {{else}}
-                  <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-            </div>
-          </div>
+        {{> userlist}}
       {{/each}}
       </div>
       {{/if}}
       {{#if followersData}}
       <h4>Followed by</h4>
-      <div class="compact-container">
+      <div class="list-container">
       {{#each followersData}}
-        <div class="content-box">
-            <div class="content-box-header">
-                <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-                {{#if this.displayName}}
-                  <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-                {{else}}
-                  <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-                {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-            </div>
-          </div>
+        {{> userlist}}
       {{/each}}
       </div>
       {{/if}}
       {{#if isOwnProfile}}
       {{#if flaggedUserData}}
       <h4>Flagged users</h4>
-      <div class="compact-container">
+      <div class="list-container">
       {{#each flaggedUserData}}
-        <div class="content-box">
-          <div class="content-box-header">
-              <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
-              {{#if this.displayName}}
-                <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
-              {{else}}
-                <strong><a class="authorLink" href="/{{this.username}}">@{{this.username}}</a></strong>
-              {{/if}} {{#contains ../flaggedUsers this.email}}<i class="fas fa-exclamation-triangle text-danger"></i>{{/contains}}
-          </div>
-        </div>
+        {{> userlist}}
       {{/each}}
       </div>
       {{/if}}
@@ -130,13 +85,15 @@
 
       {{#if communitiesData}}
       <h4>Communities</h5>
-      <div class="compact-container">
+      <div class="list-container">
       {{#each communitiesData}}
-        <div class="content-box">
-          <div class="content-box-header">
-            <img class="postAuthorImage mr-2" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
-            <strong><a class="authorLink" href="/{{this.slug}}">{{this.name}}</a></strong>
-          </div>
+        <div class="list-box">
+          <a class="list-box__header" href="/community/{{this.slug}}" alt={{this.name}}>
+            <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+            <span class="list-box__name">
+              <strong>{{this.name}}</strong>
+            </span>
+          </a>
         </div>
       {{/each}}
       </div>

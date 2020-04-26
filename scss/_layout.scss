@@ -583,63 +583,77 @@ section {
     margin-bottom: 0 !important;
 }
 
-/*stuff just for community pages*/
-
-.compact-container {
-    border: 1px solid $medium-grey;
+/* Shows a list of users or communities */
+.list-container {
+  border: 1px solid $medium-grey;
+  margin-bottom: 2rem;
 }
-/*used for listing items inside .compact-container*/
-.content-box {
-    padding: 15px;
-    border-bottom: 1px solid $medium-grey;
-    background: $element-background;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+/*used for listing items inside .list-container*/
+.list-box {
+  padding: 15px;
+  border-bottom: 1px solid $medium-grey;
+  background: $element-background;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
-    .content-box-header {
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        .postAuthorImage {
-          height: 32px;
-          width: 32px;
-          margin-right: .25rem !important;
-        }
-
-        @media (min-width: 786px) {
-            margin-bottom: 0;
-        }
-    }
-
-    .content-box-actions {
-        flex: 1;
-        justify-content: flex-start;
-        display: flex;
-
-        button:not(:last-child) {
-            margin-right: 0.25rem;
-        }
-
-        @media (min-width: 786px) {
-            justify-content: flex-end;
-        }
-    }
-
-    @media (min-width: 768px) {
-        flex-direction: row;
-    }
-}
-
-.content-box:last-of-type {
-    border-bottom: 0;
-}
-
-.content-box:hover {
+  &:hover {
     box-shadow: $post-shadow;
+    position: relative;
+  }
+
+  .list-box__header {
+      flex: 1;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: $text;
+
+      &:hover {
+        color: $text;
+        text-decoration: none;
+      }
+
+      .list-box__image {
+        height: 40px;
+        width: 40px;
+        margin-right: .25rem !important;
+        border-radius: 5px;
+      }
+
+      .list-box__description {
+        margin-top: .5rem;
+        font-size: .95rem;
+        white-space: normal;
+      }
+
+      @media (min-width: 786px) {
+          margin-bottom: 0;
+      }
+  }
+
+  .list-box__actions {
+    justify-content: flex-start;
+    display: flex;
+
+    button:not(:last-child) {
+        margin-right: 0.25rem;
+    }
+
+    @media (min-width: 786px) {
+        justify-content: flex-end;
+    }
+  }
+
+  @media (min-width: 768px) {
+      flex-direction: row;
+  }
+}
+
+.list-box:last-of-type {
+  border-bottom: 0;
 }
 
 /*page-header itself is used by a bunch of pages, its styles are down in the misc section*/

@@ -14,20 +14,18 @@
     </ul>
     <div class="tab-content" id="communitiesTabContent">
       <div class="tab-pane fade show active" id="communitiesList" role="tabpanel" aria-labelledby="communitiesListTab">
-        <div class="compact-container" id="resultsContainer">
+        <div class="list-container" id="resultsContainer">
           {{#each communities}}
-            <div class="content-box">
-              <div class="row">
-                <div class="col commentContent">
-                  <p class="mb-2" style="font-size:1.3em">
-                    <img class="postAuthorImage" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
-                    <strong><a class="authorLink" href="/community/{{this.slug}}">{{this.name}}</a></strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
-                  </p>
-                  <p>
-                    {{{this.descriptionParsed}}}
-                  </p>
+            <div class="list-box">
+              <a class="list-box__header" href="/community/{{this.slug}}" alt="{{this.name}}">
+                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+                <span class="list-box__name">
+                  <strong>{{this.name}}</strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
+                </span>
+                <div class="list-box__description">
+                  {{this.excerpt}}
                 </div>
-              </div>
+              </a>
             </div>
           {{/each}}
         </div>
@@ -94,7 +92,7 @@
         </form>
       </div>
       <div class="tab-pane fade show active" id="directory" role="tabpanel" aria-labelledby="directoryTab">
-        <div class="compact-container" id="directoryResults" style="display:none;"></div>
+        <div class="list-container" id="directoryResults" style="display:none;"></div>
         {{!--the page loading animation is hidden at the start bc the default starting tab is the "joined communities" one and that doesn't load stuff with infinite scroll --}}
         <div class="page-load-status" style="display:none;">
           <div class="loader-ellips infinite-scroll-request">

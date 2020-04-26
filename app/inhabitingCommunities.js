@@ -67,6 +67,7 @@ module.exports = function (app, passport) {
     })
     .sort('name')
     .then((communities) => {
+      communities.forEach(community => community.excerpt = community.descriptionParsed.replace(/<[^>]+>/g, ' ').replace(/^(.{160}[^\s]*).*/, "$1..."))
       res.render('communities', {
         loggedIn: true,
         loggedInUserData: req.user,
