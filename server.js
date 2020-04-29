@@ -126,6 +126,13 @@ app.use(function (req, res, next) {
   next()
 })
 
+// CORS
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 // set up webpush to send push notifications for the notifier
 const webpush = require('web-push')
 if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {

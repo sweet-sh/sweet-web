@@ -61,3 +61,4 @@ async function changeCommunityImages() {
 
 changeUserImages();
 changeCommunityImages();
+deletePostCaches();
