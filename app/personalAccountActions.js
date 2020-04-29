@@ -805,6 +805,6 @@ function isLoggedInOrRedirect (req, res, next) {
     }
     return next()
   }
-  res.redirect('/')
+  res.status(401).redirect('/')
   // next('route'); don't want this! the request has been handled by the redirect, we don't need to do anything else with it in another route
 }

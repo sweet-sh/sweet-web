@@ -1464,5 +1464,5 @@ function isLoggedInOrRedirect(req, res, next) {
     }
     return next()
   }
-  res.redirect('/')
+  res.status(401).redirect('/')
 }
