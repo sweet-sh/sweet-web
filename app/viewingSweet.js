@@ -42,7 +42,6 @@ module.exports = function (app) {
 
     Image.findOne({ $or: [{ filename: 'images/' + req.params.filename }, { filename: req.params.filename }] }).then(image => {
       if (image) {
-        console.log("Image found", image)
         if (image.privacy === 'public') {
           sendImageFile()
         } else if (image.privacy === 'private') {
@@ -66,8 +65,6 @@ module.exports = function (app) {
                   sendImageFile()
                 } else {
                   // User not a member of this community
-                  console.log(req)
-                  console.log(image)
                   console.log('User not a community member!')
                   res.status('404')
                   res.redirect('/404')
@@ -603,6 +600,7 @@ module.exports = function (app) {
   async function keepCachedHTMLUpToDate(post) {
     // only runs if cached html is out of date
     async function updateHTMLRecursive(displayContext) {
+      console.log("Updating HTML for comment", comment._id)
       const html = await helper.renderHTMLContent(displayContext)
       if (displayContext.cachedHTML) {
         displayContext.cachedHTML.fullContentHTML = html
