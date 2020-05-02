@@ -600,7 +600,7 @@ module.exports = function (app) {
   async function keepCachedHTMLUpToDate(post) {
     // only runs if cached html is out of date
     async function updateHTMLRecursive(displayContext) {
-      console.log("Updating HTML for comment", comment._id)
+      console.log("Updating HTML for post", displayContext._id)
       const html = await helper.renderHTMLContent(displayContext)
       if (displayContext.cachedHTML) {
         displayContext.cachedHTML.fullContentHTML = html
