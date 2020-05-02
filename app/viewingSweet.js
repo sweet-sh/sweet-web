@@ -611,10 +611,12 @@ module.exports = function (app) {
       }
       if (displayContext.comments) {
         for (const comment of displayContext.comments) {
+          console.log("Updating HTML for comment", comment._id)
           await updateHTMLRecursive(comment)
         }
       } else if (displayContext.replies) {
         for (const reply of displayContext.replies) {
+          console.log("Updating HTML for reply", reply._id)
           await updateHTMLRecursive(reply)
         }
       }
