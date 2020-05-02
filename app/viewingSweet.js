@@ -1204,7 +1204,6 @@ module.exports = function (app) {
         activePage: 'singlepost'
       })
     } else {
-      console.log(myCommunities)
       const getCanReply = () => {
         if (req.isAuthenticated()) {
           switch (req.params.context) {
