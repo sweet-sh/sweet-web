@@ -111,8 +111,8 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               })
             }
           }
-          // Send the user a mobile notification if they have an Expo push token
-          if (notifiedUser.expoPushTokens.length > 0) {
+          // Send the user a mobile notification if they have an Expo push token and they're accepting mobile notifications
+          if (notifiedUser.expoPushTokens.length > 0 && notifiedUser.settings.sendMobileNotifications === true) {
             // The Sweet app tends to try and send the same token multiple times for some reason, so this is
             // a perfect place to clean out the push tokens array.
             const uniqueTokens = new Set(notifiedUser.expoPushTokens);
