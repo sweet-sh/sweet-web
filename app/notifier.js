@@ -2,6 +2,7 @@ const webpush = require('web-push')
 const User = require('./models/user')
 const Community = require('./models/community')
 const emailer = require('./emailer')
+const { sendExpoNotifications } = require('./expoNotifications');
 
 function markRead(userId, subjectId) {
   User.findOne({
@@ -17,7 +18,7 @@ function markRead(userId, subjectId) {
     })
 }
 
-/** 
+/**
  * Notifier function.
  * @param {string} type - The general subject of the notification. Either 'user' or 'community'.
  * @param {string} cause - The specific action to be notified of.
@@ -34,7 +35,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
         return User.findOne({ _id: sourceId })
           .then(user => {
             const notifTexts = {
-              plus: 'noted your post.',
+              plus: 'supports your post.',
               reply: 'replied to your post.',
               boost: 'boosted your post.',
               subscribedReply: 'replied to a post you have also replied to.',
@@ -84,7 +85,6 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
           })
     }
   }
-  console.log('creating notification')
   User.findOne({
     _id: notifieeID
   })
@@ -111,10 +111,29 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               })
             }
           }
+          // Send the user a mobile notification if they have an Expo push token
+          if (notifiedUser.expoPushTokens.length > 0) {
+            // The Sweet app tends to try and send the same token multiple times for some reason, so this is
+            // a perfect place to clean out the push tokens array.
+            const uniqueTokens = new Set(notifiedUser.expoPushTokens);
+            console.log(uniqueTokens)
+            sendExpoNotifications({
+              pushTokens: uniqueTokens,
+              title: 'New on Sweet 🐝',
+              body: response.text.replace(/<(\/)?strong>/g, '')
+            });
+            notifiedUser.expoPushTokens = uniqueTokens;
+            notifiedUser.save()
+              .catch(error => {
+                console.error("Error saving user after de-depulicating Expo push tokens array:", error)
+              });
+          }
+
           // send the user an email if it's a mention and they have emails for mentions enabled
           if (notifiedUser.settings.sendMentionEmails === true && response.emailText) {
             emailer.sendSingleNotificationEmail(notifiedUser, response, url)
           }
+
           // if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two
           const lastNotif = notifiedUser.notifications[notifiedUser.notifications.length - 1]
           let notification

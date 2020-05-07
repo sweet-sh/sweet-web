@@ -69,6 +69,7 @@ const userSchema = new mongoose.Schema({
   },
   notifications: [notificationSchema],
   pushNotifSubscriptions: [String],
+  expoPushTokens: [String],
   communities: [{ type: DBReference, ref: 'Community' }],
   bannedCommunities: [{ type: DBReference, ref: 'Community' }],
   mutedCommunities: [{ type: DBReference, ref: 'Community' }],
