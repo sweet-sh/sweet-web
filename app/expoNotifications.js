@@ -30,11 +30,13 @@ module.exports = {
     let chunks = expo.chunkPushNotifications(notifications);
 
     (async () => {
-      for (let chunk of chunks) {
+      for (const chunk of chunks) {
         try {
-          let receipts = await expo.sendPushNotificationsAsync(chunk);
-          console.log(receipts);
-          fs.writeFile('./exporeceipts.log', receipts);
+          const receipts = await expo.sendPushNotificationsAsync(chunk)
+          console.log(receipts)
+          fs.writeFile('./exporeceipts.log', receipts, (response) => {
+            console.log('Write callback response:', response)
+          });
         } catch (error) {
           console.error(error);
         }

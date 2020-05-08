@@ -122,7 +122,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               body: response.text.replace(/<(\/)?strong>/g, '')
             });
             notifiedUser.expoPushTokens = uniqueTokens;
-            notifiedUser.save()
+            await notifiedUser.save()
               .catch(error => {
                 console.error("Error saving user after de-depulicating Expo push tokens array:", error)
               });
@@ -157,7 +157,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               url: url
             }
             notifiedUser.notifications[notifiedUser.notifications.length - 1] = notification
-            notifiedUser.save().then(() => { console.log('notification sent to ' + notifiedUser.username) })
+            await notifiedUser.save().then(() => { console.log('notification sent to ' + notifiedUser.username) })
           } else {
             notification = {
               category: cause,
@@ -169,7 +169,7 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
             }
             notifiedUser.notifications.push(notification)
             notifiedUser.notifications = notifiedUser.notifications.slice(Math.max(0, notifiedUser.notifications.length - 60))
-            notifiedUser.save().then(() => { console.log('notification sent to ' + notifiedUser.username) })
+            await notifiedUser.save().then(() => { console.log('notification sent to ' + notifiedUser.username) })
           }
         })
     })
