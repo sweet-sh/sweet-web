@@ -1,6 +1,6 @@
 const Autolinker = require('autolinker')
 const sharp = require('sharp')
-const bcrypt = require('bcrypt-nodejs')
+const bcrypt = require('bcryptjs');
 const sanitizeHTML = require('sanitize-html')
 const Post = require('./models/post')
 const User = require('./models/user')

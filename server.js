@@ -197,7 +197,7 @@ const momentLogFormat = '[[]DD/MM HH:mm:ss.SSS[]]'
 require('sanitize-html')
 require('sharp')
 require('nanoid')
-require('bcrypt-nodejs')
+require('bcryptjs')
 require('autolinker')
 require('node-schedule')
 require('./config/globals')

@@ -1,5 +1,5 @@
 const path = require('path')
-const bcrypt = require('bcrypt-nodejs')
+var bcrypt = require('bcryptjs')
 const fs = require('fs')
 const Post = require('./models/post')
 const User = require('./models/user')
