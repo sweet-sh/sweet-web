@@ -7,11 +7,11 @@ const User = require('./models/user')
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
-  host: 'box.raphaelkabo.com',
+  host: 'smtp.eu.mailgun.org',
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: 'updates@sweet.sh',
+    user: 'postmaster@sweet.sh',
     pass: auth.mailServer
   }
 })
@@ -19,9 +19,9 @@ const transporter = nodemailer.createTransport({
 // verify connection configuration
 transporter.verify(function (error, success) {
   if (error) {
-    emailLog('email server connection error! ' + error)
+    emailLog('Email server connection error! ' + error)
   } else {
-    emailLog('Server is ready to take our messages! ' + success)
+    emailLog('Email server is ready to take our messages! ' + success)
   }
 })
 
