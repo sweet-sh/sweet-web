@@ -206,15 +206,15 @@ module.exports = function (app, passport) {
           })
           .toBuffer()
           .then(buffer => s3.putObject({
-              Body: buffer,
-              Bucket: s3Bucket,
-              Key: newFilename,
-              ACL: 'public-read'
-            }).promise()
-            .then(() => 
+            Body: buffer,
+            Bucket: s3Bucket,
+            Key: newFilename,
+            ACL: 'public-read'
+          }).promise()
+            .then(() =>
               // Delete the old object
               s3.deleteObject({
-                Bucket: s3Bucket, 
+                Bucket: s3Bucket,
                 Key: imageFilename
               }).promise()
             )
@@ -280,12 +280,12 @@ module.exports = function (app, passport) {
       .then((user) => {
         user.settings.theme = req.params.theme
         user.save()
-        .then(response => {
-          res.sendStatus(200)
-        })
-        .catch(error => {
-          console.error(error)
-        })
+          .then(response => {
+            res.sendStatus(200)
+          })
+          .catch(error => {
+            console.error(error)
+          })
       })
   })
 
@@ -534,27 +534,25 @@ module.exports = function (app, passport) {
                 from: '"Sweet" <support@sweet.sh>',
                 subject: 'Sweet - new user verification',
                 text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
-                                    'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
-                                    'https://sweet.sh/verify-email/' + token + '\n\n' +
-                                    'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
+                  'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
+                  'https://sweet.sh/verify-email/' + token + '\n\n' +
+                  'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
               }
-              emailer.transporter.sendMail(msg, (err, info) => {
-                if (err) {
-                  req.session.sessionFlash = {
-                    type: 'alert',
-                    message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
-                    email: req.body.email
-                  }
-                  res.redirect(301, '/resend-token')
-                  console.error(error.toString())
-                } else if (info) {
-                  console.log("Message sent: %s", info.messageId);
-                  req.session.sessionFlash = {
-                    message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.'
-                  }
-                  res.redirect(301, '/resend-token');
+              const transportMessage = await emailer.transporter.sendMail(msg);
+              if (transportMessage.messageId) {
+                console.log("Message sent: %s", info.messageId);
+                req.session.sessionFlash = {
+                  message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.'
                 }
-              });
+                res.redirect(301, '/resend-token');
+              } else {
+                req.session.sessionFlash = {
+                  type: 'alert',
+                  message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
+                  email: req.body.email
+                }
+                res.redirect(301, '/resend-token')
+              }
             })
             .catch(() => {
               req.session.sessionFlash = {
@@ -647,27 +645,25 @@ module.exports = function (app, passport) {
               from: '"Sweet" <support@sweet.sh>',
               subject: 'Sweet - password reset request',
               text: 'Hi! You are receiving this because someone has requested a reset of the password for your sweet account.\n\n' +
-                                'Please click on the following link, or paste it into your browser, to reset your password:\n\n' +
-                                'https://sweet.sh/reset-password/' + token + '\n\n' +
-                                'If you did not request this email, please ignore this email and your password will remain unchanged. The password reset will expire in 1 hour.\n'
+                'Please click on the following link, or paste it into your browser, to reset your password:\n\n' +
+                'https://sweet.sh/reset-password/' + token + '\n\n' +
+                'If you did not request this email, please ignore this email and your password will remain unchanged. The password reset will expire in 1 hour.\n'
             }
-            emailer.transporter.sendMail(msg, (err, info) => {
-              if (err) {
-                req.session.sessionFlash = {
-                  type: 'alert',
-                  message: 'There has been a problem sending your recovery email. Please try again in a few minutes.',
-                  email: req.body.email
-                }
-                res.redirect(301, '/forgot-password')
-                console.error(error.toString())
-              } else if (info) {
-                console.log("Message sent: %s", info.messageId);
-                req.session.sessionFlash = {
-                  message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
-                }
-                res.redirect(301, '/forgot-password')
+            const transportMessage = await emailer.transporter.sendMail(msg);
+            if (transportMessage.messageId) {
+              console.log("Message sent: %s", info.messageId);
+              req.session.sessionFlash = {
+                message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
               }
-            });
+              res.redirect(301, '/forgot-password')
+            } else {
+              req.session.sessionFlash = {
+                type: 'alert',
+                message: 'There has been a problem sending your recovery email. Please try again in a few minutes.',
+                email: req.body.email
+              }
+              res.redirect(301, '/forgot-password')
+            }
           })
           .catch(error => {
             req.session.sessionFlash = {
@@ -728,29 +724,27 @@ module.exports = function (app, passport) {
               user.passwordResetToken = ''
               user.passwordResetTokenExpiry = ''
               user.save()
-                .then(user => {
+                .then(async (user) => {
                   const msg = {
                     to: user.email,
                     from: '"Sweet" <support@sweet.sh>',
                     subject: 'Sweet - password sucessfully reset',
                     text: 'Hi! The password on your sweet account ' + user.email + ' has just been changed.\n\n' +
-                                            'If you did not do this, please get in touch with sweet support at support@sweet.sh immediately.\n'
+                      'If you did not do this, please get in touch with sweet support at support@sweet.sh immediately.\n'
                   }
-                  emailer.transporter.sendMail(msg, (err, info) => {
-                    if (err) {
-                      req.session.sessionFlash = {
-                        message: 'Your password has been successfully changed. You can now log in with your email and new password.',
-                      }
-                      res.redirect(301, '/login')
-                      console.error(err.toString())
-                    } else if (info) {
-                      console.log("Message sent: %s", info.messageId);
-                      req.session.sessionFlash = {
-                        message: 'Your password has been successfully changed. You can now log in with your email and new password.'
-                      }
-                      res.redirect(301, '/login')
+                  const transportMessage = await emailer.transporter.sendMail(msg);
+                  if (transportMessage.messageId) {
+                    console.log("Message sent: %s", transportMessage.messageId);
+                    req.session.sessionFlash = {
+                      message: 'Your password has been successfully changed. You can now log in with your email and new password.'
                     }
-                  });
+                    res.redirect(301, '/login')
+                  } else {
+                    req.session.sessionFlash = {
+                      message: 'Your password has been successfully changed. You can now log in with your email and new password.',
+                    }
+                    res.redirect(301, '/login')
+                  }
                 })
                 .catch(error => {
                   req.session.sessionFlash = {
@@ -809,7 +803,7 @@ module.exports = function (app, passport) {
 }
 
 // For post and get requests where the browser will handle the response automatically and so redirects will work
-function isLoggedInOrRedirect (req, res, next) {
+function isLoggedInOrRedirect(req, res, next) {
   if (req.isAuthenticated()) {
     // A potentially expensive way to update a user's last logged in timestamp (currently only relevant to sorting search results)
     const currentTime = new Date()

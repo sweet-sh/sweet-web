@@ -111,32 +111,30 @@ function(req, email, password, done) {
                   'https://sweet.sh/verify-email/' + newUser.verificationToken + '\n\n' +
                   'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
                 };
-                emailer.transporter.sendMail(msg, (err, info) => {
-                  if (err) {
-                    req.session.sessionFlash = {
-                      type: 'alert',
-                      message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
-                      username: req.body.username,
-                      email: req.body.email
-                    }
-                    res.redirect(301, '/resend-token')
-                    console.error(error.toString())
-                  } else if (info) {
-                    console.log("Message sent: %s", info.messageId);
-                    const sweetbotFollow = new Relationship();
-                    sweetbotFollow.from = email;
-                    sweetbotFollow.to = 'support@sweet.sh';
-                    sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';
-                    sweetbotFollow.fromUser = newUser._id;
-                    sweetbotFollow.value = 'follow'
-                    sweetbotFollow.save(function(err) {
-                      if (err)
-                        throw err;
-                      console.log("Saved sweetbot follow!")
-                      return done(null, false);
-                    });
+                const transportMessage = await emailer.transporter.sendMail(msg);
+                if (transportMessage.messageId) {
+                  console.log("Message sent: %s", info.messageId);
+                  const sweetbotFollow = new Relationship();
+                  sweetbotFollow.from = email;
+                  sweetbotFollow.to = 'support@sweet.sh';
+                  sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';
+                  sweetbotFollow.fromUser = newUser._id;
+                  sweetbotFollow.value = 'follow'
+                  sweetbotFollow.save(function(err) {
+                    if (err)
+                      throw err;
+                    console.log("Saved sweetbot follow!")
+                    return done(null, false);
+                  });
+                } else {
+                  req.session.sessionFlash = {
+                    type: 'alert',
+                    message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
+                    username: req.body.username,
+                    email: req.body.email
                   }
-                });
+                  return done(null, false);
+                }
               });
             }
           })
