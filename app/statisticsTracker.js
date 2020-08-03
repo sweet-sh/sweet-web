@@ -1,6 +1,7 @@
 const path = require('path')
 var bcrypt = require('bcryptjs')
 const fs = require('fs')
+const appRoot = require('app-root-path');
 const Post = require('./models/post')
 const User = require('./models/user')
 
@@ -228,13 +229,13 @@ module.exports = function (app, mongoose) {
     const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
     if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash)) {
       if (!postTablePromise && fs.existsSync(postTableFileName)) {
-        fs.unlinkSync(path.resolve(global.appRoot, postTableFileName))
+        fs.unlinkSync(path.resolve(appRoot, postTableFileName))
       }
       if (!userTablePromise && fs.existsSync(userTableFileName)) {
-        fs.unlinkSync(path.resolve(global.appRoot, userTableFileName))
+        fs.unlinkSync(path.resolve(appRoot, userTableFileName))
       }
       if (!activeUsersTablePromise && fs.existsSync(activeUserTableFileName)) {
-        fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName))
+        fs.unlinkSync(path.resolve(appRoot, activeUserTableFileName))
       }
 
       res.status(200).send('thy will be done')
@@ -245,8 +246,8 @@ module.exports = function (app, mongoose) {
 
   app.get('/admin/secretstuff/:password/lyds.txt', function (req, res) {
     const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
-    if (bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'lyds.txt'))) {
-      res.status(200).sendFile(path.resolve(global.appRoot, 'lyds.txt'))
+    if (bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(appRoot, 'lyds.txt'))) {
+      res.status(200).sendFile(path.resolve(appRoot, 'lyds.txt'))
     }
   })
 }
@@ -279,7 +280,7 @@ function tableNotUpToDate (tableFilename, dateInterval = 1) {
 async function rebuildPostTable (startDate) {
   // if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
   if (fs.existsSync(postTableFileName) && !startDate) {
-    fs.unlinkSync(path.resolve(global.appRoot, postTableFileName))
+    fs.unlinkSync(path.resolve(appRoot, postTableFileName))
   }
 
   const today = new Date(new Date().setDate(new Date().getDate() - 1))
@@ -343,7 +344,7 @@ async function rebuildPostTable (startDate) {
 async function rebuildUserTable (startDate) {
   // if we're rebuilding (which means we're starting from the earliest user and don't have a startDate), we throw out any existing old version of the file.
   if (fs.existsSync(userTableFileName) && !startDate) {
-    fs.unlinkSync(path.resolve(global.appRoot, userTableFileName))
+    fs.unlinkSync(path.resolve(appRoot, userTableFileName))
   }
 
   const today = new Date(new Date().setDate(new Date().getDate() - 1))
@@ -477,7 +478,7 @@ function getPerDayRate (datapoints) {
 async function rebuildActiveUsersTable (startDate, interval = 3) {
   // if we're rebuilding (which means we're starting from the earliest post and don't have a startDate), we throw out any existing old version of the file.
   if (fs.existsSync(activeUserTableFileName) && !startDate) {
-    fs.unlinkSync(path.resolve(global.appRoot, activeUserTableFileName))
+    fs.unlinkSync(path.resolve(appRoot, activeUserTableFileName))
   }
 
   const today = new Date()

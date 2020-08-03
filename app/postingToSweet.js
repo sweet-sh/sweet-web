@@ -3,6 +3,7 @@ const nanoid = require('nanoid')
 const mongoose = require('mongoose')
 const moment = require('moment')
 const fs = require('fs')
+const appRoot = require('app-root-path');
 const Post = require('./models/post')
 const Community = require('./models/community')
 const Image = require('./models/image')
@@ -985,7 +986,7 @@ module.exports = function (app) {
             e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0])
           } else if (!post.imageVersion || post.imageVersion < 2) {
             // finalize images that were previously stored in /public/images/uploads so that there's only one url scheme that needs to be used with inlineElements.
-            horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, global.appRoot + '/public/images/uploads/')
+            horizOrVertic = await helper.finalizeImages([e.images[i]], post.type, post.community, req.user._id.toString(), imagePrivacy, req.user.settings.imageQuality, appRoot + '/public/images/uploads/')
             e.imageIsVertical.push(horizOrVertic.imageIsVertical[0])
             e.imageIsHorizontal.push(horizOrVertic.imageIsHorizontal[0])
           } else {

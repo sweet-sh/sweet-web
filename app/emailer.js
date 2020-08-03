@@ -1,4 +1,5 @@
 const fs = require('fs')
+const appRoot = require('app-root-path');
 const nodemailer = require('nodemailer')
 const nodemailerHbs = require('nodemailer-express-handlebars')
 const moment = require('moment-timezone')
@@ -28,10 +29,10 @@ transporter.verify(function (error, success) {
 const nodemailerHbsOptions = {
   viewEngine: {
     extName: '.handlebars',
-    partialsDir: global.appRoot + '/views/emails',
+    partialsDir: appRoot + '/views/emails',
     defaultLayout: false // <-----   added this
   },
-  viewPath: global.appRoot + '/views/emails',
+  viewPath: appRoot + '/views/emails',
   extName: '.handlebars'
 }
 

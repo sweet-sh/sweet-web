@@ -1,4 +1,5 @@
 const fs = require('fs')
+const appRoot = require('app-root-path');
 const mongoose = require('mongoose')
 const moment = require('moment')
 const path = require('path')
@@ -1435,15 +1436,15 @@ module.exports = function (app) {
 
   app.get('/admin/errorlogs/:password', function (req, res) {
     const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
-    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'clientsideerrors.txt'))) {
-      res.status(200).sendFile(path.resolve(global.appRoot, 'clientsideerrors.txt'))
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(appRoot, 'clientsideerrors.txt'))) {
+      res.status(200).sendFile(path.resolve(appRoot, 'clientsideerrors.txt'))
     }
   })
 
   app.get('/admin/emaillogs/:password', function (req, res) {
     const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
-    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(global.appRoot, 'emailLog.txt'))) {
-      res.status(200).sendFile(path.resolve(global.appRoot, 'emailLog.txt'))
+    if (req.isAuthenticated() && bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(appRoot, 'emailLog.txt'))) {
+      res.status(200).sendFile(path.resolve(appRoot, 'emailLog.txt'))
     }
   })
 }

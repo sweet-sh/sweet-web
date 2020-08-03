@@ -1,6 +1,7 @@
 const Autolinker = require('autolinker')
 const mongoose = require('mongoose')
 const fs = require('fs')
+const appRoot = require('app-root-path');
 const sharp = require('sharp')
 const path = require('path')
 const sanitizeHtml = require('sanitize-html')
@@ -234,7 +235,7 @@ module.exports = {
   },
   // moves them out of temp storage, creates image documents for them in the database, and returns arrays with their horizontality/verticality
   // the non-first arguments are just stored in the image documents in the database. postType is "original" or "community"
-  finalizeImages: async function (imageFileNames, postType, community, posterID, privacy, postImageQuality, imagesCurrentFolder = (global.appRoot + '/cdn/images/temp/')) {
+  finalizeImages: async function (imageFileNames, postType, community, posterID, privacy, postImageQuality, imagesCurrentFolder = (appRoot + '/cdn/images/temp/')) {
     const imageIsVertical = []
     const imageIsHorizontal = []
     for (const imageFileName of imageFileNames) {
