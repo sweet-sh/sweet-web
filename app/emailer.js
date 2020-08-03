@@ -230,6 +230,7 @@ async function sendSingleNotificationEmail (user, notification, link) {
   })
 }
 
+module.exports.transporter = transporter
 module.exports.sendSingleNotificationEmail = sendSingleNotificationEmail
 module.exports.sendUpdateEmail = sendUpdateEmail
 // export this so it can be called upon email settings changing

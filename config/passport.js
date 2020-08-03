@@ -6,7 +6,9 @@ const Relationship            = require('../app/models/relationship');
 
 const crypto = require('crypto');
 
-const sgMail = require('../app/mail');
+const emailer = require('../app/emailer');
+
+// const sgMail = require('../app/mail');
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
@@ -102,38 +104,39 @@ function(req, email, password, done) {
                   throw err;
                 const msg = {
                   to: email,
-                  from: 'support@sweet.sh',
-                  subject: 'sweet new user verification',
+                  from: '"Sweet" <support@sweet.sh>',
+                  subject: 'Sweet - new user verification',
                   text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
                   'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
                   'https://sweet.sh/verify-email/' + newUser.verificationToken + '\n\n' +
                   'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
                 };
-                sgMail.send(msg)
-                .then(() => {
-                  const sweetbotFollow = new Relationship();
-                  sweetbotFollow.from = email;
-                  sweetbotFollow.to = 'support@sweet.sh';
-                  sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';
-                  sweetbotFollow.fromUser = newUser._id;
-                  sweetbotFollow.value = 'follow'
-                  sweetbotFollow.save(function(err) {
-                    if (err)
-                      throw err;
-                    console.log("Saved sweetbot follow!")
-                    return done(null, false);
-                  })
-                })
-                .catch(error => {
-                  req.session.sessionFlash = {
-                    type: 'alert',
-                    message: "There has been a problem sending your account verification email. Please try again in a few minutes.",
-                    username: req.body.username,
-                    email: req.body.email
+                emailer.transporter.sendMail(msg, (err, info) => {
+                  if (err) {
+                    req.session.sessionFlash = {
+                      type: 'alert',
+                      message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
+                      username: req.body.username,
+                      email: req.body.email
+                    }
+                    res.redirect(301, '/resend-token')
+                    console.error(error.toString())
+                  } else if (info) {
+                    console.log("Message sent: %s", info.messageId);
+                    const sweetbotFollow = new Relationship();
+                    sweetbotFollow.from = email;
+                    sweetbotFollow.to = 'support@sweet.sh';
+                    sweetbotFollow.toUser = '5c962bccf0b0d14286e99b68';
+                    sweetbotFollow.fromUser = newUser._id;
+                    sweetbotFollow.value = 'follow'
+                    sweetbotFollow.save(function(err) {
+                      if (err)
+                        throw err;
+                      console.log("Saved sweetbot follow!")
+                      return done(null, false);
+                    });
                   }
-                  return done(null, false);
-                  console.error(error.toString());
-                })
+                });
               });
             }
           })
