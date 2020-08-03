@@ -528,7 +528,7 @@ module.exports = function (app, passport) {
           user.verificationToken = token
           user.verificationTokenExpiry = Date.now() + 3600000 // 1 hour
           user.save()
-            .then(user => {
+            .then(async (user) => {
               const msg = {
                 to: req.body.email,
                 from: '"Sweet" <support@sweet.sh>',
@@ -639,7 +639,7 @@ module.exports = function (app, passport) {
         user.passwordResetToken = token
         user.passwordResetTokenExpiry = Date.now() + 3600000 // 1 hour
         user.save()
-          .then(user => {
+          .then(async (user) => {
             const msg = {
               to: req.body.email,
               from: '"Sweet" <support@sweet.sh>',

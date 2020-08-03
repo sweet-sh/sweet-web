@@ -99,7 +99,7 @@ function(req, email, password, done) {
               newUser.verificationTokenExpiry = Date.now() + 3600000; // 1 hour
 
               // save the user
-              newUser.save(function(err) {
+              newUser.save(async function(err) {
                 if (err)
                   throw err;
                 const msg = {
