@@ -540,7 +540,7 @@ module.exports = function (app, passport) {
               }
               const transportMessage = await emailer.transporter.sendMail(msg);
               if (transportMessage.messageId) {
-                console.log("Message sent: %s", info.messageId);
+                console.log("Message sent: %s", transportMessage.messageId);
                 req.session.sessionFlash = {
                   message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.'
                 }
@@ -651,7 +651,7 @@ module.exports = function (app, passport) {
             }
             const transportMessage = await emailer.transporter.sendMail(msg);
             if (transportMessage.messageId) {
-              console.log("Message sent: %s", info.messageId);
+              console.log("Message sent: %s", transportMessage.messageId);
               req.session.sessionFlash = {
                 message: 'An email has been sent to ' + req.body.email + ' with further instructions. Please check your spam or junk folder if it does not arrive in the next few minutes.'
               }

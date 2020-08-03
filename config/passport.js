@@ -113,7 +113,7 @@ function(req, email, password, done) {
                 };
                 const transportMessage = await emailer.transporter.sendMail(msg);
                 if (transportMessage.messageId) {
-                  console.log("Message sent: %s", info.messageId);
+                  console.log("Message sent: %s", transportMessage.messageId);
                   const sweetbotFollow = new Relationship();
                   sweetbotFollow.from = email;
                   sweetbotFollow.to = 'support@sweet.sh';
