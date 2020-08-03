@@ -17,6 +17,16 @@ const transporter = nodemailer.createTransport({
   }
 })
 
+const templatedTransporter = nodemailer.createTransport({
+  host: 'smtp.eu.mailgun.org',
+  port: 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: 'postmaster@sweet.sh',
+    pass: auth.mailServer
+  }
+})
+
 // verify connection configuration
 transporter.verify(function (error, success) {
   if (error) {
@@ -36,7 +46,7 @@ const nodemailerHbsOptions = {
   extName: '.handlebars'
 }
 
-transporter.use('compile', nodemailerHbs(nodemailerHbsOptions))
+templatedTransporter.use('compile', nodemailerHbs(nodemailerHbsOptions))
 
 function emailLog (message) {
   if (process.env.NODE_ENV === 'production') {
@@ -168,7 +178,7 @@ async function sendUpdateEmail (user) {
           signoff: '— sweet x'
         }
       }
-      await transporter.sendMail(info, function (error, info) {
+      await templatedTransporter.sendMail(info, function (error, info) {
         if (error) {
           emailLog('could not send email to ' + user.username + ': ' + error)
         } else {
@@ -221,7 +231,7 @@ async function sendSingleNotificationEmail (user, notification, link) {
       signoff: '— sweet x'
     }
   }
-  await transporter.sendMail(info, function (error, info) {
+  await templatedTransporter.sendMail(info, function (error, info) {
     if (error) {
       emailLog('could not send email to ' + user.username + ': ' + error)
     } else {
