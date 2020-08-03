@@ -524,44 +524,44 @@ module.exports = function (app, passport) {
         } else { // Actual success
           require('crypto').randomBytes(20, function (_, buffer) {
             token = buffer.toString('hex')
-          })
-          user.verificationToken = token
-          user.verificationTokenExpiry = Date.now() + 3600000 // 1 hour
-          user.save()
-            .then(async (user) => {
-              const msg = {
-                to: req.body.email,
-                from: '"Sweet" <support@sweet.sh>',
-                subject: 'Sweet - new user verification',
-                text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
-                  'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
-                  'https://sweet.sh/verify-email/' + token + '\n\n' +
-                  'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
-              }
-              const transportMessage = await emailer.transporter.sendMail(msg);
-              if (transportMessage.messageId) {
-                console.log("Message sent: %s", transportMessage.messageId);
-                req.session.sessionFlash = {
-                  message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.'
+            user.verificationToken = token
+            user.verificationTokenExpiry = Date.now() + 3600000 // 1 hour
+            user.save()
+              .then(async (user) => {
+                const msg = {
+                  to: req.body.email,
+                  from: '"Sweet" <support@sweet.sh>',
+                  subject: 'Sweet - new user verification',
+                  text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
+                    'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
+                    'https://sweet.sh/verify-email/' + token + '\n\n' +
+                    'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
                 }
-                res.redirect(301, '/resend-token');
-              } else {
+                const transportMessage = await emailer.transporter.sendMail(msg);
+                if (transportMessage.messageId) {
+                  console.log("Message sent: %s", transportMessage.messageId);
+                  req.session.sessionFlash = {
+                    message: 'A new token has been sent to ' + req.body.email + '. Please check your spam or junk folder if it does not arrive in the next few minutes. You may now close this page.'
+                  }
+                  res.redirect(301, '/resend-token');
+                } else {
+                  req.session.sessionFlash = {
+                    type: 'alert',
+                    message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
+                    email: req.body.email
+                  }
+                  res.redirect(301, '/resend-token')
+                }
+              })
+              .catch(() => {
                 req.session.sessionFlash = {
                   type: 'alert',
-                  message: 'There has been a problem sending your account verification email. Please get in touch with us at support@sweet.sh and we\'ll sort it out for you.',
+                  message: 'There has been a problem sending your token. Please try again in a few minutes.',
                   email: req.body.email
                 }
                 res.redirect(301, '/resend-token')
-              }
-            })
-            .catch(() => {
-              req.session.sessionFlash = {
-                type: 'alert',
-                message: 'There has been a problem sending your token. Please try again in a few minutes.',
-                email: req.body.email
-              }
-              res.redirect(301, '/resend-token')
-            })
+              })
+          })
         }
       })
       .catch(() => {
