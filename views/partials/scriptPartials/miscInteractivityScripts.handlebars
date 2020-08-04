@@ -55,6 +55,14 @@ $(function() {
             $("#topNav").removeClass("shadow");
         }
     });
+    var stickySidebar = new StickySidebar('#homeSidebar', {
+      innerWrapperSelector: '.sidebar__inner',
+      topSpacing: 80,
+      bottomSpacing: 10
+    });
+    $('#postsContainer').on('append.infiniteScroll', function () {
+      if (stickySidebar) { stickySidebar.updateSticky(); }
+    });
 {{#if loggedInUserData.settings.flashRecentComments}}
     $(window).scroll(function() {
         $(".recent-comment-content:not(.flash)").each(function(){

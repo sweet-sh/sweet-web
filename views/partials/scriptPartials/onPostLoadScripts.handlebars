@@ -42,6 +42,7 @@ $(function(){
 
     // Attach scripts to newly loaded posts
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {
+
         var newlyLoadedStuff = $(items);
 
         if(this.fadedOut){

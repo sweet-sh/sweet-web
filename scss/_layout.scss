@@ -413,25 +413,33 @@ section {
 
 /* suggested users and hashtags stuff */
 
-.fixed-container {
-    position: fixed;
+#homeSidebar {
+    padding: 0 !important;
+    will-change: min-height;
 }
 
 @media(max-width:600px){
-    .fixed-container {
+    #homeSidebar {
         display:none;
     }
 }
 
-.fixed-container>section {
+#homeSidebar section {
     border: 1px solid $medium-grey;
     background: $aside-background;
     padding: 0.5rem 1rem 1rem 1rem;
     width: 350px;
     margin-bottom: 1rem;
+    margin-left: 1rem;
     @media(min-width:768px) {
       border-radius: $rounded-border;
     }
+}
+
+.sidebar__inner{
+    transform: translate(0, 0); /* For browsers don't support translate3d. */
+    transform: translate3d(0, 0, 0);
+    will-change: position, transform;
 }
 
 .hashtags p:nth-child(7) {
