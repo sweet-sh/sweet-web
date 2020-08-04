@@ -382,7 +382,7 @@ module.exports = function (app) {
           const follower = {
             key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
             value: relationship.toUser.username,
-            image: (relationship.toUser.imageEnabled ? relationship.toUser.image : '/images/cake.svg')
+            image: (relationship.toUser.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + relationship.toUser.image : '/images/cake.svg')
           }
           followedUserData.push(follower)
         }
