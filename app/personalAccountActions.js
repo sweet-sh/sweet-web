@@ -205,24 +205,27 @@ module.exports = function (app, passport) {
             quality: 85
           })
           .toBuffer()
-          .then(buffer => s3.putObject({
-            Body: buffer,
-            Bucket: s3Bucket,
-            Key: newFilename,
-            ACL: 'public-read'
-          }).promise()
-            .then(() =>
-              // Delete the old object
-              s3.deleteObject({
-                Bucket: s3Bucket,
-                Key: imageFilename
-              }).promise()
-            )
-            .catch(err => {
-              console.log('Error uploading user profile image to S3')
-              console.error(err)
-            })
-          )
+          .then(buffer => {
+            let uploadParams = {
+              Body: buffer,
+              Bucket: s3Bucket,
+              Key: newFilename,
+              ACL: 'public-read',
+            }
+            s3.upload(uploadParams, function (err, data) {
+              if (err) {
+                console.log('Error uploading user profile image to S3')
+                console.error(err)
+              } if (data) {
+                console.log('Image uploaded!', data);
+                // Delete the old object
+                s3.deleteObject({
+                  Bucket: s3Bucket,
+                  Key: imageFilename
+                });
+              }
+            });
+          })
           .catch(err => {
             console.log('Error processing user profile image with sharp')
             console.error(err)
