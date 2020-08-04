@@ -5,7 +5,6 @@
 ### Custom for sweet ###
 
 # Configuration files with MongoDB login and API keys
-config/apis.js
 config/database.js
 config/auth.js
 .sass-cache

@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   secure: false, // true for 465, false for other ports
   auth: {
     user: 'postmaster@sweet.sh',
-    pass: auth.mailServer
+    pass: auth.mailgun
   }
 })
 
@@ -23,7 +23,7 @@ const templatedTransporter = nodemailer.createTransport({
   secure: false, // true for 465, false for other ports
   auth: {
     user: 'postmaster@sweet.sh',
-    pass: auth.mailServer
+    pass: auth.mailgun
   }
 })
 

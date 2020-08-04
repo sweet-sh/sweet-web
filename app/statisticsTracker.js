@@ -243,13 +243,6 @@ module.exports = function (app, mongoose) {
       res.status(200).send('no dice')
     }
   })
-
-  app.get('/admin/secretstuff/:password/lyds.txt', function (req, res) {
-    const passwordHash = '$2a$08$RDb0G8GsaJZ0TIC/GcpZY.7eaASgXX0HO6d5RZ7JHMmD8eiJiGaGq'
-    if (bcrypt.compareSync(req.params.password, passwordHash) && fs.existsSync(path.resolve(appRoot, 'lyds.txt'))) {
-      res.status(200).sendFile(path.resolve(appRoot, 'lyds.txt'))
-    }
-  })
 }
 
 const postTableFileName = 'postTimeline.csv'
