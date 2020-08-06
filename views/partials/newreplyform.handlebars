@@ -1,4 +1,4 @@
-<div class="new-comment-form" data-comment-type="primary" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">
+<form class="new-comment-form" data-comment-type="primary" data-post-id="{{#eq activePage 'singlepost'}}{{post._id}}{{else}}{{this._id}}{{/eq}}">
 <input type="file" class="file-input" accept="image/gif, image/jpeg, image/png" aria-label="Choose image" name="postImage" multiple>
   <div class="form-row">
     <div class="editable-post-content editable-text" id="postContent">
@@ -24,4 +24,4 @@
       <button type="submit" class="button create-comment">Reply <i class="fas fa-chevron-right"></i></button>
     </div>
   </div>
-</div>
+</form>

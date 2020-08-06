@@ -1,5 +1,7 @@
-//okay so the below is the code that configures the quill.js text editor to work how we want it to vis-a-vis text formatting and using inline image and
-//link preview elements, both of which i'm referring to as "embeds" bc i can't think of a better name. "inlines"?
+//okay so the below is the code that configures the quill.js text editor to
+//work how we want it to vis-a-vis text formatting and using inline image and
+//link preview elements, both of which i'm referring to as "embeds" bc i can't
+//think of a better name. "inlines"?
 
 //within-editor embeds utility functions:
 function updateSubmitButtonState(postForm) {
@@ -20,7 +22,9 @@ function updateSubmitButtonState(postForm) {
     }
 }
 
-//attached directly to the onclick of the x in the embeds when a new one is created (bc of user action or rearrangement). this click event is also artificially triggered when an embed has an error
+//attached directly to the onclick of the x in the embeds when a new one is
+//created (bc of user action or rearrangement). this click event is also
+//artificially triggered when an embed has an error
 function clearEmbed(e) {
     var container = $(this).closest('.slidable-embed');
     if (container.hasClass('image-preview-container') && !container.attr('imagealreadysaved') && !container.hasClass('still-loading')) {
@@ -852,4 +856,20 @@ window.addEventListener("beforeunload", function(event) {
             $.post('/cleartempimage', { imageURL: e.getAttribute('image-url') });
         }
     })
+});
+
+
+/* Hilarity: metaKey only registers key combos on keydown, not keyup. Welp. */
+window.addEventListener("keydown", function(event) {
+  var shouldSubmit = (event.keyCode === 10 || event.keyCode === 13) && (event.ctrlKey || event.metaKey);
+  if (shouldSubmit && event.target) {
+    // We must use jQuery's idea of submit, not raw JS submit, to hit the
+    // submit logic we've written.
+    if (event.target.closest('#postForm')) {
+      $(event.target.closest('#postForm')).submit();
+    }
+    if (event.target.closest('.new-comment-form')) {
+      $(event.target.closest('.new-comment-form')).submit();
+    }
+  }
 });
