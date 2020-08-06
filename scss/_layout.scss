@@ -416,6 +416,7 @@ section {
 #homeSidebar {
     padding: 0 !important;
     will-change: min-height;
+    transition: opacity .15s ease-out;
 }
 
 @media(max-width:600px){
@@ -434,6 +435,14 @@ section {
     @media(min-width:768px) {
       border-radius: $rounded-border;
     }
+}
+
+#homeSidebar.is-affixed {
+    opacity: .4;
+}
+
+#homeSidebar:hover {
+    opacity: 1;
 }
 
 .sidebar__inner{
