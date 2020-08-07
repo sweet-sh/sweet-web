@@ -327,14 +327,17 @@ $(function () {
     }
   })
 
-  //function for very specifically submitting a post, not a comment
-  $("#postSubmit").click(function (e) {
+  // function for very specifically submitting a post, not a comment
+  $("#postForm").submit(function (e) {
     e.preventDefault();
-    $("#editPostModal").remove(); //so if it's on the page (hidden) we don't accidentally select elements in it
+    e.stopPropagation();
+    // so if it's on the page (hidden) we don't accidentally select elements in it
+    $("#editPostModal").remove(); 
     let editor = $('#editor');
-    let postContent = editor[0].getContents(); //array of paragraphs and embeds if we have embeds; normal html string if not
+    // array of paragraphs and embeds if we have embeds; normal html string if not
+    let postContent = editor[0].getContents(); 
     if (editor[0].hasContent()) {
-      var button = $(this);
+      var button = $("#postSubmit");
       button.attr('disabled', true);
       $.ajax({
         url: '/createpost',
@@ -342,11 +345,17 @@ $(function () {
         data: {
           communityId: $('#postForm').attr("communityId"),
           isDraft: $("#pseudoPrivacy-draft").is(":checked") ? true : "",
-          postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), //public posts are public; private posts and drafts are private
-          postContent: JSON.stringify(postContent), //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
+          // public posts are public; private posts and drafts are private
+          postPrivacy: ($('#postPrivacy-public').is(':checked') ? 'public' : 'private'), 
+          // doesn't actually need to be stringified if it happens to just be
+          // html (in a no embeds situation) but, doesn't hurt, the server
+          // JSON.parses this field regardless
+          postContent: JSON.stringify(postContent), 
           postContentWarnings: $('#postContentWarnings').val(),
         }
-      }).done(function (postTimestamp) { //this will be a string with timestamp 1 millisecond later than the new post's timestamp
+      }).done(function (postTimestamp) {
+        // postTimestamp will be a string with timestamp 1 millisecond later
+        // than the new post's timestamp
         $('#postContentWarnings').val("");
         $("#postContentWarningsContainer").slideUp("fast");
         $("#new-post-emoji-picker").slideUp("fast");
@@ -354,18 +363,28 @@ $(function () {
         var innerEditor = editor.find(".ql-editor");
         innerEditor.html("");
         button.attr('disabled', false);
-        //restart the feed to show the new post, unless we've just created a draft and aren't currently looking at our drafts and thus won't see it anyway, in which case just display a message talking about the draft in the editor
+        // restart the feed to show the new post, unless we've just created a
+        // draft and aren't currently looking at our drafts and thus won't see
+        // it anyway, in which case just display a message talking about the
+        // draft in the editor
         if (!$("#pseudoPrivacy-draft").is(":checked") || (typeof draftsMode != "undefined" && draftsMode)) {
           if (!$("#pseudoPrivacy-draft").is(":checked") && typeof draftsMode != "undefined" && draftsMode) {
-            //if we've just created a regular post and are currently looking at our drafts, we need to switch to looking at regular posts to see our new post
+            // if we've just created a regular post and are currently looking
+            // at our drafts, we need to switch to looking at regular posts to
+            // see our new post
             draftsMode = false;
           }
-          restartInfiniteScroll(postTimestamp) //we'll requests posts older than that specific timestamp, so the new post should always be on top, with any even newer posts not shown.
+          // we'll requests posts older than that specific timestamp, so the
+          // new post should always be on top, with any even newer posts not
+          // shown.
+          restartInfiniteScroll(postTimestamp) 
         } else {
           innerEditor.attr("data-placeholder", 'Post saved to drafts; view those through your profile.');
           innerEditor.focus(function () {
-            innerEditor.attr("data-placeholder", editor[0].__quill.options.placeholder); //this will retrieve the editor's original placeholder and looks weird
-            innerEditor.off("focus"); //don't need to reset the placeholder more than once
+            // this will retrieve the editor's original placeholder and looks weird
+            innerEditor.attr("data-placeholder", editor[0].__quill.options.placeholder); 
+            // don't need to reset the placeholder more than once
+            innerEditor.off("focus"); 
           })
         }
       }).fail(function () {
@@ -378,9 +397,11 @@ $(function () {
   });
 
   //function for sumbitting a comment and then placing the new comment on the page
-  $('body').on('click', '.create-comment', function () {
-    let commentButton = $(this);
-    let commentForm = commentButton.closest('.new-comment-form');
+  $('body').on('submit', '.new-comment-form', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let commentButton = $(this).find('button.create-comment');
+    let commentForm = $(this)
     let commentType = commentForm.attr('data-comment-type');
     let postID = commentForm.attr('data-post-id');
     let commentID = commentForm.attr('data-comment-id');
@@ -396,7 +417,10 @@ $(function () {
 
     if (commentContainer[0].hasContent()) {
       commentButton.prop('disabled', true);
-      $.post("/createcomment/" + postID + "/" + commentID, { commentContent: JSON.stringify(commentContent) }, //doesn't actually need to be stringified if it happens to just be html (in a no embeds situation) but, doesn't hurt, the server JSON.parses this field regardless
+      // doesn't actually need to be stringified if it happens to just be html
+      // (in a no embeds situation) but, doesn't hurt, the server JSON.parses
+      // this field regardless
+      $.post("/createcomment/" + postID + "/" + commentID, { commentContent: JSON.stringify(commentContent) },
         function (data) {
           if (data != 'nope') {
             commentEditor.html('');
