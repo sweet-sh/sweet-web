@@ -80,7 +80,7 @@ $(function(){
         {{#if loggedIn}}
         var commentForms = newlyLoadedStuff.find('.editable-text');
         commentForms.each(function(){
-            attachQuill(this,'Reply to this post with a good reply');
+            attachQuill(this,'What would you like to say?');
         })
         if (typeof tribute !== 'undefined') { // Silently fails to load tribute if API has not yet responded, it will be attached to these comment fields when tribute does load (look up a few lines)
             tribute.attach(newlyLoadedStuff.find(".ql-editor"));

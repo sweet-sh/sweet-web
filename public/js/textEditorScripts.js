@@ -345,7 +345,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
                 }
             }
         },
-        placeholder: placeholder ? placeholder : 'Write something, highlight text to format.',
+        placeholder: placeholder ? placeholder : 'What would you like to say?',
         theme: 'bubble'
     });
     //copying and pasting embeds has been erratic for me so this just blocks it, although that probably deserves a second look someday

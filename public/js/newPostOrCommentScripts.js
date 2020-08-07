@@ -263,7 +263,7 @@ $(function () {
     var newForm = $(document.getElementById("new-comment-form-template").innerHTML);
     newForm.attr('data-comment-type', 'child').attr('data-post-id', postID).attr('data-comment-id', commentID);
     newForm.appendTo(commentContainer);
-    attachQuill(newForm.find('.editable-text')[0], "Reply to this post with a good reply")
+    attachQuill(newForm.find('.editable-text')[0], "What would you like to say?")
     tribute.attach(newForm.find(".ql-editor"));
     //Scroll to newly created form
     if (newForm[0].getBoundingClientRect().bottom > $(window).height() - 50) {
