@@ -47,6 +47,7 @@ $(function () {
   $(".ql-editor").focus(function (e) {
     if (e.target.parentElement.id == "editor") {
       $(".post-controls").css('display', 'flex');
+      $("#shortcut-hint").css('display', 'block');
     }
   })
 
@@ -458,5 +459,16 @@ $(function () {
           }
         });
     }
-  })
+  });
+  var isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (!isMobile) {
+    if (isMac) {
+      $('.meta-key-symbol').text('⌘');
+    } else {
+      $('.meta-key-symbol').text('Ctrl');
+    }
+  } else {
+    $('#shortcut-hint').hide();
+  }
 })
