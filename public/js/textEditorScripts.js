@@ -88,7 +88,7 @@ class LinkPreview extends BlockEmbed {
                 }
                 m.find('.link-preview-title').html(linkInfo.title);
                 m.find('.link-preview-description').html(linkInfo.description);
-                m.find('.link-preview-domain').html(linkInfo.domain + (isVideo ? ' (will open as embed)' : ''));
+                m.find('.link-preview-domain').html(linkInfo.domain);
                 updateSubmitButtonState(m.closest('.new-comment-form, .contentForm'));
             }
         })
@@ -123,7 +123,7 @@ class LinkPreview extends BlockEmbed {
         if (n.hasClass('still-loading') || n.hasClass('onthemove') || n.hasClass('embedspacer')) {
             return {};
         }
-        return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain').html().replace(' (will open as embed)', ''), image: n.find('.link-preview-image').attr('src') }
+        return { title: n.find('.link-preview-title').html(), description: n.find('.link-preview-description').html(), domain: n.find('.link-preview-domain'), image: n.find('.link-preview-image').attr('src') }
     }
 }
 
