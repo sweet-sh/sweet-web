@@ -7,12 +7,17 @@
     "watch-sass": "node-sass --source-map true --output-style compressed scss/index.scss public/css/style.css --watch",
     "generate-dark-mode": "node-sass --source-map true --output-style compressed scss/dark-mode.scss public/css/dark-mode.css --watch",
     "start": "nodemon server.js & npm run watch-sass",
+    "start:prod": "node ./server.js",
     "debug": "nodemon --inspect --inspect-brk=5757 server.js & node-sass --source-comments --output-style compressed scss/index.scss public/css/style.css --watch",
     "lint": "eslint --fix",
     "test": "vue-cli-service test:unit"
   },
   "author": "Raphael Kabo",
   "license": "GPL-3.0-only",
+  "repository": {
+    "type": "github",
+    "url": "lowercasename/sweet"
+  },
   "jest": {
     "collectCoverage": true,
     "collectCoverageFrom": [
