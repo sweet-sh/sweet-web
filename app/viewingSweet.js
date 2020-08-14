@@ -1400,7 +1400,7 @@ module.exports = function (app) {
           user.notifications.reverse()
           user.notifications.forEach((notification) => {
             if (notification.image === "/images/cake.svg") {
-              notification.image = false;
+              notification.image = "images/cake.svg";
             }
           })
           res.render('partials/notifications', {
