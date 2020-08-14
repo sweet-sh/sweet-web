@@ -1398,6 +1398,11 @@ module.exports = function (app) {
       }, 'notifications')
         .then(user => {
           user.notifications.reverse()
+          user.notifications.forEach((notification) => {
+            if (notification.image === "/images/cake.svg") {
+              notification.image = false;
+            }
+          })
           res.render('partials/notifications', {
             layout: false,
             loggedIn: true,
