@@ -328,6 +328,11 @@ module.exports = function (app) {
     if (req.isAuthenticated()) {
       User.findOne({ _id: req.user._id }, 'notifications').then(user => {
         user.notifications.reverse()
+        user.notifications.forEach((notification) => {
+          if (notification.image === "/images/cake.svg") {
+            notification.image = "images/cake.svg";
+          }
+        })
         res.render('notifications', {
           loggedIn: true,
           loggedInUserData: req.user,
@@ -1402,7 +1407,7 @@ module.exports = function (app) {
             if (notification.image === "/images/cake.svg") {
               notification.image = "images/cake.svg";
             }
-          })
+          });
           res.render('partials/notifications', {
             layout: false,
             loggedIn: true,
