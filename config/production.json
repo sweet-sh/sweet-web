@@ -1,0 +1,17 @@
+{
+  "appConfig": {
+    "secret": null
+  },
+  "dbConfig": {
+    "host": null,
+    "port": null,
+    "defaultauthdb": null
+  },
+  "mailConfig": {
+    "mailgun": null
+  },
+  "pushConfig": {
+    "vapidPublicKey": null,
+    "vapidPrivateKey": null
+  }
+}

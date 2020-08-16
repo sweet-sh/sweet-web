@@ -4,9 +4,9 @@
 
 ### Custom for sweet ###
 
-# Configuration files with MongoDB login and API keys
-config/database.js
-config/auth.js
+# Configuration files
+.env
+
 .sass-cache
 
 ### macOS ###
