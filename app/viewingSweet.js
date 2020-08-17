@@ -1174,10 +1174,10 @@ module.exports = function (app) {
         if (firstLine && firstLine[1]) {
           firstLine = firstLine[1].replace(/<.*?>/g, '').substring(0, 100) + (firstLine[1].length > 100 ? '...' : '')
         } else {
-          firstLine = "Just another ol' good post on sweet"
+          firstLine = "A post by @" + displayedPost.author.username + " on Sweet"
         }
         metadata = {
-          title: '@' + displayedPost.author.username + ' on sweet',
+          title: '@' + displayedPost.author.username + ' · Sweet',
           description: firstLine,
           image: metadataImage,
           url: 'https://sweet.sh/' + displayedPost.author.username + '/' + displayedPost.url
@@ -1191,7 +1191,7 @@ module.exports = function (app) {
         canDisplay = false
         // We add some dummy metadata for posts which error
         metadata = {
-          title: 'sweet • a social network',
+          title: 'Sweet',
           description: '',
           image: 'https://sweet.sh/images/cake.svg',
           url: 'https://sweet.sh/'
