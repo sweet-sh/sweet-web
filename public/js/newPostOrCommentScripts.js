@@ -361,6 +361,7 @@ $(function () {
         $("#postContentWarningsContainer").slideUp("fast");
         $("#new-post-emoji-picker").slideUp("fast");
         $(".link-form-cont").slideUp("fast");
+        $("#postSubmit").html("Send <i class='fas fa-chevron-right'></i>").removeClass('save-draft-button');
         var innerEditor = editor.find(".ql-editor");
         innerEditor.html("");
         button.attr('disabled', false);
