@@ -14,13 +14,19 @@
                 <input type="text" class="form-control" name="postContentWarnings" id="postContentWarnings" placeholder="Warn others about your post's content." value="{{contentWarnings}}" />
               </div>
               <div class="editable-post-content editable-text" id="editPostContent"></div>
+              <div id="shortcut-hint" class="form-row p-1 text-muted small" style="display:none;">
+                Press <span class="meta-key-symbol">Ctrl</span>-Enter to post, highlight text to format.
+              </div>
               <div class="form-row mt-2 p-1 emoji-picker" style="display:none">
                 {{> emojilist }}
               </div>
             <div class="link-form-cont"> {{! this is only here bc jquery applies display:block when it slides something down, which would break the below div if it slid down that}}
               <div class="my-2 linkPreviewAddingForm">
-                <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="endless.horse" />
-                <button class="button grey-button link-add" style="margin-left: 0.5rem;"><i class="fas fa-arrow-up"></i></button>
+                <input type="text" class="form-control" name="linkPreviewUrlEntry" id="linkPreviewUrlEntry" placeholder="http://endless.horse" />
+                <button type="button" class="button grey-button link-add" style="margin-left: 0.5rem;"><i class="fas fa-plus"></i> Add link</button>
+              </div>
+              <div class="p-1">
+                <p style="flex-basis: 100%" class="small text-muted">Insert a link preview. You can also select text above and link it without a preview.</p>
               </div>
             </div>
             <div id="editorControlsRow" class="mt-2 post-controls">
