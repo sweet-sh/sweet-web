@@ -172,7 +172,17 @@ module.exports = function (app) {
                     member.isRecentlyActive = true
                   }
                 })
+
+                community.excerpt = community.descriptionParsed.replace(/<[^>]+>/g, ' ').replace(/^(.{160}[^\s]*).*/, "$1...");
+
+                let metadata = {
+                  title: community.name + ' · Sweet',
+                  description: community.excerpt,
+                  image: community.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
+                  url: 'https://sweet.sh/community/' + community.slug
+                }
                 res.render('community', {
+                  metadata: metadata,
                   loggedIn: isLoggedIn,
                   loggedInUserData: req.user,
                   communityData: community,
@@ -186,7 +196,14 @@ module.exports = function (app) {
                 })
               })
           } else {
+            let metadata = {
+              title: community.name + ' · Sweet',
+              description: community.excerpt,
+              image: community.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
+              url: 'https://sweet.sh/community/' + community.slug
+            }
             res.render('community', {
+              metadata: metadata,
               loggedIn: false,
               loggedInUserData: '',
               communityData: community,
