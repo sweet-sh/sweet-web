@@ -520,7 +520,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
             for (var i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf("image") === 0) {
                     if (element.imagesAdded() > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
+                        bootbox.alert("Sorry, we only take 4 images per post at the moment.");
                         break;
                     } else {
                         e.preventDefault();
@@ -536,7 +536,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
             if (ev.dataTransfer.items) {
                 for (var i = 0; i < ev.dataTransfer.items.length; i++) {
                     if (element.imagesAdded() > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
+                        bootbox.alert("Sorry, we only take 4 images per post at the moment.");
                         break;
                     } else if (ev.dataTransfer.items[i].kind === 'file' && ev.dataTransfer.items[i].type.indexOf("image") === 0) {
                         element.addImage(ev.dataTransfer.items[i].getAsFile());
@@ -545,7 +545,7 @@ function attachQuill(element, placeholder, embedsForbidden) {
             } else {
                 for (var i = 0; i < ev.dataTransfer.files.length; i++) {
                     if (element.imagesAdded() > 3) {
-                        bootbox.alert("sorry, we only take 4 images at once atm");
+                        bootbox.alert("Sorry, we only take 4 images per post at the moment.");
                         break;
                     } else if (ev.dataTransfer.files[i].type.indexOf("image") === 0) {
                         element.addImage(ev.dataTransfer.files[i]);

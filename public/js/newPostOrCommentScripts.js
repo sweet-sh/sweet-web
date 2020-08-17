@@ -315,15 +315,16 @@ $(function () {
     }
     input.val('');
     var subject = $(this).closest('.contentForm, .new-comment-form').find('.ql-container')[0];
-    if (subject.linkPreviewsAdded() < 4) {
+    if (subject.linkPreviewsAdded() < 10) {
       subject.addLinkPreview(url);
     } else {
-      bootbox.alert("we only take 4 link previews per post, sorry");
+      bootbox.alert("Sorry, we only take 10 link previews per post at the moment.");
     }
   })
 
   $("body").on('keyup', "#linkPreviewUrlEntry", function (e) {
     if (e.keyCode == 13) { //activate on pressing enter
+      e.preventDefault();
       $(this).siblings('.link-add').click();
     }
   })
