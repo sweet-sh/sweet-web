@@ -1,7 +1,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js" crossorigin="anonymous"></script>
 <div id="homeBody" class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-md-8">
         <form id="settingsForm" method="post" action="/updatesettings" class="pane">
             <h3 class="page-header mx-2">Settings</h3>
             <h4>Basic settings</h4>
@@ -38,7 +38,6 @@
                 	<option value="+13:00">(GMT +13:00) Apia, Nukualofa</option>
                 	<option value="+14:00">(GMT +14:00) Line Islands, Tokelau</option>
                 </select>
-                <p class="form-text small">This is currently only used for sending you your digest emails at the correct time. Picking a non-default one will result in us not really knowing your whole daylight savings time deal.</p>
             </div>
             <hr />
             <h4>Privacy</h4>
@@ -49,68 +48,6 @@
                     <option value="profileOnly" {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible to logged out users</option>
                     <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
                 </select>
-            </div>
-            <hr />
-            <h4 id="email_settings">Emails</h4>
-            <div class="form-group">
-                    <div class="form-check">
-                            <input type="checkbox" name="sendMentionEmails" id="sendMentionEmails" {{#if loggedInUserData.settings.sendMentionEmails}}checked{{/if}}>
-                            <label class="form-check-label" for="sendMentionEmails">
-                                    Receive an email when someone mentions you
-                            </label>
-                    </div>
-            </div>
-            <div class="form-group">
-                <label for="profileVisibility">Frequency of digest emails</label>
-                <p class="form-text small mt-0">sweet can send you a daily or weekly digest email with a summary of your unseen notifications.</p>
-                <select name="digestEmailFrequency" id="digestEmailFrequency">
-                    <option value="off" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}selected{{/eq}}>Do not send digest emails</option>
-                    <option value="daily" {{#eq loggedInUserData.settings.digestEmailFrequency "daily"}}selected{{/eq}}>Send a daily digest email</option>
-                    <option value="weekly" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}selected{{/eq}}>Send a weekly digest email</option>
-                </select>
-                <div id="timeSelection" {{#eq loggedInUserData.settings.digestEmailFrequency "off"}}style="display:none;"{{/eq}}>
-                    <p id="emailTimePrompt" class="form-text small mt-0">here, you can choose the time at which you would like to receive them:</p>
-                    <select name="emailDay" id="emailDaySelect" {{#eq loggedInUserData.settings.digestEmailFrequency "weekly"}}{{else}}style="display:none;"{{/eq}}>
-                        <option value="Sunday" {{#eq loggedInUserData.settings.emailDay "Sunday"}}selected{{/eq}}>Sunday</option>
-                        <option value="Monday" {{#eq loggedInUserData.settings.emailDay "Monday"}}selected{{/eq}}>Monday</option>
-                        <option value="Tuesday" {{#eq loggedInUserData.settings.emailDay "Tuesday"}}selected{{/eq}}>Tuesday</option>
-                        <option value="Wednesday" {{#eq loggedInUserData.settings.emailDay "Wednesday"}}selected{{/eq}}>Wednesday</option>
-                        <option value="Thursday" {{#eq loggedInUserData.settings.emailDay "Thursday"}}selected{{/eq}}>Thursday</option>
-                        <option value="Friday" {{#eq loggedInUserData.settings.emailDay "Friday"}}selected{{/eq}}>Friday</option>
-                        <option value="Saturday" {{#eq loggedInUserData.settings.emailDay "Saturday"}}selected{{/eq}}>Saturday</option>
-                    </select>
-                    <input name="emailTime" type="time" id="emailTime" value="{{loggedInUserData.settings.emailTime}}" required>
-                    <select id="emailTimeSelect" style="display:none;">
-                        {{!-- the idea here is that the user's current option is in the top - it can't definitely be integrated into the rest of the list --}}
-                        {{!-- because it might have a custom minutes value - but then if it is one of the options below we hide its duplicate for neatness. --}}
-                        <option value="{{loggedInUserData.settings.emailTime}}" id="currentEmailTime" selected>{{loggedInUserData.settings.emailTime}}</option>
-                        {{#eq loggedInUserData.settings.emailTime "01:00"}}{{else}}<option value="01:00">01:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "02:00"}}{{else}}<option value="02:00">02:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "03:00"}}{{else}}<option value="03:00">03:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "04:00"}}{{else}}<option value="04:00">04:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "05:00"}}{{else}}<option value="05:00">05:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "06:00"}}{{else}}<option value="06:00">06:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "07:00"}}{{else}}<option value="07:00">07:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "08:00"}}{{else}}<option value="08:00">08:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "09:00"}}{{else}}<option value="09:00">09:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "10:00"}}{{else}}<option value="10:00">10:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "11:00"}}{{else}}<option value="11:00">11:00 am</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "12:00"}}{{else}}<option value="12:00">12:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "13:00"}}{{else}}<option value="13:00">01:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "14:00"}}{{else}}<option value="14:00">02:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "15:00"}}{{else}}<option value="15:00">03:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "16:00"}}{{else}}<option value="16:00">04:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "17:00"}}{{else}}<option value="17:00">05:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "18:00"}}{{else}}<option value="18:00">06:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "19:00"}}{{else}}<option value="19:00">07:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "20:00"}}{{else}}<option value="20:00">08:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "21:00"}}{{else}}<option value="21:00">09:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "22:00"}}{{else}}<option value="22:00">10:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "23:00"}}{{else}}<option value="23:00">11:00 pm</option>{{/eq}}
-                        {{#eq loggedInUserData.settings.emailTime "00:00"}}{{else}}<option value="00:00">12:00 am</option>{{/eq}}
-                    </select>
-                </div>
-                <p class="small text-warning">If enabling emails, make sure to add <strong>updates@sweet.sh</strong> to your address book or trusted senders, especially if you use Gmail.</p>
             </div>
             <hr />
             <h4>Posting</h4>
@@ -166,10 +103,6 @@
                         Flash recent comments
                 </label>
             </div>
-            <div class="pushNotifSubStuff" style="margin:20px 0;">
-                <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to sweet push notifications!</button>
-                <p class="form-text small">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
-            </div>
             <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <hr />
             <h4 id="discovery-settings">Discovery</h4>
@@ -185,8 +118,18 @@
                         Show recent hashtags next to the home feed
                 </label>
             </div>
-            <button type="submit" class="button">Save settings</button>
+            <hr />
+            <h4>Notifications</h4>
+            <div class="form-group pushNotifSubStuff">
+                <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to Sweet push notifications!</button>
+                <p class="form-text small" style="margin-top: .5rem">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
+            </div>
         </form>
+    </div>
+    <div class="col-md-4">
+        <div class="pane">
+            <button type="submit" class="button">Save these settings</button>
+        </div>
     </div>
 </div>
 <script>
