@@ -196,6 +196,7 @@ module.exports = function (app) {
                 })
               })
           } else {
+            community.excerpt = community.descriptionParsed.replace(/<[^>]+>/g, ' ').replace(/^(.{160}[^\s]*).*/, "$1...");
             let metadata = {
               title: community.name + ' · Sweet',
               description: community.excerpt,
