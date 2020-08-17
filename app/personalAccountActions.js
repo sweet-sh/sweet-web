@@ -8,7 +8,6 @@ const Relationship = require('./models/relationship')
 const helper = require('./utilityFunctionsMostlyText')
 const notifier = require('./notifier')
 const reservedUsernames = require('../config/reserved-usernames.js')
-// const sgMail = require('./mail')
 const emailer = require('./emailer')
 const nanoid = require('nanoid')
 
@@ -342,13 +341,7 @@ module.exports = function (app, passport) {
   // database error will do... something? again, all unless isLoggedInOrRedirect redirects you first.
   app.post('/updatesettings', isLoggedInOrRedirect, async function (req, res) {
     const newSets = req.body
-    console.log(newSets)
     const oldSets = req.user.settings
-
-    let emailSetsChanged = false
-    if (newSets.digestEmailFrequency !== oldSets.digestEmailFrequency || newSets.timezone !== oldSets.timezone || newSets.autoDetectedTimeZone !== oldSets.autoDetectedTimeZone || newSets.emailTime !== oldSets.emailTime || newSets.emailDay !== oldSets.emailDay) {
-      emailSetsChanged = true
-    }
 
     User.update({
       _id: req.user._id
@@ -359,7 +352,6 @@ module.exports = function (app, passport) {
         'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone ? newSets.autoDetectedTimeZone : oldSets.autoDetectedTimeZone,
         'settings.profileVisibility': newSets.profileVisibility,
         'settings.newPostPrivacy': newSets.newPostPrivacy,
-        'settings.digestEmailFrequency': newSets.digestEmailFrequency,
         'settings.imageQuality': newSets.imageQuality,
         'settings.homeTagTimelineSorting': newSets.homeTagTimelineSorting,
         'settings.userTimelineSorting': newSets.userTimelineSorting,
@@ -367,15 +359,9 @@ module.exports = function (app, passport) {
         'settings.flashRecentComments': (newSets.flashRecentComments === 'on'),
         'settings.showRecommendations': (newSets.showRecommendations === 'on'),
         'settings.showHashtags': (newSets.showHashtags === 'on'),
-        'settings.sendMentionEmails': (newSets.sendMentionEmails === 'on'),
-        'settings.emailTime': newSets.emailTime,
-        'settings.emailDay': newSets.emailDay
       }
     })
       .then(async (updateStatus) => {
-        if (emailSetsChanged) {
-          emailer.emailRescheduler((await User.findById(req.user._id))) // can't use req.user bc that will still store the old settings
-        }
         res.redirect('/' + req.user.username)
       })
       .catch(error => {
@@ -535,7 +521,7 @@ module.exports = function (app, passport) {
                   to: req.body.email,
                   from: '"Sweet" <support@sweet.sh>',
                   subject: 'Sweet - new user verification',
-                  text: 'Hi! You are receiving this because you have created a new account on sweet with this email.\n\n' +
+                  text: 'Hi! You are receiving this because you have created a new account on Sweet with this email.\n\n' +
                     'Please click on the following link, or paste it into your browser, to verify your email:\n\n' +
                     'https://sweet.sh/verify-email/' + token + '\n\n' +
                     'If you did not create an account on sweet, please ignore and delete this email. The token will expire in an hour.\n'
@@ -647,7 +633,7 @@ module.exports = function (app, passport) {
               to: req.body.email,
               from: '"Sweet" <support@sweet.sh>',
               subject: 'Sweet - password reset request',
-              text: 'Hi! You are receiving this because someone has requested a reset of the password for your sweet account.\n\n' +
+              text: 'Hi! You are receiving this because someone has requested a reset of the password for your Sweet account.\n\n' +
                 'Please click on the following link, or paste it into your browser, to reset your password:\n\n' +
                 'https://sweet.sh/reset-password/' + token + '\n\n' +
                 'If you did not request this email, please ignore this email and your password will remain unchanged. The password reset will expire in 1 hour.\n'
@@ -732,7 +718,7 @@ module.exports = function (app, passport) {
                     to: user.email,
                     from: '"Sweet" <support@sweet.sh>',
                     subject: 'Sweet - password sucessfully reset',
-                    text: 'Hi! The password on your sweet account ' + user.email + ' has just been changed.\n\n' +
+                    text: 'Hi! The password on your Sweet account ' + user.email + ' has just been changed.\n\n' +
                       'If you did not do this, please get in touch with sweet support at support@sweet.sh immediately.\n'
                   }
                   const transportMessage = await emailer.transporter.sendMail(msg);

@@ -1,8 +1,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js" crossorigin="anonymous"></script>
-<div id="homeBody" class="row justify-content-center">
+<form id="settingsForm" class="row justify-content-center" method="post" action="/updatesettings">
     <div class="col-md-8">
-        <form id="settingsForm" method="post" action="/updatesettings" class="pane">
+        <div class="pane">
             <h3 class="page-header mx-2">Settings</h3>
             <h4>Basic settings</h4>
             <div class="form-group">
@@ -124,14 +124,14 @@
                 <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to Sweet push notifications!</button>
                 <p class="form-text small" style="margin-top: .5rem">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
             </div>
-        </form>
-    </div>
+        </div>
+    </div> 
     <div class="col-md-4">
         <div class="pane">
             <button type="submit" class="button">Save these settings</button>
         </div>
     </div>
-</div>
+</form>
 <script>
     //ok so this detects the user's time zone and if it's changed and creates options in the drop-down for time zones based on that
     function stringifyTZ(tz){
@@ -291,11 +291,11 @@
             isSubscribed = false;
             //unsubscribe the user so that the server doesn't waste time trying to send them stuff
             unsubscribeUser();
-            pushButton.html('Click to subscribe this browser to sweet push notifications!');
+            pushButton.html('Click to subscribe this browser to Sweet push notifications!');
         } else if (isSubscribed) {
-            pushButton.html('Click to unsubscribe this browser from sweet push notifications!');
+            pushButton.html('Click to unsubscribe this browser from Sweet push notifications!');
         } else {
-            pushButton.html('Click to subscribe this browser to sweet push notifications!');
+            pushButton.html('Click to subscribe this browser to Sweet push notifications!');
         }
         pushButton[0].disabled = false;
     }

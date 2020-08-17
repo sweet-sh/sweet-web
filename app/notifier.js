@@ -1,7 +1,6 @@
 const webpush = require('web-push')
 const User = require('./models/user')
 const Community = require('./models/community')
-const emailer = require('./emailer')
 const { sendExpoNotifications } = require('./expoNotifications');
 
 function markRead(userId, subjectId) {
@@ -45,18 +44,13 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               mention: 'mentioned you in a ' + context + '.',
               relationship: 'now ' + context + 's you.'
             }
-            const notifEmails = {
-              mention: 'mentioned you on sweet 🙌'
-            }
             const text = notifTexts[cause]
             const image = (user.imageEnabled ? user.image : '/images/cake.svg')
             const username = '@' + user.username
             const final = '<strong>' + username + '</strong> ' + text
-            const emailText = notifEmails[cause] ? notifEmails[cause] : ''
             return {
               image: image,
               text: final,
-              emailText: emailText
             }
           })
       case 'community':
@@ -126,11 +120,6 @@ function notify(type, cause, notifieeID, sourceId, subjectId, url, context) {
               .catch(error => {
                 console.error("Error saving user after de-depulicating Expo push tokens array:", error)
               });
-          }
-
-          // send the user an email if it's a mention and they have emails for mentions enabled
-          if (notifiedUser.settings.sendMentionEmails === true && response.emailText) {
-            emailer.sendSingleNotificationEmail(notifiedUser, response, url)
           }
 
           // if the most recent notification is a trust or follow, and the current is also a trust or follow from the same user, combine the two

@@ -229,7 +229,6 @@ for (const spicy of ['warn', 'error', 'log']) {
 require('./app/utilityFunctionsMostlyText.js')
 require('./app/statisticsTracker.js')(app, mongoose)
 require('./app/notifier.js')
-require('./app/emailer.js')
 require('./app/personalAccountActions.js')(app, passport)
 require('./app/inhabitingCommunities.js')(app, passport)
 require('./app/viewingSweet.js')(app)
