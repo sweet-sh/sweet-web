@@ -61,13 +61,14 @@
                 <img alt="Profile image for the user @{{ loggedInUserData.username}}" id="navbarProfileImage" src="{{#if loggedInUserData.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{loggedInUserData.image}}{{else}}/images/cake.svg{{/if}}" {{#eq activePage loggedInUserData.username}}class="active"{{/eq}}/> <span class="navbar-username">@{{loggedInUserData.username}}</span>
               </a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown" id="userDropdownMenu">
-                <a class="dropdown-item" href="/{{loggedInUserData.username}}"><i class="fas fa-fw fa-user-circle"></i> profile</a>
-                <a class="dropdown-item" href="/settings"><i class="fas fa-fw fa-cog"></i> settings</a>
-                <a class="dropdown-item switch-style" data-style="{{#eq loggedInUserData.settings.theme "dark"}}dark{{else}}light{{/eq}}" href="#"><i class="fas fa-fw fa-{{#eq loggedInUserData.settings.theme "dark"}}sun{{else}}moon{{/eq}}"></i> {{#eq loggedInUserData.settings.theme "dark"}}light{{else}}dark{{/eq}} mode</a>
+                <a class="dropdown-item" href="/{{loggedInUserData.username}}"><i class="fas fa-fw fa-user-circle"></i> Profile</a>
+                <a class="dropdown-item" href="/audiences"><i class="fad fa-fw fa-theater-masks"></i> Audiences</a>
+                <a class="dropdown-item" href="/settings"><i class="fas fa-fw fa-cog"></i> Settings</a>
+                <a class="dropdown-item switch-style" data-style="{{#eq loggedInUserData.settings.theme "dark"}}dark{{else}}light{{/eq}}" href="#"><i class="fas fa-fw fa-{{#eq loggedInUserData.settings.theme "dark"}}sun{{else}}moon{{/eq}}"></i> {{#eq loggedInUserData.settings.theme "dark"}}Light{{else}}Dark{{/eq}} mode</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="/support"><i class="fas fa-fw fa-question-circle"></i> support</a>
+                <a class="dropdown-item" href="/support"><i class="fas fa-fw fa-question-circle"></i> Support</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="/logout"><i class="fas fa-fw fa-sign-out-alt"></i> log out</a>
+                <a class="dropdown-item" href="/logout"><i class="fas fa-fw fa-sign-out-alt"></i> Log out</a>
               </div>
             </li>
             <li class="nav-item">
@@ -78,15 +79,15 @@
         {{else}}
             <div class="navbar-group" id="navbarLeftGroup">
                 <li class="nav-item">
-                  <a class="nav-link" href="/"><img src="/icons/bee-color.svg" id="sweetLogo" alt="sweet logo"/> <span class="nav-link-text not-hidden navbar-site-title">sweet</span></a>
+                  <a class="nav-link" href="/"><img src="/icons/bee-color.svg" id="sweetLogo" alt="sweet logo"/> <span class="nav-link-text not-hidden navbar-site-title">Sweet</span></a>
                 </li>
             </div>
           <div class="navbar-group" id="navbarRightGroup">
               <li class="nav-item">
-                <a class="nav-link nav-button" href="/login"><span class="nav-link-text not-hidden">log in</span></a>
+                <a class="nav-link nav-button" href="/login"><span class="nav-link-text not-hidden">Log in</span></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link nav-button" href="/signup"><span class="nav-link-text not-hidden">sign up</span></a>
+                <a class="nav-link nav-button" href="/signup"><span class="nav-link-text not-hidden">Sign up</span></a>
               </li>
           </div>
         {{/if}}

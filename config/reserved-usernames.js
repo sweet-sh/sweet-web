@@ -37,6 +37,8 @@ module.exports = [
                   "asset",
                   "atom",
                   "auth",
+                  "audience",
+                  "audiences",
                   "authentication",
                   "avatar",
                   "backup",
