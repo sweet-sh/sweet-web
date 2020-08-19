@@ -1,0 +1,38 @@
+FROM node:14-alpine as builder
+
+ENV NODE_ENV production
+
+## Install build toolchain, install node deps and compile native add-ons
+RUN apk add --no-cache python3 make g++ libc6-compat
+
+WORKDIR /usr/src/app
+
+COPY package*.json yarn.lock ./
+
+RUN yarn install \
+      --frozen-lockfile \
+      --production
+
+FROM node:14-alpine
+
+ENV NODE_ENV production
+ENV TINI_VERSION v0.19.0
+
+# use tini as init
+RUN apk add --no-cache tini
+
+EXPOSE 8686
+
+# see https://github.com/nodejs/docker-node/blob/master/README.md#nodealpine
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/node_modules node_modules
+
+COPY . .
+
+USER node
+
+ENTRYPOINT ["/sbin/tini", "--", "docker-entrypoint.sh"]
+CMD ["yarn", "start:prod"]

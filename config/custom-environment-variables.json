@@ -1,0 +1,17 @@
+{
+  "appSecret": {
+    "secret": "SWEET_APP_SECRET"
+  },
+  "dbConfig": {
+    "host": "SWEET_DB_HOST",
+    "port": "SWEET_DB_PORT",
+    "defaultauthdb": "SWEET_DB_DEFAULTAUTHDB"
+  },
+  "mailConfig": {
+    "mailgun": "SWEET_MAILGUN_API"
+  },
+  "pushConfig": {
+    "vapidPublicKey": "SWEET_VAPID_PUBLICKEY",
+    "vapidPrivateKey": "SWEET_VAPID_PRIVATEKEY"
+  }
+}

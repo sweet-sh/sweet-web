@@ -1,0 +1,43 @@
+---
+version: '3.1'
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: sweet
+    env_file: .env
+    networks:
+      - sweet
+    ports:
+      - 8686:8686
+
+  mongo:
+    image: mongo:4
+    env_file: .env
+    networks:
+      - sweet
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${SWEET_DB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${SWEET_DB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${SWEET_DB_DEFAULTAUTHDB}
+    volumes:
+      - "./docker/mongo-init:/docker-entrypoint-initdb.d"
+
+  mongo-express:
+    image: mongo-express:0.54
+    env_file: .env
+    networks:
+      - sweet
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${SWEET_DB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${SWEET_DB_ROOT_PASSWORD}
+
+networks:
+  sweet:

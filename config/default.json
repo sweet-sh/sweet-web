@@ -1,0 +1,17 @@
+{
+  "appConfig": {
+    "secret": null
+  },
+  "dbConfig": {
+    "host": "localhost",
+    "port": 27017,
+    "defaultauthdb": "sweet"
+  },
+  "mailConfig": {
+    "mailgun": null
+  },
+  "pushConfig": {
+    "vapidPublicKey": null,
+    "vapidPrivateKey": null
+  }
+}

@@ -1,4 +1,7 @@
 // Initialization ======================================================================
+require('dotenv').config()
+const config = require('config')
+
 const express = require('express')
 const app = express()
 const port = process.env.PORT || 8686
@@ -103,9 +106,9 @@ const MongoStore = require('connect-mongo')(session)
 
 // set up passport authentication and session storage
 require('./config/passport')(passport) // pass passport for configuration
-var auth = require('./config/auth.js')
+const appConfig = config.get('appConfig')
 app.use(session({
-  secret: auth.secret,
+  secret: appConfig.secret,
   cookie: {
     maxAge: (48 * 60 * 60 * 1000)
   }, // 48 hours
@@ -114,7 +117,7 @@ app.use(session({
   saveUninitialized: false,
   store: new MongoStore({
     mongooseConnection: mongoose.connection,
-    secret: auth.secret
+    secret: appConfig.secret
   })
 }))
 app.use(passport.initialize())
@@ -128,14 +131,15 @@ app.use(function (req, res, next) {
 
 // CORS
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  next()
+})
 
 // set up webpush to send push notifications for the notifier
 const webpush = require('web-push')
-if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {
+const pushConfig = config.get('pushConfig')
+if (!pushConfig.vapidPrivateKey || !pushConfig.vapidPublicKey) {
   const vapidKeys = webpush.generateVAPIDKeys()
   webpush.setVapidDetails(
     'mailto:support@sweet.sh',
@@ -145,8 +149,8 @@ if (!auth.vapidPrivateKey || !auth.vapidPublicKey) {
 } else {
   webpush.setVapidDetails(
     'mailto:support@sweet.sh',
-    auth.vapidPublicKey,
-    auth.vapidPrivateKey
+    pushConfig.vapidPublicKey,
+    pushConfig.vapidPrivateKey
   )
 }
 
