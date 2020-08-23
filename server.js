@@ -14,7 +14,9 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const compiler = webpack({
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: {
-    searchPage: './vue/searchPageEntry.js'
+    landingPage: './vue/landingPageEntry.js',
+    searchPage: './vue/searchPageEntry.js',
+    postEditor: './vue/postEditorEntry.js'
   },
   output: {
     filename: './public/js/vue/[name].js',
