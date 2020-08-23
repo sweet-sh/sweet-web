@@ -1,0 +1,197 @@
+.post-editor__container {
+  border: 1px solid $medium-grey;
+  background: $element-background;
+  padding: 15px;
+  margin-bottom: 1rem;
+  @media(min-width: 768px) {
+    border-radius: $rounded-border;
+  }
+}
+
+.post-editor__inputs-container {
+  margin-top: .5rem;
+  width: 100%;
+  border-radius: .25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 1px solid #cecece;
+  min-height: 6em;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-editor__content {
+  padding: .5rem;
+  flex: 1;
+}
+
+$color-black: #000;
+$color-white: #fff;
+
+.menubar__button {
+  background: $color-white;
+  border: 0;
+  padding: 5px;
+  border-radius: 3px;
+  width: 30px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.menubar__button.is-active {
+  background: #fdfdfd;
+  border: 1px solid #ccc;
+}
+
+.post-editor__link-menubar {
+  display: flex;
+  margin-top: .5rem;
+  button {
+    margin-left: .5rem;
+    border: 1px solid #ccc;
+  }
+}
+
+
+.mention {
+  padding: 0.2rem;
+  white-space: nowrap;
+  color: $dark-pink;
+  text-decoration: none;
+  background-color: transparent;
+  background: $lightest-pink;
+  border-radius: 5px;
+  border: 1px solid $light-pink;
+}
+.mention-suggestion {
+  color: rgba($color-black, 0.6);
+}
+.suggestion-list {
+  max-height: 300px;
+  overflow: auto;
+  padding: 0.2rem;
+  border: 2px solid rgba($color-black, 0.1);
+  font-size: 0.8rem;
+  &__no-results {
+    padding: 0.2rem 0.5rem;
+  }
+  &__item {
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    margin-bottom: 0.2rem;
+    cursor: pointer;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    &.is-selected,
+    &:hover {
+      background-color: rgba($color-black, 0.2);
+    }
+    &.is-empty {
+      opacity: 0.5;
+    }
+  }
+}
+.tippy-box[data-theme~=light] {
+  background-color: $color-white;
+  padding: 0;
+  font-size: 1rem;
+  text-align: inherit;
+  color: $color-black;
+  border-radius: 5px;
+}
+
+.tag-input {
+  width: 100%;
+  border-top: 1px solid rgba(#cecece, .5);
+  font-size: 0.9em;
+  padding: 0 .5rem;
+  display: flex;
+  flex-wrap: wrap;
+  &__tag {
+    background: rgba(#339fdb, .075);
+    border: 1px solid rgba(#339fdb, 0.15);
+    padding: 0 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    color: #339fdb;
+    margin-right: .5rem;
+    margin-top: .5rem;
+    align-self: flex-start;
+  }
+  &__tag > button {
+    cursor: pointer;
+    opacity: 0.75;
+    padding: 0 0 0 .25rem;
+    border: 0;
+    outline: 0;
+    background: none;
+    &:hover {
+      opacity: .5;
+    }
+  }
+  &__text-container {
+    color: $placeholder;
+    white-space: nowrap;
+    min-width: 100px;
+    flex: 1;
+    overflow: hidden;
+    width: 100%;
+  }
+  &__text {
+    outline: none;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    width: auto !important;
+    width: 100% !important;
+    margin-bottom: .5rem !important;
+    min-width: 100px;
+    margin-top: .5rem !important;
+    min-height: 23.6px;
+  }
+}
+
+.editor p.is-editor-empty:first-child::before {
+  content: attr(data-empty-text);
+  float: left;
+  color: $placeholder;
+  pointer-events: none;
+  height: 0;
+}
+
+.post-editor-image {
+  display: flex;
+  border: 1px solid $text;
+  border-radius: 6px;
+  padding: .5rem;
+  margin-bottom: .5rem;
+  &__image {
+    max-width: 60px;
+    min-width: 60px;
+    max-height: 60px;
+    min-height: 60px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 6px 0 0 6px;
+  }
+  &__text {
+    resize: none;
+    border-radius: 0;
+    border: 0;
+    background: 0;
+    padding: .15rem .5rem;
+  }
+  &__draghandle {
+    color: $dark-grey;
+    align-self: center;
+    border-radius: 50%;
+    border: 1px solid $dark-grey;
+    min-width: 30px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
