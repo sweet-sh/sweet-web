@@ -1,23 +1,28 @@
-<div class="row">
-    <div class="col-12">
-        <h1 class="centered-title"><a href="/">sweet <img class="bee-logo" src="/icons/bee-color.svg" /></a></h1>
+<div id="login-form">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="centered-title"><a href="/">sweet <img class="bee-logo" src="/icons/bee-color.svg" /></a></h1>
 
-        {{> message }}
-
-        <form  class="logged-out-form" action="/login" method="post">
-
-            <div class="form-group">
-                <input type="text" name="email" placeholder="Email" {{#if sessionFlash.email}}value="{{ sessionFlash.email }}"{{/if}}>
-                <label for="email">Email</label>
-            </div>
-            <div class="form-group">
-                <input type="password" name="password" placeholder="Password">
-                <label for="password">Password</label>
+            <div v-if="errorMessage" class="message alert" style="max-width: 500px; margin: 1rem auto 0 auto;" v-html="errorMessage">
             </div>
 
-            <button class="button full-width-button" type="submit">Log in</button>
-            <a class="help-link" href="/forgot-password">Forgot password?</a>
+            <form class="logged-out-form">
 
-        </form>
+                <div class="form-group">
+                    <input type="text" name="email" placeholder="Email" v-model="email">
+                    <label for="email">Email</label>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Password" v-model="password">
+                    <label for="password">Password</label>
+                </div>
+
+                <button class="button full-width-button" type="submit" @click="handleLogin">
+                    <span v-if="loading"><i class="fas fa-spinner-third fa-pulse"></i></span><span v-else>Log in</span>
+                </button>
+                <a class="help-link" href="/forgot-password">Forgot password?</a>
+
+            </form>
+        </div>
     </div>
 </div>
