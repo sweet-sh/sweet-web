@@ -16,7 +16,8 @@ const compiler = webpack({
   entry: {
     landingPage: './vue/landingPageEntry.js',
     searchPage: './vue/searchPageEntry.js',
-    postEditor: './vue/postEditorEntry.js'
+    postEditor: './vue/postEditorEntry.js',
+    postFeed: './vue/postFeedEntry.js',
   },
   output: {
     filename: './public/js/vue/[name].js',
@@ -27,6 +28,10 @@ const compiler = webpack({
       {
         test: /\.vue$/,
         loader: 'vue-loader'
+      },
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader']
       }
     ]
   },
