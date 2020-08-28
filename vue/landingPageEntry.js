@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import axios from 'axios';
-new Vue({
+const loginForm = new Vue({
   el: '#login-form',
   data: {
     email: '',
