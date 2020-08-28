@@ -522,9 +522,9 @@ article.comment>header .author-username {
 
 /*link preview stuff, also used to preview youtube/vimeo embeds, so that's here too, and also this is used within the editor while previewing the link previews*/
 .link-preview-container {
+    font-size: 0.9em;
     display: flex;
     height: 100px;
-    padding: 10px 5px;
     color: $text;
     font-weight: 500;
     border: 1px solid $medium-grey;
@@ -537,18 +537,9 @@ article.comment>header .author-username {
 .link-preview-container:hover {
     text-decoration: none;
     background: $lightest-grey;
+    color: $link-color;
 }
 
-.link-preview-icon {
-    position: absolute;
-    font-size: 30px;
-    color: white;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
-}
-
-.link-preview-container:hover .link-preview-icon {
-    color:#eee;
-}
 
 .link-preview-container::before {
     display: none;
@@ -566,37 +557,57 @@ article.comment>header .author-username {
     margin-left: 10px;
 }
 
-.link-preview-text-container>span {
+.link-preview-text-container>div {
     margin: 0;
     padding: 0;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    line-height: 27px;
+    line-height: 20px;
 }
 
 .link-preview-image {
     border-radius: 2px;
     align-self: center;
     max-height: 100%;
-    width: 140px;
-    object-fit: contain;
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    object-fit: cover;
 }
 
-div.link-preview-image {
-    font-size:50px;
-    text-align:center;
+.link-preview-icon {
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+}
+
+.embedded-video-preview .link-preview-icon {
+    position: absolute;
+    color: white;
+    font-size: 40px;
+    .svg-inline--fa.fa-play-circle path {
+        stroke-width: 165px;
+        stroke: rgba(0,0,0,0.3);
+        paint-order: stroke;
+    }
 }
 
 .link-preview-description {
     font-weight: 400;
     font-size: 0.9em;
+    height: 40px;
+    white-space: normal !important;
+    overflow: hidden;
 }
 
 .link-preview-domain {
     font-weight: 300;
-    font-size: 0.9em;
-    font-variant: small-caps;
+    font-size: 0.85em;
 }
 
 @media(max-width:500px) {
@@ -604,12 +615,19 @@ div.link-preview-image {
         height: 75px;
     }
 
-    .link-preview-image {
-        max-width: 75px;
+    .link-preview-image,
+    .link-preview-icon {
+        width: 75px;
+        height: 75px;
+        min-width: 75px;
     }
 
-    div.link-preview-image {
-        font-size:40px;
+    .link-preview-icon {
+        font-size: 40px;
+    }
+
+    .link-preview-description {
+        height: 20px;
     }
 }
 
