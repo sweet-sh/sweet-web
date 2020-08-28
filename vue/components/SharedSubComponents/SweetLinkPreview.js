@@ -9,7 +9,10 @@ export default class SweetLinkPreview extends Node {
     return {
       // here you have to specify all values that can be stored in this node
       attrs: {
-        href: {
+        url: {
+          default: null
+        },
+        embedUrl: {
           default: null
         },
         title: {
@@ -32,7 +35,8 @@ export default class SweetLinkPreview extends Node {
         {
           tag: 'sweet-link-preview',
           getAttrs: dom => ({
-            href: dom.getAttribute('data-href'),
+            url: dom.getAttribute('data-url'),
+            embedUrl: dom.getAttribute('data-embedUrl'),
             title: dom.getAttribute('data-title'),
             description: dom.getAttribute('data-description'),
             image: dom.getAttribute('data-image'),
@@ -43,7 +47,8 @@ export default class SweetLinkPreview extends Node {
       toDOM: node => [
         'sweet-link-preview',
         {
-          'data-href': node.attrs.href,
+          'data-url': node.attrs.url,
+          'data-embedUrl': node.attrs.embedUrl,
           'data-title': node.attrs.title,
           'data-description': node.attrs.description,
           'data-image': node.attrs.image,
@@ -68,13 +73,23 @@ export default class SweetLinkPreview extends Node {
       // `decorations` is an array of decorations around the node
       props: ['node', 'updateAttrs', 'view'],
       computed: {
-        href: {
+        url: {
           get () {
-            return this.node.attrs.href
+            return this.node.attrs.url
           },
-          set (href) {
+          set (url) {
             this.updateAttrs({
-              href
+              url
+            })
+          }
+        },
+        embedUrl: {
+          get () {
+            return this.node.attrs.embedUrl
+          },
+          set (embedUrl) {
+            this.updateAttrs({
+              embedUrl
             })
           }
         },
@@ -120,12 +135,14 @@ export default class SweetLinkPreview extends Node {
         }
       },
       template: `
-        <a class="link-preview-container" target="_blank" rel="noopener noreferrer nofollow" :href="href">
-          <img class="link-preview-image" :src="image">
+        <a class="link-preview-container" :class="embedUrl && 'embedded-video-preview'" target="_blank" rel="noopener noreferrer nofollow" :href="url">
+          <img v-if="image" class="link-preview-image" :src="image">
+          <div v-else class="link-preview-icon"><i class="fas fa-external-link-square-alt"></i></div>
+          <div v-if="embedUrl" class="link-preview-icon"><i class="fas fa-play-circle"></i></div>
           <div class="link-preview-text-container">
-            <span class="link-preview-title">{{ title }}</span>
-            <span class="link-preview-description">{{ description }}</span>
-            <span class="link-preview-domain">{{ domain }}</span>
+            <div class="link-preview-title">{{ title }}</div>
+            <div class="link-preview-description">{{ description }}</div>
+            <div class="link-preview-domain">{{ domain }}</div>
           </div>
         </a>
       `

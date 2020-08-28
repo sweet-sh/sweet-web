@@ -19,21 +19,21 @@
             <i class="far fa-italic"></i>
           </button>
 
-          <button
+          <!-- <button
             class="menubar__button"
             :class="{ 'is-active': isActive.underline() }"
             @click="commands.underline"
           >
             <i class="far fa-underline"></i>
-          </button>
+          </button>-->
 
-          <button
+          <!-- <button
             class="menubar__button"
             :class="{ 'is-active': isActive.code() }"
             @click="commands.code"
           >
             <i class="far fa-code"></i>
-          </button>
+          </button>-->
 
           <button
             class="menubar__button"
@@ -64,20 +64,20 @@
             :class="{ 'is-active': isActive.code_block() }"
             @click="commands.code_block"
           >
-            <i class="far fa-file-code"></i>
+            <i class="far fa-code"></i>
           </button>
 
           <button
             class="menubar__button"
-            :class="{ 'is-active': isActive.link() }"
-            @click="showLinkMenu(getMarkAttrs('link'))"
+            :class="{ 'is-active': isActive.sweet_link_preview() }"
+            @click="showLinkMenu"
           >
             <i class="fas fa-link"></i>
           </button>
 
           <button
             class="menubar__button"
-            :class="{ 'is-active': isActive.sweetImagePreview() }"
+            :class="{ 'is-active': isActive.sweet_image_preview() }"
             @click="showImagePrompt"
           >
             <i class="fas fa-image"></i>
@@ -91,7 +91,7 @@
             name="post-editor__imagepicker"
             multiple
             style="display:none;"
-            @change="handleFileChange($event, commands.sweetImagePreview)"
+            @change="handleFileChange($event, commands.sweet_image_preview)"
           />
 
           <div class="dropdown" style="display: inline;">
@@ -119,26 +119,60 @@
         <form
           class="post-editor__link-menubar"
           v-if="linkMenuIsActive"
-          @submit.prevent="setLinkUrl(commands.link, linkUrl)"
+          @submit.prevent="setLinkUrl(commands.sweet_link_preview, linkUrl)"
         >
           <input
-            class="foo"
+            style="flex:1;background:#fff"
             type="text"
             v-model="linkUrl"
-            placeholder="https://"
+            placeholder="http://endless.horse/"
             ref="linkInput"
             @keydown.esc="hideLinkMenu"
           />
-          <button class="menubar__button" @click="setLinkUrl(commands.link, null)" type="button">
-            <i class="far fa-trash-alt"></i>
+          <button style="width:auto" type="submit" class="menubar__button">
+            <span v-if="linkPreviewLoading">
+              <i class="fas fa-spinner-third fa-pulse"></i>
+            </span>
+            <span v-else>
+              <i class="far fa-check"></i>
+            </span>
+          </button>
+          <button class="menubar__button" @click="hideLinkMenu" type="button">
+            <i class="far fa-times"></i>
           </button>
         </form>
       </editor-menu-bar>
       <div class="post-editor__inputs-container">
         <editor-content class="editor__content post-editor__content" :editor="editor" />
-        <TagInput />
+        <TagInput v-if="mode === 'post'" :tags="tags" />
+        <div v-if="mode === 'post'" class="post-editor__input-wrapper">
+          <i class="fa fa-exclamation-circle text-muted"></i>
+          <input
+            type="text"
+            placeholder="Content warning"
+            v-model="contentWarning"
+            class="post-editor__input post-editor__input--no-border post-editor__input--padding"
+          />
+        </div>
       </div>
     </div>
+    <div v-if="mode === 'post'" class="post-editor__audience-selector">
+      <span class="post-editor__audience-selector__heading">
+        <i class="fas fa-user-friends" style="margin-right:.25rem;"></i> Audiences
+      </span>
+      <v-select
+        multiple
+        v-model="selectedAudience"
+        :options="audiences"
+        :closeOnSelect="false"
+        placeholder="No audiences selected"
+      />
+      <p class="small text-muted">
+        Choose who can see this post.
+        <strong>Public</strong> posts can be seen by anyone on Sweet. Other posts can be seen only by the audiences to which they belong.
+      </p>
+    </div>
+    <button type="button" class="button post-editor__button">Post</button>
     <div class="suggestion-list" v-show="showSuggestions" ref="suggestions">
       <template v-if="hasResults">
         <div
@@ -157,11 +191,14 @@
       </template>
       <div v-else class="suggestion-list__item is-empty">No users found</div>
     </div>
-    <pre><code v-html="json"></code></pre>
-    <p></p>
-    <pre><code style="white-space: normal;">{{ html }}</code></pre>
-    <p>JWT: <code>{{ JWT }}</code></p>
-    <pre><code v-html="editor.getSchemaJSON()"></code></pre>
+    <!-- <p>Audiences: {{ selectedAudience }}</p> -->
+    <!-- <pre><code v-html="json"></code></pre> -->
+    <!-- <p></p> -->
+    <!-- <pre><code style="white-space: normal;">{{ html }}</code></pre> -->
+    <!-- <p>
+      JWT:
+      <code>{{ JWT }}</code>
+    </p> -->
   </div>
 </template>
 
@@ -169,8 +206,11 @@
 import Fuse from "fuse.js";
 import tippy, { sticky } from "tippy.js";
 import axios from "axios";
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
 import TagInput from "./SharedSubComponents/TagInput.vue";
 import SweetImagePreview from "./SharedSubComponents/SweetImagePreview";
+import SweetLinkPreview from "./SharedSubComponents/SweetLinkPreview";
 import { Picker } from "emoji-mart-vue";
 import { Editor, EditorContent, EditorMenuBar, EditorMenuBubble } from "tiptap";
 import {
@@ -196,7 +236,8 @@ export default {
     EditorMenuBar,
     EditorMenuBubble,
     Picker,
-    TagInput
+    TagInput,
+    vSelect
   },
   data() {
     return {
@@ -208,9 +249,7 @@ export default {
           new HorizontalRule(),
           new ListItem(),
           new OrderedList(),
-          new Link({
-            openOnClick: false
-          }),
+          new SweetLinkPreview(),
           new Bold(),
           new Code(),
           new Italic(),
@@ -219,8 +258,11 @@ export default {
           new Mention({
             // a list of all suggested items
             items: async () => {
-              const usersPayload = await axios.get("/api/v2/user");
-              return usersPayload.data;
+              const usersPayload = await axios.get(
+                "http://localhost:8787/api/users/all",
+                { headers: { Authorization: localStorage.getItem("JWT") } }
+              );
+              return usersPayload.data.data;
             },
             // is called when a suggestion starts
             onEnter: ({ items, query, range, command, virtualNode }) => {
@@ -297,11 +339,25 @@ export default {
         onUpdate: ({ getJSON, getHTML }) => {
           this.json = getJSON();
           this.html = getHTML();
-        }
+          localStorage.setItem("postAutosave", this.html);
+        },
+        content: localStorage.getItem("postAutosave")
       }),
+      // Editor mode
+      mode: 'post',
+      // Secondary post data
+      contentWarning: null,
+      tags: [],
+      audiences: [
+        { label: "Public", value: "public" },
+        { label: "Private", value: "private" },
+        { label: "Personal", value: "personal" }
+      ],
+      selectedAudience: null,
       // Link adder functionality
       linkUrl: null,
       linkMenuIsActive: false,
+      linkPreviewLoading: false,
       // Suggestion functionality
       query: null,
       suggestionRange: null,
@@ -312,7 +368,7 @@ export default {
       json: "",
       html: "",
       // Session
-      JWT: localStorage.getItem('JWT')
+      JWT: localStorage.getItem("JWT")
     };
   },
   computed: {
@@ -324,8 +380,7 @@ export default {
     }
   },
   methods: {
-    showLinkMenu(attrs) {
-      this.linkUrl = attrs.href;
+    showLinkMenu() {
       this.linkMenuIsActive = true;
       this.$nextTick(() => {
         this.$refs.linkInput.focus();
@@ -334,10 +389,24 @@ export default {
     hideLinkMenu() {
       this.linkUrl = null;
       this.linkMenuIsActive = false;
+      this.linkPreviewLoading = false;
     },
     setLinkUrl(command, url) {
-      command({ href: url });
-      this.hideLinkMenu();
+      this.linkPreviewLoading = true;
+      axios
+        .post(
+          "http://localhost:8787/api/url-metadata/",
+          { url: url },
+          { headers: { Authorization: localStorage.getItem("JWT") } }
+        )
+        .then(response => {
+          const { url, embedUrl, title, description, image, domain } = response.data.data;
+          command({ url, embedUrl, title, description, image, domain });
+          this.hideLinkMenu();
+        })
+        .catch(error => {
+          // HANDLE ERROR
+        });
     },
     addEmoji(emoji) {
       console.log(emoji.native);
@@ -371,7 +440,7 @@ export default {
         range: this.suggestionRange,
         attrs: {
           id: user.id,
-          label: user.username,
+          label: user.username
         }
       });
       this.editor.focus();
@@ -408,26 +477,53 @@ export default {
       $("#post-editor__imagepicker").click();
     },
     handleFileChange(event, command) {
-      console.log(event);
-      console.log(command);
       let files = event.target.files;
       // Make an AJAX request for each file
-      $.each(files, function (index, file) {
+      $.each(files, function(index, file) {
         let formData = new FormData();
-        formData.append('image', file);
-        console.log(formData.getAll('image'))
-        axios.post('http://localhost:8787/api/image', formData, {
+        formData.append("image", file);
+        console.log(formData.getAll("image"));
+        axios
+          .post("http://localhost:8787/api/image", formData, {
             headers: {
-              'Authorization': localStorage.getItem('JWT'),
-              'Content-Type': 'multipart/form-data'
+              Authorization: localStorage.getItem("JWT"),
+              "Content-Type": "multipart/form-data"
             }
-        })
-        .then((response) => {
-          command({ thumbnail: response.data.data.thumbnail, src: response.data.data.imageKey });
-        })
+          })
+          .then(response => {
+            command({
+              thumbnail: response.data.data.thumbnail,
+              src: response.data.data.imageKey
+            });
+          });
       });
       // Wipe the image picker's data
-      $('#post-editor__imagepicker').val('');
+      $("#post-editor__imagepicker").val("");
+    }
+  },
+  watch: {
+    // This runs whenever selectedAudience changes
+    selectedAudience: function (newAudience, oldAudience) {
+      // First check if the new audience is empty - in that case, it's always set to public
+      if (!newAudience || newAudience.length === 0) {
+        this.selectedAudience = this.audiences.filter((o) => o.value === "public");
+      } else {
+        // We only run this function if we're adding a new value, not the initial value
+        if (oldAudience && newAudience && newAudience.length > 1) {
+          // Work out the new audience value
+          const changedAudience = [oldAudience, newAudience].sort((a,b)=> b.length - a.length)
+            .reduce((a,b)=>a.filter(o => !b.some(v => v.value === o.value)));
+          if (changedAudience[0]) {
+            // If we're adding 'public', we need to remove all the others...
+            if (changedAudience[0].value === "public") {
+              this.selectedAudience = this.audiences.filter((o) => o.value === "public");
+            // ...otherwise, we remove public.
+            } else {
+              this.selectedAudience = newAudience.filter((audience) => audience.value !== "public");
+            }
+          }
+        }
+      }
     }
   },
   beforeDestroy() {
