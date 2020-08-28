@@ -3,8 +3,7 @@
         {{> postEditor }}
         <div id="checkNewPosts"></div>
         {{> newpostsavailable}}
-        <div id="postsContainer"></div>
-        {{> infiniteScrollLoadingSpinner}}
+        <div id="post-feed"></div>
     </div>
     {{#or loggedInUserData.settings.showRecommendations loggedInUserData.settings.showHashtags}}
         <div class="col-md-4 d-none d-lg-block" id="homeSidebar">
@@ -99,7 +98,9 @@
 
 {{> filemessage }}
 
-<script>
+<script src="/js/vue/postFeed.js"></script>
+
+{{!-- <script>
   //called immediately below and in restartInfiniteSCroll
   function startInfiniteScroll(){
       $('#postsContainer').infiniteScroll({
@@ -120,4 +121,4 @@
       });
   }
   startInfiniteScroll(true);
-</script>
+</script> --}}
