@@ -214,7 +214,7 @@
       <div v-else class="suggestion-list__item is-empty">No users found</div>
     </div>
     <!-- <p>Audiences: {{ selectedAudience }}</p> -->
-    <!-- <pre><code v-html="editPostData"></code></pre> -->
+    <pre><code v-html="json"></code></pre>
     <!-- <p></p> -->
     <!-- <pre><code style="white-space: normal;">{{ html }}</code></pre> -->
     <!-- <p>
@@ -305,6 +305,7 @@ export default {
           new Bold(),
           new Code(),
           new Italic(),
+          new Link(),
           new Underline(),
           new History(),
           new Mention({
