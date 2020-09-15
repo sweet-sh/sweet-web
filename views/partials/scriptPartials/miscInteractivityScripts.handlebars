@@ -5,28 +5,6 @@ $('img').on('error', function() {
   $(this).css('visibility', 'hidden');
 })
 
-//bootstrap doesn't officially support multiple modals open at once, so if an alert modal comes up over our editor modal we have to sneakily keep it from resetting
-//the body when it's dismissed and make the backdrops not collide with each other
-var oldAlert = bootbox.alert;
-bootbox.alert = function(alertString, callback) {
-    var editModal = $("#editPostModal");
-    oldAlert(alertString, callback);
-    if (editModal.length) {
-        var body = $("body");
-        var obvs = new MutationObserver(function(e) {
-          if(editModal.length && editModal.is(":visible")){
-            body.addClass("modal-open");
-          }
-          obvs.disconnect();
-          obvs = undefined;
-        })
-        obvs.observe(body[0], {
-            attributes: true,
-            attributeFilter: ['class']
-        })
-        $($(".modal-backdrop")[1]).css('z-index', 1050); //so the second modal backdrop will be in front of the edit post modal, which has a z-index of 1040 (in css) but behind the bootbox-alert modal, which is at z-index: 1060
-    }
-}
 
 function resolveTimestamp(element) {
     if (!element.stamped) {
@@ -113,7 +91,7 @@ $(function() {
       $('.recommendations-help-text').slideToggle('fast');
   })
 
-  $('.hide-recommendation').click(function() {
+  {/* $('.hide-recommendation').click(function() {
       icon = $(this).closest('.user-list-icon');
       id = $(this).attr('data-target')
       type = $(this).attr('data-type')
@@ -124,7 +102,7 @@ $(function() {
               }).fail(function () { console.log("I errored!"); bootbox.alert("Hiding this recommendation failed! Refresh the page and try again."); });
           }
       });
-  })
+  }) */}
 
   //not currently used
   $("#darkModeToggle").click(function(e){
@@ -240,41 +218,41 @@ $(function() {
     $this.text(
         text == "Show post" ? "Hide post" : "Show post");
   })
-  $('body').on('click', '.delete-post', function() {
-    var element = $(this);
-    bootbox.confirm("Are you sure you want to delete this post?", function(result){
-      if (result == true) {
-        let divToDelete = element.closest(".post");
-        $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
-          divToDelete.fadeOut(function() {
-            divToDelete.remove();
-          });
-        });
-      }
-    });
-  })
-  $('body').on('click', '.delete-comment', function() {
-    let element = $(this);
-    let counterToChange = element.closest(".post").find(".show-comments").find('.comments-number');
-    var postID = element.closest('.post').attr('data-post-id')
-    bootbox.confirm("Are you sure you want to delete this comment?", function(result){
-      if (result == true) {
-        let divToDelete = element.closest(".comment");
-        $.post("/deletecomment/"+postID+"/"+element.attr("data-comment-id"), function(data) {
-            divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
-            divToDelete.find('header:first').remove();
-            divToDelete.find('footer button.delete-comment:first').remove();
+  // $('body').on('click', '.delete-post', function() {
+  //   var element = $(this);
+  //   bootbox.confirm("Are you sure you want to delete this post?", function(result){
+  //     if (result == true) {
+  //       let divToDelete = element.closest(".post");
+  //       $.post("/deletepost/"+divToDelete.attr("data-post-id"), function(data) {
+  //         divToDelete.fadeOut(function() {
+  //           divToDelete.remove();
+  //         });
+  //       });
+  //     }
+  //   });
+  // })
+  // $('body').on('click', '.delete-comment', function() {
+  //   let element = $(this);
+  //   let counterToChange = element.closest(".post").find(".show-comments").find('.comments-number');
+  //   var postID = element.closest('.post').attr('data-post-id')
+  //   bootbox.confirm("Are you sure you want to delete this comment?", function(result){
+  //     if (result == true) {
+  //       let divToDelete = element.closest(".comment");
+  //       $.post("/deletecomment/"+postID+"/"+element.attr("data-comment-id"), function(data) {
+  //           divToDelete.find('.content:first').addClass('comment-deleted-content').html('<p class="comment-deleted-message">Comment deleted</p>');
+  //           divToDelete.find('header:first').remove();
+  //           divToDelete.find('footer button.delete-comment:first').remove();
 
-            let newCommentCount = data.numberOfComments;
-            if(newCommentCount!=0){
-              counterToChange.html(newCommentCount)
-            }else{
-              counterToChange.html("")
-            }
-        });
-      }
-    });
-  })
+  //           let newCommentCount = data.numberOfComments;
+  //           if(newCommentCount!=0){
+  //             counterToChange.html(newCommentCount)
+  //           }else{
+  //             counterToChange.html("")
+  //           }
+  //       });
+  //     }
+  //   });
+  // })
 
   $('body').on('click', '.notificationLink', function(e) {
     e.preventDefault();
@@ -283,49 +261,51 @@ $(function() {
       window.location.href = link;
     });
   })
-  $('body').on('click', '.unsubscribe-post', function(e) {
-    var button = $(this);
-    bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
-      if (result == true) {
-        $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
-        })
-      }
-    })
-  })
-  $('body').on('click', '.subscribe-post', function(e) {
-    var button = $(this);
-    bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
-      if (result == true) {
-        $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
-          button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
-        })
-      }
-    })
-  })
-  $('body').on('click', '.edit-plus', function(e) {
-    var button = $(this);
-    var counterToChange = $(this).find('.pluses-number')
-    var iconToChange = $(this).find('.plus-icon')
-    $.post("/editplus/"+button.attr("data-post-id"), function( data ) {
-      let payload = JSON.parse(data);
-      if (payload.success) {
-        let plusesNumber = payload.plusesNumber === 0 ? '' : payload.plusesNumber
-        counterToChange.html(plusesNumber)
-        if (payload.plusAction === "remove") {
-          button.removeClass("have-plused").attr("data-tooltip", "Note this post")
-          iconToChange.addClass("far").removeClass("fas")
-        } else {
-          button.addClass("have-plused").attr("data-tooltip", "Remove note from this post")
-          iconToChange.addClass("fas").removeClass("far")
-        }
-      }
-    })
-  })
+  // $('body').on('click', '.unsubscribe-post', function(e) {
+  //   var button = $(this);
+  //   bootbox.confirm("You are currently <strong>receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>off</strong> notifications for this post? You will still be notified if someone mentions you.", function(result){
+  //     if (result == true) {
+  //       $.post("/api/post/unsubscribe/"+button.attr("data-post-id"), function( data ) {
+  //         button.removeClass('unsubscribe-post').addClass('subscribe-post').html('<i class="far fa-bell-slash"></i>').attr("data-original-title", "Not receiving notifications (click to change)");
+  //       })
+  //     }
+  //   })
+  // })
+  // $('body').on('click', '.subscribe-post', function(e) {
+  //   var button = $(this);
+  //   bootbox.confirm("You are currently <strong>not receiving notifications</strong> when someone comments on this post. Would you like to turn <strong>on</strong> notifications for this post?", function(result){
+  //     if (result == true) {
+  //       $.post("/api/post/subscribe/"+button.attr("data-post-id"), function( data ) {
+  //         button.removeClass('subscribe-post').addClass('unsubscribe-post').html('<i class="far fa-bell"></i>').attr("data-original-title", "Receiving notifications (click to change)");
+  //       })
+  //     }
+  //   })
+  // })
+  // $('body').on('click', '.edit-plus', function(e) {
+  //   var button = $(this);
+  //   var counterToChange = $(this).find('.pluses-number')
+  //   var iconToChange = $(this).find('.plus-icon')
+  //   $.post("/editplus/"+button.attr("data-post-id"), function( data ) {
+  //     let payload = JSON.parse(data);
+  //     if (payload.success) {
+  //       let plusesNumber = payload.plusesNumber === 0 ? '' : payload.plusesNumber
+  //       counterToChange.html(plusesNumber)
+  //       if (payload.plusAction === "remove") {
+  //         button.removeClass("have-plused").attr("data-tooltip", "Note this post")
+  //         iconToChange.addClass("far").removeClass("fas")
+  //       } else {
+  //         button.addClass("have-plused").attr("data-tooltip", "Remove note from this post")
+  //         iconToChange.addClass("fas").removeClass("far")
+  //       }
+  //     }
+  //   })
+  // })
+  console.log('Bar!');
   $('body').on('click','.embedded-video-preview', function(e){
+    console.log('Foo!');
     e.preventDefault()
-    var embedurl = $(this).attr('embedurl');
-    $(this).replaceWith('<div class="embedded-video-cont"><iframe class="embedded-video" src="'+embedurl+'" frameborder="0" allowfullscreen></iframe></div>')
+    var embedUrl = $(this).attr('data-embed-url');
+    $(this).replaceWith('<div class="embedded-video-container"><iframe class="embedded-video" src="'+embedUrl+'" frameborder="0" allowfullscreen></iframe></div>');
   })
   $(".switch-style").click(function(e){
     e.preventDefault();
