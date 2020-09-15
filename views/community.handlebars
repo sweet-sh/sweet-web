@@ -16,17 +16,15 @@
         {{/unless}}
         {{> message }}
         {{#and loggedIn isMember}}
-          {{#unless isMuted}}
-            {{> newpostform }}
-          {{else}}
+          {{#if isMuted}}
             <div class="message text-center">
               You have been muted in this community. You are unable to post and your posts and votes have been made invisible. If you are unmuted, your posts and votes will be restored.
             </div>
-          {{/unless}}
+          {{/if}}
         {{/and}}
         {{#unless isMember}}
           {{#eq communityData.settings.visibility "public"}}
-            <div id="postsContainer"></div>
+            <div id="community-app"></div>
           {{else}}
             <div class="message text-center">
               This community's posts are only visible to its members.
@@ -61,14 +59,12 @@
               {{> votes}}
             </div>
           {{/gt}}
-          <div id="postsContainer"></div>
-          {{> infiniteScrollLoadingSpinner}}
+          <div id="community-app"></div>
         {{/unless}}
       </div>
       {{#if loggedIn}}
       <div id="requestsBody" class="community-container">
         <h3 class="page-header mx-2">Membership requests</h3>
-
         <div class="list-container" id="resultsContainer">
           {{#each communityData.membershipRequests}}
             <div class="list-box">
@@ -125,8 +121,7 @@
                   <input type="hidden" name="reference" value="description" />
                   <div class="form-group">
                     <label for="communityDescription">Description</label>
-                    <div class="form-control editable-text" style="height:auto;" id="communityDescriptionHtml">{{{communityData.descriptionRaw}}}</div>
-                    <input type="hidden" name="proposedValue" id="communityDescription">
+                    <textarea class="form-control" style="height:auto;" name="proposedValue" id="communityDescription">{{{communityData.descriptionRaw}}}</textarea>
                   </div>
                   <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
@@ -136,8 +131,7 @@
                   <input type="hidden" name="reference" value="rules" />
                   <div class="form-group">
                     <label for="communityRules">Rules</label>
-                    <div class="form-control editable-text" style="height:auto;" id="communityRulesHtml">{{{communityData.rulesRaw}}}</div>
-                    <input type="hidden" name="proposedValue" id="communityRules">
+                    <textarea class="form-control" style="height:auto;" name="proposedValue" id="communityRules">{{{communityData.rulesRaw}}}</textarea>
                   </div>
                   <button type="submit" class="button community-action-button">Create vote</button>
                 </form>
@@ -153,8 +147,8 @@
                     <p class="small">
                       Unlike other community settings, the welcome message is changed immediately, with no vote.
                     </p>
-                    <div class="form-control editable-text" style="height:auto;" id="welcomeMessageHtml">{{{communityData.welcomeMessageRaw}}}</div>
-                    <input type="hidden" name="proposedValue" id="welcomeMessage">
+                    <textarea class="form-control" style="height:auto;" name="proposedValue" id="welcomeMessage">{{{communityData.welcomeMessageRaw}}}</textarea>
+                    <input type="hidden" >
                   </div>
                   <button type="submit" class="button updateWelcomeMessage">Update</button>
                 </form>
@@ -301,48 +295,10 @@
 </div>
 
 {{#unless isBanned}}
+<script src="/js/vue/community.js"></script>
 <script>
-  //called immediately below and in restartInfiniteScroll
-  function startInfiniteScroll() {
-      $('#postsContainer').infiniteScroll({
-        //infinite scroll loading is timestamp based; we want to load posts just older than the oldest post yet loaded, or we use the current time as a placeholder value
-          //if we've just gotten to this page, or if we've just made a post the feed is emptied and needPostsOlderThan is set so that the new post loads on top of the feed
-          path: function() {
-              if ($(".oldesttimestamp").length) {
-                  //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-                  return '/showposts/community/{{communityData._id}}/' + $(".oldesttimestamp").last().html();
-              }
-              //this is for when the feed is currently empty and is being loaded/reloaded
-              return '/showposts/community/{{communityData._id}}/' + needPostsOlderThan;
-          },
-          append: '.post',
-          prefill: true,
-          history: false,
-          status: '.page-load-status'
-      });
-  }
-  startInfiniteScroll();
-
 {{#if loggedIn}}
 
-attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
-attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
-attachQuill(document.getElementById("welcomeMessageHtml"),"Write something. Highlight to format",true);
-
-$("#rulesForm").submit(function(e){
-  $(this).find("#communityRules").val($(this).find("#communityRulesHtml").find(".ql-editor").html());
-  return true;
-})
-
-$("#descriptionForm").submit(function(e){
-  $(this).find("#communityDescription").val($(this).find("#communityDescriptionHtml").find(".ql-editor").html());
-  return true;
-})
-
-$("#welcomeMessageForm").submit(function(e){
-  $(this).find("#welcomeMessage").val($(this).find("#welcomeMessageHtml").find(".ql-editor").html());
-  return true;
-})
 
 $('#community-image-button').click(function(e) {
   let button = $(this);
