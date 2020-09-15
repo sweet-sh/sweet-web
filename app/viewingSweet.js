@@ -35,8 +35,7 @@ module.exports = function (app) {
         .on('error', error => {
           console.log("Image images/" + req.params.filename + " doesn't exist in S3 bucket!")
           console.log(error)
-          res.status('404')
-          res.redirect('/404')
+          res.sendStatus('404')
         })
         .pipe(res)
     }
@@ -56,8 +55,7 @@ module.exports = function (app) {
                 } else {
                   // User not trusted by image's uploader
                   console.log('User not trusted!')
-                  res.status('404')
-                  res.redirect('/404')
+                  res.sendStatus('404')
                 }
               })
             } else if (image.context === 'community') {
@@ -67,31 +65,27 @@ module.exports = function (app) {
                 } else {
                   // User not a member of this community
                   console.log('User not a community member!')
-                  res.status('404')
-                  res.redirect('/404')
+                  res.sendStatus('404')
                 }
               })
             }
           } else {
             // User not logged in, but has to be to see this image
             console.log('User not logged in!')
-            res.status('404')
-            res.redirect('/404')
+            res.sendStatus('404')
           }
         }
       } else {
         // Image entry not found in database
         console.log('Image ' + image.filename + ' not in database!')
-        res.status('404')
-        res.redirect('/404')
+        res.sendStatus('404')
       }
     })
       .catch(error => {
         // Unexpected error
         console.log('Unexpected error displaying image')
         console.log(error)
-        res.status('404')
-        res.redirect('/404')
+        res.sendStatus('404')
       })
   })
 
