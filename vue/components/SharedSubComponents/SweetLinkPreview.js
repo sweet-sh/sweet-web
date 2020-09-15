@@ -36,7 +36,7 @@ export default class SweetLinkPreview extends Node {
           tag: 'sweet-link-preview',
           getAttrs: dom => ({
             url: dom.getAttribute('data-url'),
-            embedUrl: dom.getAttribute('data-embedUrl'),
+            embedUrl: dom.getAttribute('data-embed-url'),
             title: dom.getAttribute('data-title'),
             description: dom.getAttribute('data-description'),
             image: dom.getAttribute('data-image'),
@@ -48,7 +48,7 @@ export default class SweetLinkPreview extends Node {
         'sweet-link-preview',
         {
           'data-url': node.attrs.url,
-          'data-embedUrl': node.attrs.embedUrl,
+          'data-embed-url': node.attrs.embedUrl,
           'data-title': node.attrs.title,
           'data-description': node.attrs.description,
           'data-image': node.attrs.image,
@@ -135,7 +135,7 @@ export default class SweetLinkPreview extends Node {
         }
       },
       template: `
-        <a class="link-preview-container" :class="embedUrl && 'embedded-video-preview'" target="_blank" rel="noopener noreferrer nofollow" :href="url">
+        <a class="link-preview-container" :class="embedUrl && 'embedded-video-preview'" target="_blank" rel="noopener noreferrer nofollow" :href="url" :data-embed-url="embedUrl">
           <img v-if="image" class="link-preview-image" :src="image">
           <div v-else class="link-preview-icon"><i class="fas fa-external-link-square-alt"></i></div>
           <div v-if="embedUrl" class="link-preview-icon"><i class="fas fa-play-circle"></i></div>

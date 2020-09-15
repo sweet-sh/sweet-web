@@ -119,7 +119,7 @@ const schema = new Schema({
           tag: 'a.link-preview-container',
           getAttrs(dom) {
             const url = dom.getAttribute('href');
-            const embedUrl = dom.getAttribute('embedurl');
+            const embedUrl = dom.getAttribute('data-embed-url');
             const title = dom.querySelector('.link-preview-title').innerHTML;
             const description = dom.querySelector('.link-preview-description')
               .innerHTML;
@@ -143,6 +143,7 @@ const schema = new Schema({
             node.attrs.embedUrl ? ` embedded-video-preview` : ``
           }`,
           href: node.attrs.url || '',
+          'data-embed-url': node.attrs.embedUrl || null,
           rel: 'noopener noreferrer nofollow',
           target: '_blank',
         },
@@ -185,10 +186,44 @@ const schema = new Schema({
           'img',
           {
             class: 'post-single-image',
-            src: node.attrs.src,
+            src: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
             alt: node.attrs.alt,
           },
         ],
+      ],
+    },
+    sweet_image_preview: {
+      attrs: {
+        src: {},
+        alt: { default: null },
+      },
+      toDOM: (node) => [
+        'div',
+        { class: 'post-editor-image' },
+        [
+          'img',
+          {
+            class: 'post-editor-image__image',
+            src: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+            alt: node.attrs.alt,
+          },
+        ],
+        [
+          'textarea',
+          {
+            class: 'post-editor-image__text',
+            placeholder: 'Describe this image for people using screen readers',
+          },
+          node.attrs.alt
+        ],
+        [
+          'div',
+          {
+            class: 'post-editor-image__draghandle',
+            'data-drag-handle': true
+          },
+          '<i class="far fa-bars"></i>'
+        ]
       ],
     },
     gallery: {
