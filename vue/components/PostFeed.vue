@@ -1,11 +1,39 @@
 <template>
-  <div class="post-feed__container">
+  <div class="post-feed__container" v-if="userData">
     <article
+      v-if="postAllowed"
       v-for="post in posts"
       v-bind:key="post._id"
       class="post"
       v-bind:data-post-id="post._id"
     >
+      <aside v-if="(post.boostBlame || post.community) && context !== 'community'" class="notifications">
+        <div v-if="post.boostBlame" class="boosters-notification">
+          <i class="fas fa-retweet"></i>
+          <img
+            class="user-image-sm"
+            v-bind:alt="`Profile image of @${post.boostBlame.culprit.username}`"
+            v-bind:src="post.boostBlame.culprit.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${post.boostBlame.culprit.image}` : `/images/cake.svg`"
+          /> Boosted by
+          <a
+            v-bind:href="`/${post.boostBlame.culprit.username}`"
+          >{{ post.boostBlame.culprit._id === userId ? 'you' : (post.boostBlame.culprit.displayName || '@' + post.boostBlame.culprit.username) }}</a>
+        </div>
+        <div
+          v-if="post.viewingContext !== 'community' && post.community"
+          class="community-notification"
+        >
+          <img
+            class="user-image-sm"
+            v-bind:alt="`Display image for the community '${post.community.name}'`"
+            v-bind:src="post.community.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${post.community.image}` : `/images/communities/cake.svg`"
+          />
+          <span>
+            Posted in
+            <a v-bind:href="`/community/${post.community.slug}`">{{ post.community.name }}</a>
+          </span>
+        </div>
+      </aside>
       <header>
         <div class="post-header-left">
           <a v-bind:href="`/${post.author.username}`">
@@ -32,25 +60,191 @@
           </h2>
           <aside class="metadata">
             <span class="post-timestamp">{{ parsePostTimestamp(post.timestamp) }}</span>
+            <span v-if="post.lastEdited">
+              &nbsp;&middot;&nbsp;
+              <span class="post-edited">Edited</span>
+            </span>
             &nbsp;&middot;&nbsp;
             <span class="post-visibility">
               <i v-if="post.type === 'draft'" class="fas fa-pencil-ruler"></i>
               <i v-if="post.privacy === 'public'" class="fas fa-eye"></i>
               <i v-if="post.privacy === 'private'" class="fas fa-eye-slash"></i>
             </span>
-            <span v-if="post.lastEdited">
-              &nbsp;&middot;&nbsp;
-              <span class="post-edited">Edited</span>
-            </span>
           </aside>
         </div>
       </header>
-      <section class="content" v-html="processPostBody(post.jsonBody)"></section>
+      <section v-if="post.editModeEnabled" class="content">
+        <post-editor
+          :mode="'post'"
+          :postEditorVisible="true"
+          :editPostData="post"
+          :destroyEditingEditor="destroyEditingEditor"
+        ></post-editor>
+      </section>
+      <section
+        v-if="!post.editModeEnabled"
+        v-bind:class="'content ' + (post.contentWarnings ? 'content-warning-post' : '')"
+      >
+        <div v-if="post.contentWarnings">
+          <aside class="content-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            {{post.contentWarnings}}
+          </aside>
+          <div
+            class="abbreviated-content content-warning-content"
+            style="height:0"
+            v-html="processPostBody(post.jsonBody)"
+          ></div>
+          <button
+            type="button"
+            class="button grey-button content-warning-show-more uppercase-button"
+            data-state="contracted"
+          >Show post</button>
+        </div>
+        <div v-else v-html="processPostBody(post.jsonBody)"></div>
+        <div v-if="post.tags" class="post__tags-container">
+          <a
+            v-for="tag in post.tags"
+            v-bind:key="tag"
+            :href="`/tag/${tag}`"
+            class="post__tag"
+          >#{{ tag }}</a>
+        </div>
+      </section>
+      <footer class="toolbar">
+        <div class="toolbar-button-container">
+          <button
+            type="button"
+            v-bind:class="'button post-toolbar-button tooltip-top' + (post.havePlused ? ' have-plused' : '')"
+            v-bind:data-tooltip="(post.havePlused ? 'Unsupport ' : 'Support ') + 'this post'"
+            @click="_handleSupportButtonClick($event, post)"
+          >
+            <span v-show="post.havePlused">
+              <i class="plus-icon fas fa-hands-helping"></i>
+              {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
+            </span>
+            <span v-show="!post.havePlused">
+              <i class="plus-icon far fa-hands-helping"></i>
+              {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
+            </span>
+          </button>
+        </div>
+        <div v-if="!post.commentsDisabled && post.canReply" class="toolbar-button-container">
+          <button
+            type="button"
+            class="button post-toolbar-button tooltip-top"
+            :data-tooltip="(post.commentsVisible ? 'Hide' : 'Show') + ' post comments'"
+            @click="toggleComments($event, post)"
+          >
+            <i class="far fa-comment"></i>
+            <span v-if="post.numberOfComments" class="comments-number">{{post.numberOfComments}}</span>
+          </button>
+        </div>
+        <div
+          v-if="post.privacy === 'public' && userData.loggedIn && post.type !== 'community'"
+          class="toolbar-button-container"
+        >
+          <button
+            type="button"
+            class="button post-toolbar-button tooltip-top"
+            :data-tooltip="(post.boostsV2.some(o => o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
+            @click="_handleBoostButtonClick($event, post)"
+          >
+            <span
+              v-if="post.boostsV2.some(o => o.booster._id === userData._id)"
+              class="fa-layers fa-fw"
+            >
+              <i class="fas fa-retweet"></i>
+              <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+            </span>
+            <i v-else class="fas fa-retweet"></i>
+          </button>
+        </div>
+        <div class="toolbar-button-container">
+          <a
+            class="button post-toolbar-button tooltip-top"
+            :href="`${post.author.username}/${post.url}`"
+            data-tooltip="Permalink to this post"
+          >
+            <span class="fa-layers">
+              <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
+              <i class="far fa-sticky-note"></i>
+            </span>
+          </a>
+        </div>
+        <div v-show="post.subscribedUsers.includes(userId)" class="toolbar-button-container">
+          <button
+            type="button"
+            class="button post-toolbar-button tooltip-top"
+            data-tooltip="Receiving notifications (click to change)"
+            @click="_handleUnsubscribeButtonClick($event, post)"
+          >
+            <i class="far fa-bell"></i>
+          </button>
+        </div>
+        <div v-show="!post.subscribedUsers.includes(userId)" class="toolbar-button-container">
+          <button
+            type="button"
+            class="button post-toolbar-button tooltip-top"
+            data-tooltip="Not receiving notifications (click to change)"
+            @click="_handleSubscribeButtonClick($event, post)"
+          >
+            <i class="far fa-bell-slash"></i>
+          </button>
+        </div>
+        <div v-if="post.author._id === userId" class="toolbar-button-container dropdown">
+          <button
+            id="post-extra-controls-dropdown"
+            class="button post-toolbar-button"
+            type="button"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <i class="fa fa-bars"></i>
+          </button>
+          <div class="dropdown-menu" aria-labelledby="post-extra-controls-dropdown">
+            <button
+              type="button"
+              class="dropdown-item"
+              @click="_handleEditPostButtonClick($event, post)"
+            >
+              <i class="fas fa-fw fa-pencil-alt"></i> Edit post
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              @click="_handleDeletePostButtonClick($event, post)"
+            >
+              <i class="far fa-fw fa-trash-alt"></i> Delete post
+            </button>
+          </div>
+        </div>
+      </footer>
+      <section v-if="!post.commentsDisabled" class="comments" v-show="post.commentsVisible || openAllComments">
+        <div class="comments-container">
+          <comment-tree
+            v-for="comment in post.comments"
+            v-bind:key="comment._id"
+            :comment="comment"
+            :postId="post._id"
+            :parsePostTimestamp="parsePostTimestamp"
+            :processPostBody="processPostBody"
+          ></comment-tree>
+        </div>
+        <post-editor v-if="post.canReply" :mode="'comment'" :parentPost="post._id"></post-editor>
+      </section>
     </article>
+    <loading-spinner :loading="loading" :message="loadingMessage" />
+    <div v-if="!postAllowed">
+      Nope!
+    </div>
   </div>
 </template>
 
 <script>
+import Vue from "vue";
+import { EventBus } from "./SharedSubComponents/EventBus";
 import axios from "axios";
 import moment from "moment";
 import {
@@ -62,32 +256,115 @@ import {
 } from "prosemirror-model";
 import { schema } from "./SharedSubComponents/schema";
 const serializer = DOMSerializer.fromSchema(schema);
+import CommentTree from "./SharedSubComponents/CommentTree.vue";
+import loadingSpinner from "./SharedSubComponents/loadingSpinner.vue";
+import PostEditor from "./PostEditor.vue";
+import swal from "sweetalert2";
 
 export default {
-  components: {},
+  components: {
+    CommentTree,
+    PostEditor,
+    loadingSpinner,
+  },
   data() {
     return {
       // Post feed
       oldestTimestamp: Date.now(),
       newestTimestamp: Date.now(),
       posts: [],
+      loading: true,
+      loadingMessage: "",
+      postAllowed: true,
       // Session
       JWT: localStorage.getItem("JWT"),
+      userData: null,
+      userId: this.parseJWT(localStorage.getItem("JWT")).id,
       // Constants
-      today: moment().clone().startOf('day'),
-      thisYear: moment().clone().startOf('year')
+      today: moment()
+        .clone()
+        .startOf("day"),
+      thisYear: moment()
+        .clone()
+        .startOf("year")
     };
   },
-  computed: {},
+  props: {
+    context: String,
+    openAllComments: Boolean
+  },
+  computed: {
+    feedEndpoint: function() {
+      const parsedUrl = new URL(window.location.href);
+      let contextType, context;
+      switch (this.context) {
+        case "tag":
+          contextType = "tag";
+          context = parsedUrl.pathname
+            .split("/")
+            .filter(v => v && v !== "tag")
+            .join();
+          break;
+      case "user":
+        contextType = "user";
+        context = parsedUrl.pathname
+          .split("/")
+          .filter(v => v && v !== "user")
+          .join();
+        break;
+      case "single":
+        contextType = "url";
+        context = parsedUrl.pathname
+          .split("/")
+          .filter(v => v && v !== "user")[1];
+        break;
+      case "community":
+        contextType = "community";
+        context = parsedUrl.pathname
+          .split("/")
+          .filter(v => v && v !== "community");
+        break;
+      default:
+        contextType = "home";
+        break;
+      }
+      return [`http://localhost:8787/api/posts/${contextType}/`, `/${context}`];
+    }
+  },
   methods: {
+    destroyEditingEditor(postId) {
+      const affectedPost = this.posts.find(post => post._id === postId);
+      // Destroys the editor which is editing a post.
+      Vue.set(affectedPost, "editModeEnabled", false);
+    },
+    toggleComments(event, post) {
+      if (post.commentsVisible) {
+        post.commentsVisible = false;
+      } else if (!post.commentsVisible) {
+        Vue.set(post, "commentsVisible", true);
+      }
+    },
+    parseJWT(token) {
+      var base64Url = token.split(".")[1];
+      var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      var jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function(c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    },
     parsePostTimestamp(time) {
       let parsedTimestamp;
-      if (moment(time).isSame(this.today, 'd')) {
-        parsedTimestamp = moment(time).fromNow()
-      } else if (moment(time).isSame(this.thisYear, 'y')) {
-        parsedTimestamp = moment(time).format('D MMM')
+      if (moment(time).isSame(this.today, "d")) {
+        parsedTimestamp = moment(time).fromNow();
+      } else if (moment(time).isSame(this.thisYear, "y")) {
+        parsedTimestamp = moment(time).format("D MMM");
       } else {
-        parsedTimestamp = moment(time).format('D MMM YYYY')
+        parsedTimestamp = moment(time).format("D MMM YYYY");
       }
       return parsedTimestamp;
     },
@@ -99,18 +376,24 @@ export default {
       return div.innerHTML;
     },
     getInitialPosts() {
+      this.loading = true;
       axios
-        .get(`http://localhost:8787/api/posts/home/${this.oldestTimestamp}`, {
+        .get(`${this.feedEndpoint[0]}${Date.now()}${this.feedEndpoint[1]}`, {
           headers: { Authorization: localStorage.getItem("JWT") }
         })
         .then(response => {
-          console.log("Initial load");
+          this.loading = false;
           this.posts = response.data.data;
           console.log(response.data.data);
           this.oldestTimestamp = Date.parse(
             response.data.data[response.data.data.length - 1].lastUpdated
           );
-          console.log(this.oldestTimestamp);
+        })
+        .catch(error => {
+          this.loading = false;
+          if (error.response.status === 404) {
+            this.loadingMessage = "No more posts.";
+          }
         });
     },
     scroll() {
@@ -119,15 +402,19 @@ export default {
           document.documentElement.scrollTop + window.innerHeight ===
           document.documentElement.offsetHeight;
         if (bottomOfWindow) {
+          // console.log(
+          //   `${this.feedEndpoint[0]}${Date.now()}${this.feedEndpoint[1]}`
+          // );
+          this.loading = true;
           axios
             .get(
-              `http://localhost:8787/api/posts/home/${this.oldestTimestamp}`,
+              `${this.feedEndpoint[0]}${this.oldestTimestamp}${this.feedEndpoint[1]}`,
               {
                 headers: { Authorization: localStorage.getItem("JWT") }
               }
             )
             .then(response => {
-              console.log("Scroll load");
+              this.loading = false;
               // Filter out posts that already exist
               const payload = response.data.data.filter(
                 post =>
@@ -135,22 +422,187 @@ export default {
                     existingPost => existingPost._id === post._id
                   )
               );
-              this.posts = [...this.posts, ...payload];
-              this.oldestTimestamp = Date.parse(
-                response.data.data[response.data.data.length - 1].lastUpdated
-              );
-              console.log(this.oldestTimestamp);
+              if (payload.length) {
+                this.posts = [...this.posts, ...payload];
+                this.oldestTimestamp = Date.parse(
+                  response.data.data[response.data.data.length - 1].lastUpdated
+                );
+              }
+            })
+            .catch(error => {
+              this.loading = false;
+              if (error.response.status === 404) {
+                this.loadingMessage = "No more posts.";
+              }
             });
         }
       };
+    },
+    _handleSupportButtonClick(event, post) {
+      axios({
+        // method: post.havePlused ? 'DELETE' : 'GET',
+        method: "POST",
+        url: `http://localhost:8787/api/plus/${post._id}`,
+        headers: { Authorization: localStorage.getItem("JWT") }
+        // data: { postid: post._id }
+      })
+        .then(response => {
+          post.havePlused = !post.havePlused;
+          if (post.havePlused) {
+            Vue.set(post, "numberOfPluses", ++post.numberOfPluses);
+          } else {
+            Vue.set(post, "numberOfPluses", --post.numberOfPluses);
+          }
+        })
+        .catch(error => {
+          console.error(error.response);
+          swal.fire(
+            "Uh-oh.",
+            "There has been an unexpected error supporting/unsupporting this post. Please try again."
+          );
+        });
+    },
+    _handleBoostButtonClick(event, post) {
+      axios({
+        method: "POST",
+        url: `http://localhost:8787/api/boost/${post._id}`,
+        headers: { Authorization: localStorage.getItem("JWT") }
+      })
+        .then(response => {
+          const boostBlame = {
+            reason: "ownBoost",
+            culprit: {
+              ...this.userData.profileData,
+              _id: this.userId
+            }
+          };
+          Vue.set(post, "boostBlame", boostBlame);
+        })
+        .catch(error => {
+          console.error(error);
+          swal.fire(
+            "Uh-oh.",
+            "There has been an unexpected error boosting/unboosting this post. Please try again."
+          );
+        });
+    },
+    _handleSubscribeButtonClick(event, post) {
+      axios
+        .post(
+          `http://localhost:8787/api/subscription`,
+          { postId: post._id },
+          { headers: { Authorization: localStorage.getItem("JWT") } }
+        )
+        .then(response => {
+          post.subscribedUsers.push(this.userId);
+          Vue.set(post, "subscribedUsers", post.subscribedUsers);
+        })
+        .catch(error => {
+          console.error(error);
+          swal.fire(
+            "Uh-oh.",
+            "There has been an unexpected error subscribing to this post. Please try again."
+          );
+        });
+    },
+    _handleUnsubscribeButtonClick(event, post) {
+      axios
+        .delete(`http://localhost:8787/api/subscription`, {
+          headers: { Authorization: localStorage.getItem("JWT") },
+          data: { postId: post._id }
+        })
+        .then(response => {
+          const subscribedUsers = post.subscribedUsers.filter(
+            v => v !== this.userId
+          );
+          Vue.set(post, "subscribedUsers", subscribedUsers);
+        })
+        .catch(error => {
+          console.error(error);
+          swal.fire(
+            "Uh-oh.",
+            "There has been an unexpected error unsubscribing from this post. Please try again."
+          );
+        });
+    },
+    _handleDeletePostButtonClick(event, post) {
+      swal
+        .fire({
+          text:
+            "Are you sure you want to delete this post? This action cannot be undone.",
+          showCancelButton: true,
+          confirmButtonColor: "#ed5e5e",
+          cancelButtonColor: "#e8e8e8",
+          confirmButtonText: "Delete"
+        })
+        .then(result => {
+          if (result.isConfirmed) {
+            axios
+              .delete(`http://localhost:8787/api/post`, {
+                headers: { Authorization: localStorage.getItem("JWT") },
+                data: { postId: post._id }
+              })
+              .then(response => {
+                this.posts = this.posts.filter(o => o._id !== post._id);
+              })
+              .catch(error => {
+                console.error(error);
+                swal.fire(
+                  "Uh-oh.",
+                  "There has been an unexpected error deleting this post. Please try again."
+                );
+              });
+          }
+        });
+    },
+    _handleEditPostButtonClick(event, post) {
+      if (!post.editModeEnabled) {
+        Vue.set(post, "editModeEnabled", true);
+      }
     }
   },
   watch: {},
+  async created() {},
   beforeMount() {
+    // Log out user if we don't have the JWT token in localStorage
+    if (!localStorage.getItem("JWT")) {
+      window.location.assign("/logout");
+    }
+    axios
+      .get(`http://localhost:8787/api/user/${this.userId}`, {
+        headers: { Authorization: localStorage.getItem("JWT") }
+      })
+      .then(response => {
+        this.userData = response.data.data;
+      });
     this.getInitialPosts();
   },
   mounted() {
     this.scroll();
+    EventBus.$on("post-created", post => {
+      this.getInitialPosts();
+    });
+    // This event controls top-level comments, which are pushed into post objects.
+    // For child-level comments, see CommentTree.
+    EventBus.$on(
+      "comment-created",
+      ({ parentPost, parentComment, comment }) => {
+        if (!parentComment) {
+          const parentPostObject = this.posts.find(o => o._id === parentPost);
+          parentPostObject.comments.push(comment);
+          parentPostObject.numberOfComments++;
+          parentPostObject.commentsVisible = true;
+        }
+      }
+    );
+    EventBus.$on("post-edited", editedPost => {
+      console.log("Edited post event!");
+      this.posts.forEach((post, index, array) => {
+        if (post._id === editedPost._id) {
+          this.posts.splice(index, 1, editedPost);
+        }
+      });
+    });
   },
   beforeDestroy() {}
 };
