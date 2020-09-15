@@ -1,3 +1,12 @@
+section.comments .post-editor__wrapper {
+  margin-bottom: .5rem;
+}
+
+.new-comment-form .post-editor__wrapper {
+  margin-top: .5rem;
+  padding-left: 10%;
+}
+
 .post-editor__container {
   border: 1px solid $medium-grey;
   background: $element-background;
@@ -14,10 +23,15 @@
   border-radius: .25rem;
   font-size: 1rem;
   line-height: 1.5;
-  border: 1px solid #cecece;
+  border: 1px solid $medium-grey;
   min-height: 14rem;
   display: flex;
   flex-direction: column;
+}
+
+section.comments .post-editor__inputs-container {
+  min-height: 5rem;
+  margin-bottom: .5rem;
 }
 
 .post-editor__content {
@@ -29,7 +43,8 @@ $color-black: #000;
 $color-white: #fff;
 
 .menubar__button {
-  background: $color-white;
+  background: $editor-button-background;
+  color: $editor-button-text;
   border: 0;
   padding: 5px;
   border-radius: 3px;
@@ -39,16 +54,20 @@ $color-white: #fff;
 }
 
 .menubar__button.is-active {
-  background: #fdfdfd;
-  border: 1px solid #ccc;
+  background: $editor-button-selected-background;
+  border: 1px solid $medium-grey;
 }
 
 .post-editor__link-menubar {
   display: flex;
   margin-top: .5rem;
+  input {
+    background: $editor-button-background !important;
+    color: $editor-button-text !important;
+  }
   button {
     margin-left: .5rem;
-    border: 1px solid #ccc;
+    border: 1px solid $medium-grey;
   }
 }
 
@@ -90,6 +109,10 @@ $color-white: #fff;
     &.is-empty {
       opacity: 0.5;
     }
+  }
+  &__item {
+    height: 20px;
+    border-radius: 3px;
   }
 }
 .tippy-box[data-theme~=light] {
@@ -138,6 +161,7 @@ $color-white: #fff;
   }
   &__tag > button {
     cursor: pointer;
+    color: $darkest-grey;
     opacity: 0.75;
     padding: 0 0 0 .25rem;
     border: 0;
@@ -177,10 +201,10 @@ $color-white: #fff;
   min-height: 42.6px;
   width: 100%;
   &--border-top {
-    border-top: 1px solid rgba(#cecece, .5);
+    border-top: 1px solid rgba($medium-grey, .5);
   }
   &--border-bottom {
-    border-bottom: 1px solid rgba(#cecece, .5);
+    border-bottom: 1px solid rgba($medium-grey, .5);
   }
 }
 
@@ -221,7 +245,7 @@ $color-white: #fff;
 }
 
 .post-editor__audience-selector {
-  margin: .75rem 0;
+  margin-top: .75rem;
   &__heading {
     font-weight: 500;
     margin-left: .25rem;
@@ -244,10 +268,42 @@ input.vs__search, input.vs__search:focus {
   padding: .25rem !important;
 }
 
+.post-editor__buttons-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: .75rem;
+}
+
 .post-editor__button {
   font-weight: 500;
   min-width: 120px;
   font-size: 1.05rem;
-  margin-left: auto;
   display: block;
+  margin-left: 10px;
+}
+
+section.comments .post-editor__button {
+  font-size: 1rem;
+}
+
+.post-editor__fake-editor {
+  border-radius: .25rem;
+  width: 100%;
+  border: 1px solid $medium-grey;
+  padding: .5rem;
+  color: $placeholder;
+  height: 4rem;
+  font-size: 16px;
+}
+
+.emoji-mart {
+  width: 100% !important;
+}
+
+.vs__dropdown-toggle {
+  border-color: $medium-grey !important;
+}
+
+.vs__open-indicator {
+  fill: $medium-grey !important;
 }

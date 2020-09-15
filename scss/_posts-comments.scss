@@ -18,15 +18,20 @@ article.post>.toolbar {
     padding: 0 1rem;
 }
 
+article.post>.notifications {
+    border-bottom: 1px solid rgba($medium-grey, .5);
+    margin-bottom: 1rem;
+    margin-top: -.25rem;
+}
+
 
 article.post>.notifications>div:last-child {
-    margin-bottom: 1em;
+    margin-bottom: .5rem;
 }
 
 article.post>.notifications div {
     color: $darkest-grey;
     margin-bottom: 0.5rem;
-    font-size: 0.925rem;
 }
 
 article.post>.notifications div a,
@@ -84,7 +89,7 @@ article.post>header img.author-image {
 article.post>header .post-header-left {
     height: 46px;
     width: 46px;
-    margin-right: 5px;
+    margin-right: 7px;
 }
 
 article.post>header .post-header-right {
@@ -364,10 +369,6 @@ section.comments>.comments-container>.comment:first-child {
     border-top: 1px solid $light-grey;
 }
 
-section.comments:not(.single-post-comments) {
-    display: none;
-}
-
 article.comment {
     margin-top: .75rem;
 }
@@ -536,17 +537,7 @@ article.comment>header .author-username {
 
 .link-preview-container:hover {
     text-decoration: none;
-    background: $lightest-grey;
     color: $link-color;
-}
-
-
-.link-preview-container::before {
-    display: none;
-}
-
-.link-preview-container::after {
-    display: none;
 }
 
 .link-preview-text-container {
@@ -631,7 +622,7 @@ article.comment>header .author-username {
     }
 }
 
-.embedded-video-cont {
+.embedded-video-container {
     position: relative;
     padding-bottom: 56.25%;
     height: 0;
@@ -653,4 +644,48 @@ article.comment>header .author-username {
     justify-content: center;
     position: relative;
     height: 78px;
+}
+
+.user-image-sm {
+    height: 16px;
+    border-radius: 3px;
+}
+
+.post__tags-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.post__tag {
+    font-size: 0.9em;
+    background: rgba(#339fdb, .075);
+    border: 1px solid rgba(#339fdb, 0.15);
+    padding: 0 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    color: #339fdb;
+    margin-right: .5rem;
+    margin-top: .5rem;
+    align-self: flex-start;
+    &:hover {
+        background: rgba(#339fdb, .2);
+        border: 1px solid rgba(#339fdb, 0.3);
+        text-decoration: none;
+        color: #339fdb;
+    }
+}
+
+.mention-link {
+    padding: 0.2rem;
+    white-space: nowrap;
+    color: $dark-pink;
+    text-decoration: none;
+    background-color: transparent;
+    background: $lightest-pink;
+    border-radius: 5px;
+    border: 1px solid lighten($light-pink, 5);
+    &:hover {
+        background: darken($lightest-pink, 3%);
+        text-decoration: none;
+    }
 }
