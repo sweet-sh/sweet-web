@@ -17,9 +17,6 @@
   </div>
   <div class="col-md-7">
     <div id="mainBody" class="user-container">
-      {{#and loggedIn isOwnProfile}}
-      {{> newpostform }}
-      {{/and}}
       {{#unless loggedIn}}
       <div class="message w-100 text-center" style="font-size:1.4em;">
         <strong>@{{ profileData.username }}</strong> is on <strong>sweet</strong>, a utopian social network. <a
@@ -27,13 +24,11 @@
       </div>
       {{/unless}}
       {{#if loggedIn}}
-      <div id="postsContainer"></div>
-      {{> infiniteScrollLoadingSpinner}}
+        <div id="user-app"></div>
       {{else}}
-      {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
-      <div id="postsContainer"></div>
-      {{> infiniteScrollLoadingSpinner}}
-      {{/eq}}
+        {{#eq profileData.settings.profileVisibility "profileAndPosts"}}
+          <div id="user-app"></div>
+        {{/eq}}
       {{/if}}
     </div>
     <div id="connectionsBody" class="pane user-container">
@@ -154,26 +149,27 @@
 {{> filemessage }}
 {{/if}}
 
+<script src="/js/vue/user.js"></script>
 
 <script>
-  draftsMode = false;
-  function startInfiniteScroll() {
-    $('#postsContainer').infiniteScroll({
-      path: function () {
-        if ($(".oldesttimestamp").length) {
-          //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
-          return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
-        }
-        //and then this is for when the feed is currently empty and being loaded/reloaded
-        return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
-      },
-      append: '.post',
-      prefill: true,
-      history: false,
-      status: '.page-load-status'
-    });
-  }
-  startInfiniteScroll();
+  //draftsMode = false;
+ //  function startInfiniteScroll() {
+//     $('#postsContainer').infiniteScroll({
+//       path: function () {
+//         if ($(".oldesttimestamp").length) {
+//           //if there are posts on the page, the server has provided the timestamp of the oldest post yet loaded in a hidden element that we will find here
+//           return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + $(".oldesttimestamp").last().html();
+//         }
+//         //and then this is for when the feed is currently empty and being loaded/reloaded
+//         return (draftsMode ? '/drafts/' : '/showposts/user/{{profileData._id}}/') + needPostsOlderThan;
+//       },
+//       append: '.post',
+//       prefill: true,
+//       history: false,
+//       status: '.page-load-status'
+//     });
+//   }
+//   startInfiniteScroll();
   $(".user-panel-link").click(function () {
     var element = $(this);
     var currentVisibility = element.attr("data-shown");

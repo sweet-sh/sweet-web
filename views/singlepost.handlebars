@@ -1,9 +1,9 @@
 <section id="homeBody" class="row justify-content-center">
     <div class="col-lg-8">
         <div class="single-post-container" id="postsContainer">
-            {{#if canDisplay}}
-                {{> posts_v2 }}
-            {{else}}
+            {{!-- {{#if canDisplay}} --}}
+                <div id="single-app"></div>
+            {{!-- {{else}}
                 <article class="post">
                     <section class="content">
                         <p>
@@ -19,13 +19,15 @@
                         </p>
                     </section>
                 </article>
-            {{/if}}
+            {{/if}} --}}
         </div>
     </div>
 </div>
 
+<script src="/js/vue/single.js"></script>
+
 <script>
-$(function() {
+{{!-- $(function() {
   if ($('.post-images').length > 0) {
       var imagesLoaded = $('.post-single-image').length;
       console.log("images loaded: " + imagesLoaded);
@@ -33,22 +35,5 @@ $(function() {
       //i think when you're looking at a single post it makes perfect sense to be able to slideshow through all the images in the post + comments at once  
       $('.post-images a').simpleLightbox();
     }
-  
-{{#if loggedIn}}
-    var commentForm = undefined;
-    if(commentForm = document.getElementsByClassName('editable-text')[0]){
-        attachQuill(commentForm,'What would you like to say?')
-    }
-
-  $.post('/api/user/followers', function(data){
-    followers = JSON.parse(data).followers;
-    tribute = new Tribute({
-      values: followers,
-      menuItemTemplate: function (item) {
-        return '<img class="tribute-image" src="' + item.original.image + '">' + item.string;
-      }
-    })
-  })
-});
-{{/if}}
+}); --}}
 </script>
