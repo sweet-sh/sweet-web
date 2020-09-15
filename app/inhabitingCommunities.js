@@ -277,8 +277,8 @@ module.exports = function (app) {
               })
             }
           }
-          const parsedDesc = (await helper.parseText(newCommunityData.communityDescription)).text
-          const parsedRules = (await helper.parseText(newCommunityData.communityRules)).text
+          const parsedDesc = (await helper.parseText(newCommunityData.communityDescription, false, false, true)).text
+          const parsedRules = (await helper.parseText(newCommunityData.communityRules, false, false, true)).text
 
           const community = new Community({
             created: new Date(),
@@ -743,7 +743,9 @@ module.exports = function (app) {
     let parsedProposedValue
     if (req.body.reference === 'description' || req.body.reference === 'rules') {
       proposedValue = req.body.proposedValue
-      parsedProposedValue = (await helper.parseText(req.body.proposedValue)).text
+      console.log(req.body);
+      parsedProposedValue = (await helper.parseText(req.body.proposedValue, false, false, true)).text
+      console.log("??", proposedValue);
       if (req.body.reference === 'description') {
         allowedChange = (community.descriptionRaw !== proposedValue)
       } else {
@@ -811,7 +813,7 @@ module.exports = function (app) {
       }
       return res.redirect('back')
     }
-    console.log(community)
+    // console.log(community)
     const voteUrl = nanoid()
     const created = new Date()
     const expiryTime = moment(created).add((community.settings.voteLength ? community.settings.voteLength : 7), 'd')
@@ -839,7 +841,7 @@ module.exports = function (app) {
       votes: votesNumber,
       voters: votesNumber === 1 ? [req.user._id] : []
     })
-    console.log(vote)
+    // console.log(vote)
     vote.save()
       .then(vote => {
         const expireVote = schedule.scheduleJob(expiryTime, function () {
@@ -1100,7 +1102,7 @@ module.exports = function (app) {
       .then(async function (community) {
         if (await isCommunityMember(community)) {
           community.welcomeMessageRaw = req.body.proposedValue
-          community.welcomeMessageParsed = (await helper.parseText(req.body.proposedValue)).text
+          community.welcomeMessageParsed = (await helper.parseText(req.body.proposedValue, false, false, true)).text
           community.welcomeMessageAuthor = req.user._id
           community.save()
             .then(result => {
