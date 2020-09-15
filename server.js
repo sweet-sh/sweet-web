@@ -16,8 +16,11 @@ const compiler = webpack({
   entry: {
     landingPage: './vue/landingPageEntry.js',
     searchPage: './vue/searchPageEntry.js',
-    postEditor: './vue/postEditorEntry.js',
-    postFeed: './vue/postFeedEntry.js',
+    home: './vue/homeEntry.js',
+    tag: './vue/tagEntry.js',
+    user: './vue/userEntry.js',
+    single: './vue/singleEntry.js',
+    community: './vue/communityEntry.js',
   },
   output: {
     filename: './public/js/vue/[name].js',
