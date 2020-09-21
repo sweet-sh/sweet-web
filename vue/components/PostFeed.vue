@@ -1,249 +1,266 @@
 <template>
-  <div class="post-feed__container" v-if="userData">
-    <article
-      v-if="postAllowed"
-      v-for="post in posts"
-      v-bind:key="post._id"
-      class="post"
-      v-bind:data-post-id="post._id"
-    >
-      <aside v-if="(post.boostBlame || post.community) && context !== 'community'" class="notifications">
-        <div v-if="post.boostBlame" class="boosters-notification">
-          <i class="fas fa-retweet"></i>
-          <img
-            class="user-image-sm"
-            v-bind:alt="`Profile image of @${post.boostBlame.culprit.username}`"
-            v-bind:src="post.boostBlame.culprit.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${post.boostBlame.culprit.image}` : `/images/cake.svg`"
-          /> Boosted by
-          <a
-            v-bind:href="`/${post.boostBlame.culprit.username}`"
-          >{{ post.boostBlame.culprit._id === userId ? 'you' : (post.boostBlame.culprit.displayName || '@' + post.boostBlame.culprit.username) }}</a>
-        </div>
-        <div
-          v-if="post.viewingContext !== 'community' && post.community"
-          class="community-notification"
-        >
-          <img
-            class="user-image-sm"
-            v-bind:alt="`Display image for the community '${post.community.name}'`"
-            v-bind:src="post.community.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${post.community.image}` : `/images/communities/cake.svg`"
-          />
-          <span>
-            Posted in
-            <a v-bind:href="`/community/${post.community.slug}`">{{ post.community.name }}</a>
-          </span>
-        </div>
-      </aside>
-      <header>
-        <div class="post-header-left">
-          <a v-bind:href="`/${post.author.username}`">
-            <img
-              class="author-image"
-              v-bind:alt="`Profile image of @${post.author.username}`"
-              v-bind:src="post.author.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${post.author.image}` : `/images/cake.svg`"
-            />
-          </a>
-        </div>
-        <div class="post-header-right">
-          <h2 class="author-name">
-            <span v-if="post.author.displayName" class="author-display-name">
-              <a v-bind:href="`/${post.author.username}`">{{ post.author.displayName }}</a>
-            </span>
-            <span class="author-username">
-              <a
-                v-if="!post.author.displayName"
-                v-bind:href="`/${post.author.username}`"
-              >@{{ post.author.username }}</a>
-              <span v-else>@{{ post.author.username }}</span>
-            </span>
-            <i v-if="post.authorFlagged" class="fas fa-exclamation-triangle user-flag"></i>
-          </h2>
-          <aside class="metadata">
-            <span class="post-timestamp">{{ parsePostTimestamp(post.timestamp) }}</span>
-            <span v-if="post.lastEdited">
-              &nbsp;&middot;&nbsp;
-              <span class="post-edited">Edited</span>
-            </span>
-            &nbsp;&middot;&nbsp;
-            <span class="post-visibility">
-              <i v-if="post.type === 'draft'" class="fas fa-pencil-ruler"></i>
-              <i v-if="post.privacy === 'public'" class="fas fa-eye"></i>
-              <i v-if="post.privacy === 'private'" class="fas fa-eye-slash"></i>
-            </span>
-          </aside>
-        </div>
-      </header>
-      <section v-if="post.editModeEnabled" class="content">
-        <post-editor
-          :mode="'post'"
-          :postEditorVisible="true"
-          :editPostData="post"
-          :destroyEditingEditor="destroyEditingEditor"
-        ></post-editor>
-      </section>
-      <section
-        v-if="!post.editModeEnabled"
-        v-bind:class="'content ' + (post.contentWarnings ? 'content-warning-post' : '')"
+  <div>
+    <div class="post-feed__container" v-if="userData">
+      <article
+        v-if="postAllowed"
+        v-for="post in posts"
+        v-bind:key="post._id"
+        class="post"
+        v-bind:data-post-id="post._id"
       >
-        <div v-if="post.contentWarnings">
-          <aside class="content-warning">
-            <i class="fas fa-exclamation-circle"></i>
-            {{post.contentWarnings}}
-          </aside>
-          <div
-            class="abbreviated-content content-warning-content"
-            style="height:0"
-            v-html="processPostBody(post.jsonBody)"
-          ></div>
-          <button
-            type="button"
-            class="button grey-button content-warning-show-more uppercase-button"
-            data-state="contracted"
-          >Show post</button>
-        </div>
-        <div v-else v-html="processPostBody(post.jsonBody)"></div>
-        <div v-if="post.tags" class="post__tags-container">
-          <a
-            v-for="tag in post.tags"
-            v-bind:key="tag"
-            :href="`/tag/${tag}`"
-            class="post__tag"
-          >#{{ tag }}</a>
-        </div>
-      </section>
-      <footer class="toolbar">
-        <div class="toolbar-button-container">
-          <button
-            type="button"
-            v-bind:class="'button post-toolbar-button tooltip-top' + (post.havePlused ? ' have-plused' : '')"
-            v-bind:data-tooltip="(post.havePlused ? 'Unsupport ' : 'Support ') + 'this post'"
-            @click="_handleSupportButtonClick($event, post)"
-          >
-            <span v-show="post.havePlused">
-              <i class="plus-icon fas fa-hands-helping"></i>
-              {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
-            </span>
-            <span v-show="!post.havePlused">
-              <i class="plus-icon far fa-hands-helping"></i>
-              {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
-            </span>
-          </button>
-        </div>
-        <div v-if="!post.commentsDisabled && post.canReply" class="toolbar-button-container">
-          <button
-            type="button"
-            class="button post-toolbar-button tooltip-top"
-            :data-tooltip="(post.commentsVisible ? 'Hide' : 'Show') + ' post comments'"
-            @click="toggleComments($event, post)"
-          >
-            <i class="far fa-comment"></i>
-            <span v-if="post.numberOfComments" class="comments-number">{{post.numberOfComments}}</span>
-          </button>
-        </div>
-        <div
-          v-if="post.privacy === 'public' && userData.loggedIn && post.type !== 'community'"
-          class="toolbar-button-container"
+        <aside
+          v-if="(post.boostBlame || post.community) && context !== 'community'"
+          class="notifications"
         >
-          <button
-            type="button"
-            class="button post-toolbar-button tooltip-top"
-            :data-tooltip="(post.boostsV2.some(o => o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
-            @click="_handleBoostButtonClick($event, post)"
+          <div v-if="post.boostBlame" class="boosters-notification">
+            <i class="fas fa-retweet"></i>
+            <img
+              class="user-image-sm"
+              v-bind:alt="`Profile image of @${post.boostBlame.culprit.username}`"
+              v-lazy="post.boostBlame.culprit.imageEnabled ? `https://sweet-images.s3.eu-west-2.amazonaws.com/${post.boostBlame.culprit.image}` : `/images/cake.svg`"
+            /> Boosted by
+            <a
+              v-bind:href="`/${post.boostBlame.culprit.username}`"
+            >{{ post.boostBlame.culprit._id === userId ? 'you' : (post.boostBlame.culprit.displayName || '@' + post.boostBlame.culprit.username) }}</a>
+          </div>
+          <div
+            v-if="post.viewingContext !== 'community' && post.community"
+            class="community-notification"
           >
-            <span
-              v-if="post.boostsV2.some(o => o.booster._id === userData._id)"
-              class="fa-layers fa-fw"
-            >
-              <i class="fas fa-retweet"></i>
-              <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+            <img
+              class="user-image-sm"
+              v-bind:alt="`Display image for the community '${post.community.name}'`"
+              v-lazy="post.community.imageEnabled ? `https://sweet-images.s3.eu-west-2.amazonaws.com/${post.community.image}` : `/images/communities/cake.svg`"
+            />
+            <span>
+              Posted in
+              <a
+                v-bind:href="`/community/${post.community.slug}`"
+              >{{ post.community.name }}</a>
             </span>
-            <i v-else class="fas fa-retweet"></i>
-          </button>
-        </div>
-        <div class="toolbar-button-container">
-          <a
-            class="button post-toolbar-button tooltip-top"
-            :href="`${post.author.username}/${post.url}`"
-            data-tooltip="Permalink to this post"
-          >
-            <span class="fa-layers">
-              <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
-              <i class="far fa-sticky-note"></i>
-            </span>
-          </a>
-        </div>
-        <div v-show="post.subscribedUsers.includes(userId)" class="toolbar-button-container">
-          <button
-            type="button"
-            class="button post-toolbar-button tooltip-top"
-            data-tooltip="Receiving notifications (click to change)"
-            @click="_handleUnsubscribeButtonClick($event, post)"
-          >
-            <i class="far fa-bell"></i>
-          </button>
-        </div>
-        <div v-show="!post.subscribedUsers.includes(userId)" class="toolbar-button-container">
-          <button
-            type="button"
-            class="button post-toolbar-button tooltip-top"
-            data-tooltip="Not receiving notifications (click to change)"
-            @click="_handleSubscribeButtonClick($event, post)"
-          >
-            <i class="far fa-bell-slash"></i>
-          </button>
-        </div>
-        <div v-if="post.author._id === userId" class="toolbar-button-container dropdown">
-          <button
-            id="post-extra-controls-dropdown"
-            class="button post-toolbar-button"
-            type="button"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            <i class="fa fa-bars"></i>
-          </button>
-          <div class="dropdown-menu" aria-labelledby="post-extra-controls-dropdown">
+          </div>
+        </aside>
+        <header>
+          <div class="post-header-left">
+            <a v-bind:href="`/${post.author.username}`">
+              <img
+                class="author-image"
+                v-bind:alt="`Profile image of @${post.author.username}`"
+                v-lazy="post.author.imageEnabled ? `https://sweet-images.s3.eu-west-2.amazonaws.com/${post.author.image}` : `/images/cake.svg`"
+              />
+            </a>
+          </div>
+          <div class="post-header-right">
+            <h2 class="author-name">
+              <span v-if="post.author.displayName" class="author-display-name">
+                <a v-bind:href="`/${post.author.username}`">{{ post.author.displayName }}</a>
+              </span>
+              <span class="author-username">
+                <a
+                  v-if="!post.author.displayName"
+                  v-bind:href="`/${post.author.username}`"
+                >@{{ post.author.username }}</a>
+                <span v-else>@{{ post.author.username }}</span>
+              </span>
+              <i v-if="post.authorFlagged" class="fas fa-exclamation-triangle user-flag"></i>
+            </h2>
+            <aside class="metadata">
+              <span class="post-timestamp">{{ parsePostTimestamp(post.timestamp) }}</span>
+              <span v-if="post.lastEdited">
+                &nbsp;&middot;&nbsp;
+                <span class="post-edited">Edited</span>
+              </span>
+              &nbsp;&middot;&nbsp;
+              <span class="post-visibility">
+                <i v-if="post.type === 'draft'" class="fas fa-pencil-ruler"></i>
+                <i v-if="post.privacy === 'public'" class="fas fa-eye"></i>
+                <i v-if="post.privacy === 'private'" class="fas fa-eye-slash"></i>
+              </span>
+            </aside>
+          </div>
+        </header>
+        <section v-if="post.editModeEnabled" class="content">
+          <post-editor
+            :mode="'post'"
+            :postEditorVisible="true"
+            :editPostData="post"
+            :destroyEditingEditor="destroyEditingEditor"
+          ></post-editor>
+        </section>
+        <section
+          v-if="!post.editModeEnabled"
+          v-bind:class="'content ' + (post.contentWarnings ? 'content-warning-post' : '')"
+        >
+          <div v-if="post.contentWarnings">
+            <aside class="content-warning">
+              <i class="fas fa-exclamation-circle"></i>
+              {{post.contentWarnings}}
+            </aside>
+            <div
+              class="abbreviated-content content-warning-content"
+              style="height:0"
+              :is="dynamicPostBody(processPostBody(post.jsonBody))"
+              :author="post.author"
+            ></div>
             <button
               type="button"
-              class="dropdown-item"
-              @click="_handleEditPostButtonClick($event, post)"
-            >
-              <i class="fas fa-fw fa-pencil-alt"></i> Edit post
-            </button>
+              class="button grey-button content-warning-show-more uppercase-button"
+              data-state="contracted"
+            >Show post</button>
+          </div>
+          <div v-else :is="dynamicPostBody(processPostBody(post.jsonBody))" :author="post.author"></div>
+          <div v-if="post.tags" class="post__tags-container">
+            <a
+              v-for="tag in post.tags"
+              v-bind:key="tag"
+              :href="`/tag/${tag}`"
+              class="post__tag"
+            >#{{ tag }}</a>
+          </div>
+        </section>
+        <footer class="toolbar">
+          <div class="toolbar-button-container">
             <button
               type="button"
-              class="dropdown-item"
-              @click="_handleDeletePostButtonClick($event, post)"
+              v-bind:class="'button post-toolbar-button tooltip-top' + (post.havePlused ? ' have-plused' : '')"
+              v-bind:data-tooltip="(post.havePlused ? 'Unsupport ' : 'Support ') + 'this post'"
+              @click="_handleSupportButtonClick($event, post)"
             >
-              <i class="far fa-fw fa-trash-alt"></i> Delete post
+              <span v-show="post.havePlused">
+                <i class="plus-icon fas fa-hands-helping"></i>
+                {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
+              </span>
+              <span v-show="!post.havePlused">
+                <i class="plus-icon far fa-hands-helping"></i>
+                {{ post.author._id === userId ? (post.numberOfPluses > 0 ? post.numberOfPluses : '') : ''}}
+              </span>
             </button>
           </div>
-        </div>
-      </footer>
-      <section v-if="!post.commentsDisabled" class="comments" v-show="post.commentsVisible || openAllComments">
-        <div class="comments-container">
-          <comment-tree
-            v-for="comment in post.comments"
-            v-bind:key="comment._id"
-            :comment="comment"
-            :postId="post._id"
-            :parsePostTimestamp="parsePostTimestamp"
-            :processPostBody="processPostBody"
-          ></comment-tree>
-        </div>
-        <post-editor v-if="post.canReply" :mode="'comment'" :parentPost="post._id"></post-editor>
-      </section>
-    </article>
-    <loading-spinner :loading="loading" :message="loadingMessage" />
-    <div v-if="!postAllowed">
-      Nope!
+          <div v-if="!post.commentsDisabled && post.canReply" class="toolbar-button-container">
+            <button
+              type="button"
+              class="button post-toolbar-button tooltip-top"
+              :data-tooltip="(post.commentsVisible ? 'Hide' : 'Show') + ' post comments'"
+              @click="toggleComments($event, post)"
+            >
+              <i class="far fa-comment"></i>
+              <span v-if="post.numberOfComments" class="comments-number">{{post.numberOfComments}}</span>
+            </button>
+          </div>
+          <div
+            v-if="post.privacy === 'public' && userData.loggedIn && post.type !== 'community'"
+            class="toolbar-button-container"
+          >
+            <button
+              type="button"
+              class="button post-toolbar-button tooltip-top"
+              :data-tooltip="(post.boostsV2.some(o => o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
+              @click="_handleBoostButtonClick($event, post)"
+            >
+              <span
+                v-if="post.boostsV2.some(o => o.booster._id === userData._id)"
+                class="fa-layers fa-fw"
+              >
+                <i class="fas fa-retweet"></i>
+                <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+              </span>
+              <i v-else class="fas fa-retweet"></i>
+            </button>
+          </div>
+          <div class="toolbar-button-container">
+            <a
+              class="button post-toolbar-button tooltip-top"
+              :href="`${post.author.username}/${post.url}`"
+              data-tooltip="Permalink to this post"
+            >
+              <span class="fa-layers">
+                <i class="fas fa-bars" data-fa-transform="shrink-8"></i>
+                <i class="far fa-sticky-note"></i>
+              </span>
+            </a>
+          </div>
+          <div v-show="post.subscribedUsers.includes(userId)" class="toolbar-button-container">
+            <button
+              type="button"
+              class="button post-toolbar-button tooltip-top"
+              data-tooltip="Receiving notifications (click to change)"
+              @click="_handleUnsubscribeButtonClick($event, post)"
+            >
+              <i class="far fa-bell"></i>
+            </button>
+          </div>
+          <div v-show="!post.subscribedUsers.includes(userId)" class="toolbar-button-container">
+            <button
+              type="button"
+              class="button post-toolbar-button tooltip-top"
+              data-tooltip="Not receiving notifications (click to change)"
+              @click="_handleSubscribeButtonClick($event, post)"
+            >
+              <i class="far fa-bell-slash"></i>
+            </button>
+          </div>
+          <div v-if="post.author._id === userId" class="toolbar-button-container dropdown">
+            <button
+              id="post-extra-controls-dropdown"
+              class="button post-toolbar-button"
+              type="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fa fa-bars"></i>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="post-extra-controls-dropdown">
+              <button
+                type="button"
+                class="dropdown-item"
+                @click="_handleEditPostButtonClick($event, post)"
+              >
+                <i class="fas fa-fw fa-pencil-alt"></i> Edit post
+              </button>
+              <button
+                type="button"
+                class="dropdown-item"
+                @click="_handleDeletePostButtonClick($event, post)"
+              >
+                <i class="far fa-fw fa-trash-alt"></i> Delete post
+              </button>
+            </div>
+          </div>
+        </footer>
+        <section
+          v-if="!post.commentsDisabled"
+          class="comments"
+          v-show="post.commentsVisible || openAllComments"
+        >
+          <div class="comments-container">
+            <comment-tree
+              v-for="comment in post.comments"
+              v-bind:key="comment._id"
+              :comment="comment"
+              :postId="post._id"
+              :parsePostTimestamp="parsePostTimestamp"
+              :processPostBody="processPostBody"
+            ></comment-tree>
+          </div>
+          <post-editor v-if="post.canReply" :mode="'comment'" :parentPost="post._id"></post-editor>
+        </section>
+      </article>
+      <image-lightbox
+        v-if="lightboxImages && showImageLightbox"
+        :lightboxImages="lightboxImages"
+        :_hideImageLightbox="() => showImageLightbox = false"
+        :author="lightboxAuthor"
+      />
+      <div v-if="!postAllowed">Nope!</div>
     </div>
+    <loading-spinner :loading="loading" :message="loadingMessage" />
   </div>
 </template>
 
 <script>
 import Vue from "vue";
+import VueLazyload from "vue-lazyload";
 import { EventBus } from "./SharedSubComponents/EventBus";
 import axios from "axios";
 import moment from "moment";
@@ -258,14 +275,18 @@ import { schema } from "./SharedSubComponents/schema";
 const serializer = DOMSerializer.fromSchema(schema);
 import CommentTree from "./SharedSubComponents/CommentTree.vue";
 import loadingSpinner from "./SharedSubComponents/loadingSpinner.vue";
+import ImageLightbox from "./ImageLightbox.vue";
 import PostEditor from "./PostEditor.vue";
 import swal from "sweetalert2";
+
+Vue.use(VueLazyload);
 
 export default {
   components: {
     CommentTree,
     PostEditor,
     loadingSpinner,
+    ImageLightbox
   },
   data() {
     return {
@@ -276,6 +297,10 @@ export default {
       loading: true,
       loadingMessage: "",
       postAllowed: true,
+      // Image lightbox
+      showImageLightbox: false,
+      lightboxImages: [],
+      lightboxAuthor: null,
       // Session
       JWT: localStorage.getItem("JWT"),
       userData: null,
@@ -305,33 +330,47 @@ export default {
             .filter(v => v && v !== "tag")
             .join();
           break;
-      case "user":
-        contextType = "user";
-        context = parsedUrl.pathname
-          .split("/")
-          .filter(v => v && v !== "user")
-          .join();
-        break;
-      case "single":
-        contextType = "url";
-        context = parsedUrl.pathname
-          .split("/")
-          .filter(v => v && v !== "user")[1];
-        break;
-      case "community":
-        contextType = "community";
-        context = parsedUrl.pathname
-          .split("/")
-          .filter(v => v && v !== "community");
-        break;
-      default:
-        contextType = "home";
-        break;
+        case "user":
+          contextType = "user";
+          context = parsedUrl.pathname
+            .split("/")
+            .filter(v => v && v !== "user")
+            .join();
+          break;
+        case "single":
+          contextType = "url";
+          context = parsedUrl.pathname
+            .split("/")
+            .filter(v => v && v !== "user")[1];
+          break;
+        case "community":
+          contextType = "community";
+          context = parsedUrl.pathname
+            .split("/")
+            .filter(v => v && v !== "community");
+          break;
+        default:
+          contextType = "home";
+          break;
       }
       return [`http://localhost:8787/api/posts/${contextType}/`, `/${context}`];
     }
   },
   methods: {
+    dynamicPostBody(html, author) {
+      return {
+        template: html,
+        props: {
+          author: Object
+        }
+      };
+    },
+    _handleImageClick(event, payload, author) {
+      event.preventDefault();
+      this.lightboxImages = payload;
+      this.lightboxAuthor = author;
+      this.showImageLightbox = true;
+    },
     destroyEditingEditor(postId) {
       const affectedPost = this.posts.find(post => post._id === postId);
       // Destroys the editor which is editing a post.
@@ -345,6 +384,9 @@ export default {
       }
     },
     parseJWT(token) {
+      if (!token) {
+        return false;
+      }
       var base64Url = token.split(".")[1];
       var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       var jsonPayload = decodeURIComponent(
@@ -373,7 +415,7 @@ export default {
       const node = Node.fromJSON(schema, jsonBody);
       const serializedFragment = serializer.serializeFragment(node);
       div.appendChild(serializedFragment);
-      return div.innerHTML;
+      return div.outerHTML;
     },
     getInitialPosts() {
       this.loading = true;
@@ -559,15 +601,18 @@ export default {
       if (!post.editModeEnabled) {
         Vue.set(post, "editModeEnabled", true);
       }
+    },
+    _handleClick() {
+      console.log("Foo!");
     }
   },
   watch: {},
   async created() {},
   beforeMount() {
     // Log out user if we don't have the JWT token in localStorage
-    if (!localStorage.getItem("JWT")) {
-      window.location.assign("/logout");
-    }
+    // if (!localStorage.getItem("JWT")) {
+    //   window.location.assign("/logout");
+    // }
     axios
       .get(`http://localhost:8787/api/user/${this.userId}`, {
         headers: { Authorization: localStorage.getItem("JWT") }

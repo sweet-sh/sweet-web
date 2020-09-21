@@ -11,5 +11,5 @@ new Vue({
       </div>
       <post-feed />
     </div>`,
-  components: { PostEditor, PostFeed },
+  components: { PostEditor, PostFeed }
 })

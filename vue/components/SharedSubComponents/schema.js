@@ -141,7 +141,7 @@ const schema = new Schema({
         {
           class: `link-preview-container${
             node.attrs.embedUrl ? ` embedded-video-preview` : ``
-          }`,
+            }`,
           href: node.attrs.url || '',
           'data-embed-url': node.attrs.embedUrl || null,
           rel: 'noopener noreferrer nofollow',
@@ -181,7 +181,10 @@ const schema = new Schema({
       ],
       toDOM: (node) => [
         'a',
-        { href: node.attrs.src },
+        {
+          href: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+          class: 'post-single-image__link'
+        },
         [
           'img',
           {
@@ -238,7 +241,7 @@ const schema = new Schema({
           4: 'four-images',
         }
         const numberOfImages = lookupTable[node.content.content.length];
-        return ['div', { class: 'post-images ' + numberOfImages }, 0];
+        return ['div', { class: 'post-images ' + numberOfImages, 'v-on:click': '$parent._handleImageClick($event, ' + JSON.stringify(node.content.content.map((node) => node.attrs)) + ', author)' }, 0];
       },
       draggable: true,
     },

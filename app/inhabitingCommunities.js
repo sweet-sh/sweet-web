@@ -178,7 +178,7 @@ module.exports = function (app) {
                 let metadata = {
                   title: community.name + ' · Sweet',
                   description: community.excerpt,
-                  image: community.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
+                  image: community.imageEnabled ? 'https://sweet-images.s3.eu-west-2.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
                   url: 'https://sweet.sh/community/' + community.slug
                 }
                 res.render('community', {
@@ -200,7 +200,7 @@ module.exports = function (app) {
             let metadata = {
               title: community.name + ' · Sweet',
               description: community.excerpt,
-              image: community.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
+              image: community.imageEnabled ? 'https://sweet-images.s3.eu-west-2.amazonaws.com/' + community.image : 'https://sweet.sh/images/communities/cake.svg',
               url: 'https://sweet.sh/community/' + community.slug
             }
             res.render('community', {

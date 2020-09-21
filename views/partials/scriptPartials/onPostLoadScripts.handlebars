@@ -19,26 +19,6 @@ function showMoreAndImageLightboxing(e) {
     }
 }
 $(function(){
-{{#if loggedIn}}
-
-    // TRIBUTE-RELATED FUNCTIONALITY (@-MENTIONS)
-    // Init tribute
-    $.post('/api/user/followers', function (data) {
-        followers = JSON.parse(data).followers;
-        tribute = new Tribute({
-            values: followers,
-            menuItemTemplate: function (item) {
-                return '<img class="tribute-image" src="' + item.original.image + '"><span class="tribute-text">' + item.string + '</span>';
-            },
-            searchOpts: {
-                pre: '<strong>',
-                post: '</strong>'
-            }
-        })
-        tribute.attach($(".ql-editor")); //attach to new post form and comment fields if there are any that aren't handled when their posts are appended (look a few lines down for that)
-    });
-
-{{/if}}
 
     // Attach scripts to newly loaded posts
     $('#postsContainer').on('append.infiniteScroll', function (event, response, path, items) {

@@ -124,8 +124,11 @@
                 <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to Sweet push notifications!</button>
                 <p class="form-text small" style="margin-top: .5rem">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
             </div>
+            <h4 style="color: purple;">Danger zone!</h4>
+            <button type="button" class="button delete-user">Delete my Sweet account</button>
+            <p class="form-text mt-2">Clicking this button will delete your Sweet user account and all your data, including your posts, comments, boosts, subscriptions, uploaded images, community memberships, votes, and relationships. This process is immediate and permanent. You will <strong>not</strong> be able to undo it.</p>
         </div>
-    </div> 
+    </div>
     <div class="col-md-4">
         <div class="pane">
             <button type="submit" class="button">Save these settings</button>
@@ -133,76 +136,6 @@
     </div>
 </form>
 <script>
-    //ok so this detects the user's time zone and if it's changed and creates options in the drop-down for time zones based on that
-    function stringifyTZ(tz){
-        //just to make moment's time zone strings more human-readable
-        return tz.replace(new RegExp('_', 'g'), ' ').replace(new RegExp('/', 'g'), ', ');
-    }
-
-    var autoDetectedTimeZone = moment.tz.guess();
-    var autoDetectedTimeZoneString = stringifyTZ(autoDetectedTimeZone);
-    var lastKnownTimeZone = "{{loggedInUserData.settings.autoDetectedTimeZone}}";
-
-    if("" === lastKnownTimeZone){
-        //if it's not yet saved, we need to put it in the form so it becomes saved upon submission
-        $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
-    }
-
-    if("" === lastKnownTimeZone || autoDetectedTimeZone === lastKnownTimeZone){
-        //if auto-detected time zone is not yet saved (like, it will be on submission though) or is being used currently, it's just the default option
-        $("#guessed-timezone")[0].innerHTML = 'Default (for you): '+autoDetectedTimeZoneString;
-
-    }else if(autoDetectedTimeZone !== lastKnownTimeZone){
-        //if auto-detected time zone was saved but is now different, offer them the new one as the second option, and change their auto-detected time zone if they choose it
-        var lastKnownTimeZoneString = stringifyTZ(lastKnownTimeZone);
-        $("#guessed-timezone")[0].innerHTML = "Last known default (for you): "+lastKnownTimeZoneString;
-        $("#guessed-timezone").after('<option value="auto" id="newDefault">'+'Brand new default (for you): '+autoDetectedTimeZoneString+'</option>');
-        $('#settingsForm').submit(function(event){
-            if($("#newDefault")[0].selected){
-                $("#submitDetectedTimeZone").val(autoDetectedTimeZone);
-            }
-            return true;
-        })
-    }
-
-    //email time choosing stuff:
-    //show/hide time selection based on whether the user wants to get emails at all:
-    $("#digestEmailFrequency").change(function(event){
-        if($(this).val()=="off"){
-            $('#timeSelection').css('display','none');
-        }else{
-            $('#timeSelection').css('display','block');
-            if($(this).val()=="weekly"){
-                $("#emailDaySelect").css('display','inline');
-            }else{
-                $("#emailDaySelect").css('display','none');
-            }
-        }
-    })
-
-    {{!-- if the user isn't using their timezone, select auto for them, otherwise select the timezone they have currently selected --}}
-    {{#eq loggedInUserData.settings.digestEmailFrequency 'off'}}
-    $('#timezone').find('[value="auto"]').prop('selected',true);
-    {{else}}
-    $('#timezone').find('[value="{{loggedInUserData.settings.timezone}}"]').prop('selected',true);
-    {{/eq}}
-
-    //format the user's currently chosen email time so it's not in 24-hour format like how it's stored in the database:
-    var day = moment().tz('GMT'); //we need an arbitrary day to accompany the time when creating the moment object that will give us our formatted output
-    var splitTime = $('#currentEmailTime').html().split(/:/);
-    day.hours(splitTime[0]).minutes(splitTime[1]).seconds(0).milliseconds(0);
-    $('#currentEmailTime').html(day.format('LT'));
-
-    //safari (and some really old browsers) turn time inputs into text inputs for no reason, so we'll use the <select> instead in that case
-    if($("#emailTime")[0].type == "text"){
-        $("#emailTime").css('display','none');
-        $("#emailTime").attr('name','UNUSED');
-        $("#emailTime").prop('required',false);
-        $("#emailTimeSelect").prop('required',true); //not sure how you would leave this empty but just in case!
-        $("#emailTimeSelect").css('display','block');
-        $("#emailTimeSelect").attr('name','emailTime');
-    }
-    
     //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
     var isSubscribed = false;
     var pushButton = $('#notifs-button');
@@ -314,4 +247,23 @@
         }
         return outputArray;
     }
+
+    $('.delete-user').click(function() {
+        bootbox.confirm('You are about to delete your Sweet user account and all your data, including your posts, comments, boosts, subscriptions, uploaded images, community memberships, votes, and relationships. This process is immediate and permanent. You will not be able to undo it. Would you like to proceed?', function (result) {
+            if (result === true) {
+                $.ajax({
+                    url: 'http://localhost:8787/api/user',
+                    type: 'DELETE',
+                    headers: {
+                        'Authorization': localStorage.getItem('JWT')
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        localStorage.removeItem('JWT');
+                        location.href = 'https://sweet.sh/';
+                    },
+                });
+            }
+        });
+    });
 </script>

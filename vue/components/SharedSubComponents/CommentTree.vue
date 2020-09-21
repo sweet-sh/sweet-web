@@ -9,7 +9,7 @@
       <img
         v-bind:alt="`Profile image of @${comment.author.username}`"
         class="author-image"
-        v-bind:src="comment.author.imageEnabled ? `https://sweet-images.s3.amazonaws.com/${comment.author.image}` : `/images/cake.svg`"
+        v-lazy="comment.author.imageEnabled ? `https://sweet-images.s3.eu-west-2.amazonaws.com/${comment.author.image}` : `/images/cake.svg`"
       />
       <div class="comment-header-container">
         <h3 class="author-name">

@@ -18,7 +18,7 @@
           {{#each communities}}
             <div class="list-box">
               <a class="list-box__header" href="/community/{{this.slug}}" alt="{{this.name}}">
-                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
                 <span class="list-box__name">
                   <strong>{{this.name}}</strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
                 </span>

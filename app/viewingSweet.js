@@ -381,7 +381,7 @@ module.exports = function (app) {
           const follower = {
             key: helper.escapeHTMLChars(relationship.toUser.displayName ? relationship.toUser.displayName + ' (' + '@' + relationship.toUser.username + ')' : '@' + relationship.toUser.username),
             value: relationship.toUser.username,
-            image: (relationship.toUser.imageEnabled ? 'https://sweet-images.s3.amazonaws.com/' + relationship.toUser.image : '/images/cake.svg')
+            image: (relationship.toUser.imageEnabled ? 'https://sweet-images.s3.eu-west-2.amazonaws.com/' + relationship.toUser.image : '/images/cake.svg')
           }
           followedUserData.push(follower)
         }
@@ -1160,7 +1160,7 @@ module.exports = function (app) {
         } else if (displayedPost.images && displayedPost.images.length) {
           metadataImage = 'https://sweet.sh/api/image/display/' + displayedPost.images[0]
         } else if (displayedPost.author.imageEnabled) {
-          metadataImage = 'https://sweet-images.s3.amazonaws.com/' + displayedPost.author.image
+          metadataImage = 'https://sweet-images.s3.eu-west-2.amazonaws.com/' + displayedPost.author.image
         } else {
           metadataImage = 'https://sweet.sh/images/cake.svg'
         }

@@ -38,7 +38,7 @@
                   <div class="updated-by-text">
                       Updated by
                   </div>
-                  <img alt="Profile image of @{{communityData.welcomeMessageAuthor.username}}" class="author-image" src="{{#if communityData.welcomeMessageAuthor.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{communityData.welcomeMessageAuthor.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <img alt="Profile image of @{{communityData.welcomeMessageAuthor.username}}" class="author-image" src="{{#if communityData.welcomeMessageAuthor.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{communityData.welcomeMessageAuthor.image}}{{else}}/images/cake.svg{{/if}}" />
                   <div class="welcome-message-container">
                       <h3 class="author-name">
                           {{#if communityData.welcomeMessageAuthor.displayName}}
@@ -69,7 +69,7 @@
           {{#each communityData.membershipRequests}}
             <div class="list-box">
               <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
-                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                 <span class="list-box__name"
                   {{#if this.displayName}}
                     <strong><a class="authorLink" href="/{{this.username}}">{{this.displayName}}</a></strong> &middot; <span class="text-muted">@{{this.username}}</span>
@@ -222,7 +222,7 @@
             {{else}}
               <div class="list-box">
                 <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
-                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                   <span class="list-box__name">
                     {{#if this.displayName}}
                       <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
@@ -245,7 +245,7 @@
             {{#each communityData.mutedMembers}}
               <div class="list-box">
                 <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
-                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                   <span class="list-box__name">
                     {{#if this.displayName}}
                       <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
@@ -272,7 +272,7 @@
             {{#each communityData.bannedMembers}}
               <div class="list-box">
                 <a class="list-box__header" href="/{{this.username}}" alt="@{{this.username}}">
-                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
+                  <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}" />
                   <span class="list-box__name">
                     {{#if this.displayName}}
                       <strong>{{this.displayName}}</strong> &middot; <span class="text-muted">@{{this.username}}</span>
@@ -475,7 +475,7 @@ $("#image-upload").change(function (e) {
       $("#image-label").html("choose image");
     }
   })
-$("#image-preview").css("background-image", "url('https://sweet-images.s3.amazonaws.com/{{communityData.image}}')");
+$("#image-preview").css("background-image", "url('https://sweet-images.s3.eu-west-2.amazonaws.com/{{communityData.image}}')");
 $("#image-preview").css("background-size", "cover");
 $("#image-preview").css("background-position", "center center");
 {{/unless}}

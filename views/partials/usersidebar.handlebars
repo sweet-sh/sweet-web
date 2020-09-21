@@ -5,7 +5,7 @@
     {{/if}}
     <div id="profileImageContainer" class="{{#if isOwnProfile}}own-profile-image{{else}}user-image{{/if}}">
       <img alt="Profile image for the user @{{ profileData.username}}" id="profileImage"
-        src="{{#if profileData.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
+        src="{{#if profileData.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{profileData.image}}{{else}}/images/cake.svg{{/if}}" />
     </div>
     {{#if isOwnProfile}}
   </div>

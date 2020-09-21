@@ -6,6 +6,12 @@ $('img').on('error', function() {
 })
 
 
+{/* $('body').on('click', '.post-single-image__link', function(e) {
+  e.preventDefault();
+  $("document").trigger( "imageLightboxOpened", [ "Custom", "Event" ] );
+}) */}
+
+
 function resolveTimestamp(element) {
     if (!element.stamped) {
         element.title += new Date(parseInt(element.getAttribute('data-timestamp'))).toLocaleTimeString(undefined, { weekday: 'long', day: 'numeric', month: 'long', era: 'short', timeZoneName: 'short' });
@@ -73,7 +79,7 @@ $(function() {
 
   // Reload notifications container every minute (hack until we set up WebSockets)
   window.setInterval(function(){
-    $("#notificationsContainer").load("/api/notification/display");
+   $("#notificationsContainer").load("/api/notification/display");
   }, 60000);
   $("#notificationsContainer").load( "/api/notification/display" );
 
@@ -110,8 +116,6 @@ $(function() {
     if ($(this).hasClass('notification-active')){
       $("#darkModeStylesheet").attr("href","")
       $(this).removeClass('notification-active')
-    }
-    else {
       $("#darkModeStylesheet").attr("href","/css/darkmode.css")
       $(this).addClass('notification-active')
     }
@@ -300,7 +304,6 @@ $(function() {
   //     }
   //   })
   // })
-  console.log('Bar!');
   $('body').on('click','.embedded-video-preview', function(e){
     console.log('Foo!');
     e.preventDefault()
