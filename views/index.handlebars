@@ -49,10 +49,10 @@
         <label for="password">Password</label>
       </div>
       <button class="button large-button full-width-button" type="submit" @click="handleLogin">
-        <span v-if="loading">
+        <span v-show="loading">
           <i class="fas fa-spinner-third fa-pulse"></i>
         </span>
-        <span v-else>Log in</span>
+        <span v-show="!loading">Log in</span>
       </button>
       <a class="help-link" href="/forgot-password">Forgot password?</a>
     </form>
