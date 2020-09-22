@@ -14,10 +14,9 @@
         v-model="currentTag"
         @keydown.enter="addTag"
         @keydown.space="addTag"
-        @keydown.tab="clearInput"
         @keydown.188="addTag"
         @keydown.delete="removeLastTag"
-        @blur="clearInput"
+        @blur="addTag"
       />
     </span>
   </div>
