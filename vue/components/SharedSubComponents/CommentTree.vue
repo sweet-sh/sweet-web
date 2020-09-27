@@ -134,7 +134,7 @@ export default {
         .then(result => {
           if (result.isConfirmed) {
             axios
-              .delete("http://localhost:8787/api/comment", {
+              .delete("https://apiv2.sweet.sh/api/comment", {
                 headers: { Authorization: localStorage.getItem("JWT") },
                 data: { postId: this.postId, commentId: this.comment._id }
               })
