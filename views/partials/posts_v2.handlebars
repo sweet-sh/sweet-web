@@ -23,7 +23,7 @@
         {{#isnt ../context "community"}}
             {{#if this.community._id}}
                 <div class="community-notification">
-                    <img alt="Display image for the community '{{this.community.name}}'" src="{{#if this.community.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.community.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+                    <img alt="Display image for the community '{{this.community.name}}'" src="{{#if this.community.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.community.image}}{{else}}/images/communities/cake.svg{{/if}}" />
                     <span>Posted in <a href="/community/{{this.community.slug}}">{{this.community.name}}</a></span>
                 </div>
             {{/if}}
@@ -33,7 +33,7 @@
     <header>
         <div class="post-header-left">
             <a href="/{{this.author.username}}">
-                <img class="author-image" alt="Profile image of @{{this.author.username}}" src="{{#if this.author.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.author.image}}{{else}}/images/cake.svg{{/if}}" />
+                <img class="author-image" alt="Profile image of @{{this.author.username}}" src="{{#if this.author.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.author.image}}{{else}}/images/cake.svg{{/if}}" />
             </a>
         </div>
         <div class="post-header-right">

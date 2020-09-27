@@ -3,7 +3,7 @@
   <div class="list-group" id="notificationsList">
   {{#each notifications}}
     <a href="{{this.url}}" class="d-flex align-items-center p-2 list-group-item list-group-item-action notificationLink {{#unless this.seen}}notification-active{{/unless}}" id="{{this._id}}">
-      <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{#if this.image}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}"/>
+      <img class="postAuthorImage mr-2" style="width:25px;height:25px;" src="{{#if this.image}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/cake.svg{{/if}}"/>
       <span class="notification-text">
         {{{this.text}}}
       </span>

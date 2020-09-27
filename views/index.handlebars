@@ -11,7 +11,7 @@
       {{#each communities}}
       <a href="/community/{{this.slug}}">
         <img
-          src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+          src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
         {{this.name}}
       </a>
       {{/each}}
@@ -24,29 +24,36 @@
 
     <div class="logged-out-form">
       <h4>Download the Sweet app!</h4>
-    <div style="display: flex;">
-      <a target="_blank" href="https://apps.apple.com/gb/app/sweet-your-social-network/id1511517895"><img
-          src="/images/app-store-badge.png" alt="Download on the App Store"
-          style="height:40px;margin-right: .25rem;" /></a>
-      <a target="_blank" href="https://play.google.com/store/apps/details?id=com.rk.sweet"><img
-          src="/images/google-play-badge.png" alt="Download on Google Play" style="height:40px;" /></a>
-    </div>
+      <div style="display: flex;">
+        <a target="_blank" href="https://apps.apple.com/gb/app/sweet-your-social-network/id1511517895"><img
+            src="/images/app-store-badge.png" alt="Download on the App Store"
+            style="height:40px;margin-right: .25rem;" /></a>
+        <a target="_blank" href="https://play.google.com/store/apps/details?id=com.rk.sweet"><img
+            src="/images/google-play-badge.png" alt="Download on Google Play" style="height:40px;" /></a>
+      </div>
     </div>
 
     {{> message }}
 
-    <form class="logged-out-form" action="/login" method="post">
+    <form class="logged-out-form" id="login-form">
+      <div v-if="errorMessage" class="form-group">
+        <div class="message alert" v-html="errorMessage">
+        </div>
+      </div>
       <div class="form-group">
-        <input type="text" name="email" placeholder="Email" {{#if sessionFlash.email}}value="{{ sessionFlash.email }}"
-          {{/if}}>
+        <input type="text" name="email" placeholder="Email" v-model="email">
         <label for="email">Email</label>
       </div>
       <div class="form-group">
-        <input type="password" name="password" placeholder="Password">
+        <input type="password" name="password" placeholder="Password" v-model="password">
         <label for="password">Password</label>
       </div>
-
-      <button class="button large-button full-width-button" type="submit">Log in</button>
+      <button class="button large-button full-width-button" type="submit" @click="handleLogin">
+        <span v-show="loading">
+          <i class="fas fa-spinner-third fa-pulse"></i>
+        </span>
+        <span v-show="!loading">Log in</span>
+      </button>
       <a class="help-link" href="/forgot-password">Forgot password?</a>
     </form>
 
@@ -80,34 +87,3 @@
     </form>
   </div>
 </div>
-
-<!-- <img src="/icons/bee.svg" id="sweetIndexLogo" alt="sweet logo"/>
-<div class="container">
-  <hgroup style="min-height: 120px; margin-bottom: 1rem;">
-    <h1 class="mb-2" style="font-size: 3.5rem;"><strong>welcome to sweet</strong></h1>
-    <h4 class="mb-4" style="font-size: 2.5rem;">(currently home to {{userCount}} utopians).</h4>
-  </hgroup>
-
-  <p class="mb-4" style="font-size:1.8rem;">
-    sweet is a <strong>utopian social network</strong>, an experiment in creating a better online world for folk who are made to feel unsafe online - all are welcome, but we especially seek to create a safer space for queer and trans people, women, disabled people, and people of colour. only by coming together we can work for the abolition of patriarchy and capitalism.
-  </p>
-
-  <h5><i class="fas fa-lock"></i> sweet is built on trust.</h5>
-  <p>
-    on sweet, you can <strong class="text-success">trust</strong> users alongside following them. users you trust see your private posts, and in return you will see which users they have anonymously <strong class="text-danger">flagged</strong> as unsafe.
-  </p>
-
-  <h5><i class="fas fa-eye-slash"></i> sweet is built on privacy.</h5>
-  <p>
-    sweet will never have ads, never track its users, and never willingly share data with external organisations and services.
-  </p>
-
-  <h5><i class="fas fa-leaf"></i> sweet is built around communities.</h5>
-  <p>
-    in sweet communities, there are no administrators or moderators. all members share responsibility for managing the community, and decisions like changes to the community rules or banning users are put to a majority vote before they can be enacted. communities can be made private and invite-only.
-  </p>
-
-  <p>
-    <strong>have fun and be kind. x</strong>
-  </p>
-</div> -->

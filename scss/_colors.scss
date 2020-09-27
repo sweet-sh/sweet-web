@@ -1,6 +1,6 @@
-$text: #1a1717; // Text for light mode.
+$text: #1a1717; // Text for light mode, background for code and pre elements
 
-$background-white: #fff;
+$background-white: #fff; // Text for code and pre elements
 $background-grey: #f9f9fa; // Page background
 
 $medium-grey: #cecece; // Post borders
@@ -64,4 +64,8 @@ $comment-background: $lightest-grey;
 $message-color: $dark-pink;
 $message-background: $lightest-pink;
 $message-border: $light-pink;
+
+$editor-button-text: $text;
+$editor-button-background: $background-white;
+$editor-button-selected-background: $light-grey;
 

@@ -253,3 +253,16 @@ small,
 .screenreader-text {
     display: none;
 }
+
+code, pre {
+    font-family: 'Roboto Mono', monospace;
+    background-color: $text;
+    color: $background-grey;
+    border-radius: 3px;
+    padding: 0 5px;
+}
+
+pre {
+    padding: 5px;
+    overflow: auto;
+}

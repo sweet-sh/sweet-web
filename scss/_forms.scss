@@ -429,25 +429,6 @@ button.close {
     align-items: center;
 }
 
-.new-comment-form {
-    background-color: $comment-background;
-    padding: .75rem;
-    border: 1px solid $light-grey;
-    border-radius: 4px;
-    margin: 0 0 1rem;
-}
-
-.comment .new-comment-form {
-    background-color: transparent;
-    box-shadow: none;
-    padding-left: 10%;
-    padding-right: 0.5rem;
-    padding-bottom: 0;
-    padding-top: 0.5rem;
-    border: none;
-    margin: 0;
-}
-
 /*post image + link preview adder stuff (🐍)*/
 /* actually, most of the link preview stuff is in its own section as the css also applies to the real link previews in the posts */
 

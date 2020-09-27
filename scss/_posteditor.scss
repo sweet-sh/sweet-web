@@ -1,0 +1,332 @@
+section.comments .post-editor__wrapper {
+  margin-bottom: .5rem;
+}
+
+.new-comment-form .post-editor__wrapper {
+  margin-top: .5rem;
+  padding-left: 10%;
+}
+
+.post-editor__container {
+  border: 1px solid $medium-grey;
+  background: $element-background;
+  padding: 15px;
+  margin-bottom: 1rem;
+  @media(min-width: 768px) {
+    border-radius: $rounded-border;
+  }
+}
+
+.post-editor__inputs-container {
+  margin-top: .5rem;
+  width: 100%;
+  border-radius: .25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 1px solid $medium-grey;
+  min-height: 14rem;
+  display: flex;
+  flex-direction: column;
+}
+
+section.comments .post-editor__inputs-container {
+  min-height: 5rem;
+  margin-bottom: .5rem;
+}
+
+.post-editor__content-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.post-editor__toast {
+  position: absolute;
+  bottom: 0;
+  font-size: smaller;
+  padding: .5rem;
+  width: 100%;
+  background: $aside-background;
+  border-top: 1px solid rgba($medium-grey, .5);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.post-editor__content {
+  padding: .5rem;
+}
+
+$color-black: #000;
+$color-white: #fff;
+
+.menubar__button {
+  background: $editor-button-background;
+  color: $editor-button-text;
+  border: 0;
+  padding: 5px;
+  border-radius: 3px;
+  width: 30px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.menubar__button.is-active {
+  background: $editor-button-selected-background;
+  border: 1px solid $medium-grey;
+}
+
+.post-editor__link-menubar {
+  display: flex;
+  margin-top: .5rem;
+  input {
+    background: $editor-button-background !important;
+    color: $editor-button-text !important;
+  }
+  button {
+    margin-left: .5rem;
+    border: 1px solid $medium-grey;
+  }
+}
+
+
+.mention {
+  padding: 0.2rem;
+  white-space: nowrap;
+  color: $dark-pink;
+  text-decoration: none;
+  background-color: transparent;
+  background: $lightest-pink;
+  border-radius: 5px;
+  border: 1px solid lighten($light-pink, 5);
+}
+.mention-suggestion {
+  color: rgba($color-black, 0.6);
+}
+.suggestion-list {
+  max-height: 300px;
+  overflow: auto;
+  padding: 0.2rem;
+  border: 2px solid rgba($color-black, 0.1);
+  font-size: 0.8rem;
+  &__no-results {
+    padding: 0.2rem 0.5rem;
+  }
+  &__item {
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    margin-bottom: 0.2rem;
+    cursor: pointer;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    &.is-selected,
+    &:hover {
+      background-color: rgba($color-black, 0.2);
+    }
+    &.is-empty {
+      opacity: 0.5;
+    }
+  }
+  &__item {
+    height: 20px;
+    border-radius: 3px;
+  }
+}
+.tippy-box[data-theme~=light] {
+  background-color: $color-white;
+  padding: 0;
+  font-size: 1rem;
+  text-align: inherit;
+  color: $color-black;
+  border-radius: 5px;
+}
+
+.post-editor__input {
+  outline: none;
+  background: none !important;
+  border: 1px solid $medium-grey !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  width: 100% !important;
+  margin-bottom: .5rem !important;
+  min-width: 100px;
+  margin-top: .5rem !important;
+  min-height: 23.6px;
+  font-size: 0.9em;
+  &--no-border {
+    border: 0 !important;
+  }
+  &--padding {
+    padding: 0 .5rem !important;
+  }
+}
+
+.tag-input {
+  flex-wrap: wrap;
+  &__tag {
+    font-size: 0.9em;
+    background: rgba(#339fdb, .075);
+    border: 1px solid rgba(#339fdb, 0.15);
+    padding: 0 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    color: #339fdb;
+    margin-right: .5rem;
+    margin-top: .5rem;
+    align-self: flex-start;
+  }
+  &__tag > button {
+    cursor: pointer;
+    color: $darkest-grey;
+    opacity: 0.75;
+    padding: 0 0 0 .25rem;
+    border: 0;
+    outline: 0;
+    background: none;
+    &:hover {
+      opacity: .5;
+    }
+  }
+  &__text-container {
+    color: $placeholder;
+    white-space: nowrap;
+    min-width: 100px;
+    flex: 1;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  &__text-prefix {
+    font-size: 0.9em;
+  }
+}
+
+.editor p.is-editor-empty:first-child::before {
+  content: attr(data-empty-text);
+  float: left;
+  color: $placeholder;
+  pointer-events: none;
+  height: 0;
+}
+
+.post-editor__input-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 0 .5em;
+  min-height: 42.6px;
+  width: 100%;
+  &--border-top {
+    border-top: 1px solid rgba($medium-grey, .5);
+  }
+  &--border-bottom {
+    border-bottom: 1px solid rgba($medium-grey, .5);
+  }
+}
+
+
+.post-editor-image {
+  display: flex;
+  border: 1px solid $text;
+  border-radius: 6px;
+  padding: .5rem;
+  margin-bottom: .5rem;
+  &__image {
+    max-width: 60px;
+    min-width: 60px;
+    max-height: 60px;
+    min-height: 60px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 6px 0 0 6px;
+  }
+  &__text {
+    resize: none;
+    border-radius: 0;
+    border: 0;
+    background: 0;
+    padding: .15rem .5rem;
+  }
+  &__draghandle {
+    color: $dark-grey;
+    align-self: center;
+    border-radius: 50%;
+    border: 1px solid $dark-grey;
+    min-width: 30px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.post-editor__audience-selector {
+  margin-top: .75rem;
+  &__heading {
+    font-weight: 500;
+    margin-left: .25rem;
+    padding-bottom: .25rem;
+    display: block;
+  }
+}
+
+input.vs__search, input.vs__search:focus {
+  display: initial;
+  width: auto;
+  padding: initial;
+  border-radius: initial;
+  border: 0;
+  background: 0;
+  transition: none;
+}
+
+.vs__selected-options {
+  padding: .25rem !important;
+}
+
+.post-editor__buttons-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: .75rem;
+}
+
+.post-editor__button {
+  font-weight: 500;
+  min-width: 120px;
+  font-size: 1.05rem;
+  display: block;
+  margin-left: 10px;
+}
+
+section.comments .post-editor__button {
+  font-size: 1rem;
+}
+
+.post-editor__fake-editor {
+  border-radius: .25rem;
+  width: 100%;
+  border: 1px solid $medium-grey;
+  padding: .5rem;
+  color: $placeholder;
+  height: 4rem;
+  font-size: 16px;
+}
+
+.emoji-mart {
+  width: 100% !important;
+}
+
+.vs__dropdown-toggle {
+  border-color: $medium-grey !important;
+}
+
+.vs__open-indicator {
+  fill: $medium-grey !important;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}

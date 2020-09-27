@@ -105,7 +105,7 @@ module.exports = function (app, passport) {
   app.get('/logout', function (req, res) {
     req.logout()
     req.session.destroy()
-    res.redirect('back')
+    res.redirect('login')
   })
 
   // Responds to post requests that create relationships between users.

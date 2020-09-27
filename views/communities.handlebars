@@ -18,7 +18,7 @@
           {{#each communities}}
             <div class="list-box">
               <a class="list-box__header" href="/community/{{this.slug}}" alt="{{this.name}}">
-                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
+                <img class="list-box__image" src="{{#if this.imageEnabled}}https://sweet-images.s3.eu-west-2.amazonaws.com/{{this.image}}{{else}}/images/communities/cake.svg{{/if}}" />
                 <span class="list-box__name">
                   <strong>{{this.name}}</strong> &middot; <span class="text-muted">{{this.membersCount}} {{plural this.membersCount 'member(s)'}}</span>
                 </span>
@@ -47,13 +47,11 @@
           </div>
           <div class="form-group">
             <label for="communityDescription">Description</label>
-            <div class="form-control editable-text" style="height:auto;" id="communityDescriptionHtml">{{sessionFlash.newCommunityData.communityDescription}}</div>
-            <input type="hidden" name="communityDescription" id="communityDescription">
+            <textarea class="form-control" style="height:auto;" name="communityDescription" id="communityDescription">{{sessionFlash.newCommunityData.communityDescription}}</textarea>
           </div>
           <div class="form-group">
             <label for="communityRules">Rules</label>
-            <div class="form-control editable-text" style="height:auto;" id="communityRulesHtml">{{#if  sessionFlash.newCommunityData.communityRules}}{{sessionFlash.newCommunityData.communityRules}}{{else}}Please follow the guidelines laid out in the Community Covenant, available to read here: https://community-covenant.net/version/1/0/{{/if}}</div>
-            <input type="hidden" name="communityRules" id="communityRules">
+            <textarea class="form-control" style="height:auto;" name="communityRules" id="communityRules">{{#if  sessionFlash.newCommunityData.communityRules}}{{sessionFlash.newCommunityData.communityRules}}{{else}}Please follow the guidelines laid out in the Community Covenant, available to read here: https://community-covenant.net/version/1/0/{{/if}}</textarea>
           </div>
           <div class="form-group">
             <label for="communityVisibility">Post visibility</label>
@@ -112,15 +110,6 @@
 {{> filemessage }}
 
 <script type="text/javascript">
-
-attachQuill(document.getElementById("communityDescriptionHtml"),"Write something. Highlight to format",true);
-attachQuill(document.getElementById("communityRulesHtml"),"Write something. Highlight to format",true);
-
-$("#newCommunityForm").submit(function(e){
-  $("#communityRules").val($("#communityRulesHtml").find(".ql-editor").html());
-  $("#communityDescription").val($("#communityDescriptionHtml").find(".ql-editor").html());
-  return true;
-})
 
 
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {

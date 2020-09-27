@@ -1,0 +1,98 @@
+.hooper {
+  height: 100% !important;
+  width: 70% !important;
+}
+.image-lightbox {
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__container {
+    min-width: 0;
+    height: 90%;
+    width: 90%;
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  &__slide {
+    width: 100% !important;
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  &__info {
+    width: 30%;
+    background: $element-background;
+    padding: 2rem;
+    position: relative;
+  }
+  &__close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border: 0;
+    outline: 0;
+    background: none;
+    cursor: pointer;
+  }
+  &__caption {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+  }
+  &__author {
+    display: flex;
+    background: $comment-background;
+    border-radius: 4px;
+    align-items: center;
+    .author-image {
+      width: 46px;
+      height: 46px;
+      border-radius: 5px;
+      margin-right: 7px;
+    }
+    .author-name {
+      font-size: 1em;
+      letter-spacing: 0;
+      margin: 0;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+    .author-display-name {
+      font-weight: 500;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      margin-right: 5px;
+    }
+    .author-username a {
+      color: $text;
+    }
+    .author-username a:hover {
+      color: $link-hover-color;
+    }
+    .author-username {
+      color: $darkest-grey;
+    }
+    .author-username:first-child {
+      color: $text;
+      font-weight: 500;
+    }
+  }
+}
