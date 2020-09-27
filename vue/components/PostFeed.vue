@@ -154,11 +154,11 @@
             <button
               type="button"
               class="button post-toolbar-button tooltip-top"
-              :data-tooltip="(post.boostsV2.some(o => o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
+              :data-tooltip="(post.boostsV2.some(o => o.booster && o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
               @click="_handleBoostButtonClick($event, post)"
             >
               <span
-                v-if="post.boostsV2.some(o => o.booster._id === userData._id)"
+                v-if="post.boostsV2.some(o => o.booster && o.booster._id === userData._id)"
                 class="fa-layers fa-fw"
               >
                 <i class="fas fa-retweet"></i>
@@ -278,6 +278,9 @@ import loadingSpinner from "./SharedSubComponents/loadingSpinner.vue";
 import ImageLightbox from "./ImageLightbox.vue";
 import PostEditor from "./PostEditor.vue";
 import swal from "sweetalert2";
+import Autolinker from 'autolinker';
+
+const autolinker = new Autolinker();
 
 Vue.use(VueLazyload);
 
@@ -415,7 +418,8 @@ export default {
       const node = Node.fromJSON(schema, jsonBody);
       const serializedFragment = serializer.serializeFragment(node);
       div.appendChild(serializedFragment);
-      return div.outerHTML;
+      const linkedText = autolinker.link(div.outerHTML);
+      return linkedText;
     },
     getInitialPosts() {
       this.loading = true;
@@ -444,39 +448,39 @@ export default {
           document.documentElement.scrollTop + window.innerHeight ===
           document.documentElement.offsetHeight;
         if (bottomOfWindow) {
-          // console.log(
-          //   `${this.feedEndpoint[0]}${Date.now()}${this.feedEndpoint[1]}`
-          // );
-          this.loading = true;
-          axios
-            .get(
-              `${this.feedEndpoint[0]}${this.oldestTimestamp}${this.feedEndpoint[1]}`,
-              {
-                headers: { Authorization: localStorage.getItem("JWT") }
-              }
-            )
-            .then(response => {
-              this.loading = false;
-              // Filter out posts that already exist
-              const payload = response.data.data.filter(
-                post =>
-                  !this.posts.some(
-                    existingPost => existingPost._id === post._id
-                  )
-              );
-              if (payload.length) {
-                this.posts = [...this.posts, ...payload];
-                this.oldestTimestamp = Date.parse(
-                  response.data.data[response.data.data.length - 1].lastUpdated
+          if (!this.loadingMessage) {
+            this.loading = true;
+            axios
+              .get(
+                `${this.feedEndpoint[0]}${this.oldestTimestamp}${this.feedEndpoint[1]}`,
+                {
+                  headers: { Authorization: localStorage.getItem("JWT") }
+                }
+              )
+              .then(response => {
+                this.loading = false;
+                // Filter out posts that already exist
+                const payload = response.data.data.filter(
+                  post =>
+                    !this.posts.some(
+                      existingPost => existingPost._id === post._id
+                    )
                 );
-              }
-            })
-            .catch(error => {
-              this.loading = false;
-              if (error.response.status === 404) {
-                this.loadingMessage = "No more posts.";
-              }
-            });
+                if (payload.length) {
+                  this.posts = [...this.posts, ...payload];
+                  this.oldestTimestamp = Date.parse(
+                    response.data.data[response.data.data.length - 1]
+                      .lastUpdated
+                  );
+                }
+              })
+              .catch(error => {
+                this.loading = false;
+                if (error.response.status === 404) {
+                  this.loadingMessage = "No more posts.";
+                }
+              });
+          }
         }
       };
     },
