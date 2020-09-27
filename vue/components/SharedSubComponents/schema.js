@@ -182,14 +182,14 @@ const schema = new Schema({
       toDOM: (node) => [
         'a',
         {
-          href: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+          href: (node.attrs.src.startsWith('http') || node.attrs.src.startsWith('/api/image/display')) ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
           class: 'post-single-image__link'
         },
         [
           'img',
           {
             class: 'post-single-image',
-            src: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+            src: (node.attrs.src.startsWith('http') || node.attrs.src.startsWith('/api/image/display')) ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
             alt: node.attrs.alt,
           },
         ],
@@ -207,7 +207,7 @@ const schema = new Schema({
           'img',
           {
             class: 'post-editor-image__image',
-            src: node.attrs.src.startsWith('/api/image/display') ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+            src: (node.attrs.src.startsWith('http') || node.attrs.src.startsWith('/api/image/display')) ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
             alt: node.attrs.alt,
           },
         ],
