@@ -57,7 +57,7 @@
         :depth="depth+1"
       ></reply>
     </section>
-    <div class="new-comment-form" ref="replyEditorContainerRef" v-show="this.replyEditorShown"></div>
+    <div class="new-comment-form" ref="replyEditorContainerRef" v-show="this.replyEditorShown" :mode="'comment'"></div>
   </article>
   <article v-else class="comment" v-bind:data-comment-id="comment._id">
     <section v-if="comment.deleted" class="content comment-deleted-content">
