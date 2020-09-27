@@ -148,7 +148,15 @@
         @select="addEmoji"
       />
       <div class="post-editor__inputs-container">
-        <editor-content class="editor__content post-editor__content" :editor="editor" />
+        <div class="post-editor__content-wrapper">
+          <editor-content class="editor__content post-editor__content" :editor="editor" />
+          <transition name="fade">
+            <div
+              class="post-editor__toast"
+              v-show="toastMessage"
+            ><i class="fas fa-spinner-third fa-pulse"></i>&nbsp;&nbsp;{{ toastMessage ? toastMessage : ''}}</div>
+          </transition>
+        </div>
         <TagInput v-if="mode === 'post'" :tags="tags" />
         <div v-if="mode === 'post'" class="post-editor__input-wrapper">
           <i class="fa fa-exclamation-circle text-muted"></i>
@@ -181,7 +189,7 @@
         <strong>Public</strong> posts can be seen by anyone on Sweet. Other posts can be seen only by the audiences to which they belong.
       </p>
     </div>
-    <div class="post-editor__buttons-toolbar" v-show="postEditorVisible">
+    <div class="post-editor__buttons-toolbar" v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'">
       <button
         type="button"
         class="button grey-button post-editor__button"
@@ -434,7 +442,9 @@ export default {
       JWT: localStorage.getItem("JWT"),
       // Emoji
       emojiIndex: new EmojiIndex(emojiData),
-      emojiPickerVisible: false
+      emojiPickerVisible: false,
+      // Status and error messages
+      toastMessage: false
     };
   },
   computed: {
@@ -482,13 +492,15 @@ export default {
     },
     setLinkUrl(command, url) {
       this.linkPreviewLoading = true;
+      this.toastMessage = "Loading link preview...";
       axios
         .post(
           "http://localhost:8787/api/url-metadata/",
-          { url: url },
+          { url: url || "https://endless.horse" },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
         .then(response => {
+          this.toastMessage = false;
           const {
             url,
             embedUrl,
@@ -501,6 +513,7 @@ export default {
           this.hideLinkMenu();
         })
         .catch(error => {
+          this.toastMessage = false;
           console.error(error.response);
           swal.fire(
             "Uh-oh.",
@@ -574,8 +587,9 @@ export default {
     },
     handleFileChange(event, command) {
       let files = event.target.files;
+      this.toastMessage = `Uploading image${files.length > 1 ? 's' : ''}...`;
       // Make an AJAX request for each file
-      $.each(files, function(index, file) {
+      $.each(files, (index, file) => {
         let formData = new FormData();
         formData.append("image", file);
         axios
@@ -586,11 +600,22 @@ export default {
             }
           })
           .then(response => {
+            if (index >= files.length - 1) {
+              this.toastMessage = false;
+            }
             command({
               thumbnail: response.data.data.thumbnail,
               src: response.data.data.imageKey
             });
-          });
+          })
+          .catch((error) => {
+            this.toastMessage = false;
+            console.error(error.response);
+            swal.fire(
+              "Uh-oh.",
+              "There has been an unexpected error uploading this image. Please try again."
+            );
+          })
       });
       // Wipe the image picker's data
       $(".post-editor__imagepicker").val("");
@@ -626,7 +651,8 @@ export default {
         const payload = {
           postId: this.editPostData ? this.editPostData._id : null, // Only for editing posts
           context: this.context,
-          contextId: this.context === "community" ? await getCommunityId() : null,
+          contextId:
+            this.context === "community" ? await getCommunityId() : null,
           parentPost: this.parentPost, // Only for creating comments
           parentComment: this.parentComment, // Only for creating comments
           body: newJSON,
