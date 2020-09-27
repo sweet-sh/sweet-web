@@ -34,9 +34,25 @@ section.comments .post-editor__inputs-container {
   margin-bottom: .5rem;
 }
 
+.post-editor__content-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.post-editor__toast {
+  position: absolute;
+  bottom: 0;
+  font-size: smaller;
+  padding: .5rem;
+  width: 100%;
+  background: $aside-background;
+  border-top: 1px solid rgba($medium-grey, .5);
+  white-space: nowrap;
+  text-align: center;
+}
+
 .post-editor__content {
   padding: .5rem;
-  flex: 1;
 }
 
 $color-black: #000;
@@ -306,4 +322,11 @@ section.comments .post-editor__button {
 
 .vs__open-indicator {
   fill: $medium-grey !important;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
