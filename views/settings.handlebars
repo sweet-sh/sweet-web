@@ -1,52 +1,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js" crossorigin="anonymous"></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.25/moment-timezone-with-data-10-year-range.min.js"
+    crossorigin="anonymous"></script>
 <form id="settingsForm" class="row justify-content-center" method="post" action="/updatesettings">
     <div class="col-md-8">
         <div class="pane">
             <h3 class="page-header mx-2">Settings</h3>
-            <h4>Basic settings</h4>
-            <div class="form-group">
-                <label for="timezone">Select your timezone (or the nearest equivalent):</label>
-                <select name="timezone" id="timezone">
-                    {{!-- the defaulted selected timezone for this section is chosen by javascript at the bottom of the page --}}
-                	<option id="guessed-timezone" value="auto">...loading default timezone...</option>
-                	<option value="-12:00">(GMT -12:00) Eniwetok, Kwajalein</option>
-                	<option value="-11:00">(GMT -11:00) Midway Island, Samoa</option>
-                	<option value="-10:00">(GMT -10:00) Hawaii</option>
-                	<option value="-09:00">(GMT -9:00) Alaska</option>
-                	<option value="-08:00">(GMT -8:00) Pacific Time (US &amp; Canada)</option>
-                	<option value="-07:00">(GMT -7:00) Mountain Time (US &amp; Canada)</option>
-                	<option value="-06:00">(GMT -6:00) Central Time (US &amp; Canada), Mexico City</option>
-                	<option value="-05:00">(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima</option>
-                	<option value="-04:00">(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz</option>
-                	<option value="-03:00">(GMT -3:00) Brazil, Buenos Aires, Georgetown</option>
-                	<option value="-02:00">(GMT -2:00) Mid-Atlantic</option>
-                	<option value="-01:00">(GMT -1:00) Azores, Cape Verde Islands</option>
-                	<option value="+00:00">(GMT) Western Europe Time, London, Lisbon, Casablanca</option>
-                	<option value="+01:00">(GMT +1:00) Amsterdam, Brussels, Copenhagen, Madrid, Paris</option>
-                	<option value="+02:00">(GMT +2:00) Kaliningrad, South Africa</option>
-                	<option value="+03:00">(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg</option>
-                	<option value="+04:00">(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi</option>
-                	<option value="+05:00">(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent</option>
-                	<option value="+06:00">(GMT +6:00) Almaty, Dhaka, Colombo</option>
-                	<option value="+07:00">(GMT +7:00) Bangkok, Hanoi, Jakarta</option>
-                	<option value="+08:00">(GMT +8:00) Beijing, Perth, Singapore, Hong Kong</option>
-                	<option value="+09:00">(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk</option>
-                	<option value="+10:00">(GMT +10:00) Eastern Australia, Guam, Vladivostok</option>
-                	<option value="+11:00">(GMT +11:00) Magadan, Solomon Islands, New Caledonia</option>
-                	<option value="+12:00">(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka</option>
-                	<option value="+13:00">(GMT +13:00) Apia, Nukualofa</option>
-                	<option value="+14:00">(GMT +14:00) Line Islands, Tokelau</option>
-                </select>
-            </div>
-            <hr />
             <h4>Privacy</h4>
             <div class="form-group">
                 <label for="profileVisibility">Profile page and public posts visibility</label>
                 <select name="profileVisibility" id="profileVisibility">
-                    <option value="invisible" {{#eq loggedInUserData.settings.profileVisibility "invisible"}}selected{{/eq}}>Visible to logged in users only</option>
-                    <option value="profileOnly" {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible to logged out users</option>
-                    <option value="profileAndPosts" {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and public posts visible to logged out users</option>
+                    <option value="invisible"
+                        {{#eq loggedInUserData.settings.profileVisibility "invisible"}}selected{{/eq}}>Visible to logged
+                        in users only</option>
+                    <option value="profileOnly"
+                        {{#eq loggedInUserData.settings.profileVisibility "profileOnly"}}selected{{/eq}}>Profile visible
+                        to logged out users</option>
+                    <option value="profileAndPosts"
+                        {{#eq loggedInUserData.settings.profileVisibility "profileAndPosts"}}selected{{/eq}}>Profile and
+                        public posts visible to logged out users</option>
                 </select>
             </div>
             <hr />
@@ -54,18 +26,26 @@
             <div class="form-group">
                 <label for="newPostPrivacy">Default privacy for new posts</label>
                 <select name="newPostPrivacy" id="newPostPrivacy">
-                    <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>Public</option>
-                    <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>Private</option>
+                    <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>
+                        Public</option>
+                    <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>
+                        Private</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="newPostPrivacy">Quality of uploaded images</label>
                 <select name="imageQuality" id="imageQuality">
-                    <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>Standard (up to 1200px standard quality JPGs)</option>
-                    <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up to 2048px high quality JPGs/PNGs)</option>
-                    <option value="ridiculous" {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to 4096px high quality JPGs/PNGs)</option>
+                    <option value="standard" {{#eq loggedInUserData.settings.imageQuality "standard"}}selected{{/eq}}>
+                        Standard (up to 1200px standard quality JPGs)</option>
+                    <option value="high" {{#eq loggedInUserData.settings.imageQuality "high"}}selected{{/eq}}>High (up
+                        to 2048px high quality JPGs/PNGs)</option>
+                    <option value="ridiculous"
+                        {{#eq loggedInUserData.settings.imageQuality "ridiculous"}}selected{{/eq}}>Ridiculous (up to
+                        4096px high quality JPGs/PNGs)</option>
                 </select>
-                <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large number of high quality images, we may ask you in future to help out with sweet's web hosting costs.</p>
+                <p class="form-text small">GIFs are always uploaded in their original quality. If you upload a large
+                    number of high quality images, we may ask you in future to help out with sweet's web hosting costs.
+                </p>
             </div>
             <hr />
             <h4>Viewing</h4>
@@ -79,54 +59,78 @@
             <div class="form-group">
                 <label for="homeTagTimelineSorting">Sorting of posts in Home and Tag timelines</label>
                 <select name="homeTagTimelineSorting" id="homeTagTimelineSorting">
-                    <option value="chronological" {{#eq loggedInUserData.settings.homeTagTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
-                    <option value="fluid" {{#eq loggedInUserData.settings.homeTagTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                    <option value="chronological"
+                        {{#eq loggedInUserData.settings.homeTagTimelineSorting "chronological"}}selected{{/eq}}>
+                        Chronological (the time they were originally posted)</option>
+                    <option value="fluid"
+                        {{#eq loggedInUserData.settings.homeTagTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently
+                        commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="userTimelineSorting">Sorting of posts in User timelines</label>
                 <select name="userTimelineSorting" id="userTimelineSorting">
-                    <option value="chronological" {{#eq loggedInUserData.settings.userTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
-                    <option value="fluid" {{#eq loggedInUserData.settings.userTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                    <option value="chronological"
+                        {{#eq loggedInUserData.settings.userTimelineSorting "chronological"}}selected{{/eq}}>
+                        Chronological (the time they were originally posted)</option>
+                    <option value="fluid" {{#eq loggedInUserData.settings.userTimelineSorting "fluid"}}selected{{/eq}}>
+                        Fluid (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="communityTimelineSorting">Sorting of posts in Community timelines</label>
                 <select name="communityTimelineSorting" id="communityTimelineSorting">
-                    <option value="chronological" {{#eq loggedInUserData.settings.communityTimelineSorting "chronological"}}selected{{/eq}}>Chronological (the time they were originally posted)</option>
-                    <option value="fluid" {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid (recently commented and boosted posts move to the top)</option>
+                    <option value="chronological"
+                        {{#eq loggedInUserData.settings.communityTimelineSorting "chronological"}}selected{{/eq}}>
+                        Chronological (the time they were originally posted)</option>
+                    <option value="fluid"
+                        {{#eq loggedInUserData.settings.communityTimelineSorting "fluid"}}selected{{/eq}}>Fluid
+                        (recently commented and boosted posts move to the top)</option>
                 </select>
             </div>
             <div class="form-group">
-                <input type="checkbox" name="flashRecentComments" id="flashRecentComments" {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
+                <input type="checkbox" name="flashRecentComments" id="flashRecentComments"
+                    {{#if loggedInUserData.settings.flashRecentComments}}checked{{/if}}>
                 <label class="form-check-label" for="flashRecentComments">
-                        Flash recent comments
+                    Flash recent comments
                 </label>
             </div>
-            <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone" value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
+            <input name="autoDetectedTimeZone" type="hidden" id="submitDetectedTimeZone"
+                value="{{loggedInUserData.settings.autoDetectedTimeZone}}">
             <hr />
             <h4 id="discovery-settings">Discovery</h4>
             <div class="form-group">
-                <input type="checkbox" name="showRecommendations" id="showRecommendations" {{#if loggedInUserData.settings.showRecommendations}}checked{{/if}}>
+                <input type="checkbox" name="showRecommendations" id="showRecommendations"
+                    {{#if loggedInUserData.settings.showRecommendations}}checked{{/if}}>
                 <label class="form-check-label" for="showRecommendations">
-                        Show recommended people and communities next to the home feed
+                    Show recommended people and communities next to the home feed
                 </label>
             </div>
             <div class="form-group">
-                <input type="checkbox" name="showHashtags" id="showHashtags" {{#if loggedInUserData.settings.showHashtags}}checked{{/if}}>
+                <input type="checkbox" name="showHashtags" id="showHashtags"
+                    {{#if loggedInUserData.settings.showHashtags}}checked{{/if}}>
                 <label class="form-check-label" for="showHashtags">
-                        Show recent hashtags next to the home feed
+                    Show recent hashtags next to the home feed
                 </label>
             </div>
             <hr />
             <h4>Notifications</h4>
             <div class="form-group pushNotifSubStuff">
-                <button style="white-space:normal;" type="button" id="notifs-button" class="button lowercase-button">Click to subscribe this browser to Sweet push notifications!</button>
-                <p class="form-text small" style="margin-top: .5rem">On desktop you'll get notifications while this browser is open, on Android devices just like any other social media app, and on Apple devices probably nothing because we haven't gone through their approval process yet, sorry.</p>
+                <button style="white-space:normal;" type="button" id="notifs-button"
+                    class="button lowercase-button">Click to subscribe this browser to Sweet push
+                    notifications!</button>
+                <p class="form-text small" style="margin-top: .5rem">On desktop you'll get notifications while this
+                    browser is open, on Android devices just like any other social media app, and on Apple devices
+                    probably nothing because we haven't gone through their approval process yet, sorry.</p>
             </div>
-            <h4 style="color: purple;">Danger zone!</h4>
-            <button type="button" class="button delete-user">Delete my Sweet account</button>
-            <p class="form-text mt-2">Clicking this button will delete your Sweet user account and all your data, including your posts, comments, boosts, subscriptions, uploaded images, community memberships, votes, and relationships. This process is immediate and permanent. You will <strong>not</strong> be able to undo it.</p>
+            <div class="message">
+                <h4>Danger zone!</h4>
+                <button type="button" class="button delete-user">Delete my Sweet account</button>
+                <p class="form-text mt-2">Clicking this button will delete your Sweet user account and all your data,
+                    including your posts, comments, boosts, subscriptions, uploaded images, community memberships,
+                    votes, and relationships. This process is immediate and permanent. You will <strong>not</strong> be
+                    able to undo it.</p>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
@@ -144,10 +148,10 @@
         //service worker is like a mini program that contains some code that responds to events no matter what page the user is on.
         //the below line will only have an effect the first time it is run, after that it will be already registered
         navigator.serviceWorker.register('/js/sw.js')
-            .then(function(swReg) {
+            .then(function (swReg) {
                 swReg.update();
                 swRegistration = swReg; //store the registration in a global variable for future use
-                swRegistration.pushManager.getSubscription().then(function(subscription) {
+                swRegistration.pushManager.getSubscription().then(function (subscription) {
                     isSubscribed = !(subscription === null);
                     if (isSubscribed) {
                         console.log('User IS subscribed.');
@@ -157,11 +161,11 @@
                     updateButtonDisplay();
                 });
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 console.error('Service Worker Error', error);
             });
 
-        pushButton.click(function(e) {
+        pushButton.click(function (e) {
             pushButton[0].disabled = true; //so it can't be clicked again right away and double-send subscription info to server
             if (Notification.permission == "denied") {
                 bootbox.alert("You have notification permissions turned off for this site! To change this, click the button with the letter 'i' on it on the left side of the address bar and look for the word 'notifications' in the menu that shows up.");
@@ -185,14 +189,14 @@
         swRegistration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: applicationServerKey
-        }).then(function(subscription) {
+        }).then(function (subscription) {
             console.log('User was just subscribed');
             $.post("/pushnotifs/subscribe", {
                 subscription: JSON.stringify(subscription)
             })
             isSubscribed = true;
             updateButtonDisplay()
-        }).catch(function(err) {
+        }).catch(function (err) {
             console.log('Failed to subscribe the user: ', err);
             updateButtonDisplay()
         });
@@ -200,13 +204,13 @@
 
     function unsubscribeUser() {
         swRegistration.pushManager.getSubscription()
-            .then(function(subscription) {
+            .then(function (subscription) {
                 if (subscription) {
                     subscription.unsubscribe()
-                        .catch(function(error) {
+                        .catch(function (error) {
                             console.log('Error unsubscribing', error);
                         })
-                        .then(function() {
+                        .then(function () {
                             $.post("/pushnotifs/unsubscribe", {
                                 subscription: JSON.stringify(subscription)
                             })
@@ -248,7 +252,7 @@
         return outputArray;
     }
 
-    $('.delete-user').click(function() {
+    $('.delete-user').click(function () {
         bootbox.confirm('You are about to delete your Sweet user account and all your data, including your posts, comments, boosts, subscriptions, uploaded images, community memberships, votes, and relationships. This process is immediate and permanent. You will not be able to undo it. Would you like to proceed?', function (result) {
             if (result === true) {
                 $.ajax({
@@ -257,10 +261,10 @@
                     headers: {
                         'Authorization': localStorage.getItem('JWT')
                     },
-                    success: function(response) {
+                    success: function (response) {
                         console.log(response);
                         localStorage.removeItem('JWT');
-                        location.href = 'https://sweet.sh/';
+                        location.href = '/logout';
                     },
                 });
             }
