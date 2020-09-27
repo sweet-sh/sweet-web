@@ -21,7 +21,7 @@ const loginForm = new Vue({
       event.preventDefault();
       this.loading = true;
       if (this.email && this.password) {
-        axios.post('https://apiv2.sweet.sh/api/login', {
+        axios.post('https://api.sweet.sh/api/login', {
           email: this.email,
           password: this.password
         })

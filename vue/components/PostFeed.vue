@@ -356,7 +356,7 @@ export default {
           contextType = "home";
           break;
       }
-      return [`https://apiv2.sweet.sh/api/posts/${contextType}/`, `/${context}`];
+      return [`https://api.sweet.sh/api/posts/${contextType}/`, `/${context}`];
     }
   },
   methods: {
@@ -488,7 +488,7 @@ export default {
       axios({
         // method: post.havePlused ? 'DELETE' : 'GET',
         method: "POST",
-        url: `https://apiv2.sweet.sh/api/plus/${post._id}`,
+        url: `https://api.sweet.sh/api/plus/${post._id}`,
         headers: { Authorization: localStorage.getItem("JWT") }
         // data: { postid: post._id }
       })
@@ -511,7 +511,7 @@ export default {
     _handleBoostButtonClick(event, post) {
       axios({
         method: "POST",
-        url: `https://apiv2.sweet.sh/api/boost/${post._id}`,
+        url: `https://api.sweet.sh/api/boost/${post._id}`,
         headers: { Authorization: localStorage.getItem("JWT") }
       })
         .then(response => {
@@ -535,7 +535,7 @@ export default {
     _handleSubscribeButtonClick(event, post) {
       axios
         .post(
-          `https://apiv2.sweet.sh/api/subscription`,
+          `https://api.sweet.sh/api/subscription`,
           { postId: post._id },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
@@ -553,7 +553,7 @@ export default {
     },
     _handleUnsubscribeButtonClick(event, post) {
       axios
-        .delete(`https://apiv2.sweet.sh/api/subscription`, {
+        .delete(`https://api.sweet.sh/api/subscription`, {
           headers: { Authorization: localStorage.getItem("JWT") },
           data: { postId: post._id }
         })
@@ -584,7 +584,7 @@ export default {
         .then(result => {
           if (result.isConfirmed) {
             axios
-              .delete(`https://apiv2.sweet.sh/api/post`, {
+              .delete(`https://api.sweet.sh/api/post`, {
                 headers: { Authorization: localStorage.getItem("JWT") },
                 data: { postId: post._id }
               })
@@ -618,7 +618,7 @@ export default {
     //   window.location.assign("/logout");
     // }
     axios
-      .get(`https://apiv2.sweet.sh/api/user/${this.userId}`, {
+      .get(`https://api.sweet.sh/api/user/${this.userId}`, {
         headers: { Authorization: localStorage.getItem("JWT") }
       })
       .then(response => {

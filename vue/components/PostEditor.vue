@@ -320,7 +320,7 @@ export default {
             // a list of all suggested items
             items: async () => {
               const usersPayload = await axios.get(
-                "https://apiv2.sweet.sh/api/users/all",
+                "https://api.sweet.sh/api/users/all",
                 { headers: { Authorization: localStorage.getItem("JWT") } }
               );
               return usersPayload.data.data;
@@ -495,7 +495,7 @@ export default {
       this.toastMessage = "Loading link preview...";
       axios
         .post(
-          "https://apiv2.sweet.sh/api/url-metadata/",
+          "https://api.sweet.sh/api/url-metadata/",
           { url: url || "https://endless.horse" },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
@@ -593,7 +593,7 @@ export default {
         let formData = new FormData();
         formData.append("image", file);
         axios
-          .post("https://apiv2.sweet.sh/api/image", formData, {
+          .post("https://api.sweet.sh/api/image", formData, {
             headers: {
               Authorization: localStorage.getItem("JWT"),
               "Content-Type": "multipart/form-data"
@@ -639,7 +639,7 @@ export default {
             .split("/")
             .filter(v => v && v !== "community");
           let response = await axios
-            .get(`https://apiv2.sweet.sh/api/communities/${communitySlug}`, {
+            .get(`https://api.sweet.sh/api/communities/${communitySlug}`, {
               headers: { Authorization: localStorage.getItem("JWT") }
             })
             .then(response => {
@@ -667,7 +667,7 @@ export default {
         // - PUT to /api/post (editing post)
         // Editing comments is not yet implemented.
         axios({
-          url: `https://apiv2.sweet.sh/api/${this.mode}`,
+          url: `https://api.sweet.sh/api/${this.mode}`,
           method: this.editPostData ? "PUT" : "POST",
           data: payload,
           headers: { Authorization: localStorage.getItem("JWT") }
