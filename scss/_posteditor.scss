@@ -130,6 +130,10 @@ $color-white: #fff;
     height: 20px;
     border-radius: 3px;
   }
+  &__image {
+    height: 20px;
+    border-radius: 3px;
+  }
 }
 .tippy-box[data-theme~=light] {
   background-color: $color-white;
