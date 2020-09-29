@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 const DBReference = mongoose.Schema.Types.ObjectId
 
 // this is used by older posts instead of the below inlineElementSchema
@@ -71,13 +71,16 @@ const commentSchema = new mongoose.Schema({
   deleted: { type: Boolean, default: false },
   cachedHTML: { // was rendered with either the versions of the templates indicated by the post's corresponding cachedHTML MTimes or the version that was available when the comment was created, whichever is newer
     fullContentHTML: String
-  }
+  },
+  htmlBody: String,
+  jsonBody: Object,
 })
 
 commentSchema.add({ replies: [commentSchema] })
 
 const boostSchema = new mongoose.Schema({
   booster: { type: DBReference, ref: 'User', required: true },
+  community: { type: DBReference, ref: 'Community' },
   timestamp: { type: Date, required: true },
   boost: { type: DBReference, ref: 'Post' }
 })
@@ -88,13 +91,20 @@ const plusSchema = new mongoose.Schema({
   type: String // Currently only "plus"
 })
 
+const audienceSchema = new mongoose.Schema({
+  key: { type: String, unique: true },
+  label: String,
+});
+
 const postSchema = new mongoose.Schema({
   type: String, // "original", "community", or "boost". note that the equivalent "context" field in image documents stores either "user", "community", or "user"
   community: { type: DBReference, ref: 'Community' }, // hopefully undefined if type=="user"
-  authorEmail: { type: String, required: true },
-  author: { type: DBReference, ref: 'User' },
+  authorEmail: String,
+  author: { type: DBReference, ref: 'User', required: true },
   url: { type: String, required: true },
   privacy: { type: String, required: true },
+  // audiences: [audienceSchema],
+  audiences: [String],
   timestamp: { type: Date, required: true },
   lastUpdated: Date, // intially equal to timestamp, updated as comments are left
   lastEdited: Date, // initially undefined (although it wouldn't be crazy to set it equal to timestamp initially) and then changed when the post content is edited through the saveedits route in postingToSweet.js
@@ -138,8 +148,30 @@ const postSchema = new mongoose.Schema({
     fullContentHTML: String,
     imageGalleryMTime: Date, // the last modified date of the imagegallery template when the html was rendered
     embedsMTime: Date // the last modified date of the embeds template when the html was rendered
+  },
+  htmlBody: String,
+  jsonBody: Object,
+  seenBy: [{ type: DBReference, ref: 'User' }], // An array of users who have seen the latest version of this post, including its comments.
+});
+
+postSchema.pre('save', function (next) {
+  if (this.comments && this.comments.length) {
+    let count = this.comments.length;
+    const recursiveCount = (node) => {
+      node.forEach((subNode) => {
+        if (subNode.replies && subNode.replies.length) {
+          count = count + subNode.replies.length;
+          recursiveCount(subNode.replies);
+        }
+      });
+    };
+    recursiveCount(this.comments);
+    this.numberOfComments = count;
+  } else {
+    this.numberOfComments = 0;
   }
-})
+  next();
+});
 
 // used to select posts to display in feeds
 postSchema.index({ author: 1 })
