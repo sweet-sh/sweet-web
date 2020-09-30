@@ -109,7 +109,7 @@ require('./app/models/vote')
 require('./app/models/image')
 
 // persist sessions across restarts via their storage in mongodb
-// const MongoStore = require('connect-mongo')(session)
+const MongoStore = require('connect-mongo')(session)
 
 // set up passport authentication and session storage
 require('./config/passport')(passport) // pass passport for configuration
@@ -117,15 +117,15 @@ var auth = require('./config/auth.js')
 app.use(session({
   secret: auth.secret,
   cookie: {
-    maxAge: (48 * 60 * 60 * 1000)
-  }, // 48 hours
+    maxAge: (30 * 24 * 60 * 60 * 1000)
+  }, // 30 days
   rolling: true,
   resave: true,
   saveUninitialized: false,
-  // store: new MongoStore({
-  //   mongooseConnection: mongoose.connection,
-  //   secret: auth.secret
-  // })
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection,
+    secret: auth.secret
+  })
 }))
 app.use(passport.initialize())
 app.use(passport.session()) // persistent login sessions
