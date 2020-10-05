@@ -276,6 +276,12 @@ import {
   TrailingNode
 } from "tiptap-extensions";
 
+const audiencesDictionary = [
+        { label: "Public", value: "public" },
+        { label: "Private", value: "private" }
+        // { label: "Personal", value: "personal" }
+      ];
+
 export default {
   components: {
     EditorContent,
@@ -298,11 +304,6 @@ export default {
   },
   data() {
     const vm = this;
-    const audiencesDictionary = [
-      { label: "Public", value: "public" },
-      { label: "Private", value: "private" }
-      // { label: "Personal", value: "personal" }
-    ];
     return {
       editor: new Editor({
         extensions: [
@@ -423,7 +424,7 @@ export default {
           let hasFiles = false;
           let files = [];
           if (event.dataTransfer.items) {
-            console.log('Got items');
+            console.log("Got items");
             for (var i = 0; i < event.dataTransfer.items.length; i++) {
               if (
                 event.dataTransfer.items[i].kind === "file" &&
@@ -433,7 +434,7 @@ export default {
               }
             }
           } else {
-            console.log('Got files');
+            console.log("Got files");
             for (var i = 0; i < event.dataTransfer.files.length; i++) {
               if (event.dataTransfer.files[i].type.indexOf("image") === 0) {
                 files.push(event.dataTransfer.files[i]);
@@ -490,7 +491,7 @@ export default {
             hasFiles = true;
             console.log("Processing copied image item");
             this.toastMessage = `Uploading image${
-              files.files.length > 1 ? "s" : ""
+              files.length > 1 ? "s" : ""
             }...`;
             let formData = new FormData();
             formData.append("image", currentValue);
@@ -527,16 +528,13 @@ export default {
           }
         }
       }),
-      // Fake editor display for post editor module
+      // User data
+      userData: null,
       // Secondary post data
       contentWarning: this.editPostData
         ? this.editPostData.contentWarnings
         : null,
       tags: this.editPostData ? this.editPostData.tags : [],
-      audiences: audiencesDictionary,
-      selectedAudience: this.editPostData
-        ? [audiencesDictionary.find(o => o.value === this.editPostData.privacy)]
-        : [{ label: "Public", value: "public" }],
       // Link adder functionality
       linkUrl: null,
       linkMenuIsActive: false,
@@ -565,9 +563,39 @@ export default {
     },
     showSuggestions() {
       return this.query || this.hasResults;
+    },
+    audiences() {
+      return audiencesDictionary;
+    },
+    selectedAudience() {
+      if (this.editPostData) {
+        return [audiencesDictionary.find(o => o.value === this.editPostData.privacy)];
+      } else {
+        if (this.userData) {
+          return [audiencesDictionary.find(o => o.value === this.userData.settings.newPostPrivacy)];
+        } else {
+          return [{ label: "Public", value: "public" }];
+        }
+      }
     }
   },
   methods: {
+    parseJWT(token) {
+      if (!token) {
+        return false;
+      }
+      var base64Url = token.split(".")[1];
+      var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      var jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function(c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    },
     processPostBodyForEditor(body) {
       // This is necessary because we need to unpack the gallery>image objects back into
       // sweet_image_preview objects for the editor.
@@ -822,7 +850,7 @@ export default {
     },
     destroyEditor() {
       // If it's editing an existing post or creating a comment
-      if (this.editPostData._id || this.mode === "comment") {
+      if ((this.editPostData && this.editPostData._id) || this.mode === "comment") {
         this.resetEditor();
         // If it's editing an existing post...
         if (this.editPostData) {
@@ -870,6 +898,14 @@ export default {
   },
   beforeMount() {
     window.addEventListener("beforeunload", this.preventUnload);
+    const userId = this.parseJWT(localStorage.getItem("JWT")).id;
+    axios
+      .get(`https://api.sweet.sh/api/user/${userId}`, {
+        headers: { Authorization: localStorage.getItem("JWT") }
+      })
+      .then(response => {
+        this.userData = response.data.data.profileData;
+      });
   },
   beforeDestroy() {
     window.removeEventListener("beforeunload", this.preventUnload);

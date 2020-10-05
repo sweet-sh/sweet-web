@@ -18,7 +18,6 @@ new Vue({
     }
   },
   beforeMount() {
-    console.log(localStorage.getItem('JWT'))
     if (localStorage.getItem('JWT').length) {
       console.log('Yes');
       this.canMount = true;
