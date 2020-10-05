@@ -151,10 +151,10 @@
         <div class="post-editor__content-wrapper">
           <editor-content class="editor__content post-editor__content" :editor="editor" />
           <transition name="fade">
-            <div
-              class="post-editor__toast"
-              v-show="toastMessage"
-            ><i class="fas fa-spinner-third fa-pulse"></i>&nbsp;&nbsp;{{ toastMessage ? toastMessage : ''}}</div>
+            <div class="post-editor__toast" v-show="toastMessage">
+              <i class="fas fa-spinner-third fa-pulse"></i>
+              &nbsp;&nbsp;{{ toastMessage ? toastMessage : ''}}
+            </div>
           </transition>
         </div>
         <TagInput v-if="mode === 'post'" :tags="tags" />
@@ -189,7 +189,10 @@
         <strong>Public</strong> posts can be seen by anyone on Sweet. Other posts can be seen only by the audiences to which they belong.
       </p>
     </div>
-    <div class="post-editor__buttons-toolbar" v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'">
+    <div
+      class="post-editor__buttons-toolbar"
+      v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'"
+    >
       <button
         type="button"
         class="button grey-button post-editor__button"
@@ -319,6 +322,7 @@ export default {
           new Mention({
             // a list of all suggested items
             items: async () => {
+              // console.log("Fetching users for suggestions list");
               const usersPayload = await axios.get(
                 "https://api.sweet.sh/api/users/all",
                 { headers: { Authorization: localStorage.getItem("JWT") } }
@@ -413,7 +417,115 @@ export default {
         },
         content: this.editPostData
           ? this.processPostBodyForEditor(this.editPostData.jsonBody)
-          : null
+          : null,
+        onDrop: (view, event, slice, moved) => {
+          console.log(event);
+          let hasFiles = false;
+          let files = [];
+          if (event.dataTransfer.items) {
+            console.log('Got items');
+            for (var i = 0; i < event.dataTransfer.items.length; i++) {
+              if (
+                event.dataTransfer.items[i].kind === "file" &&
+                event.dataTransfer.items[i].type.indexOf("image") === 0
+              ) {
+                files.push(event.dataTransfer.items[i].getAsFile());
+              }
+            }
+          } else {
+            console.log('Got files');
+            for (var i = 0; i < event.dataTransfer.files.length; i++) {
+              if (event.dataTransfer.files[i].type.indexOf("image") === 0) {
+                files.push(event.dataTransfer.files[i]);
+              }
+            }
+          }
+          console.log(files);
+          files.forEach((currentValue, index, array) => {
+            hasFiles = true;
+            console.log("Processing copied image item");
+            this.toastMessage = `Uploading image${
+              files.length > 1 ? "s" : ""
+            }...`;
+            let formData = new FormData();
+            formData.append("image", currentValue);
+            axios
+              .post("https://api.sweet.sh/api/image", formData, {
+                headers: {
+                  Authorization: localStorage.getItem("JWT"),
+                  "Content-Type": "multipart/form-data"
+                }
+              })
+              .then(response => {
+                console.log();
+                if (index >= array.length - 1) {
+                  this.toastMessage = false;
+                }
+                this.editor.commands.sweet_image_preview({
+                  thumbnail: response.data.data.thumbnail,
+                  src: response.data.data.imageKey
+                });
+              })
+              .catch(error => {
+                this.toastMessage = false;
+                console.error(error);
+                console.error(error.response);
+                swal.fire(
+                  "Uh-oh.",
+                  "There has been an unexpected error uploading this image. Please try again."
+                );
+              });
+          });
+          if (hasFiles) {
+            event.preventDefault();
+            return true;
+          }
+        },
+        onPaste: () => {
+          let hasFiles = false;
+          const files = Array.from(event.clipboardData.files).filter(item =>
+            item.type.startsWith("image")
+          );
+          files.forEach((currentValue, index, array) => {
+            hasFiles = true;
+            console.log("Processing copied image item");
+            this.toastMessage = `Uploading image${
+              files.files.length > 1 ? "s" : ""
+            }...`;
+            let formData = new FormData();
+            formData.append("image", currentValue);
+            axios
+              .post("https://api.sweet.sh/api/image", formData, {
+                headers: {
+                  Authorization: localStorage.getItem("JWT"),
+                  "Content-Type": "multipart/form-data"
+                }
+              })
+              .then(response => {
+                console.log();
+                if (index >= array.length - 1) {
+                  this.toastMessage = false;
+                }
+                this.editor.commands.sweet_image_preview({
+                  thumbnail: response.data.data.thumbnail,
+                  src: response.data.data.imageKey
+                });
+              })
+              .catch(error => {
+                this.toastMessage = false;
+                console.error(error);
+                console.error(error.response);
+                swal.fire(
+                  "Uh-oh.",
+                  "There has been an unexpected error uploading this image. Please try again."
+                );
+              });
+          });
+          if (hasFiles) {
+            event.preventDefault();
+            return true;
+          }
+        }
       }),
       // Fake editor display for post editor module
       // Secondary post data
@@ -496,7 +608,7 @@ export default {
       axios
         .post(
           "https://api.sweet.sh/api/url-metadata/",
-          { url: url || "https://endless.horse" },
+          { url: url || "http://endless.horse" },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
         .then(response => {
@@ -587,7 +699,7 @@ export default {
     },
     handleFileChange(event, command) {
       let files = event.target.files;
-      this.toastMessage = `Uploading image${files.length > 1 ? 's' : ''}...`;
+      this.toastMessage = `Uploading image${files.length > 1 ? "s" : ""}...`;
       // Make an AJAX request for each file
       $.each(files, (index, file) => {
         let formData = new FormData();
@@ -608,14 +720,14 @@ export default {
               src: response.data.data.imageKey
             });
           })
-          .catch((error) => {
+          .catch(error => {
             this.toastMessage = false;
             console.error(error.response);
             swal.fire(
               "Uh-oh.",
               "There has been an unexpected error uploading this image. Please try again."
             );
-          })
+          });
       });
       // Wipe the image picker's data
       $(".post-editor__imagepicker").val("");

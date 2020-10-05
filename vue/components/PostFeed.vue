@@ -170,7 +170,7 @@
           <div class="toolbar-button-container">
             <a
               class="button post-toolbar-button tooltip-top"
-              :href="`${post.author.username}/${post.url}`"
+              :href="`/${post.author.username}/${post.url}`"
               data-tooltip="Permalink to this post"
             >
               <span class="fa-layers">
