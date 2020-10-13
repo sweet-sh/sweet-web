@@ -277,10 +277,10 @@ import {
 } from "tiptap-extensions";
 
 const audiencesDictionary = [
-        { label: "Public", value: "public" },
-        { label: "Private", value: "private" }
-        // { label: "Personal", value: "personal" }
-      ];
+  { label: "Public", value: "public" },
+  { label: "Private", value: "private" }
+  // { label: "Personal", value: "personal" }
+];
 
 export default {
   components: {
@@ -535,6 +535,15 @@ export default {
         ? this.editPostData.contentWarnings
         : null,
       tags: this.editPostData ? this.editPostData.tags : [],
+      selectedAudience: this.editPostData
+        ? [audiencesDictionary.find(o => o.value === this.editPostData.privacy)]
+        : this.userData
+        ? [
+            audiencesDictionary.find(
+              o => o.value === this.userData.settings.newPostPrivacy
+            )
+          ]
+        : [{ label: "Public", value: "public" }],
       // Link adder functionality
       linkUrl: null,
       linkMenuIsActive: false,
@@ -566,17 +575,6 @@ export default {
     },
     audiences() {
       return audiencesDictionary;
-    },
-    selectedAudience() {
-      if (this.editPostData) {
-        return [audiencesDictionary.find(o => o.value === this.editPostData.privacy)];
-      } else {
-        if (this.userData) {
-          return [audiencesDictionary.find(o => o.value === this.userData.settings.newPostPrivacy)];
-        } else {
-          return [{ label: "Public", value: "public" }];
-        }
-      }
     }
   },
   methods: {
@@ -850,7 +848,10 @@ export default {
     },
     destroyEditor() {
       // If it's editing an existing post or creating a comment
-      if ((this.editPostData && this.editPostData._id) || this.mode === "comment") {
+      if (
+        (this.editPostData && this.editPostData._id) ||
+        this.mode === "comment"
+      ) {
         this.resetEditor();
         // If it's editing an existing post...
         if (this.editPostData) {
@@ -865,7 +866,6 @@ export default {
     }
   },
   watch: {
-    // This runs whenever selectedAudience changes
     selectedAudience: function(newAudience, oldAudience) {
       // First check if the new audience is empty - in that case, it's always set to public
       if (!newAudience || newAudience.length === 0) {
@@ -883,7 +883,7 @@ export default {
             // If we're adding 'public', we need to remove all the others...
             if (changedAudience[0].value === "public") {
               this.selectedAudience = this.audiences.filter(
-                o => o.value === "public"
+                audience => audience.value === "public"
               );
               // ...otherwise, we remove public.
             } else {
