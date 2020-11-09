@@ -278,7 +278,7 @@ import loadingSpinner from "./SharedSubComponents/loadingSpinner.vue";
 import ImageLightbox from "./ImageLightbox.vue";
 import PostEditor from "./PostEditor.vue";
 import swal from "sweetalert2";
-import Autolinker from 'autolinker';
+import Autolinker from "autolinker";
 
 const autolinker = new Autolinker();
 
@@ -439,6 +439,9 @@ export default {
           this.loading = false;
           if (error.response.status === 404) {
             this.loadingMessage = "No more posts.";
+          } else if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
           }
         });
     },
@@ -478,6 +481,9 @@ export default {
                 this.loading = false;
                 if (error.response.status === 404) {
                   this.loadingMessage = "No more posts.";
+                } else if (error.response.status === 401) {
+                  console.log("Destroying invalid session");
+                  window.location.assign("/logout");
                 }
               });
           }
@@ -506,6 +512,10 @@ export default {
             "Uh-oh.",
             "There has been an unexpected error supporting/unsupporting this post. Please try again."
           );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
         });
     },
     _handleBoostButtonClick(event, post) {
@@ -530,6 +540,10 @@ export default {
             "Uh-oh.",
             "There has been an unexpected error boosting/unboosting this post. Please try again."
           );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
         });
     },
     _handleSubscribeButtonClick(event, post) {
@@ -549,6 +563,10 @@ export default {
             "Uh-oh.",
             "There has been an unexpected error subscribing to this post. Please try again."
           );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
         });
     },
     _handleUnsubscribeButtonClick(event, post) {
@@ -569,6 +587,10 @@ export default {
             "Uh-oh.",
             "There has been an unexpected error unsubscribing from this post. Please try again."
           );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
         });
     },
     _handleDeletePostButtonClick(event, post) {
@@ -597,6 +619,10 @@ export default {
                   "Uh-oh.",
                   "There has been an unexpected error deleting this post. Please try again."
                 );
+                if (error.response.status === 401) {
+                  console.log("Destroying invalid session");
+                  window.location.assign("/logout");
+                }
               });
           }
         });
@@ -623,6 +649,12 @@ export default {
       })
       .then(response => {
         this.userData = response.data.data;
+      })
+      .catch(error => {
+        if (error.response.status === 401) {
+          console.log("Destroying invalid session");
+          window.location.assign("/logout");
+        }
       });
     this.getInitialPosts();
   },

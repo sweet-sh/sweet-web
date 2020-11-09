@@ -475,6 +475,10 @@ export default {
                   "Uh-oh.",
                   "There has been an unexpected error uploading this image. Please try again."
                 );
+                if (error.response.status === 401) {
+                  console.log("Destroying invalid session");
+                  window.location.assign("/logout");
+                }
               });
           });
           if (hasFiles) {
@@ -520,6 +524,10 @@ export default {
                   "Uh-oh.",
                   "There has been an unexpected error uploading this image. Please try again."
                 );
+                if (error.response.status === 401) {
+                  console.log("Destroying invalid session");
+                  window.location.assign("/logout");
+                }
               });
           });
           if (hasFiles) {
@@ -657,6 +665,10 @@ export default {
             "Uh-oh.",
             "There has been an unexpected error creating this link preview. Please double check the link and try again."
           );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
         });
     },
     addEmoji(emoji) {
@@ -753,6 +765,10 @@ export default {
               "Uh-oh.",
               "There has been an unexpected error uploading this image. Please try again."
             );
+            if (error.response.status === 401) {
+              console.log("Destroying invalid session");
+              window.location.assign("/logout");
+            }
           });
       });
       // Wipe the image picker's data
@@ -782,6 +798,12 @@ export default {
             })
             .then(response => {
               return response.data.data._id;
+            })
+            .catch(error => {
+              if (error.response.status === 401) {
+                console.log("Destroying invalid session");
+                window.location.assign("/logout");
+              }
             });
           console.log(response);
           return response;
@@ -830,6 +852,10 @@ export default {
               "Uh-oh.",
               "There has been an unexpected error creating this post. Please try again."
             );
+            if (error.response.status === 401) {
+              console.log("Destroying invalid session");
+              window.location.assign("/logout");
+            }
           });
       } else {
         swal.fire("Uh-oh.", "You appear to be trying to post nothing. Why?");
@@ -905,6 +931,12 @@ export default {
       })
       .then(response => {
         this.userData = response.data.data.profileData;
+      })
+      .catch(error => {
+        if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
       });
   },
   beforeDestroy() {
