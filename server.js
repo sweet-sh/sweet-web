@@ -21,6 +21,7 @@ const compiler = webpack({
     user: './vue/userEntry.js',
     single: './vue/singleEntry.js',
     community: './vue/communityEntry.js',
+    library: './vue/libraryEntry.js',
   },
   output: {
     filename: './public/js/vue/[name].js',
