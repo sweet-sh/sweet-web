@@ -257,7 +257,8 @@ article.post:hover {
     margin-left: 3px;
 }
 
-.post-toolbar-button.have-plused {
+.post-toolbar-button.have-plused,
+.post-toolbar-button.in-library {
   font-weight: bold;
   color: $darker-pink;
 }

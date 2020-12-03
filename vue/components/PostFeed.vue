@@ -2,14 +2,13 @@
   <div>
     <div class="post-feed__container" v-if="userData">
       <article
-        v-if="postAllowed"
         v-for="post in posts"
         v-bind:key="post._id"
         class="post"
         v-bind:data-post-id="post._id"
       >
         <aside
-          v-if="(post.boostBlame || post.community) && context !== 'community'"
+          v-if="post.community && context !== 'community'"
           class="notifications"
         >
           <div v-if="post.boostBlame" class="boosters-notification">
@@ -147,24 +146,16 @@
               <span v-if="post.numberOfComments" class="comments-number">{{post.numberOfComments}}</span>
             </button>
           </div>
-          <div
-            v-if="post.privacy === 'public' && userData.loggedIn && post.type !== 'community'"
-            class="toolbar-button-container"
-          >
+          <div class="toolbar-button-container">
             <button
               type="button"
-              class="button post-toolbar-button tooltip-top"
-              :data-tooltip="(post.boostsV2.some(o => o.booster && o.booster._id === userData._id) ? 'Unboost' : 'Boost') + ' this post'"
-              @click="_handleBoostButtonClick($event, post)"
+              v-bind:class="'button post-toolbar-button tooltip-top' + (post.inLibrary ? ' in-library' : '')"
+              v-bind:data-tooltip="(post.inLibrary ? 'Remove this post from your Library' : 'Save this post to your Library')"
+              @click="post.inLibrary ? _handleLibraryRemoveButtonClick($event, post) : _handleLibraryAddButtonClick($event, post)"
             >
-              <span
-                v-if="post.boostsV2.some(o => o.booster && o.booster._id === userData._id)"
-                class="fa-layers fa-fw"
-              >
-                <i class="fas fa-retweet"></i>
-                <i class="fas fa-slash" data-fa-transform="rotate-90"></i>
+              <span>
+                <i class="library-icon fas fa-book-heart"></i>
               </span>
-              <i v-else class="fas fa-retweet"></i>
             </button>
           </div>
           <div class="toolbar-button-container">
@@ -252,7 +243,6 @@
         :_hideImageLightbox="() => showImageLightbox = false"
         :author="lightboxAuthor"
       />
-      <div v-if="!postAllowed">Nope!</div>
     </div>
     <loading-spinner :loading="loading" :message="loadingMessage" />
   </div>
@@ -299,7 +289,6 @@ export default {
       posts: [],
       loading: true,
       loadingMessage: "",
-      postAllowed: true,
       // Image lightbox
       showImageLightbox: false,
       lightboxImages: [],
@@ -351,6 +340,10 @@ export default {
           context = parsedUrl.pathname
             .split("/")
             .filter(v => v && v !== "community");
+          break;
+        case "library":
+          contextType = "library";
+          context = '';
           break;
         default:
           contextType = "home";
@@ -518,27 +511,50 @@ export default {
           }
         });
     },
-    _handleBoostButtonClick(event, post) {
+    _handleLibraryAddButtonClick(event, post) {
       axios({
         method: "POST",
-        url: `https://api.sweet.sh/api/boost/${post._id}`,
-        headers: { Authorization: localStorage.getItem("JWT") }
+        url: `https://api.sweet.sh/api/library`,
+        headers: { Authorization: localStorage.getItem("JWT") },
+        data: {
+          postId: post._id
+        }
       })
         .then(response => {
-          const boostBlame = {
-            reason: "ownBoost",
-            culprit: {
-              ...this.userData.profileData,
-              _id: this.userId
-            }
-          };
-          Vue.set(post, "boostBlame", boostBlame);
+          Vue.set(post, "inLibrary", true);
         })
         .catch(error => {
           console.error(error);
           swal.fire(
             "Uh-oh.",
-            "There has been an unexpected error boosting/unboosting this post. Please try again."
+            "There has been an unexpected error adding this post to your Library. Please try again."
+          );
+          if (error.response.status === 401) {
+            console.log("Destroying invalid session");
+            window.location.assign("/logout");
+          }
+        });
+    },
+    _handleLibraryRemoveButtonClick(event, post) {
+      axios({
+        method: "DELETE",
+        url: `https://api.sweet.sh/api/library`,
+        headers: { Authorization: localStorage.getItem("JWT") },
+        data: {
+          postId: post._id
+        }
+      })
+        .then(response => {
+          Vue.set(post, "inLibrary", false);
+          if (this.context === "library") {
+            this.posts = this.posts.filter(o => o._id !== post._id);
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          swal.fire(
+            "Uh-oh.",
+            "There has been an unexpected error removing this post from your Library. Please try again."
           );
           if (error.response.status === 401) {
             console.log("Destroying invalid session");

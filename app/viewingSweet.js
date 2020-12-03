@@ -315,6 +315,18 @@ module.exports = function (app) {
     })
   })
 
+  // Responds to get requests for the user's library page.
+  // Input: the name of the tag from the url
+  // Output: the tag page rendered if it exists, redirect to the 404 page otherwise, unless isLoggedInOrRedirect redirects you
+  app.get('/library', isLoggedInOrRedirect, function (req, res) {
+    res.render('library', {
+      loggedIn: true,
+      loggedInUserData: req.user,
+      notifierPublicKey: auth.vapidPublicKey,
+      activePage: 'library'
+    })
+  })
+
   // Responds to get requests for /notifications. I think this is only used on mobile?
   // Input: none
   // Output: renders notifications page, which renders as "you're not logged in" if you're not logged in
