@@ -377,6 +377,13 @@ section {
     margin-bottom: 20px;
 }
 
+.page-header--pink {
+    border: 0;
+    padding-bottom: 0;
+    margin-bottom: 10px;
+    color: $dark-pink;
+}
+
 
 @media (min-width: 576px) {
     .container {
