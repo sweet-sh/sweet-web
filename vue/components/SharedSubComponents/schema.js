@@ -189,7 +189,9 @@ const schema = new Schema({
           'img',
           {
             class: 'post-single-image',
-            src: (node.attrs.src.startsWith('http') || node.attrs.src.startsWith('/api/image/display')) ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')),
+            // The random string at the end forces the image to refresh after it's been edited, in case
+            // it's been rotated. An absolute cheat.
+            src: (node.attrs.src.startsWith('http') || node.attrs.src.startsWith('/api/image/display')) ? node.attrs.src : ('/api/image/display/' + node.attrs.src.replace('images/', '')) + '?rs=' + Math.random().toString(36).substring(7),
             alt: node.attrs.alt,
           },
         ],

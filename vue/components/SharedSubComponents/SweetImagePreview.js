@@ -1,11 +1,13 @@
 import { Node } from 'tiptap'
+import axios from "axios";
+import swal from "sweetalert2";
 
 export default class SweetImagePreview extends Node {
-  get name () {
+  get name() {
     return 'sweet_image_preview'
   }
 
-  get schema () {
+  get schema() {
     return {
       // here you have to specify all values that can be stored in this node
       attrs: {
@@ -45,7 +47,7 @@ export default class SweetImagePreview extends Node {
 
   // return a vue component
   // this can be an object or an imported component
-  get view () {
+  get view() {
     return {
       // there are some props available
       // `node` is a Prosemirror Node Object
@@ -59,10 +61,10 @@ export default class SweetImagePreview extends Node {
       props: ['node', 'updateAttrs', 'view'],
       computed: {
         src: {
-          get () {
+          get() {
             return this.node.attrs.src
           },
-          set (src) {
+          set(src) {
             // we cannot update `src` itself because `this.node.attrs` is immutable
             this.updateAttrs({
               src
@@ -70,20 +72,20 @@ export default class SweetImagePreview extends Node {
           }
         },
         alt: {
-          get () {
+          get() {
             return this.node.attrs.alt
           },
-          set (alt) {
+          set(alt) {
             this.updateAttrs({
               alt
             })
           }
         },
         thumbnail: {
-          get () {
+          get() {
             return this.node.attrs.thumbnail
           },
-          set (thumbnail) {
+          set(thumbnail) {
             this.updateAttrs({
               thumbnail
             })
@@ -93,14 +95,80 @@ export default class SweetImagePreview extends Node {
       template: `
         <div class="post-editor-image">
           <img class="post-editor-image__image" :src="thumbnail" />
+          <div class="post-editor-image__controls">
+            <button type="button" @click="_handleRotateImageCW($event, src)"><i class="far fa-redo"></i></button>
+            <button type="button" @click="_handleRotateImageCCW($event, src)"><i class="far fa-undo"></i></button>
+          </div>
           <textarea class="post-editor-image__text" v-model="alt" v-if="view.editable" @paste.stop placeholder="Describe this image for people using screen readers"/>
           <div class="post-editor-image__draghandle" data-drag-handle><i class="far fa-bars"></i></div>
         </div>
-      `
+      `,
+      methods: {
+        _handleRotateImageCCW(event, src) {
+          console.log('CCW');
+          console.log(src);
+          axios
+            .post("https://api.sweet.sh/api/image/rotate", {
+              key: src,
+              direction: 'ccw'
+            }, {
+              headers: {
+                Authorization: localStorage.getItem("JWT"),
+              }
+            })
+            .then(response => {
+              console.log(response);
+              this.updateAttrs({
+                thumbnail: response.data.data.thumbnail
+              })
+            })
+            .catch(error => {
+              console.error(error.response);
+              swal.fire(
+                "Uh-oh.",
+                "There has been an unexpected error rotating this image. Please try again."
+              );
+              if (error.response.status === 401) {
+                console.log("Destroying invalid session");
+                window.location.assign("/logout");
+              }
+            });
+        },
+        _handleRotateImageCW(event, src) {
+          console.log('CW');
+          console.log(src);
+          axios
+            .post("https://api.sweet.sh/api/image/rotate", {
+              key: src,
+              direction: 'cw'
+            }, {
+              headers: {
+                Authorization: localStorage.getItem("JWT"),
+              }
+            })
+            .then(response => {
+              console.log(response);
+              this.updateAttrs({
+                thumbnail: response.data.data.thumbnail
+              })
+            })
+            .catch(error => {
+              console.error(error.response);
+              swal.fire(
+                "Uh-oh.",
+                "There has been an unexpected error rotating this image. Please try again."
+              );
+              if (error.response.status === 401) {
+                console.log("Destroying invalid session");
+                window.location.assign("/logout");
+              }
+            });
+        }
+      }
     }
   }
 
-  commands ({ type }) {
+  commands({ type }) {
     return attrs => (state, dispatch) => {
       const { selection } = state
       const position = selection.$cursor
