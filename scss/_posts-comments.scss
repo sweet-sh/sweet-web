@@ -690,3 +690,24 @@ article.comment>header .author-username {
         text-decoration: none;
     }
 }
+
+.collapsed-post-body {
+    height: 160px;
+    overflow: hidden;
+    &::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgb(255, 255, 255) 90%, rgb(255, 255, 255) 100%);
+        pointer-events: none;
+        bottom: 1rem;
+        left: 0;
+        height: 50px;
+    }
+}
+
+.keep-reading-button {
+    display: block;
+    margin-top: .75rem;
+    font-weight: 700;
+}
