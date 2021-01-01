@@ -108,7 +108,7 @@ export default class SweetImagePreview extends Node {
           console.log('CCW');
           console.log(src);
           axios
-            .post("https://api.sweet.sh/api/image/rotate", {
+            .post("http://localhost:8787/api/image/rotate", {
               key: src,
               direction: 'ccw'
             }, {
@@ -138,7 +138,7 @@ export default class SweetImagePreview extends Node {
           console.log('CW');
           console.log(src);
           axios
-            .post("https://api.sweet.sh/api/image/rotate", {
+            .post("http://localhost:8787/api/image/rotate", {
               key: src,
               direction: 'cw'
             }, {

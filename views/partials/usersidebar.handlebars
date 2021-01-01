@@ -115,6 +115,8 @@
 {{/if}}
 {{/unless}} {{! End unless is own profile}}
 
+{{#if loggedIn}}
+
 <button type="button" id="toggle-connections" class="button full-width-button user-panel-link"
   data-target="#connectionsBody" data-shown="false" data-shown-text="<i class='fas fa-users'></i> Hide all connections"
   data-hidden-text="<i class='fas fa-users'></i> See all connections">
@@ -159,4 +161,6 @@
   </div>
 </div>
 {{/unless}} {{! End unless is own profile}}
+
+{{/if}} {{! End if is logged in}}
 </div>

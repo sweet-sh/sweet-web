@@ -3,10 +3,21 @@
     <div
       class="post-editor__fake-editor"
       v-show="mode === 'post' && !postEditorVisible"
-      @click="postEditorVisible = true; editor.focus();"
-    >What would you like to say?</div>
-    <div class="editor" v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'">
-      <editor-menu-bar :editor="editor" v-slot="{ commands, isActive, getMarkAttrs }">
+      @click="
+        postEditorVisible = true;
+        editor.focus();
+      "
+    >
+      What would you like to say?
+    </div>
+    <div
+      class="editor"
+      v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'"
+    >
+      <editor-menu-bar
+        :editor="editor"
+        v-slot="{ commands, isActive, getMarkAttrs }"
+      >
         <div class="menubar">
           <button
             class="menubar__button"
@@ -95,7 +106,7 @@
             class="post-editor__imagepicker"
             name="post-editor__imagepicker"
             multiple
-            style="display:none;"
+            style="display: none"
             @change="handleFileChange($event, commands.sweet_image_preview)"
             ref="imagePickerRef"
           />
@@ -119,14 +130,14 @@
           @submit.prevent="setLinkUrl(commands.sweet_link_preview, linkUrl)"
         >
           <input
-            style="flex:1;background:#fff"
+            style="flex: 1; background: #fff"
             type="text"
             v-model="linkUrl"
             placeholder="http://endless.horse/"
             ref="linkInput"
             @keydown.esc="hideLinkMenu"
           />
-          <button style="width:auto" type="submit" class="menubar__button">
+          <button style="width: auto" type="submit" class="menubar__button">
             <span v-if="linkPreviewLoading">
               <i class="fas fa-spinner-third fa-pulse"></i>
             </span>
@@ -149,11 +160,14 @@
       />
       <div class="post-editor__inputs-container">
         <div class="post-editor__content-wrapper">
-          <editor-content class="editor__content post-editor__content" :editor="editor" />
+          <editor-content
+            class="editor__content post-editor__content"
+            :editor="editor"
+          />
           <transition name="fade">
             <div class="post-editor__toast" v-show="toastMessage">
               <i class="fas fa-spinner-third fa-pulse"></i>
-              &nbsp;&nbsp;{{ toastMessage ? toastMessage : ''}}
+              &nbsp;&nbsp;{{ toastMessage ? toastMessage : "" }}
             </div>
           </transition>
         </div>
@@ -175,18 +189,22 @@
       v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'"
     >
       <span class="post-editor__audience-selector__heading">
-        <i class="fas fa-user-friends" style="margin-right:.25rem;"></i> Audiences
+        <i class="fas fa-user-friends" style="margin-right: 0.25rem"></i>
+        Audiences
       </span>
       <v-select
         multiple
-        v-model="selectedAudience"
+        :value="selectedAudiences"
+        @input="setSelectedAudiences"
+        label="name"
         :options="audiences"
         :closeOnSelect="false"
         placeholder="No audiences selected"
       />
-      <p class="small text-muted" style="margin-top:.25rem;">
-        Choose who can see this post.
-        <strong>Public</strong> posts can be seen by anyone on Sweet. Other posts can be seen only by the audiences to which they belong.
+      <p class="small text-muted" style="margin-top: 0.25rem">
+        Choose who can see this post. Posts marked <strong>Everyone</strong> can
+        be seen by anyone on Sweet. Other posts can be seen only by the
+        Audiences to which they belong.
       </p>
     </div>
     <div
@@ -198,13 +216,17 @@
         class="button grey-button post-editor__button"
         v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'"
         @click="destroyEditor()"
-      >Cancel</button>
+      >
+        Cancel
+      </button>
       <button
         type="button"
         class="button post-editor__button"
         v-show="(mode === 'post' && postEditorVisible) || mode === 'comment'"
         @click="_handlePostButtonClick"
-      >{{ editPostData ? 'Edit' : mode === 'post' ? 'Post' : 'Reply' }}</button>
+      >
+        {{ editPostData ? "Edit" : mode === "post" ? "Post" : "Reply" }}
+      </button>
     </div>
     <div class="suggestion-list" v-show="showSuggestions" ref="suggestions">
       <template v-if="hasResults">
@@ -216,10 +238,13 @@
           @click="selectUser(user)"
         >
           <img class="suggestion-list__image" v-bind:src="user.image" />
-          <strong v-if="user.displayName">{{ user.displayName }} &middot;</strong>
+          <strong v-if="user.displayName"
+            >{{ user.displayName }} &middot;</strong
+          >
           <span
             v-bind:style="{ fontWeight: user.displayName ? 'regular' : 'bold' }"
-          >@{{ user.username }}</span>
+            >@{{ user.username }}</span
+          >
         </div>
       </template>
       <div v-else class="suggestion-list__item is-empty">No users found</div>
@@ -250,7 +275,7 @@ import {
   EditorContent,
   EditorMenuBar,
   EditorMenuBubble,
-  Extension
+  Extension,
 } from "tiptap";
 import swal from "sweetalert2";
 
@@ -273,14 +298,8 @@ import {
   History,
   Mention,
   Placeholder,
-  TrailingNode
+  TrailingNode,
 } from "tiptap-extensions";
-
-const audiencesDictionary = [
-  { label: "Public", value: "public" },
-  { label: "Private", value: "private" }
-  // { label: "Personal", value: "personal" }
-];
 
 export default {
   components: {
@@ -289,7 +308,7 @@ export default {
     EditorMenuBubble,
     Picker,
     TagInput,
-    vSelect
+    vSelect,
   },
   props: {
     mode: { type: String, default: "post" },
@@ -300,7 +319,7 @@ export default {
     context: String,
     contextId: String,
     postEditorVisible: { type: Boolean, default: false },
-    destroyEditingEditor: Function
+    destroyEditingEditor: Function,
   },
   data() {
     const vm = this;
@@ -325,7 +344,7 @@ export default {
             items: async () => {
               // console.log("Fetching users for suggestions list");
               const usersPayload = await axios.get(
-                "https://api.sweet.sh/api/users/all",
+                "http://localhost:8787/api/users/all",
                 { headers: { Authorization: localStorage.getItem("JWT") } }
               );
               return usersPayload.data.data;
@@ -384,32 +403,32 @@ export default {
               }
               const fuse = new Fuse(items, {
                 threshold: 0.2,
-                keys: ["displayName", "username"]
+                keys: ["displayName", "username"],
               });
-              return fuse.search(query).map(item => item.item);
-            }
+              return fuse.search(query).map((item) => item.item);
+            },
           }),
           new Placeholder({
             emptyEditorClass: "is-editor-empty",
             emptyNodeClass: "is-empty",
             emptyNodeText: "What would you like to say?",
             showOnlyWhenEditable: true,
-            showOnlyCurrent: true
+            showOnlyCurrent: true,
           }),
           new SweetImagePreview(),
           new TrailingNode({
             node: "paragraph",
-            notAfter: ["paragraph"]
+            notAfter: ["paragraph"],
           }),
           new (class extends Extension {
             keys({ type }) {
               return {
-                "Ctrl-Enter": function() {
+                "Ctrl-Enter": function () {
                   vm._handlePostButtonClick();
-                }
+                },
               };
             }
-          })()
+          })(),
         ],
         onUpdate: ({ getJSON, getHTML }) => {
           this.json = getJSON();
@@ -451,23 +470,23 @@ export default {
             let formData = new FormData();
             formData.append("image", currentValue);
             axios
-              .post("https://api.sweet.sh/api/image", formData, {
+              .post("http://localhost:8787/api/image", formData, {
                 headers: {
                   Authorization: localStorage.getItem("JWT"),
-                  "Content-Type": "multipart/form-data"
-                }
+                  "Content-Type": "multipart/form-data",
+                },
               })
-              .then(response => {
+              .then((response) => {
                 console.log();
                 if (index >= array.length - 1) {
                   this.toastMessage = false;
                 }
                 this.editor.commands.sweet_image_preview({
                   thumbnail: response.data.data.thumbnail,
-                  src: response.data.data.imageKey
+                  src: response.data.data.imageKey,
                 });
               })
-              .catch(error => {
+              .catch((error) => {
                 this.toastMessage = false;
                 console.error(error);
                 console.error(error.response);
@@ -488,7 +507,7 @@ export default {
         },
         onPaste: () => {
           let hasFiles = false;
-          const files = Array.from(event.clipboardData.files).filter(item =>
+          const files = Array.from(event.clipboardData.files).filter((item) =>
             item.type.startsWith("image")
           );
           files.forEach((currentValue, index, array) => {
@@ -500,23 +519,23 @@ export default {
             let formData = new FormData();
             formData.append("image", currentValue);
             axios
-              .post("https://api.sweet.sh/api/image", formData, {
+              .post("http://localhost:8787/api/image", formData, {
                 headers: {
                   Authorization: localStorage.getItem("JWT"),
-                  "Content-Type": "multipart/form-data"
-                }
+                  "Content-Type": "multipart/form-data",
+                },
               })
-              .then(response => {
+              .then((response) => {
                 console.log();
                 if (index >= array.length - 1) {
                   this.toastMessage = false;
                 }
                 this.editor.commands.sweet_image_preview({
                   thumbnail: response.data.data.thumbnail,
-                  src: response.data.data.imageKey
+                  src: response.data.data.imageKey,
                 });
               })
-              .catch(error => {
+              .catch((error) => {
                 this.toastMessage = false;
                 console.error(error);
                 console.error(error.response);
@@ -534,7 +553,7 @@ export default {
             event.preventDefault();
             return true;
           }
-        }
+        },
       }),
       // User data
       userData: null,
@@ -543,15 +562,8 @@ export default {
         ? this.editPostData.contentWarnings
         : null,
       tags: this.editPostData ? this.editPostData.tags : [],
-      selectedAudience: this.editPostData
-        ? [audiencesDictionary.find(o => o.value === this.editPostData.privacy)]
-        : this.userData
-        ? [
-            audiencesDictionary.find(
-              o => o.value === this.userData.settings.newPostPrivacy
-            )
-          ]
-        : [{ label: "Public", value: "public" }],
+      audiences: [],
+      selectedAudiences: [],
       // Link adder functionality
       linkUrl: null,
       linkMenuIsActive: false,
@@ -571,7 +583,7 @@ export default {
       emojiIndex: new EmojiIndex(emojiData),
       emojiPickerVisible: false,
       // Status and error messages
-      toastMessage: false
+      toastMessage: false,
     };
   },
   computed: {
@@ -581,9 +593,6 @@ export default {
     showSuggestions() {
       return this.query || this.hasResults;
     },
-    audiences() {
-      return audiencesDictionary;
-    }
   },
   methods: {
     parseJWT(token) {
@@ -595,7 +604,7 @@ export default {
       var jsonPayload = decodeURIComponent(
         atob(base64)
           .split("")
-          .map(function(c) {
+          .map(function (c) {
             return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
           })
           .join("")
@@ -609,7 +618,7 @@ export default {
         const parsedContent = [];
         body.content.forEach((node, index, array) => {
           if (node.type === "gallery") {
-            node.content.forEach(imageNode => {
+            node.content.forEach((imageNode) => {
               imageNode.type = "sweet_image_preview";
               imageNode.attrs.thumbnail = `/api/image/display/${imageNode.attrs.src.replace(
                 "images/",
@@ -641,11 +650,11 @@ export default {
       this.toastMessage = "Loading link preview...";
       axios
         .post(
-          "https://api.sweet.sh/api/url-metadata/",
+          "http://localhost:8787/api/url-metadata/",
           { url: url || "http://endless.horse" },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
-        .then(response => {
+        .then((response) => {
           this.toastMessage = false;
           const {
             url,
@@ -653,12 +662,12 @@ export default {
             title,
             description,
             image,
-            domain
+            domain,
           } = response.data.data;
           command({ url, embedUrl, title, description, image, domain });
           this.hideLinkMenu();
         })
-        .catch(error => {
+        .catch((error) => {
           this.toastMessage = false;
           console.error(error.response);
           swal.fire(
@@ -702,8 +711,8 @@ export default {
         range: this.suggestionRange,
         attrs: {
           id: user.id,
-          label: user.username
-        }
+          label: user.username,
+        },
       });
       this.editor.focus();
     },
@@ -726,7 +735,7 @@ export default {
         theme: "light",
         placement: "top-start",
         inertia: true,
-        duration: [400, 200]
+        duration: [400, 200],
       });
     },
     destroyPopup() {
@@ -743,22 +752,22 @@ export default {
         let formData = new FormData();
         formData.append("image", file);
         axios
-          .post("https://api.sweet.sh/api/image", formData, {
+          .post("http://localhost:8787/api/image", formData, {
             headers: {
               Authorization: localStorage.getItem("JWT"),
-              "Content-Type": "multipart/form-data"
-            }
+              "Content-Type": "multipart/form-data",
+            },
           })
-          .then(response => {
+          .then((response) => {
             if (index >= files.length - 1) {
               this.toastMessage = false;
             }
             command({
               thumbnail: response.data.data.thumbnail,
-              src: response.data.data.imageKey
+              src: response.data.data.imageKey,
             });
           })
-          .catch(error => {
+          .catch((error) => {
             this.toastMessage = false;
             console.error(error.response);
             swal.fire(
@@ -791,15 +800,15 @@ export default {
           const parsedUrl = new URL(window.location.href);
           let communitySlug = parsedUrl.pathname
             .split("/")
-            .filter(v => v && v !== "community");
+            .filter((v) => v && v !== "community");
           let response = await axios
-            .get(`https://api.sweet.sh/api/communities/${communitySlug}`, {
-              headers: { Authorization: localStorage.getItem("JWT") }
+            .get(`http://localhost:8787/api/communities/${communitySlug}`, {
+              headers: { Authorization: localStorage.getItem("JWT") },
             })
-            .then(response => {
+            .then((response) => {
               return response.data.data._id;
             })
-            .catch(error => {
+            .catch((error) => {
               if (error.response.status === 401) {
                 console.log("Destroying invalid session");
                 window.location.assign("/logout");
@@ -818,7 +827,7 @@ export default {
           body: newJSON,
           contentWarning: this.contentWarning,
           tags: this.tags,
-          audience: this.selectedAudience
+          audiences: this.selectedAudiences,
         };
         console.log(payload);
         // Three options here:
@@ -827,12 +836,12 @@ export default {
         // - PUT to /api/post (editing post)
         // Editing comments is not yet implemented.
         axios({
-          url: `https://api.sweet.sh/api/${this.mode}`,
+          url: `http://localhost:8787/api/${this.mode}`,
           method: this.editPostData ? "PUT" : "POST",
           data: payload,
-          headers: { Authorization: localStorage.getItem("JWT") }
+          headers: { Authorization: localStorage.getItem("JWT") },
         })
-          .then(response => {
+          .then((response) => {
             console.log(response.data);
             this.resetEditor();
             if (this.mode === "post") {
@@ -846,7 +855,7 @@ export default {
               EventBus.$emit("comment-created", response.data.data);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error.response);
             swal.fire(
               "Uh-oh.",
@@ -861,6 +870,29 @@ export default {
         swal.fire("Uh-oh.", "You appear to be trying to post nothing. Why?");
       }
     },
+    setSelectedAudiences(maybeSelectedAudiences) {
+      // First check if the new audience is empty - in that case, it's always set to 'Everyone'
+      if (!maybeSelectedAudiences || maybeSelectedAudiences.length === 0) {
+        this.selectedAudiences = this.audiences.filter(
+          (o) => o._id === "everyone"
+        );
+      } else {
+        // Get the element which has just been added (it's always last)
+        const newAudience =
+          maybeSelectedAudiences[maybeSelectedAudiences.length - 1];
+        // If we're adding 'Everyone', we need to remove all the others...
+        if (newAudience._id === "everyone") {
+          this.selectedAudiences = this.audiences.filter(
+            (o) => o._id === "everyone"
+          );
+          // ...otherwise, we remove 'Everyone'.
+        } else {
+          this.selectedAudiences = maybeSelectedAudiences.filter(
+            (o) => o._id !== "everyone"
+          );
+        }
+      }
+    },
     resetEditor() {
       // Reset the post editor
       this.editor.clearContent();
@@ -868,7 +900,7 @@ export default {
       this.html = "";
       this.tags = [];
       this.contentWarning = null;
-      this.selectedAudience = null;
+      this.selectedAudiences = null;
       this.emojiPickerVisible = false;
       this.postEditorVisible = false;
     },
@@ -889,60 +921,51 @@ export default {
       if (this.mode === "post") {
         this.resetEditor();
       }
-    }
-  },
-  watch: {
-    selectedAudience: function(newAudience, oldAudience) {
-      // First check if the new audience is empty - in that case, it's always set to public
-      if (!newAudience || newAudience.length === 0) {
-        this.selectedAudience = this.audiences.filter(
-          o => o.value === "public"
-        );
-      } else {
-        // We only run this function if we're adding a new value, not the initial value
-        if (oldAudience && newAudience && newAudience.length > 1) {
-          // Work out the new audience value
-          const changedAudience = [oldAudience, newAudience]
-            .sort((a, b) => b.length - a.length)
-            .reduce((a, b) => a.filter(o => !b.some(v => v.value === o.value)));
-          if (changedAudience[0]) {
-            // If we're adding 'public', we need to remove all the others...
-            if (changedAudience[0].value === "public") {
-              this.selectedAudience = this.audiences.filter(
-                audience => audience.value === "public"
-              );
-              // ...otherwise, we remove public.
-            } else {
-              this.selectedAudience = newAudience.filter(
-                audience => audience.value !== "public"
-              );
-            }
-          }
-        }
-      }
-    }
+    },
   },
   beforeMount() {
     window.addEventListener("beforeunload", this.preventUnload);
     const userId = this.parseJWT(localStorage.getItem("JWT")).id;
     axios
-      .get(`https://api.sweet.sh/api/user/${userId}`, {
-        headers: { Authorization: localStorage.getItem("JWT") }
+      .get(`http://localhost:8787/api/user/${userId}`, {
+        headers: { Authorization: localStorage.getItem("JWT") },
       })
-      .then(response => {
+      .then((response) => {
         this.userData = response.data.data.profileData;
       })
-      .catch(error => {
-        if (error.response.status === 401) {
-            console.log("Destroying invalid session");
-            window.location.assign("/logout");
-          }
+      .catch((error) => {
+        if (error.response && error.response.status === 401) {
+          console.log("Destroying invalid session");
+          window.location.assign("/logout");
+        }
+      });
+    // Fetch the user's current Audiences and set the initial Audience
+    axios
+      .get("http://localhost:8787/api/audience", {
+        headers: { Authorization: localStorage.getItem("JWT") },
+      })
+      .then((response) => {
+        // Set user audiences
+        this.audiences = [
+          ...response.data.data,
+          { _id: "everyone", name: "Everyone" },
+        ];
+        // Set initial audiences
+        // If we're editing a post, the selected audience is set on the post
+        if (this.editPostData) {
+          this.selectedAudiences = this.editPostData.audiences;
+        }
+        // If we're creating a new post, the default selected audience
+        // is set in the user's settings
+        else if (this.userData) {
+          this.selectedAudiences = this.userData.settings.newPostAudiences;
+        }
       });
   },
   beforeDestroy() {
     window.removeEventListener("beforeunload", this.preventUnload);
     this.destroyPopup();
     this.editor.destroy();
-  }
+  },
 };
 </script>

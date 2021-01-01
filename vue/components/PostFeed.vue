@@ -349,7 +349,7 @@ export default {
           contextType = "home";
           break;
       }
-      return [`https://api.sweet.sh/api/posts/${contextType}/`, `/${context}`];
+      return [`http://localhost:8787/api/posts/${contextType}/`, `/${context}`];
     }
   },
   methods: {
@@ -430,9 +430,9 @@ export default {
         })
         .catch(error => {
           this.loading = false;
-          if (error.response.status === 404) {
+          if (error.response && error.response.status === 404) {
             this.loadingMessage = "No more posts.";
-          } else if (error.response.status === 401) {
+          } else if (error.response && error.response.status === 401) {
             console.log("Destroying invalid session");
             window.location.assign("/logout");
           }
@@ -487,7 +487,7 @@ export default {
       axios({
         // method: post.havePlused ? 'DELETE' : 'GET',
         method: "POST",
-        url: `https://api.sweet.sh/api/plus/${post._id}`,
+        url: `http://localhost:8787/api/plus/${post._id}`,
         headers: { Authorization: localStorage.getItem("JWT") }
         // data: { postid: post._id }
       })
@@ -514,7 +514,7 @@ export default {
     _handleLibraryAddButtonClick(event, post) {
       axios({
         method: "POST",
-        url: `https://api.sweet.sh/api/library`,
+        url: `http://localhost:8787/api/library`,
         headers: { Authorization: localStorage.getItem("JWT") },
         data: {
           postId: post._id
@@ -538,7 +538,7 @@ export default {
     _handleLibraryRemoveButtonClick(event, post) {
       axios({
         method: "DELETE",
-        url: `https://api.sweet.sh/api/library`,
+        url: `http://localhost:8787/api/library`,
         headers: { Authorization: localStorage.getItem("JWT") },
         data: {
           postId: post._id
@@ -565,7 +565,7 @@ export default {
     _handleSubscribeButtonClick(event, post) {
       axios
         .post(
-          `https://api.sweet.sh/api/subscription`,
+          `http://localhost:8787/api/subscription`,
           { postId: post._id },
           { headers: { Authorization: localStorage.getItem("JWT") } }
         )
@@ -587,7 +587,7 @@ export default {
     },
     _handleUnsubscribeButtonClick(event, post) {
       axios
-        .delete(`https://api.sweet.sh/api/subscription`, {
+        .delete(`http://localhost:8787/api/subscription`, {
           headers: { Authorization: localStorage.getItem("JWT") },
           data: { postId: post._id }
         })
@@ -622,7 +622,7 @@ export default {
         .then(result => {
           if (result.isConfirmed) {
             axios
-              .delete(`https://api.sweet.sh/api/post`, {
+              .delete(`http://localhost:8787/api/post`, {
                 headers: { Authorization: localStorage.getItem("JWT") },
                 data: { postId: post._id }
               })
@@ -660,7 +660,7 @@ export default {
     //   window.location.assign("/logout");
     // }
     axios
-      .get(`https://api.sweet.sh/api/user/${this.userId}`, {
+      .get(`http://localhost:8787/api/user/${this.userId}`, {
         headers: { Authorization: localStorage.getItem("JWT") }
       })
       .then(response => {
