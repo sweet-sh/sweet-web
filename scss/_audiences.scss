@@ -1,0 +1,119 @@
+.audience-window {
+  margin-bottom: 1rem;
+}
+
+.audience-users {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.audience {
+  &__add-new-user-container {
+    display: flex;
+    flex-direction: column;
+    @media (min-width: 768px) {
+      flex-direction: row;
+    }
+    button {
+      margin-top: 10px;
+      @media (min-width: 768px) {
+        margin-left: 10px;
+        margin-top: 0;
+      }
+    }
+  }
+  &__name {
+    display: flex;
+    align-items: center;
+    h4 {
+      margin: 0;
+    }
+    margin-bottom: 1rem;
+  }
+  &__name-editor {
+    align-items: center;
+    display: flex;
+    margin-bottom: 1rem;
+  }
+}
+
+.user-card {
+  border: 1px solid $message-border;
+  border-radius: 0.25rem;
+  background: $message-background;
+  color: $message-color;
+  // background-color: $element-background;
+  // border: 1px solid $medium-grey;
+  // border-radius: $rounded-border;
+  // box-shadow: $card-shadow;
+  flex: 1;
+  display: flex;
+  padding: .5rem;
+  margin: 0 10px 10px 0;
+  position: relative;
+  &__avatar {
+    max-width: 46px;
+    height: 46px;
+    border-radius: 5px;
+    margin-right: 5px;
+    flex: 1;
+    img {
+      width: 46px;
+    }
+  }
+  &__name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  &__display-name {
+    font-weight: 700;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+  }
+  &__username {
+    font-weight: 300;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+  }
+  &__delete-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: .9rem;
+    padding: 0;
+    color: $medium-grey;
+    cursor: pointer;
+    &:hover {
+      color: $dark-pink;
+    }
+  }
+}
+
+.border-box {
+  background: $element-background;
+  padding: .5rem;
+  border: 1px solid $medium-grey;
+  border-radius: $rounded-border;
+  margin: 1rem 0;
+}
+
+.capabilities-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  li {
+    font-size: .9rem;
+    font-weight: 300;
+    i {
+      margin-right: 5px;
+    }
+  }
+}

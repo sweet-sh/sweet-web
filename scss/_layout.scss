@@ -60,7 +60,7 @@ section {
   padding: .75rem;
   border-top: 1px solid $medium-grey;
   border-bottom: 1px solid $medium-grey;
-  @media(min-width:768px) {
+  @media(min-width:576px) {
     border-radius: $rounded-border;
     border-right: 1px solid $medium-grey;
     border-left: 1px solid $medium-grey;
