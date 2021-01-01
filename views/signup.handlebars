@@ -25,7 +25,21 @@
                 <label for="passwordrepeat">Repeat password</label>
             </div>
 
-            <button class="button large-button full-width-button" type="submit" >Sign up</button>
+            <button class="button large-button full-width-button" type="submit" id="sign-up-button">Sign up</button>
         </form>
 
 </div>
+
+<script src="https://www.google.com/recaptcha/api.js?render=6LeXhPsZAAAAACCLlU1OHZGn5mXxn8eSr95x7MXS"></script>
+
+<script>
+    $('#sign-up-button').click(function (e) {
+        e.preventDefault();
+        grecaptcha.ready(function() {
+            grecaptcha.execute('https://www.google.com/recaptcha/api.js?render=6LeXhPsZAAAAACCLlU1OHZGn5mXxn8eSr95x7MXS', {action: 'submit'}).then(function(token) {
+                console.log(token);
+            });
+        });
+    });
+</script>
+
