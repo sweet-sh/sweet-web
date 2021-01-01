@@ -256,7 +256,7 @@
         bootbox.confirm('You are about to delete your Sweet user account and all your data, including your posts, comments, boosts, subscriptions, uploaded images, community memberships, votes, and relationships. This process is immediate and permanent. You will not be able to undo it. Would you like to proceed?', function (result) {
             if (result === true) {
                 $.ajax({
-                    url: 'https://api.sweet.sh/api/user',
+                    url: 'http://localhost:8787/api/user',
                     type: 'DELETE',
                     headers: {
                         'Authorization': localStorage.getItem('JWT')
