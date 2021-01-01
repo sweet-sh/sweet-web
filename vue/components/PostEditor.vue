@@ -224,14 +224,6 @@
       </template>
       <div v-else class="suggestion-list__item is-empty">No users found</div>
     </div>
-    <!-- <p>Audiences: {{ selectedAudience }}</p> -->
-    <!-- <pre><code v-html="json"></code></pre> -->
-    <!-- <p></p> -->
-    <!-- <pre><code style="white-space: normal;">{{ html }}</code></pre> -->
-    <!-- <p>
-      JWT:
-      <code>{{ JWT }}</code>
-    </p>-->
   </div>
 </template>
 
@@ -300,7 +292,8 @@ export default {
     context: String,
     contextId: String,
     postEditorVisible: { type: Boolean, default: false },
-    destroyEditingEditor: Function
+    destroyEditingEditor: Function,
+    userData: Object,
   },
   data() {
     const vm = this;
@@ -536,22 +529,25 @@ export default {
           }
         }
       }),
-      // User data
-      userData: null,
       // Secondary post data
       contentWarning: this.editPostData
         ? this.editPostData.contentWarnings
         : null,
       tags: this.editPostData ? this.editPostData.tags : [],
-      selectedAudience: this.editPostData
-        ? [audiencesDictionary.find(o => o.value === this.editPostData.privacy)]
-        : this.userData
-        ? [
-            audiencesDictionary.find(
-              o => o.value === this.userData.settings.newPostPrivacy
-            )
-          ]
-        : [{ label: "Public", value: "public" }],
+      selectedAudience: 
+        this.editPostData
+        ?
+          [audiencesDictionary.find(o => o.value === this.editPostData.privacy)]
+        :
+          this.userData && this.userData.settings
+          ?
+            [
+              audiencesDictionary.find(
+                o => o.value === this.userData.settings.newPostPrivacy
+              )
+            ]
+          :
+            [{ label: "Public", value: "public" }],
       // Link adder functionality
       linkUrl: null,
       linkMenuIsActive: false,
@@ -924,20 +920,6 @@ export default {
   },
   beforeMount() {
     window.addEventListener("beforeunload", this.preventUnload);
-    const userId = this.parseJWT(localStorage.getItem("JWT")).id;
-    axios
-      .get(`https://api.sweet.sh/api/user/${userId}`, {
-        headers: { Authorization: localStorage.getItem("JWT") }
-      })
-      .then(response => {
-        this.userData = response.data.data.profileData;
-      })
-      .catch(error => {
-        if (error.response.status === 401) {
-            console.log("Destroying invalid session");
-            window.location.assign("/logout");
-          }
-      });
   },
   beforeDestroy() {
     window.removeEventListener("beforeunload", this.preventUnload);
