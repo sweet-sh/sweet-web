@@ -99,7 +99,7 @@ module.exports = function (app) {
     if (req.isAuthenticated()) {
       res.redirect('/home')
     } else {
-      User.count().then(users => {
+      User.count({ isVerified: true }).then(users => {
         Community.find().sort('-lastUpdated').then(communities => {
           const publicCommunites = communities.filter(c => c.settings.visibility === 'public' && c.settings.joinType === 'open')
           publicCommunites.sort(function () {
@@ -316,8 +316,6 @@ module.exports = function (app) {
   })
 
   // Responds to get requests for the user's library page.
-  // Input: the name of the tag from the url
-  // Output: the tag page rendered if it exists, redirect to the 404 page otherwise, unless isLoggedInOrRedirect redirects you
   app.get('/library', isLoggedInOrRedirect, function (req, res) {
     res.render('library', {
       loggedIn: true,
@@ -326,6 +324,17 @@ module.exports = function (app) {
       activePage: 'library'
     })
   })
+
+
+  // Responds to get requests for the user's audience manager page.
+  app.get('/audiences', isLoggedInOrRedirect, function (req, res) {
+    res.render('audienceManager', {
+      loggedIn: true,
+      loggedInUserData: req.user,
+      notifierPublicKey: auth.vapidPublicKey,
+      activePage: 'audienceManager'
+    })
+  });
 
   // Responds to get requests for /notifications. I think this is only used on mobile?
   // Input: none
