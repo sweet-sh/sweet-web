@@ -10,13 +10,43 @@ const notifier = require('./notifier')
 const reservedUsernames = require('../config/reserved-usernames.js')
 const emailer = require('./emailer')
 const nanoid = require('nanoid')
+const axios = require('axios')
 
 module.exports = function (app, passport) {
   // Responds to a post request containing signup information.
   // Inputs: the request body, containing an email, a username, and a password.
   // Outputs: either a redirect back to the signup html page with an error message in the sessionflash if some of the info is invalid;
   // or a redirect to login if with a message telling you you've been sent a confirmation email otherwise. also passport is called to send the email for some reason
-  app.post('/signup', function (req, res) {
+  app.post('/signup', async function (req, res) {
+    const recaptchaClientPayload = req.body['g-recaptcha-response'];
+    console.log("RECAPTCHA RESPONSE: ", recaptchaClientPayload);
+    if (!recaptchaClientPayload) {
+      req.session.sessionFlash = {
+            type: 'alert',
+            message: 'Please fill out the RECAPTCHA.',
+            username: req.body.username,
+            email: req.body.email
+          }
+          res.redirect(301, '/signup')
+          return false;
+    }
+    const recaptchaResponse = await axios({ method: 'post', url: 'https://www.google.com/recaptcha/api/siteverify', params: {
+      secret: '6LcoayEaAAAAAECorRz86wJm1dAuesOTotrhxkcG',
+      response: recaptchaClientPayload,
+    }}).then((response) => {
+      console.log(response.data);
+      return response.data.success;
+    });
+    if (recaptchaResponse !== true) {
+      req.session.sessionFlash = {
+        type: 'alert',
+        message: 'RECAPTCHA verification failed.',
+        username: req.body.username,
+        email: req.body.email
+      }
+      res.redirect(301, '/signup')
+      return false;
+    }
     if (reservedUsernames.includes(req.body.username)) {
       req.session.sessionFlash = {
         type: 'alert',

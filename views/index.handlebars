@@ -68,8 +68,8 @@
         <small class="help-text">We don't spam you or share your data.</small>
       </div>
       <div class="form-group">
-        <input type="text" name="username" placeholder="Username" maxlength="20"
-          {{#if sessionFlash.username}}value="{{ sessionFlash.username }}" {{/if}}>
+        <input type="text" name="username" placeholder="Username" maxlength="20" {{#if
+          sessionFlash.username}}value="{{ sessionFlash.username }}" {{/if}}>
         <label for="username">Username</label>
         <small class="help-text">Lowercase letters, numbers, - (dash) and _ (underscore) only. 20 characters
           maximum.</small>
@@ -81,6 +81,9 @@
       <div class="form-group">
         <input type="password" name="passwordrepeat" placeholder="Repeat password">
         <label for="passwordrepeat">Repeat password</label>
+      </div>
+      <div class="form-group">
+        <div class="g-recaptcha" data-sitekey="6LcoayEaAAAAADN3QZxU6thbV-v054753frbO4Kd"></div>
       </div>
 
       <button class="button large-button full-width-button" type="submit">Sign up</button>
