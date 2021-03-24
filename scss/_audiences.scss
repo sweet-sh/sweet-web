@@ -6,6 +6,7 @@
   display: flex;
   flex-wrap: wrap;
   margin-top: 1rem;
+  margin-right: -.5rem;
 }
 
 .audience {
@@ -49,7 +50,7 @@
   // box-shadow: $card-shadow;
   flex: 1;
   display: flex;
-  padding: .5rem;
+  padding: .5rem 1.5rem .5rem .5rem;
   margin: 0 10px 10px 0;
   position: relative;
   &__avatar {
