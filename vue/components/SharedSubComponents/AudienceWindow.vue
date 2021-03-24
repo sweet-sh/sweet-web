@@ -147,9 +147,9 @@
     </div>
     <div class="message" v-if="audience._id === 'everyone'">
       This special Audience contains everyone on Sweet. When you make a post
-      visible to 'Everyone', it will show up for anybody who follows you or
+      visible to <strong>Everyone</strong>, it will show up for anybody who follows you or
       visits your profile. If you want to always have control over who sees your
-      posts, don't make any of them visible to 'Everyone'.
+      posts, don't make any of them visible to <strong>Everyone</strong>.
     </div>
   </div>
 </template>

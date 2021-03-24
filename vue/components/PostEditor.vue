@@ -203,7 +203,7 @@
       />
       <p class="small text-muted" style="margin-top: 0.25rem">
         Choose who can see this post. Posts marked <strong>Everyone</strong> can
-        be seen by anyone on Sweet. Other posts can be seen only by the
+        be seen by everyone on Sweet. Other posts can be seen only by the
         Audiences to which they belong.
       </p>
     </div>
@@ -932,33 +932,43 @@ export default {
       })
       .then((response) => {
         this.userData = response.data.data.profileData;
+        // Fetch the user's current Audiences and set the initial Audience
+        axios
+          .get("http://localhost:8787/api/audience", {
+            headers: { Authorization: localStorage.getItem("JWT") },
+          })
+          .then((response) => {
+            // Set user audiences
+            this.audiences = [
+              ...response.data.data,
+              { _id: "everyone", name: "Everyone" },
+            ];
+            // Set initial audiences
+            // If we're editing a post, the selected audience is set on the post
+            if (this.editPostData) {
+              if (this.editPostData.visibleToEveryone === true) {
+                // This post has the 'Everyone' audience
+                this.selectedAudiences = [{ _id: "everyone", name: "Everyone" }];
+              } else {
+                // Map the list of audience IDs into real audience objects
+                this.selectedAudiences = this.editPostData.audiences.map(v => this.audiences.find(o => o._id === v));
+              }
+            }
+            // If we're creating a new post, the default selected audience
+            // is set in the user's settings
+            else if (this.userData && this.userData.settings && this.userData.settings.defaultAudience) {
+              this.selectedAudiences = this.audiences.find(o => o._id === this.userData.settings.defaultAudience);
+            }
+            // Fall back to 'Everyone'
+            else {
+              this.selectedAudiences = [{ _id: "everyone", name: "Everyone" }];
+            }
+          });
       })
       .catch((error) => {
         if (error.response && error.response.status === 401) {
           console.log("Destroying invalid session");
           window.location.assign("/logout");
-        }
-      });
-    // Fetch the user's current Audiences and set the initial Audience
-    axios
-      .get("http://localhost:8787/api/audience", {
-        headers: { Authorization: localStorage.getItem("JWT") },
-      })
-      .then((response) => {
-        // Set user audiences
-        this.audiences = [
-          ...response.data.data,
-          { _id: "everyone", name: "Everyone" },
-        ];
-        // Set initial audiences
-        // If we're editing a post, the selected audience is set on the post
-        if (this.editPostData) {
-          this.selectedAudiences = this.editPostData.audiences;
-        }
-        // If we're creating a new post, the default selected audience
-        // is set in the user's settings
-        else if (this.userData) {
-          this.selectedAudiences = this.userData.settings.newPostAudiences;
         }
       });
   },

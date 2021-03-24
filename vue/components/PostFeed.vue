@@ -69,11 +69,10 @@
                 &nbsp;&middot;&nbsp;
                 <span class="post-edited">Edited</span>
               </span>
-              &nbsp;&middot;&nbsp;
-              <span class="post-visibility">
-                <i v-if="post.type === 'draft'" class="fas fa-pencil-ruler"></i>
-                <i v-if="post.privacy === 'public'" class="fas fa-eye"></i>
-                <i v-if="post.privacy === 'private'" class="fas fa-eye-slash"></i>
+              <span v-if="post.isYourPost" class="post-visibility">
+                <span>&nbsp;&middot;&nbsp;</span>
+                <span v-if="post.visibleToEveryone === true" v-tippy content="You have made this post visible to everyone"><i class="far fa-lock-open"></i></span>
+                <span v-if="!post.visibleToEveryone" v-tippy content="You have restricted this post to certain Audiences"><i class="far fa-lock"></i></span>
               </span>
             </aside>
           </div>
@@ -250,6 +249,10 @@
 
 <script>
 import Vue from "vue";
+import VueTippy, { TippyComponent } from "vue-tippy";
+Vue.use(VueTippy, {
+  arrow: true,
+});
 import VueLazyload from "vue-lazyload";
 import { EventBus } from "./SharedSubComponents/EventBus";
 import axios from "axios";
