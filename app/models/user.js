@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
     timezone: { type: String, default: 'auto' },
     autoDetectedTimeZone: { type: String, default: '' },
     profileVisibility: { type: String, default: 'invisible' },
-    newPostPrivacy: { type: String, default: 'public' },
+    defaultAudience: { type: DBReference, ref: 'Audience', default: null },
     imageQuality: { type: String, default: 'standard' },
     homeTagTimelineSorting: { type: String, default: 'fluid' },
     userTimelineSorting: { type: String, default: 'chronological' },

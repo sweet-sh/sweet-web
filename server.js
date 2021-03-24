@@ -23,6 +23,7 @@ const compiler = webpack({
     community: './vue/communityEntry.js',
     library: './vue/libraryEntry.js',
     audienceManager: './vue/audienceManagerEntry.js',
+    settings: './vue/settingsEntry.js',
   },
   output: {
     filename: './public/js/vue/[name].js',

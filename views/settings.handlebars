@@ -24,13 +24,7 @@
             <hr />
             <h4>Posting</h4>
             <div class="form-group">
-                <label for="newPostPrivacy">Default privacy for new posts</label>
-                <select name="newPostPrivacy" id="newPostPrivacy">
-                    <option value="public" {{#eq loggedInUserData.settings.newPostPrivacy "public"}}selected{{/eq}}>
-                        Public</option>
-                    <option value="private" {{#eq loggedInUserData.settings.newPostPrivacy "private"}}selected{{/eq}}>
-                        Private</option>
-                </select>
+                <div id="settings-app"></div>
             </div>
             <div class="form-group">
                 <label for="newPostPrivacy">Quality of uploaded images</label>
@@ -139,6 +133,7 @@
         </div>
     </div>
 </form>
+<script src="/js/vue/settings.js"></script>
 <script>
     //push notification code largely taken from https://developers.google.com/web/fundamentals/codelabs/push-notifications/
     var isSubscribed = false;

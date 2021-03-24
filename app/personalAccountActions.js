@@ -343,6 +343,8 @@ module.exports = function (app, passport) {
     const newSets = req.body
     const oldSets = req.user.settings
 
+    console.log(newSets);
+
     User.update({
       _id: req.user._id
     }, {
@@ -351,7 +353,7 @@ module.exports = function (app, passport) {
         'settings.timezone': newSets.timezone,
         'settings.autoDetectedTimeZone': newSets.autoDetectedTimeZone ? newSets.autoDetectedTimeZone : oldSets.autoDetectedTimeZone,
         'settings.profileVisibility': newSets.profileVisibility,
-        'settings.newPostPrivacy': newSets.newPostPrivacy,
+        'settings.defaultAudience': newSets.defaultAudience,
         'settings.imageQuality': newSets.imageQuality,
         'settings.homeTagTimelineSorting': newSets.homeTagTimelineSorting,
         'settings.userTimelineSorting': newSets.userTimelineSorting,
