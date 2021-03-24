@@ -694,13 +694,14 @@ article.comment>header .author-username {
 .collapsed-post-body {
     height: 160px;
     overflow: hidden;
+    position: relative;
     &::after {
         content: '';
         position: absolute;
         width: 100%;
         background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgb(255, 255, 255) 90%, rgb(255, 255, 255) 100%);
         pointer-events: none;
-        bottom: 1rem;
+        bottom: 0;
         left: 0;
         height: 50px;
     }
@@ -708,6 +709,7 @@ article.comment>header .author-username {
 
 .keep-reading-button {
     display: block;
-    margin-top: .75rem;
+    margin-bottom: .5rem;
     font-weight: 700;
+    z-index: 50;
 }
