@@ -123,7 +123,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "jest": "^25.1.0",
-    "node-sass": "^5.0.0",
+    "node-sass": "^7.0.0",
     "nodemon": "^1.19.1",
     "style-loader": "^1.2.1",
     "vue-jest": "^4.0.0-rc.0",
