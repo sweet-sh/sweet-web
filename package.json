@@ -69,7 +69,7 @@
     "express-session": "^1.15.6",
     "express-validator": "^5.3.1",
     "fuse.js": "^6.4.1",
-    "got": "^9.6.0",
+    "got": "^11.8.5",
     "handlebars-helpers": "^0.10.0",
     "hooper": "^0.3.4",
     "jquery": "^3.4.1",
