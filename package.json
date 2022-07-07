@@ -79,7 +79,7 @@
     "metascraper-title": "^5.4.0",
     "metascraper-url": "^5.4.0",
     "method-override": "^3.0.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "moment-timezone": "^0.5.25",
     "mongo-connect": "^0.0.6",
     "mongoose": "^5.4.19",
