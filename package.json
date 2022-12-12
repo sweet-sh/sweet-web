@@ -61,7 +61,7 @@
     "emoji-mart-vue": "^2.6.6",
     "emoji-mart-vue-fast": "^7.0.4",
     "expo-server-sdk": "^3.5.0",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "express-fileupload": "^1.1.9",
     "express-handlebars": "^3.0.2",
     "express-messages": "^1.0.1",
